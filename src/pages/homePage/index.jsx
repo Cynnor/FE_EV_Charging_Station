@@ -1,8 +1,98 @@
+import React from "react";
 import "./index.scss";
 
 const hotlines = [
-  { phone: "0912210210", href: "tel:0912210210" },
+  { phone: "0335165044", href: "tel:0335165044" },
   { phone: "0373185010", href: "tel:0373185010" },
+];
+
+const features = [
+  {
+    icon: "🗺️",
+    title: "Tìm kiếm trụ sạc gần bạn",
+    description:
+      "Dễ dàng tìm kiếm các trụ sạc xe điện gần nhất với vị trí hiện tại của bạn trên bản đồ",
+  },
+  {
+    icon: "⚡",
+    title: "Thông tin chi tiết trụ sạc",
+    description:
+      "Xem thông tin đầy đủ về loại sạc, công suất, giá cả và tình trạng hoạt động",
+  },
+  {
+    icon: "📱",
+    title: "Đặt chỗ trước",
+    description:
+      "Đặt trước chỗ sạc để đảm bảo có sẵn khi bạn đến, tiết kiệm thời gian chờ đợi",
+  },
+  {
+    icon: "💳",
+    title: "Thanh toán tiện lợi",
+    description:
+      "Thanh toán dễ dàng qua ví điện tử, thẻ ngân hàng hoặc QR code ngay trên ứng dụng",
+  },
+  {
+    icon: "📊",
+    title: "Theo dõi quá trình sạc",
+    description:
+      "Giám sát thời gian sạc, mức pin hiện tại và chi phí trong thời gian thực",
+  },
+  {
+    icon: "🔔",
+    title: "Thông báo thông minh",
+    description:
+      "Nhận thông báo khi sạc hoàn tất, cảnh báo khi trụ sạc gặp sự cố",
+  },
+];
+
+const statistics = [
+  { number: "500+", label: "Trụ sạc khả dụng" },
+  { number: "50,000+", label: "Người dùng tin tưởng" },
+  { number: "99.5%", label: "Độ tin cậy" },
+  { number: "24/7", label: "Hỗ trợ khách hàng" },
+];
+
+const chargingStations = [
+  {
+    id: 1,
+    name: "Trạm sạc Vincom Đồng Khởi",
+    address: "72 Lê Thánh Tôn, Q1, TP.HCM",
+    status: "available",
+    type: "fast",
+    price: "3,500 VNĐ/kWh",
+  },
+  {
+    id: 2,
+    name: "Trạm sạc Landmark 81",
+    address: "720A Điện Biên Phủ, Bình Thạnh, TP.HCM",
+    status: "busy",
+    type: "ultra-fast",
+    price: "4,000 VNĐ/kWh",
+  },
+  {
+    id: 3,
+    name: "Trạm sạc Crescent Mall",
+    address: "101 Tôn Dật Tiên, Q7, TP.HCM",
+    status: "available",
+    type: "fast",
+    price: "3,200 VNĐ/kWh",
+  },
+  {
+    id: 4,
+    name: "Trạm sạc AEON Bình Tân",
+    address: "1 Đường số 17A, Bình Tân, TP.HCM",
+    status: "maintenance",
+    type: "normal",
+    price: "2,800 VNĐ/kWh",
+  },
+  {
+    id: 5,
+    name: "Trạm sạc GIGAMALL",
+    address: "240-242 Phạm Văn Đồng, Thủ Đức, TP.HCM",
+    status: "available",
+    type: "fast",
+    price: "3,300 VNĐ/kWh",
+  },
 ];
 
 const HotlineFloating = () => (
@@ -15,221 +105,217 @@ const HotlineFloating = () => (
         target="_blank"
         rel="noopener noreferrer"
       >
-        <span className="homepage__hotline-icon">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="#fff">
-            <circle cx="10" cy="10" r="10" fill="#7ed321" />
-            <path
-              d="M14.5 13.5c-.7-.2-1.4-.4-2-.8-.2-.1-.4-.2-.6-.1-.2.1-.4.3-.6.5-.3.3-.6.3-.9.1-1.1-.7-2-1.6-2.7-2.7-.2-.3-.2-.6.1-.9.2-.2.4-.4.5-.6.1-.2 0-.4-.1-.6-.4-.6-.6-1.3-.8-2-.1-.3-.4-.5-.7-.5H5c-.3 0-.6.3-.6.6C4.4 12.1 7.9 15.6 12.4 15.6c.3 0 .6-.3.6-.6v-1.1c0-.3-.2-.6-.5-.7z"
-              fill="#fff"
-            />
-          </svg>
-        </span>
+        <span className="homepage__hotline-icon">📞</span>
         <span className="homepage__hotline-text">{item.phone}</span>
       </a>
     ))}
   </div>
 );
 
-const HomePage = () => (
-  <div className="homepage">
-    <main className="homepage__main">
-      <section className="homepage">
-        <div className="homepage__container">
-          <div className="homepage__content">
-            <h2 className="homepage__title">
-              <span className="green">
-                Nền tảng đám mây để sạc điện
-                <br />
-                và quản lý trạm sạc thông minh.
-              </span>
-            </h2>
-            <p className="homepage__desc">
-              Khởi động, tối ưu hóa và mở rộng quy mô hoạt động kinh doanh sạc
-              xe điện của bạn với nền tảng sạc xe điện không phân biệt phần
-              cứng, nhãn trắng của <span className="green">S.TOUCH</span>.
+const HomePage = () => {
+  return (
+    <div className="homepage">
+      <main className="homepage__main">
+        {/* Hero Section */}
+        <section className="homepage__hero">
+          <div className="homepage__hero-content">
+            <h1>Tìm trụ sạc xe điện dễ dàng, sạc nhanh chóng</h1>
+            <p>
+              Ứng dụng tìm kiếm và sử dụng trụ sạc xe điện hàng đầu Việt Nam.
+              Hơn 500 trụ sạc trên toàn quốc, đặt chỗ trước, thanh toán tiện
+              lợi.
             </p>
-            <button className="homepage__demo">ĐẶT BẢN DEMO ▶</button>
-          </div>
-          <div className="homepage__image">
-            <img
-              src="https://stouch.vn/wp-content/uploads/2024/07/S.Touch_Bo-Banner-Sac-Dien-24-1.svg"
-              alt="Demo"
-            />
-          </div>
-        </div>
-      </section>
-      <section className="homepage-features">
-        <div className="homepage-features__container">
-          <h3 className="homepage-features__title">
-            Phần mềm quản lý sạc S.TOUCH tất cả trong
-            <br />
-            một thương hiệu của bạn
-          </h3>
-          <div className="homepage-features__grid">
-            <div className="feature-item">
-              <span className="feature-icon">🔘</span>
-              <span className="feature-label">Nhãn Trắng</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🧾</span>
-              <span className="feature-label">Thanh toán và hóa đơn</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🔌</span>
-              <span className="feature-label">Tương thích đa thiết bị sạc</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">💻</span>
-              <span className="feature-label">API S.TOUCH</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">💙</span>
-              <span className="feature-label">Đa dạng chủng loại xe điện</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">⚡</span>
-              <span className="feature-label">Quản lý tái động</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">📄</span>
-              <span className="feature-label">Gói giá và biểu phí</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🤝</span>
-              <span className="feature-label">
-                Quản lý khách hàng và đối tác
-              </span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🛠️</span>
-              <span className="feature-label">Quản lý bảo trì từ xa</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🔒</span>
-              <span className="feature-label">Bảo mật và khả năng mở rộng</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">📊</span>
-              <span className="feature-label">Báo cáo và phân tích</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🏠</span>
-              <span className="feature-label">Sạc tại nhà và đặt chỗ</span>
+            <div className="homepage__hero-actions">
+              <button className="btn btn--primary">Tìm trụ sạc ngay</button>
+              <button className="btn btn--secondary">Tải ứng dụng</button>
             </div>
           </div>
-        </div>
-      </section>
-      <section className="homepage-white-label">
-        <div className="homepage-white-label__container">
-          <div className="homepage-white-label__header">
-            <h4 className="homepage-white-label__subtitle">NHÃN TRẮNG</h4>
-            <h2 className="homepage-white-label__title">
-              Trải nghiệm <span className="green">sạc xe điện 360</span> với
-              thương hiệu được nhận diện
-            </h2>
-            <p className="homepage-white-label__desc">
-              Phần mềm đa dụng quản lý trạm sạc xe điện với các ứng dụng di động
-              cho người dùng có hiện logo của bạn, giao diện web và mạng liên
-              kết dành cho khách hàng và nhân viên của bạn.
-            </p>
+          <div className="homepage__hero-image">
+            <div className="hero-visual">
+              <div className="charging-station">🚗</div>
+              <div className="dashboard">⚡</div>
+              <div className="mobile-app">📱</div>
+            </div>
           </div>
-          <div className="homepage-white-label__content">
-            <div className="homepage-white-label__image">
-              <img
-                src="https://stouch.vn/wp-content/uploads/2024/06/S.Touch_Hinhanh-02.svg"
-                alt="White Label Demo"
+        </section>
+
+        {/* Quick Search */}
+        <section className="homepage__search">
+          <div className="search-container">
+            <h2>Tìm trụ sạc gần bạn</h2>
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="Nhập địa chỉ hoặc tên địa điểm..."
               />
+              <button className="search-btn">Tìm kiếm</button>
             </div>
-            <div className="homepage-white-label__features">
-              <div className="feature-block">
-                <h3>Nền tảng nhận diện thương hiệu</h3>
-                <p>
-                  Thông tin nhận diện thương hiệu cho khách hàng và đối tác
-                  thương mại của bạn
-                </p>
-              </div>
-              <div className="feature-block">
-                <h3>Cổng thông tin điện tử</h3>
-                <p>Tùy chỉnh giao diện web cho trình điều khiển EV của bạn</p>
-              </div>
-              <div className="feature-block">
-                <h3>Ứng dụng di động</h3>
-                <p>
-                  Các ứng dụng sạc xe điện có thể tuỳ chỉnh cho IOS và Android
-                </p>
-              </div>
+            <div className="quick-filters">
+              <button className="filter-btn active">Tất cả</button>
+              <button className="filter-btn">Sạc nhanh</button>
+              <button className="filter-btn">Sạc siêu tốc</button>
+              <button className="filter-btn">Miễn phí</button>
             </div>
           </div>
-        </div>
-      </section>
-      <section className="homepage-payment">
-        <div className="homepage-payment__container">
-          <div className="homepage-payment__content">
-            <h4 className="homepage-payment__subtitle">THANH TOÁN & HÓA ĐƠN</h4>
-            <h2 className="homepage-payment__title">
-              Tăng doanh thu với các hình thức thanh toán linh hoạt và lập hóa
-              đơn.
-            </h2>
-            <h3 className="homepage-payment__highlight">Làm chủ dòng tiền.</h3>
-            <p className="homepage-payment__desc">
-              Tích hợp với cổng thanh toán bạn chọn và dễ dàng quản lý nhiều tuỳ
-              chọn thanh toán cho khách hàng và đối tác kinh doanh của bạn.
-            </p>
-            <ul className="homepage-payment__list">
-              <li>
-                Sử dụng QR pay, VN pay ngay lập tức hoặc tích hợp bộ xử lý thanh
-                toán ưa thích của bạn
-              </li>
-              <li>
-                Chấp nhận thanh toán trực tiếp từ khách hàng mà không phải trả
-                thêm phí hoặc chậm trễ từ S.TOUCH
-              </li>
-              <li>Lợi ích về việc hóa đơn và thanh toán tự động</li>
-              <li>Hoàn tiền cho nhân viên sạc xe điện tại nhà</li>
-            </ul>
-            <button className="homepage-payment__btn">Tìm hiểu thêm</button>
+        </section>
+
+        {/* Statistics */}
+        <section className="homepage__stats">
+          {statistics.map((stat, idx) => (
+            <div key={idx} className="stat-item">
+              <div className="stat-number">{stat.number}</div>
+              <div className="stat-label">{stat.label}</div>
+            </div>
+          ))}
+        </section>
+
+        {/* Map Section */}
+        <section className="homepage__map">
+          <div className="section-header">
+            <h2>Bản đồ trụ sạc</h2>
+            <p>Tìm kiếm và xem thông tin chi tiết các trụ sạc gần bạn</p>
           </div>
-          <div className="homepage-payment__image">
-            <img
-              src="https://stouch.vn/wp-content/uploads/2024/05/3.png"
-              alt="Payment Demo"
-            />
+          <div className="map-container">
+            <div className="map-view">
+              <div className="map-placeholder">
+                <div className="map-content">
+                  <div className="map-icon">🗺️</div>
+                  <p>Bản đồ tương tác - Click vào marker để xem chi tiết</p>
+                </div>
+                <div className="map-markers">
+                  <div
+                    className="map-marker marker-1 available"
+                    title="Trạm sạc Vincom Đồng Khởi"
+                  >
+                    📍
+                  </div>
+                  <div
+                    className="map-marker marker-2 busy"
+                    title="Trạm sạc Landmark 81"
+                  >
+                    📍
+                  </div>
+                  <div
+                    className="map-marker marker-3 available"
+                    title="Trạm sạc Crescent Mall"
+                  >
+                    📍
+                  </div>
+                  <div
+                    className="map-marker marker-4 maintenance"
+                    title="Trạm sạc AEON Bình Tân"
+                  >
+                    📍
+                  </div>
+                  <div
+                    className="map-marker marker-5 available"
+                    title="Trạm sạc GIGAMALL"
+                  >
+                    📍
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="station-list">
+              <h3>Trụ sạc gần bạn</h3>
+              <div className="station-scroll">
+                {chargingStations.map((station) => (
+                  <div key={station.id} className="station-item">
+                    <div className="station-header">
+                      <h4>{station.name}</h4>
+                      <div
+                        className={`station-status status-${station.status}`}
+                      >
+                        {station.status === "available" && "✅ Sẵn sàng"}
+                        {station.status === "busy" && "🔴 Đang sử dụng"}
+                        {station.status === "maintenance" && "🔧 Bảo trì"}
+                      </div>
+                    </div>
+                    <p className="station-address">{station.address}</p>
+                    <div className="station-details">
+                      <div className="station-type">
+                        {station.type === "ultra-fast" &&
+                          "⚡ Sạc siêu tốc (150kW)"}
+                        {station.type === "fast" && "⚡ Sạc nhanh (50kW)"}
+                        {station.type === "normal" && "🔌 Sạc thường (22kW)"}
+                      </div>
+                      <div className="station-price">{station.price}</div>
+                    </div>
+                    <div className="station-actions">
+                      <button className="btn-small btn-primary">Đặt chỗ</button>
+                      <button className="btn-small btn-secondary">
+                        Chi tiết
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
-      <section className="homepage-ocpp">
-        <div className="homepage-ocpp__container">
-          <div className="homepage-ocpp__image">
-            <img
-              src="https://stouch.vn/wp-content/uploads/2024/07/S.Touch_Tu-lieu-hinh-anh-11-1-1.png"
-              alt="OCPP Demo"
-            />
+        </section>
+
+        {/* Features */}
+        <section className="homepage__features">
+          <div className="section-header">
+            <h2>Tính năng nổi bật</h2>
+            <p>Những tính năng giúp bạn sạc xe điện thuận tiện và tiết kiệm</p>
           </div>
-          <div className="homepage-ocpp__content">
-            <h4 className="homepage-ocpp__subtitle">
-              TƯƠNG THÍCH ĐA THIẾT BỊ SẠC
-            </h4>
-            <h2 className="homepage-ocpp__title">
-              Có tính linh hoạt và khả năng{" "}
-              <span className="green">tương tác với OCPP</span>
-            </h2>
-            <p className="homepage-ocpp__desc">
-              Các trường hợp kinh doanh khác nhau yêu cầu các hình thức tính phí
-              khác nhau. Mở rộng quy mô mạng sạc của bạn bằng cách tích hợp dễ
-              dàng các trạm sạc từ nhiều nhà sản xuất tuân thủ OCPP với hệ thống
-              quản lý trạm sạc tích hợp đa thiết bị sạc (CPMS) của S.TOUCH
-            </p>
-            <ul className="homepage-ocpp__list">
-              <li>Hỗ trợ OCPP 1.6 đến OCPP 2.0.1</li>
-              <li>Hỗ trợ các loại trạm sạc tuân thủ OCPP</li>
-              <li>Tích hợp thành công với nhiều bộ sạc khác nhau</li>
-            </ul>
-            <button className="homepage-ocpp__btn">Tìm hiểu thêm</button>
+          <div className="features-grid">
+            {features.map((feature, idx) => (
+              <div key={idx} className="feature-card">
+                <div className="feature-icon">{feature.icon}</div>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
-    </main>
-  </div>
-);
+        </section>
+
+        {/* How to use */}
+        <section className="homepage__howto">
+          <div className="section-header">
+            <h2>Cách sử dụng đơn giản</h2>
+            <p>Chỉ với 4 bước đơn giản để sạc xe điện</p>
+          </div>
+          <div className="steps-grid">
+            <div className="step-item">
+              <div className="step-number">1</div>
+              <h3>Tìm trụ sạc</h3>
+              <p>Sử dụng bản đồ để tìm trụ sạc gần nhất</p>
+            </div>
+            <div className="step-item">
+              <div className="step-number">2</div>
+              <h3>Đặt chỗ</h3>
+              <p>Đặt trước để đảm bảo có chỗ sạc khi đến</p>
+            </div>
+            <div className="step-item">
+              <div className="step-number">3</div>
+              <h3>Kết nối và sạc</h3>
+              <p>Cắm sạc và theo dõi quá trình trên ứng dụng</p>
+            </div>
+            <div className="step-item">
+              <div className="step-number">4</div>
+              <h3>Thanh toán</h3>
+              <p>Thanh toán tự động khi hoàn tất sạc</p>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="homepage__cta">
+          <h2>Bắt đầu hành trình xe điện của bạn</h2>
+          <p>Tải ứng dụng ngay để trải nghiệm sạc xe điện tiện lợi nhất</p>
+          <div className="cta-buttons">
+            <button className="btn btn--primary btn--large">
+              Tải cho Android
+            </button>
+            <button className="btn btn--primary btn--large">Tải cho iOS</button>
+          </div>
+        </section>
+      </main>
+      <HotlineFloating />
+    </div>
+  );
+};
 
 export default HomePage;
