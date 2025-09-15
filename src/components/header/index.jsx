@@ -1,7 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import "./index.scss";
 
 const Header = () => {
+  const [currentLang, setCurrentLang] = useState("vi");
+
+  const toggleLanguage = () => {
+    setCurrentLang(currentLang === "vi" ? "en" : "vi");
+  };
+
   return (
     <header className="header">
       <div className="header__wrapper">
@@ -12,26 +18,37 @@ const Header = () => {
               alt="S. TOUCH Logo"
               className="header__logo-img"
             />
+            <div className="header__logo-text">
+              <span className="header__logo-sub">Touch To Charge</span>
+            </div>
           </div>
           <nav className="header__nav">
             <a href="#" className="active">
-              Nền Tảng
+              Trang chủ
             </a>
-            <div className="dropdown">
-              <a href="#">
-                Giải Pháp <span>▼</span>
-              </a>
-            </div>
             <a href="#">Trụ sạc</a>
-            <a href="#">Khách hàng</a>
-            <div className="dropdown">
-              <a href="#">
-                Tài Nguyên <span>▼</span>
-              </a>
-            </div>
-            <a href="#">Blog</a>
-            <button className="header__contact">Liên Hệ</button>
+            <a href="#">Giới thiệu</a>
+            <a href="#">Liên hệ</a>
           </nav>
+          <div className="header__actions">
+            <div className="header__auth">
+              <button className="header__login">Đăng nhập</button>
+              <span className="header__auth-divider">|</span>
+              <button className="header__register">Đăng ký</button>
+            </div>
+            <button className="header__lang-toggle" onClick={toggleLanguage}>
+              <span
+                className={`lang-flag ${currentLang === "vi" ? "active" : ""}`}
+              >
+                🇻🇳
+              </span>
+              <span
+                className={`lang-flag ${currentLang === "en" ? "active" : ""}`}
+              >
+                🇺🇸
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
