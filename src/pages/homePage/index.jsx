@@ -1,10 +1,7 @@
 import React from "react";
+import Layout from "../../components/layout";
+import HotlineFloating from "../../components/hotlineFloating";
 import "./index.scss";
-
-const hotlines = [
-  { phone: "0335165044", href: "tel:0335165044" },
-  { phone: "0373185010", href: "tel:0373185010" },
-];
 
 const features = [
   {
@@ -94,23 +91,6 @@ const chargingStations = [
     price: "3,300 VNĐ/kWh",
   },
 ];
-
-const HotlineFloating = () => (
-  <div className="homepage__hotline-group">
-    {hotlines.map((item) => (
-      <a
-        key={item.phone}
-        href={item.href}
-        className="homepage__hotline"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <span className="homepage__hotline-icon">📞</span>
-        <span className="homepage__hotline-text">{item.phone}</span>
-      </a>
-    ))}
-  </div>
-);
 
 const HomePage = () => {
   return (
@@ -290,13 +270,13 @@ const HomePage = () => {
             </div>
             <div className="step-item">
               <div className="step-number">3</div>
-              <h3>Kết nối và sạc</h3>
-              <p>Cắm sạc và theo dõi quá trình trên ứng dụng</p>
+              <h3>Thanh toán</h3>
+              <p>Thanh toán tự động khi hoàn tất sạc</p>
             </div>
             <div className="step-item">
               <div className="step-number">4</div>
-              <h3>Thanh toán</h3>
-              <p>Thanh toán tự động khi hoàn tất sạc</p>
+              <h3>Kết nối và sạc</h3>
+              <p>Cắm sạc và theo dõi quá trình trên ứng dụng</p>
             </div>
           </div>
         </section>
@@ -313,7 +293,7 @@ const HomePage = () => {
           </div>
         </section>
       </main>
-      <HotlineFloating />
+      {/* HotlineFloating nếu muốn dùng chung cho mọi trang thì để trong Layout */}
     </div>
   );
 };

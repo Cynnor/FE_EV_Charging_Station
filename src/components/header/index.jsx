@@ -23,12 +23,12 @@ const Header = () => {
             </div>
           </div>
           <nav className="header__nav">
-            <a href="#" className="active">
+            <a href="/" className="active">
               Trang chủ
             </a>
-            <a href="#">Trụ sạc</a>
-            <a href="#">Giới thiệu</a>
-            <a href="#">Liên hệ</a>
+            <a href="/chargingStations">Trụ sạc</a>
+            <a href="/about">Giới thiệu</a>
+            <a href="/support">Hỗ trợ</a>
           </nav>
           <div className="header__actions">
             <div className="header__auth">
