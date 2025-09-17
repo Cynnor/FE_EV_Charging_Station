@@ -1,0 +1,183 @@
+.admin-header {
+  background: white;
+  padding: 24px 32px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  .header-left {
+    h1 {
+      margin: 0 0 4px 0;
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #1e293b, #475569);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    p {
+      margin: 0;
+      color: #64748b;
+      font-size: 14px;
+    }
+  }
+
+  .header-right {
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .notification-btn {
+        position: relative;
+        background: none;
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #f1f5f9;
+
+        &:hover {
+          background: #e2e8f0;
+        }
+
+        .icon {
+          font-size: 18px;
+        }
+
+        .badge {
+          position: absolute;
+          top: 6px;
+          right: 6px;
+          background: #ef4444;
+          color: white;
+          font-size: 10px;
+          font-weight: 600;
+          padding: 2px 6px;
+          border-radius: 10px;
+          min-width: 18px;
+          height: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      .admin-avatar {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #7ed321, #a3e635);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          transform: scale(1.05);
+        }
+      }
+    }
+  }
+}
+
+// Notifications Dropdown
+.notifications-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 80px 32px;
+}
+
+.notifications-dropdown {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  width: 380px;
+  max-height: 500px;
+  overflow: hidden;
+
+  .notifications-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #94a3b8;
+      padding: 4px;
+
+      &:hover {
+        color: #64748b;
+      }
+    }
+  }
+
+  .notifications-content {
+    max-height: 400px;
+    overflow-y: auto;
+
+    .notification-item {
+      padding: 16px 24px;
+      border-bottom: 1px solid #f8fafc;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #f8fafc;
+      }
+
+      .notification-content {
+        h5 {
+          margin: 0 0 4px 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: #1e293b;
+        }
+
+        p {
+          margin: 0 0 8px 0;
+          font-size: 13px;
+          color: #64748b;
+        }
+
+        .notification-time {
+          font-size: 12px;
+          color: #94a3b8;
+        }
+      }
+    }
+  }
+}
