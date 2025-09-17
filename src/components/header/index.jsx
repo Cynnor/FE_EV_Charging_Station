@@ -1,11 +1,17 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import "./index.scss";
 
 const Header = () => {
   const [currentLang, setCurrentLang] = useState("vi");
+  const location = useLocation();
 
   const toggleLanguage = () => {
     setCurrentLang(currentLang === "vi" ? "en" : "vi");
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
   };
 
   return (
@@ -23,12 +29,24 @@ const Header = () => {
             </div>
           </div>
           <nav className="header__nav">
-            <a href="/" className="active">
+            <Link to="/" className={isActive("/") ? "active" : ""}>
               Trang chủ
-            </a>
-            <a href="/chargingStations">Trụ sạc</a>
-            <a href="/about">Giới thiệu</a>
-            <a href="/support">Hỗ trợ</a>
+            </Link>
+            <Link
+              to="/charging-stations"
+              className={isActive("/charging-stations") ? "active" : ""}
+            >
+              Trụ sạc
+            </Link>
+            <Link to="/about" className={isActive("/about") ? "active" : ""}>
+              Giới thiệu
+            </Link>
+            <Link
+              to="/support"
+              className={isActive("/support") ? "active" : ""}
+            >
+              Hỗ trợ
+            </Link>
           </nav>
           <div className="header__actions">
             <div className="header__auth">

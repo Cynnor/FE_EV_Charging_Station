@@ -1,6 +1,5 @@
-import React from "react";
-import Layout from "../../components/layout";
-import HotlineFloating from "../../components/hotlineFloating";
+import { useEffect, useRef, useState } from "react";
+// import Layout from "../../components/layout";
 import "./index.scss";
 
 const features = [
@@ -93,6 +92,43 @@ const chargingStations = [
 ];
 
 const HomePage = () => {
+  const featuresRef = useRef(null);
+  const statsRef = useRef(null);
+  const stepsRef = useRef(null);
+
+  // Highlight a station when a marker is clicked and scroll it into view
+  const [selectedId, setSelectedId] = useState(null);
+  const itemRefs = useRef({});
+
+  const handleMarkerClick = (id) => {
+    setSelectedId(id);
+    requestAnimationFrame(() => {
+      itemRefs.current[id]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("animate-in");
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (featuresRef.current) observer.observe(featuresRef.current);
+    if (statsRef.current) observer.observe(statsRef.current);
+    if (stepsRef.current) observer.observe(stepsRef.current);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="homepage">
       <main className="homepage__main">
@@ -140,7 +176,7 @@ const HomePage = () => {
         </section>
 
         {/* Statistics */}
-        <section className="homepage__stats">
+        <section className="homepage__stats" ref={statsRef}>
           {statistics.map((stat, idx) => (
             <div key={idx} className="stat-item">
               <div className="stat-number">{stat.number}</div>
@@ -164,32 +200,47 @@ const HomePage = () => {
                 </div>
                 <div className="map-markers">
                   <div
-                    className="map-marker marker-1 available"
+                    className={`map-marker marker-1 available ${
+                      selectedId === 1 ? "active" : ""
+                    }`}
                     title="Trạm sạc Vincom Đồng Khởi"
+                    onClick={() => handleMarkerClick(1)}
                   >
                     📍
                   </div>
                   <div
-                    className="map-marker marker-2 busy"
+                    className={`map-marker marker-2 busy ${
+                      selectedId === 2 ? "active" : ""
+                    }`}
                     title="Trạm sạc Landmark 81"
+                    onClick={() => handleMarkerClick(2)}
                   >
                     📍
                   </div>
                   <div
-                    className="map-marker marker-3 available"
+                    className={`map-marker marker-3 available ${
+                      selectedId === 3 ? "active" : ""
+                    }`}
                     title="Trạm sạc Crescent Mall"
+                    onClick={() => handleMarkerClick(3)}
                   >
                     📍
                   </div>
                   <div
-                    className="map-marker marker-4 maintenance"
+                    className={`map-marker marker-4 maintenance ${
+                      selectedId === 4 ? "active" : ""
+                    }`}
                     title="Trạm sạc AEON Bình Tân"
+                    onClick={() => handleMarkerClick(4)}
                   >
                     📍
                   </div>
                   <div
-                    className="map-marker marker-5 available"
+                    className={`map-marker marker-5 available ${
+                      selectedId === 5 ? "active" : ""
+                    }`}
                     title="Trạm sạc GIGAMALL"
+                    onClick={() => handleMarkerClick(5)}
                   >
                     📍
                   </div>
@@ -200,15 +251,29 @@ const HomePage = () => {
               <h3>Trụ sạc gần bạn</h3>
               <div className="station-scroll">
                 {chargingStations.map((station) => (
-                  <div key={station.id} className="station-item">
+                  <div
+                    key={station.id}
+                    ref={(el) => (itemRefs.current[station.id] = el)}
+                    className={`station-item ${
+                      selectedId === station.id ? "is-selected" : ""
+                    }`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedId(station.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ")
+                        setSelectedId(station.id);
+                    }}
+                    aria-selected={selectedId === station.id}
+                  >
                     <div className="station-header">
                       <h4>{station.name}</h4>
                       <div
                         className={`station-status status-${station.status}`}
                       >
-                        {station.status === "available" && "✅ Sẵn sàng"}
-                        {station.status === "busy" && "🔴 Đang sử dụng"}
-                        {station.status === "maintenance" && "🔧 Bảo trì"}
+                        {station.status === "available" && "Sẵn sàng"}
+                        {station.status === "busy" && "Đang sử dụng"}
+                        {station.status === "maintenance" && "Bảo trì"}
                       </div>
                     </div>
                     <p className="station-address">{station.address}</p>
@@ -235,7 +300,7 @@ const HomePage = () => {
         </section>
 
         {/* Features */}
-        <section className="homepage__features">
+        <section className="homepage__features" ref={featuresRef}>
           <div className="section-header">
             <h2>Tính năng nổi bật</h2>
             <p>Những tính năng giúp bạn sạc xe điện thuận tiện và tiết kiệm</p>
@@ -252,7 +317,7 @@ const HomePage = () => {
         </section>
 
         {/* How to use */}
-        <section className="homepage__howto">
+        <section className="homepage__howto" ref={stepsRef}>
           <div className="section-header">
             <h2>Cách sử dụng đơn giản</h2>
             <p>Chỉ với 4 bước đơn giản để sạc xe điện</p>
@@ -271,7 +336,7 @@ const HomePage = () => {
             <div className="step-item">
               <div className="step-number">3</div>
               <h3>Thanh toán</h3>
-              <p>Thanh toán tự động khi hoàn tất sạc</p>
+              <p>Thanh toán bằng nhiều phương thức</p>
             </div>
             <div className="step-item">
               <div className="step-number">4</div>
@@ -293,7 +358,6 @@ const HomePage = () => {
           </div>
         </section>
       </main>
-      {/* HotlineFloating nếu muốn dùng chung cho mọi trang thì để trong Layout */}
     </div>
   );
 };

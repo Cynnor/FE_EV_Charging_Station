@@ -65,7 +65,8 @@ body {
   flex: 1;
   justify-content: center;
 }
-.header__nav a {
+.header__nav a,
+.header__nav Link {
   color: #222;
   font-weight: 500;
   text-decoration: none;
@@ -75,7 +76,9 @@ body {
   transition: color 0.2s, border-bottom 0.2s;
 }
 .header__nav a:hover,
-.header__nav a.active {
+.header__nav a.active,
+.header__nav Link:hover,
+.header__nav Link.active {
   color: #7ed321;
   border-bottom: 2px solid #7ed321;
 }
