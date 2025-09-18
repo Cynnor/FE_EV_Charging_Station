@@ -2,6 +2,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/layout";
 import AdminLayout from "./components/adminLayout";
 import HomePage from "./pages/homePage";
+import LoginPage from "./pages/loginPage";
+import RegisterPage from "./pages/registerPage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
 import SupportPage from "./pages/supportPage/index";
@@ -23,6 +25,14 @@ function App() {
         { path: "about", element: <AboutPage /> },
         { path: "support", element: <SupportPage /> },
       ],
+    },
+    {
+      path: "/login",
+      element: <LoginPage />,
+    },
+    {
+      path: "/register",
+      element: <RegisterPage />,
     },
     {
       path: "admin",
