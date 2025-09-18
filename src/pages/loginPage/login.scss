@@ -3,60 +3,67 @@
   justify-content: center;
   align-items: center;
   height: 100vh; // căn giữa theo chiều dọc
-  background: linear-gradient(135deg, #e6f7e6, #f9fff2);
+  background: linear-gradient(135deg, #e8f5e9, #f1fff5); // xanh lá nhạt gradient
 
   .login-container {
     width: 100%;
     max-width: 400px;
-    padding: 30px;
+    padding: 32px;
     border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(0, 128, 0, 0.15);
     text-align: center;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
     h2 {
-      margin-bottom: 20px;
-      font-size: 24px;
-      color: #333;
+      margin-bottom: 22px;
+      font-size: 26px;
+      color: #2e7d32; // xanh lá đậm
+      font-weight: 600;
     }
 
     input {
       width: 100%;
       padding: 12px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
+      margin: 12px 0;
+      border: 1px solid #a5d6a7; // xanh lá nhạt
+      border-radius: 10px;
+      font-size: 15px;
+      background: #f9fff9; // nền xanh lá nhạt nhẹ
 
       &:focus {
-        border-color: #4caf50;
+        border-color: #66bb6a;
         outline: none;
-        box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
+        box-shadow: 0 0 6px rgba(102, 187, 106, 0.5);
+        background: #ffffff;
       }
     }
 
     button {
       width: 100%;
-      padding: 12px;
-      margin-top: 15px;
-      background: #4caf50;
+      padding: 14px;
+      margin-top: 18px;
+      background: linear-gradient(135deg, #81c784, #66bb6a); // gradient xanh lá
       color: #fff;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 16px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
-      transition: 0.3s;
+      transition: all 0.3s ease;
 
       &:hover {
-        background: #43a047;
+        background: linear-gradient(135deg, #66bb6a, #4caf50);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
       }
     }
 
     p {
-      margin-top: 15px;
-      color: #d32f2f;
+      margin-top: 18px;
+      color: #388e3c; // xanh lá đậm
       font-weight: 500;
+      font-size: 14px;
     }
   }
 }
