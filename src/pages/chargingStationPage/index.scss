@@ -1,0 +1,173 @@
+/* ===== RESET & FONT ===== */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f9fafb;
+    margin: 0;
+    padding: 0;
+}
+
+/* ===== HERO ===== */
+.charging-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+
+    .hero-text {
+        max-width: 50%;
+
+        h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .highlight {
+            color: #16a34a;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #16a34a;
+            color: #fff;
+            border-radius: 9999px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s ease;
+
+            &:hover {
+                background: #15803d;
+            }
+        }
+    }
+
+    .hero-image {
+        max-width: 45%;
+
+        img {
+            width: 100%;
+            height: auto;
+            border-radius: 0.75rem;
+        }
+    }
+}
+
+/* ===== GRID CONTAINER ===== */
+.charging-stations {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+    display: grid;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .charging-stations {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ===== CARD ===== */
+.card {
+    background: #f4fce3;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease;
+    display: flex;
+    /* bật flexbox */
+    flex-direction: column;
+    /* xếp dọc */
+    justify-content: space-between;
+    /* đẩy button xuống dưới */
+}
+
+.card button {
+    align-self: center;
+    /* canh giữa ngang */
+    margin-top: auto;
+    /* đẩy button về cuối */
+}
+
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card img {
+    width: 100%;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+
+}
+
+.card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2f855a;
+    margin-bottom: 0.5rem;
+}
+
+.card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.card ul li+li {
+    margin-top: 0.25rem;
+}
+
+.card button {
+    margin-top: 1rem;
+    background: #16a34a;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.card button:hover {
+    background: #15803d;
+
+}
+
+.title-support {
+    background: linear-gradient(90deg, #a8e063, #56ab2f);
+    /* màu xanh lá chuyển */
+    padding: 40px 0;
+    text-align: center;
+    margin: 40px 0;
+    border-radius: 8px;
+}
+
+.title-support h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+//cuộn mượt hơn
