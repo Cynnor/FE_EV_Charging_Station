@@ -1,0 +1,121 @@
+.about-page {
+  font-family: "Arial", sans-serif;
+  color: #333;
+
+  .about-banner {
+    background: url("https://greencharge.vn/wp-content/uploads/2023/04/greencharge-38.jpg") center/cover no-repeat;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+
+    .overlay {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 40px;
+      border-radius: 12px;
+      text-align: center;
+      color: #fff;
+
+      h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 18px;
+      }
+    }
+  }
+
+  /* Phần mô tả */
+  .about-intro {
+    padding: 60px 20px;
+    background: #f9fff4;
+
+    .intro-flex {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .intro-image {
+      flex: 1;
+      img {
+        max-width: 75%;
+        border-radius: 12px;
+      }
+    }
+
+    .intro-content {
+      flex: 1;
+
+      h2 {
+        font-size: 28px;
+        color: #2e7d32;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+      }
+
+      p {
+        margin-bottom: 15px;
+        line-height: 1.6;
+        font-size: 16px;
+      }
+    }
+
+    /* Responsive: mobile thì ảnh lên trên, text xuống dưới */
+    @media (max-width: 768px) {
+      .intro-flex {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .intro-content {
+        h2 {
+          font-size: 24px;
+        }
+      }
+    }
+  }
+
+  /* Đội ngũ */
+  .about-team {
+    padding: 60px 20px;
+    background: #fff;
+
+    h2 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 40px;
+      color: #2e7d32;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+
+      .team-card {
+        background: #f0fff4;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+
+        h3 {
+          color: #388e3c;
+          font-size: 18px;
+          margin-bottom: 10px;
+        }
+
+        p {
+          font-size: 14px;
+          color: #555;
+        }
+      }
+    }
+  }
+}

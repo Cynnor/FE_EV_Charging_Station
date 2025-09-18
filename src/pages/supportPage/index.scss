@@ -1,0 +1,122 @@
+.support-container {
+  padding: 5rem 2rem 4rem;
+  background: #f8fdf8;
+  text-align: center;
+
+  h2 {
+    color: #2e7d32;
+    font-size: 1.8rem;
+    margin-bottom: 1.2rem;
+    font-weight: 700;
+  }
+
+  p {
+    color: #555;
+    line-height: 1.6;
+  }
+
+  /* Thông tin liên hệ */
+  .info-section {
+    margin-bottom: 3rem;
+
+    .info-cards {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+
+      .card {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        width: 280px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        &:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+
+        h3 {
+          color: #388e3c;
+          margin-bottom: 0.5rem;
+          font-size: 1.2rem;
+        }
+      }
+    }
+  }
+
+  /* Form */
+  .form-section {
+    margin-bottom: 3rem;
+
+    p {
+      margin-bottom: 1rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      max-width: 500px;
+      margin: 0 auto;
+      gap: 1rem;
+
+      input, textarea {
+        padding: 0.8rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        outline: none;
+        font-size: 0.95rem;
+
+        &:focus {
+          border-color: #66bb6a;
+          box-shadow: 0 0 0 2px rgba(102,187,106,0.2);
+        }
+      }
+
+      button {
+        background: #66bb6a;
+        color: #fff;
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: background 0.2s ease;
+
+        &:hover {
+          background: #43a047;
+        }
+      }
+    }
+  }
+
+  /* Các cam kết */
+  .features {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+
+    .feature {
+      background: #fff;
+      padding: 1.2rem;
+      border-radius: 12px;
+      width: 200px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+      i {
+        font-size: 2rem;
+        color: #2e7d32;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        font-weight: 500;
+        color: #444;
+      }
+    }
+  }
+}
