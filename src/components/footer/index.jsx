@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="footer__top">
           <div className="footer__brand">
             <img
-              src="https://stouch.vn/wp-content/uploads/2024/05/S.TOUCH_Logo_Tren-Website-01-1.svg"
+              src="https://i.postimg.cc/15px6VJv/logo-part-1.png"
               alt="S. TOUCH Logo"
               className="footer__logo-img"
             />

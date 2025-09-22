@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import React from "react";
 import "./index.scss";
 import AC10 from "./image/AC10.jpg";
@@ -28,7 +29,9 @@ function ChargingStationCard({
         <li><b>Dạng ổ cắm:</b> {plugTypes}</li>
         <li><b>Bảo vệ:</b> {protection}</li>
       </ul>
-      <button>Khám phá</button>
+      <Link to="/charging-stations/card-station">
+        <button>Khám phá</button>
+      </Link>
     </div>
   );
 }

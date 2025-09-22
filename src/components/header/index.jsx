@@ -20,7 +20,7 @@ const Header = () => {
         <div className="header__container">
           <div className="header__logo">
             <img
-              src="https://stouch.vn/wp-content/uploads/2024/05/S.TOUCH_Logo_Tren-Website-01-1.svg"
+              src="https://postimg.cc/kBXhPGrS"
               alt="S. TOUCH Logo"
               className="header__logo-img"
             />
