@@ -2,8 +2,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/layout";
 import AdminLayout from "./components/adminLayout";
 import HomePage from "./pages/homePage";
-import LoginPage from "./pages/loginPage";
-import RegisterPage from "./pages/registerPage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
 import SupportPage from "./pages/supportPage/index";
@@ -14,6 +12,10 @@ import Analytics from "./pages/adminDashboard/analytics";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement";
 import SettingManagement from "./pages/adminDashboard/settingManagement/index";
 import CardStationPage from "./pages/chargingStationPage/cardStationPage";
+import Login from "./pages/loginPage";
+import Register from "./pages/registerPage";
+
+
 function App() {
   const router = createBrowserRouter([
     {
@@ -29,11 +31,11 @@ function App() {
     },
     {
       path: "/login",
-      element: <LoginPage />,
+      element: <Login />,
     },
     {
       path: "/register",
-      element: <RegisterPage />,
+      element: <Register />,
     },
     {
       path: "admin",

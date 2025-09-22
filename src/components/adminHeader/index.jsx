@@ -50,7 +50,7 @@ const AdminHeader = ({ title, subtitle }) => {
             </button>
 
             <div className="admin-avatar">
-              <span>A</span>
+              <span>H</span>
             </div>
           </div>
         </div>
