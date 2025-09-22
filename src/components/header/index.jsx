@@ -50,9 +50,13 @@ const Header = () => {
           </nav>
           <div className="header__actions">
             <div className="header__auth">
-              <button className="header__login">Đăng nhập</button>
+              <Link to="/login" className="header__login">
+                Đăng nhập
+              </Link>
               <span className="header__auth-divider">|</span>
-              <button className="header__register">Đăng ký</button>
+              <Link to="/register" className="header__register">
+                Đăng ký
+              </Link>
             </div>
             <button className="header__lang-toggle" onClick={toggleLanguage}>
               <span
