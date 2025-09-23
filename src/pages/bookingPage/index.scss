@@ -1,0 +1,105 @@
+.booking-layout {
+  display: flex;
+  height: 100vh; /* toàn màn hình */
+  font-family: "Arial", sans-serif;
+
+  .left-panel {
+    flex: 1;
+    padding: 20px;
+    background: #f2ffe6;
+    overflow-y: auto;
+
+    h1 {
+      color: #2e7d32;
+    }
+
+    .type-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .type-btn {
+      padding: 10px;
+      border: 2px solid #2e7d32;
+      border-radius: 8px;
+      background: white;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .type-btn.active,
+    .type-btn:hover {
+      background: #c8f7c5;
+    }
+
+    .summary {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .book-btn {
+      padding: 12px;
+      width: 100%;
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .book-btn:hover {
+      background: #256428;
+    }
+  }
+
+  .right-panel {
+    flex: 2;
+    padding: 20px;
+    background: #fff;
+
+    .map-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .map-image {
+      width: 150%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .map-marker {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      font-size: 22px;
+      background: transparent;
+      border: none;
+    }
+
+    .map-marker.active {
+      color: red;
+      font-size: 28px;
+    }
+  }
+}
