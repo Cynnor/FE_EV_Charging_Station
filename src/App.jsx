@@ -13,6 +13,7 @@ import RevenueManagement from "./pages/adminDashboard/revenueManagement";
 import SettingManagement from "./pages/adminDashboard/settingManagement/index";
 import Login from "./pages/loginPage";
 import Register from "./pages/registerPage";
+import BookingPage from "./pages/bookingPage"; 
 
 function App() {
   const router = createBrowserRouter([
@@ -46,6 +47,10 @@ function App() {
         { path: "settings-management", element: <SettingManagement /> },
       ],
     },
+    {
+      path: "booking",
+      element: <BookingPage />,
+    }
   ]);
   return <RouterProvider router={router} />;
 }
