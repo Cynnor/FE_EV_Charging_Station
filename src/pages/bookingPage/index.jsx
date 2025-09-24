@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./index.scss";
 
 const stationTypes = [
@@ -81,6 +81,10 @@ export default function BookingPage() {
     : stationTypes.flatMap((t) =>
         t.locations.map((loc) => ({ ...loc, type: t }))
       );
+
+  useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
 
   return (
     <div className="booking-layout">

@@ -1,6 +1,10 @@
+import { useEffect } from "react";
 import "./index.scss";
 
 const About = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   return (
     <div className="about-page">
       {/* Banner */}
