@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import ChargingMap from "../../components/ChargingMap";
 // import Layout from "../../components/layout";
 import "./index.scss";
 
@@ -46,6 +48,15 @@ const statistics = [
   { number: "50,000+", label: "Người dùng tin tưởng" },
   { number: "99.5%", label: "Độ tin cậy" },
   { number: "24/7", label: "Hỗ trợ khách hàng" },
+];
+
+// Dữ liệu trạm sạc cho map thật (format tương thích với ChargingMap)
+const mapStations = [
+  { id: 1, name: "Trạm sạc Vincom Đồng Khởi", speed: "50 kW", price: "3.500 đ/kWh", coords: [10.7769, 106.7009], type: "DC" },
+  { id: 2, name: "Trạm sạc Landmark 81", speed: "150 kW", price: "4.000 đ/kWh", coords: [10.7944, 106.7219], type: "DC" },
+  { id: 3, name: "Trạm sạc Crescent Mall", speed: "50 kW", price: "3.200 đ/kWh", coords: [10.7374, 106.7223], type: "DC" },
+  { id: 4, name: "Trạm sạc AEON Bình Tân", speed: "22 kW", price: "2.800 đ/kWh", coords: [10.7500, 106.6000], type: "AC" },
+  { id: 5, name: "Trạm sạc GIGAMALL", speed: "50 kW", price: "3.300 đ/kWh", coords: [10.8500, 106.7500], type: "DC" },
 ];
 
 const chargingStations = [
@@ -119,6 +130,7 @@ const HomePage = () => {
           }
         });
       },
+      window.scrollTo(0, 0),
       { threshold: 0.1 }
     );
 
@@ -193,59 +205,13 @@ const HomePage = () => {
           </div>
           <div className="map-container">
             <div className="map-view">
-              <div className="map-placeholder">
-                <div className="map-content">
-                  <div className="map-icon">🗺️</div>
-                  <p>Bản đồ tương tác - Click vào marker để xem chi tiết</p>
-                </div>
-                <div className="map-markers">
-                  <div
-                    className={`map-marker marker-1 available ${
-                      selectedId === 1 ? "active" : ""
-                    }`}
-                    title="Trạm sạc Vincom Đồng Khởi"
-                    onClick={() => handleMarkerClick(1)}
-                  >
-                    📍
-                  </div>
-                  <div
-                    className={`map-marker marker-2 busy ${
-                      selectedId === 2 ? "active" : ""
-                    }`}
-                    title="Trạm sạc Landmark 81"
-                    onClick={() => handleMarkerClick(2)}
-                  >
-                    📍
-                  </div>
-                  <div
-                    className={`map-marker marker-3 available ${
-                      selectedId === 3 ? "active" : ""
-                    }`}
-                    title="Trạm sạc Crescent Mall"
-                    onClick={() => handleMarkerClick(3)}
-                  >
-                    📍
-                  </div>
-                  <div
-                    className={`map-marker marker-4 maintenance ${
-                      selectedId === 4 ? "active" : ""
-                    }`}
-                    title="Trạm sạc AEON Bình Tân"
-                    onClick={() => handleMarkerClick(4)}
-                  >
-                    📍
-                  </div>
-                  <div
-                    className={`map-marker marker-5 available ${
-                      selectedId === 5 ? "active" : ""
-                    }`}
-                    title="Trạm sạc GIGAMALL"
-                    onClick={() => handleMarkerClick(5)}
-                  >
-                    📍
-                  </div>
-                </div>
-              </div>
+              <ChargingMap
+                stations={mapStations}
+                center={[10.7769, 106.7009]}
+                zoom={12}
+                onSelect={(station) => handleMarkerClick(station.id)}
+                selectedStation={selectedId ? mapStations.find(s => s.id === selectedId) : null}
+              />
             </div>
             <div className="station-list">
               <h3>Trụ sạc gần bạn</h3>
@@ -254,9 +220,8 @@ const HomePage = () => {
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${
-                      selectedId === station.id ? "is-selected" : ""
-                    }`}
+                    className={`station-item ${selectedId === station.id ? "is-selected" : ""
+                      }`}
                     role="button"
                     tabIndex={0}
                     onClick={() => setSelectedId(station.id)}
@@ -287,7 +252,9 @@ const HomePage = () => {
                       <div className="station-price">{station.price}</div>
                     </div>
                     <div className="station-actions">
-                      <button className="btn-small btn-primary">Đặt chỗ</button>
+                      <Link to="/booking">
+                        <button className="btn-small btn-primary">Đặt chỗ</button>
+                      </Link>
                       <button className="btn-small btn-secondary">
                         Chi tiết
                       </button>

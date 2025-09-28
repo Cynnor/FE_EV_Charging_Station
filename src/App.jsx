@@ -11,9 +11,10 @@ import UserManagement from "./pages/adminDashboard/userManagement";
 import Analytics from "./pages/adminDashboard/analytics";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement";
 import SettingManagement from "./pages/adminDashboard/settingManagement/index";
-import CardStationPage from "./pages/chargingStationPage/cardStationPage";
 import Login from "./pages/loginPage";
 import Register from "./pages/registerPage";
+import BookingPage from "./pages/bookingPage";
+import ProfilePage from "./pages/profilePage/ProfilePage";
 
 
 function App() {
@@ -24,9 +25,10 @@ function App() {
       children: [
         { path: "", element: <HomePage /> },
         { path: "charging-stations", element: <ChargingStationsPage /> },
-        { path: "charging-stations/card-station", element: <CardStationPage /> },
         { path: "about", element: <AboutPage /> },
         { path: "support", element: <SupportPage /> },
+        { path: "profile", element: <ProfilePage /> },
+        { path: "booking", element: <BookingPage /> },
       ],
     },
     {

@@ -1,12 +1,11 @@
 import { Link } from "react-router-dom";
-import React from "react";
+import React, { useEffect } from "react";
 import "./index.scss";
-import AC10 from "./image/AC10.jpg";
-import sacAC4 from "./image/sacAC4.jpg";
-import DC60 from "./image/DC60.jpg";
-import DC120 from "./image/DC120.jpg";
-import Banner from "./image/banner.jpg";
-
+import AC10 from "../../assets/AC10.jpg";
+import sacAC4 from "../../assets/sacAC4.jpg";
+import DC60 from "../../assets/DC60.jpg";
+import DC120 from "../../assets/DC120.jpg";
+import Banner from "../../assets/banner.jpg";
 
 /* ----- Card hiển thị từng trạm sạc ----- */
 function ChargingStationCard({
@@ -23,15 +22,28 @@ function ChargingStationCard({
       <img src={image} alt={title} />
       <h3>{title}</h3>
       <ul>
-        <li><b>Cách lắp đặt:</b> {installTypes}</li>
-        <li><b>Số lượng cổng:</b> {sockets}</li>
-        <li><b>Công suất:</b> {power}</li>
-        <li><b>Dạng ổ cắm:</b> {plugTypes}</li>
-        <li><b>Bảo vệ:</b> {protection}</li>
+        <li>
+          <b>Cách lắp đặt:</b> {installTypes}
+        </li>
+        <li>
+          <b>Số lượng cổng:</b> {sockets}
+        </li>
+        <li>
+          <b>Công suất:</b> {power}
+        </li>
+        <li>
+          <b>Dạng ổ cắm:</b> {plugTypes}
+        </li>
+        <li>
+          <b>Bảo vệ:</b> {protection}
+        </li>
       </ul>
-      <Link to="/charging-stations/card-station">
-        <button>Khám phá</button>
-      </Link>
+      <div className="card-actions">
+        <button className="btn-detail">Chi tiết</button>
+        <Link to="/booking">
+          <button className="btn-rent">Đặt chỗ</button>
+        </Link>
+      </div>
     </div>
   );
 }
@@ -102,9 +114,14 @@ function ChargingStationsPage() {
       power: "120 kW",
       plugTypes: "CCS / CHAdeMO",
       installTypes: "Ngoài trời / Trong nhà",
-      protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
+      protection:
+        "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
     },
   ];
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div>
