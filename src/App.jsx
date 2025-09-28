@@ -13,6 +13,7 @@ import UserManagement from "./pages/adminDashboard/userManagement";
 import Analytics from "./pages/adminDashboard/analytics";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement";
 import SettingManagement from "./pages/adminDashboard/settingManagement/index";
+import ForgotPassword from "./pages/forgotpasswordPage/forgotpassword";
 
 function App() {
   const router = createBrowserRouter([
@@ -33,6 +34,10 @@ function App() {
     {
       path: "/register",
       element: <RegisterPage />,
+    },
+    {
+      path: "/forgot-password",
+      element: <ForgotPassword />,
     },
     {
       path: "admin",
