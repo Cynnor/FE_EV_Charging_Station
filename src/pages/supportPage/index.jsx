@@ -1,7 +1,11 @@
-import React from "react";
+import { useEffect } from "react";
 import "./index.scss";
 
 const Support = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="support-container">
       {/* Thông tin liên hệ */}
@@ -28,7 +32,9 @@ const Support = () => {
       {/* Form gửi yêu cầu */}
       <section className="form-section">
         <h2>Yêu cầu hỗ trợ</h2>
-        <p>Điền thông tin để đội ngũ kỹ thuật của chúng tôi hỗ trợ nhanh nhất</p>
+        <p>
+          Điền thông tin để đội ngũ kỹ thuật của chúng tôi hỗ trợ nhanh nhất
+        </p>
         <form>
           <input type="text" placeholder="Họ và tên *" required />
           <input type="text" placeholder="Số điện thoại *" required />

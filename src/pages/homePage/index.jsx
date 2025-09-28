@@ -119,6 +119,7 @@ const HomePage = () => {
           }
         });
       },
+      window.scrollTo(0, 0),
       { threshold: 0.1 }
     );
 
