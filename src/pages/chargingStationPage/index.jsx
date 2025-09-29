@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import React, { useEffect } from "react";
 import "./index.scss";
 import AC10 from "../../assets/AC10.jpg";
@@ -37,7 +38,12 @@ function ChargingStationCard({
           <b>Bảo vệ:</b> {protection}
         </li>
       </ul>
-      <button>Khám phá</button>
+      <div className="card-actions">
+        <button className="btn-detail">Chi tiết</button>
+        <Link to="/booking">
+          <button className="btn-rent">Đặt chỗ</button>
+        </Link>
+      </div>
     </div>
   );
 }
@@ -114,8 +120,8 @@ function ChargingStationsPage() {
   ];
 
   useEffect(() => {
-      window.scrollTo(0, 0);
-    }, []);
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div>

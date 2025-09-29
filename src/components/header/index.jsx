@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./index.scss";
-
+import "../../assets/logo.jpg"
 const Header = () => {
   const [currentLang, setCurrentLang] = useState("vi");
   const location = useLocation();
@@ -20,7 +20,7 @@ const Header = () => {
         <div className="header__container">
           <div className="header__logo">
             <img
-              src="https://stouch.vn/wp-content/uploads/2024/05/S.TOUCH_Logo_Tren-Website-01-1.svg"
+              src="https://i.postimg.cc/15px6VJv/logo-part-1.png"
               alt="S. TOUCH Logo"
               className="header__logo-img"
             />

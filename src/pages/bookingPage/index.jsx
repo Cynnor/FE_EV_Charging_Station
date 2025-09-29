@@ -1,212 +1,175 @@
-import { useEffect, useState } from "react";
+// src/pages/BookingPage/index.jsx
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import ChargingMap from "../../components/ChargingMap";
 import "./index.scss";
 
-const stationTypes = [
-  {
-    id: "ac10",
-    name: "Trạm sạc xe máy AC 10 cổng",
-    price: "3.500 đ/kWh",
-    speed: "7 kW",
-    locations: [
-      { id: 1, name: "Hà Nội", coords: { top: "20%", left: "50%" } },
-      { id: 2, name: "Đà Nẵng", coords: { top: "50%", left: "55%" } },
-      { id: 3, name: "TP.HCM", coords: { top: "80%", left: "45%" } },
-    ],
-  },
-  {
-    id: "ac4",
-    name: "Trạm sạc xe máy AC 4 cổng",
-    price: "3.500 đ/kWh",
-    speed: "7 kW",
-    locations: [
-      { id: 1, name: "Hải Phòng", coords: { top: "18%", left: "60%" } },
-      { id: 2, name: "Huế", coords: { top: "55%", left: "52%" } },
-      { id: 3, name: "Cần Thơ", coords: { top: "82%", left: "42%" } },
-    ],
-  },
-  {
-    id: "dc60",
-    name: "Trạm sạc nhanh DC 60 kW",
-    price: "5.000 đ/kWh",
-    speed: "60 kW",
-    locations: [
-      { id: 1, name: "Quảng Ninh", coords: { top: "15%", left: "58%" } },
-      { id: 2, name: "Nha Trang", coords: { top: "70%", left: "53%" } },
-      { id: 3, name: "Sóc Trăng", coords: { top: "85%", left: "44%" } },
-    ],
-  },
+const stations = [
+  { id: 1, name: "Trạm AC 1 – NVHSV", speed: "7 kW", price: "3.500 đ/kWh", coords: [10.939, 106.813], type: "AC" },
+  { id: 2, name: "Trạm AC 2 – Cổng chính", speed: "7 kW", price: "3.500 đ/kWh", coords: [10.940, 106.815], type: "AC" },
+  { id: 3, name: "Trạm AC 3 – KTX", speed: "7 kW", price: "3.500 đ/kWh", coords: [10.9385, 106.8115], type: "AC" },
+  { id: 4, name: "Trạm DC 1 – Nhà thi đấu", speed: "60 kW", price: "5.000 đ/kWh", coords: [10.9395, 106.816], type: "DC" },
+  { id: 5, name: "Trạm DC 2 – Công viên", speed: "60 kW", price: "5.000 đ/kWh", coords: [10.9378, 106.814], type: "DC" },
+  { id: 6, name: "Trạm DC 3 – Bãi xe sau", speed: "60 kW", price: "5.000 đ/kWh", coords: [10.941, 106.812], type: "DC" },
 ];
 
-function getNowFormatted() {
-  const now = new Date();
-  return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
-}
-
 export default function BookingPage() {
-  const [selectedType, setSelectedType] = useState(null);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [time, setTime] = useState(getNowFormatted());
-  const [payment, setPayment] = useState("ewallet");
-  const [history, setHistory] = useState([]);
-  const [chargingStatus, setChargingStatus] = useState(null);
+  const navigate = useNavigate();
 
-  const handleBooking = () => {
-    if (!selectedType || !selectedLocation || !time) {
-      alert("Vui lòng chọn loại trạm, địa điểm và thời gian!");
-      return;
-    }
+  // mặc định: ngày/giờ hiện tại
+  const today = new Date();
+  const defaultDate = today.toISOString().split("T")[0];
+  const defaultTime = today.toTimeString().slice(0, 5);
 
-    const booking = {
-      type: selectedType.name,
-      location: selectedLocation.name,
-      speed: selectedType.speed,
-      price: selectedType.price,
-      time,
-      payment,
-      status: "Đang sạc",
-    };
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [formData, setFormData] = useState({
+    date: defaultDate,
+    startTime: defaultTime,
+  });
 
-    setHistory([booking, ...history]);
-    setChargingStatus(booking);
+  // lọc trạm sạc
+  const filteredStations = stations.filter(station => {
+    const matchesSearch = station.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === "all" || station.type === filterType;
+    return matchesSearch && matchesType;
+  });
 
-    alert(
-      `Đặt chỗ thành công!\nTrạm: ${booking.type}\nĐịa điểm: ${booking.location}\nThời gian: ${booking.time}\nThanh toán: ${booking.payment}`
-    );
+  // khi nhập input
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const locationsToShow = selectedType
-    ? selectedType.locations.map((loc) => ({ ...loc, type: selectedType }))
-    : stationTypes.flatMap((t) =>
-        t.locations.map((loc) => ({ ...loc, type: t }))
-      );
+  // khi chọn trạm từ danh sách
+  const handleStationSelect = (station) => {
+    setSelectedStation(station);
+  };
 
-  useEffect(() => {
-      window.scrollTo(0, 0);
-    }, []);
+  // khi bấm nút đặt chỗ
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedStation) {
+      alert("⚠️ Vui lòng chọn một trạm trên bản đồ!");
+      return;
+    }
+    // chuyển sang trang payment, truyền state
+    navigate("/payment", { state: { station: selectedStation, formData } });
+  };
 
   return (
-    <div className="booking-layout">
-      {/* Bên trái: Form + trạng thái + lịch sử */}
-      <div className="left-panel">
-        <h1>Đăng ký sạc</h1>
+    <div className="booking-wrapper">
+      <div className="booking-container">
+        {/* Form bên trái */}
+        <div className="left-panel">
+          <h1>Đăng ký sạc</h1>
 
-        <h2>Chọn loại trạm</h2>
-        <div className="type-list">
-          {stationTypes.map((type) => (
-            <button
-              key={type.id}
-              className={`type-btn ${
-                selectedType?.id === type.id ? "active" : ""
-              }`}
-              onClick={() => {
-                setSelectedType(type);
-                setSelectedLocation(null);
-              }}
-            >
-              ⚡ {type.name} <br />
-              <small>
-                {type.speed} | {type.price}
-              </small>
-            </button>
-          ))}
+          {selectedStation ? (
+            <form className="booking-form" onSubmit={handleSubmit}>
+              <div className="station-info">
+                <p><b>Trạm:</b> {selectedStation.name}</p>
+                <p><b>Công suất:</b> {selectedStation.speed}</p>
+                <p><b>Giá:</b> {selectedStation.price}</p>
+              </div>
+
+              <label>
+                Ngày sạc:
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
+
+              <label>
+                Giờ bắt đầu:
+                <input
+                  type="time"
+                  name="startTime"
+                  value={formData.startTime}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
+
+              <button type="submit" className="book-btn">
+                Đặt chỗ & Thanh toán
+              </button>
+
+              <button
+                type="button"
+                className="change-station-btn"
+                onClick={() => setSelectedStation(null)}
+              >
+                🔄 Chọn trạm khác
+              </button>
+            </form>
+          ) : (
+            <div className="station-selection">
+              <p className="hint">🔍 Chọn một trạm sạc để đặt chỗ</p>
+
+              {/* Tìm kiếm và lọc */}
+              <div className="search-filters">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm trạm sạc..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="all">Tất cả loại</option>
+                  <option value="AC">AC (Sạc chậm)</option>
+                  <option value="DC">DC (Sạc nhanh)</option>
+                </select>
+              </div>
+
+              {/* Danh sách trạm sạc */}
+              <div className="stations-list">
+                {filteredStations.map((station) => (
+                  <div
+                    key={station.id}
+                    className={`station-card ${station.type.toLowerCase()}`}
+                    onClick={() => handleStationSelect(station)}
+                  >
+                    <div className="station-header">
+                      <h3>{station.name}</h3>
+                      <span className={`station-type ${station.type.toLowerCase()}`}>
+                        {station.type}
+                      </span>
+                    </div>
+                    <div className="station-details">
+                      <p>⚡ {station.speed}</p>
+                      <p>💰 {station.price}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {filteredStations.length === 0 && (
+                <p className="no-results">Không tìm thấy trạm sạc nào</p>
+              )}
+            </div>
+          )}
         </div>
 
-        {selectedLocation && (
-          <div className="summary">
-            <p>
-              <b>Loại trạm:</b> {selectedLocation.type?.name}
-            </p>
-            <p>
-              <b>Địa điểm:</b> {selectedLocation.name}
-            </p>
-            <p>
-              <b>Tốc độ:</b> {selectedLocation.type?.speed}
-            </p>
-            <p>
-              <b>Giá:</b> {selectedLocation.type?.price}
-            </p>
-          </div>
-        )}
-
-        <label>Thời gian sạc:</label>
-        <input
-          type="datetime-local"
-          value={time}
-          min={getNowFormatted()}
-          onChange={(e) => setTime(e.target.value)}
-        />
-
-        <label>Phương thức thanh toán:</label>
-        <select value={payment} onChange={(e) => setPayment(e.target.value)}>
-          <option value="ewallet">Ví điện tử</option>
-          <option value="bank">Ngân hàng</option>
-          <option value="subscription">Gói thuê bao</option>
-        </select>
-
-        <button className="book-btn" onClick={handleBooking}>
-          Đặt chỗ & Thanh toán
-        </button>
-
-        {/* Trạng thái sạc */}
-        {chargingStatus && (
-          <div className="status-box">
-            <h3>🔋 Trạng thái sạc hiện tại</h3>
-            <p>
-              <b>Trạm:</b> {chargingStatus.type}
-            </p>
-            <p>
-              <b>Địa điểm:</b> {chargingStatus.location}
-            </p>
-            <p>
-              <b>Thời gian:</b> {chargingStatus.time}
-            </p>
-            <p>
-              <b>Trạng thái:</b> {chargingStatus.status}
-            </p>
-          </div>
-        )}
-
-        {/* Lịch sử đặt chỗ */}
-        {history.length > 0 && (
-          <div className="history-box">
-            <h3>📜 Lịch sử đặt chỗ</h3>
-            <ul>
-              {history.map((h, i) => (
-                <li key={i}>
-                  {h.type} - {h.location} - {h.time} ({h.status})
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      {/* Bên phải: Map */}
-      <div className="right-panel">
-        <h2>Bản đồ trạm sạc</h2>
-        <div className="map-container">
-          <img src="/src/config/assets/map.jpg" alt="Bản đồ" className="map-image" />
-
-          {locationsToShow.map((loc) => (
-            <button
-              key={`${loc.type.id}-${loc.id}`}
-              className={`map-marker ${
-                selectedLocation?.id === loc.id &&
-                selectedLocation?.type?.id === loc.type.id
-                  ? "active"
-                  : ""
-              }`}
-              style={{
-                top: loc.coords.top,
-                left: loc.coords.left,
-              }}
-              onClick={() => setSelectedLocation(loc)}
-            >
-              📍
-            </button>
-          ))}
+        {/* Map bên phải */}
+        <div className="right-panel">
+          <ChargingMap
+            stations={stations}
+            center={[10.939, 106.813]}
+            zoom={15}
+            onSelect={setSelectedStation}
+            selectedStation={selectedStation}
+          />
         </div>
       </div>
     </div>
