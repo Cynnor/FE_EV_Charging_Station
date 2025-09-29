@@ -125,6 +125,53 @@ body {
   font-weight: 300;
   font-size: 1.2rem;
 }
+
+.header__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 2px solid #7ed321;
+  border-radius: 24px;
+  padding: 4px 8px;
+}
+
+.header__avatar-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.header__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #7ed321;
+  transition: transform 0.2s;
+}
+
+.header__avatar:hover {
+  transform: scale(1.1);
+}
+
+.header__logout-btn {
+  background: transparent;
+  color: #222;
+  border: none;
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  border-radius: 18px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.header__logout-btn:hover {
+  background: #7ed321;
+  color: #fff;
+}
+
 .header__lang-toggle {
   background: #fff;
   border: 1px solid #e0e0e0;
