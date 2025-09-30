@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://ev-charging-management-latest.onrender.com",
+  baseURL: "https://private-eve-evchargingstation-7d82d2a9.koyeb.app",
   headers: {
     "Content-Type": "application/json",
   },

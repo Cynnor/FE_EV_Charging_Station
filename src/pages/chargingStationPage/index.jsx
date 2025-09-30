@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import React, { useEffect } from "react";
+import React from "react";
 import "./index.scss";
 import AC10 from "../../assets/AC10.jpg";
 import sacAC4 from "../../assets/sacAC4.jpg";
@@ -79,6 +79,7 @@ function TitleSupport() {
 }
 /* ----- Trang chính hiển thị danh sách ----- */
 function ChargingStationsPage() {
+
   const stations = [
     {
       image: AC10,
@@ -119,9 +120,7 @@ function ChargingStationsPage() {
     },
   ];
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  // Không kiểm tra login, chỉ hiển thị danh sách và nút điều hướng sang booking
 
   return (
     <div>

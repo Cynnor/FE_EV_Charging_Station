@@ -121,6 +121,8 @@ const HomePage = () => {
     });
   };
 
+  // Nút đặt chỗ sẽ dẫn thẳng đến trang booking (không check login)
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -252,12 +254,10 @@ const HomePage = () => {
                       <div className="station-price">{station.price}</div>
                     </div>
                     <div className="station-actions">
-                      <Link to="/booking">
+                      <Link to="/charging-stations">
                         <button className="btn-small btn-primary">Đặt chỗ</button>
                       </Link>
-                      <button className="btn-small btn-secondary">
-                        Chi tiết
-                      </button>
+                      <button className="btn-small btn-secondary">Chi tiết</button>
                     </div>
                   </div>
                 ))}
