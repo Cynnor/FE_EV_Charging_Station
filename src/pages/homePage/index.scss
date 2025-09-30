@@ -420,89 +420,14 @@
 
 .map-view {
   position: relative;
-  background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+  background: #f8f9fa;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.map-placeholder {
-  position: relative;
-  width: 100%;
   height: 100%;
 }
 
-.map-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  z-index: 1;
-  
-  .map-icon {
-    font-size: 4rem;
-    margin-bottom: 16px;
-  }
-  
-  p {
-    font-size: 1.2rem;
-    color: #666;
-    font-weight: 500;
-    margin: 0;
-  }
-}
-
-.map-markers {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-}
-
-.map-marker {
-  position: absolute;
-  font-size: 1.8rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-  
-  &:hover {
-    transform: scale(1.3);
-  }
-  
-  &.marker-1 {
-    top: 25%;
-    left: 30%;
-    color: #28a745;
-  }
-  
-  &.marker-2 {
-    top: 45%;
-    left: 50%;
-    color: #dc3545;
-  }
-  
-  &.marker-3 {
-    top: 70%;
-    left: 25%;
-    color: #28a745;
-  }
-  
-  &.marker-4 {
-    top: 35%;
-    left: 70%;
-    color: #ffc107;
-  }
-  
-  &.marker-5 {
-    top: 60%;
-    left: 65%;
-    color: #28a745;
-  }
-}
+// Map styles đã được thay thế bằng ChargingMap component
 
 // Quick Search Section
 .homepage__search {
@@ -712,34 +637,12 @@
   }
 }
 
-// Map marker colors
-.map-marker {
-  // ...existing code...
-  
-  &.available {
-    color: #28a745;
-  }
-  
-  &.busy {
-    color: #dc3545;
-  }
-  
-  &.maintenance {
-    color: #ffc107;
-  }
-}
-
-// Highlight selected station and active marker
+// Highlight selected station
 .station-item.is-selected {
   background: #f7fff0;
   border-radius: 12px;
   box-shadow: 0 6px 18px rgba(126, 211, 33, 0.18);
   outline: 2px solid rgba(126, 211, 33, 0.4);
-}
-
-.map-marker.active {
-  transform: scale(1.3);
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
 }
 
 // Station list layout and styles
