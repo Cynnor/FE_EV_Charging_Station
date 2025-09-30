@@ -71,6 +71,22 @@
           box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
         }
       }
+
+      select {
+        margin-top: 5px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #fff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: #28a745;
+          box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+        }
+      }
     }
 
     .book-btn {

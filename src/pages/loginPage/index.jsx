@@ -5,6 +5,7 @@ import { FcGoogle } from "react-icons/fc"
 import { Eye, EyeOff, Zap } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import "./login.scss"
+import { useLocation } from "react-router-dom";
 
 export default function Login() {
   const [username, setUsername] = useState("")
@@ -21,6 +22,9 @@ export default function Login() {
       setIsSuccess(false)
       return
     }
+
+    const location = useLocation();
+    const redirectTo = location.state?.redirectTo || "/";
 
     setIsLoading(true)
     try {
@@ -48,14 +52,14 @@ export default function Login() {
       console.log("Login response:", data)
 
       if (data.success && data.data && data.data.token) {
-  setMessage("Đăng nhập thành công!")
-  setIsSuccess(true)
-  localStorage.setItem("token", data.data.token)
-  navigate("/") 
-} else {
-  setMessage(data.message || "Phản hồi không hợp lệ từ server!")
-  setIsSuccess(false)
-}
+        setMessage("Đăng nhập thành công!")
+        setIsSuccess(true)
+        localStorage.setItem("token", data.data.token)
+        navigate("/")
+      } else {
+        setMessage(data.message || "Phản hồi không hợp lệ từ server!")
+        setIsSuccess(false)
+      }
 
     } catch (error) {
       console.error(error)

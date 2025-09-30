@@ -1,0 +1,131 @@
+.payment-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0fad6 0%, #eafbcf 100%);
+    padding-top: 80px;
+    font-family: "Arial", sans-serif;
+}
+
+.payment-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    padding: 20px;
+}
+
+.left,
+.right {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+}
+
+.summary-card,
+.plan-card,
+.payment-methods,
+.total-card {
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+h1,
+h3 {
+    margin: 0 0 12px 0;
+    color: #144d1a;
+}
+
+.plan-types {
+    display: flex;
+    gap: 16px;
+}
+
+.plan-inputs {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+
+    &.grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    input,
+    select {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+}
+
+.price-note {
+    color: #666;
+    font-size: 13px;
+}
+
+.methods {
+    display: grid;
+    gap: 8px;
+}
+
+.total-card .row {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+}
+
+.total-card .value {
+    font-weight: bold;
+}
+
+.pay-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #28a745;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.back-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.invoice {
+    margin-top: 16px;
+    background: #f8fff2;
+    border: 1px solid #d8f2c0;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.grand-total {
+    font-size: 18px;
+    color: #1f7a2e;
+}
+
+.invoice-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+    .payment-container {
+        grid-template-columns: 1fr;
+    }
+}
