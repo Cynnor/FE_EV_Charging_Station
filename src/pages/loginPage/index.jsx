@@ -1,57 +1,58 @@
-"use client"
+"use client";
 
 import { useState } from "react"
 import { FcGoogle } from "react-icons/fc"
 import { Eye, EyeOff, Zap } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import "./login.scss"
-import { useLocation } from "react-router-dom";
+
 
 export default function Login() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [message, setMessage] = useState("")
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     if (!username || !password) {
-      setMessage("Vui lòng nhập đầy đủ Username và Password!")
-      setIsSuccess(false)
-      return
+      setMessage("Vui lòng nhập đầy đủ Username và Password!");
+      setIsSuccess(false);
+      return;
     }
 
-    const location = useLocation();
-    const redirectTo = location.state?.redirectTo || "/";
-
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const res = await fetch("https://ev-charging-management-latest.onrender.com/users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      })
+      const res = await fetch(
+        "https://ev-charging-management-latest.onrender.com/users/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, password }),
+        }
+      );
 
       if (!res.ok) {
         if (res.status === 401) {
-          setMessage("Sai tài khoản hoặc mật khẩu!")
+          setMessage("Sai tài khoản hoặc mật khẩu!");
         } else if (res.status === 400) {
-          setMessage("Dữ liệu không hợp lệ!")
+          setMessage("Dữ liệu không hợp lệ!");
         } else {
-          setMessage("Lỗi server!")
+          setMessage("Lỗi server!");
         }
-        setIsSuccess(false)
-        return
+        setIsSuccess(false);
+        return;
       }
 
-      const data = await res.json()
-      console.log("Login response:", data)
+      const data = await res.json();
+      console.log("Login response:", data);
 
       if (data.success && data.data && data.data.token) {
+
         setMessage("Đăng nhập thành công!")
         setIsSuccess(true)
         localStorage.setItem("token", data.data.token)
@@ -62,24 +63,24 @@ export default function Login() {
       }
 
     } catch (error) {
-      console.error(error)
-      setMessage("Lỗi khi gọi API!")
-      setIsSuccess(false)
+      console.error(error);
+      setMessage("Lỗi khi gọi API!");
+      setIsSuccess(false);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleLogin = () => {
-    setMessage("Đăng nhập với Google thành công!")
-    setIsSuccess(true)
-  }
+    setMessage("Đăng nhập với Google thành công!");
+    setIsSuccess(true);
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      handleLogin()
+      handleLogin();
     }
-  }
+  };
 
   return (
     <div className="login-page">
@@ -217,5 +218,5 @@ export default function Login() {
         </div>
       </div>
     </div>
-  )
+  );
 }
