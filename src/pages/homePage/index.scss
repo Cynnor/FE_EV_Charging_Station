@@ -22,7 +22,7 @@
 .homepage__hero-content {
   flex: 1;
   animation: fadeInLeft 1s ease-out;
-  
+
   h1 {
     font-size: 3.5rem;
     font-weight: 800;
@@ -32,6 +32,7 @@
     letter-spacing: -0.02em;
     animation: fadeInUp 1s ease-out 0.2s both;
   }
+
   p {
     font-size: 1.3rem;
     color: #636e72;
@@ -57,20 +58,50 @@
   position: relative;
   animation: fadeInRight 1s ease-out 0.3s both;
 }
+.logo-image {
+  width: 150px;       /* Kích thước logo */
+  height: 150px;      /* Chiều cao = chiều rộng để tạo hình tròn */
+  border-radius: 50%; /* Biến ảnh thành hình tròn */
+  object-fit: cover;  /* Cắt ảnh vừa với khung mà không méo */
+  display: block;     /* Tránh khoảng trống */
+}
 
 .hero-visual {
   position: relative;
   width: 400px;
   height: 400px;
   background: linear-gradient(135deg, #81C784, #66BB6A);
-  border-radius: 50%;
+  border-radius: 50%; // Logo tròn
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 30px 60px rgba(102, 187, 106, 0.3);
-  animation: float 6s ease-in-out infinite;
-  
-  .charging-station, .dashboard, .mobile-app {
+
+  // Xóa animation float cho logo
+  // animation: float 6s ease-in-out infinite;
+
+  // Icon nhỏ vẫn có animation bình thường
+  .charging-station,
+  .dashboard,
+  .mobile-app {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+  .charging-station,
+  .dashboard,
+  .mobile-app {
     position: absolute;
     width: 70px;
     height: 70px;
@@ -80,14 +111,14 @@
     align-items: center;
     justify-content: center;
     font-size: 2.2rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     transition: transform 0.3s ease;
-    
+
     &:hover {
       transform: scale(1.2);
     }
   }
-  
+
   .charging-station {
     top: 15px;
     right: 50px;
@@ -95,6 +126,7 @@
     color: white;
     animation: bounce 2s ease-in-out infinite;
   }
+
   .dashboard {
     bottom: 50px;
     left: 30px;
@@ -102,6 +134,7 @@
     color: white;
     animation: bounce 2s ease-in-out infinite 0.5s;
   }
+
   .mobile-app {
     top: 50%;
     right: -30px;
@@ -118,6 +151,7 @@
     opacity: 0;
     transform: translateX(-50px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -129,6 +163,7 @@
     opacity: 0;
     transform: translateX(50px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -140,6 +175,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -147,21 +183,31 @@
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-20px);
   }
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
     transform: translateY(0);
   }
+
   40% {
     transform: translateY(-10px);
   }
+
   60% {
     transform: translateY(-5px);
   }
@@ -171,9 +217,11 @@
   0% {
     box-shadow: 0 0 0 0 rgba(102, 187, 106, 0.7);
   }
+
   70% {
     box-shadow: 0 0 0 20px rgba(102, 187, 106, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(102, 187, 106, 0);
   }
@@ -193,12 +241,23 @@
 .stat-item {
   text-align: center;
   animation: fadeInUp 0.8s ease-out both;
-  
-  &:nth-child(1) { animation-delay: 0.2s; }
-  &:nth-child(2) { animation-delay: 0.4s; }
-  &:nth-child(3) { animation-delay: 0.6s; }
-  &:nth-child(4) { animation-delay: 0.8s; }
-  
+
+  &:nth-child(1) {
+    animation-delay: 0.2s;
+  }
+
+  &:nth-child(2) {
+    animation-delay: 0.4s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.6s;
+  }
+
+  &:nth-child(4) {
+    animation-delay: 0.8s;
+  }
+
   .stat-number {
     font-size: 2.5rem;
     font-weight: 700;
@@ -206,6 +265,7 @@
     margin-bottom: 8px;
     animation: countUp 2s ease-out 1s both;
   }
+
   .stat-label {
     font-size: 1rem;
     color: #666;
@@ -218,6 +278,7 @@
     transform: scale(0.5);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
@@ -234,12 +295,14 @@
 .section-header {
   text-align: center;
   margin-bottom: 64px;
+
   h2 {
     font-size: 2.5rem;
     font-weight: 700;
     color: #222;
     margin-bottom: 16px;
   }
+
   p {
     font-size: 1.2rem;
     color: #666;
@@ -257,35 +320,52 @@
   padding: 40px 32px;
   border-radius: 20px;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s, box-shadow 0.3s;
-  animation: fadeInUp 0.8s ease-out both;
-  
-  &:nth-child(1) { animation-delay: 0.1s; }
-  &:nth-child(2) { animation-delay: 0.2s; }
-  &:nth-child(3) { animation-delay: 0.3s; }
-  &:nth-child(4) { animation-delay: 0.4s; }
-  &:nth-child(5) { animation-delay: 0.5s; }
-  &:nth-child(6) { animation-delay: 0.6s; }
-  
+
+
+  &:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+
+  &:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  &:nth-child(4) {
+    animation-delay: 0.4s;
+  }
+
+  &:nth-child(5) {
+    animation-delay: 0.5s;
+  }
+
+  &:nth-child(6) {
+    animation-delay: 0.6s;
+  }
+
   &:hover {
     transform: translateY(-8px);
-    box-shadow: 0 16px 48px rgba(0,0,0,0.12);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
     animation: pulse 2s infinite;
   }
-  
+
   .feature-icon {
     font-size: 3rem;
     margin-bottom: 24px;
   }
-  
+
   h3 {
     font-size: 1.5rem;
     font-weight: 600;
     color: #222;
     margin-bottom: 16px;
   }
-  
+
   p {
     font-size: 1rem;
     color: #666;
@@ -304,7 +384,7 @@
   box-shadow: 0 12px 40px rgba(126, 211, 33, 0.3);
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -312,10 +392,10 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
     animation: float 6s ease-in-out infinite;
   }
-  
+
   h2 {
     font-size: 2.2rem;
     font-weight: 700;
@@ -323,7 +403,7 @@
     position: relative;
     z-index: 2;
   }
-  
+
   p {
     font-size: 1.1rem;
     margin-bottom: 40px;
@@ -334,7 +414,7 @@
     position: relative;
     z-index: 2;
   }
-  
+
   .cta-buttons {
     display: flex;
     gap: 20px;
@@ -346,11 +426,14 @@
 }
 
 @keyframes float {
-  0%, 100% { 
-    transform: translateY(0px) rotate(0deg); 
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
   }
-  50% { 
-    transform: translateY(-20px) rotate(180deg); 
+
+  50% {
+    transform: translateY(-20px) rotate(180deg);
   }
 }
 
@@ -367,25 +450,25 @@
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-  
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+
   &--primary {
     background: linear-gradient(135deg, #66BB6A, #4CAF50);
     color: #fff;
     border: 2px solid transparent;
-    
+
     &:hover {
       background: linear-gradient(135deg, #4CAF50, #388E3C);
       transform: translateY(-3px);
       box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
     }
   }
-  
+
   &--secondary {
     background: transparent;
     color: #66BB6A;
     border: 2px solid #66BB6A;
-    
+
     &:hover {
       background: #66BB6A;
       color: #fff;
@@ -393,7 +476,7 @@
       box-shadow: 0 10px 30px rgba(102, 187, 106, 0.3);
     }
   }
-  
+
   &--large {
     padding: 18px 48px;
     font-size: 1.2rem;
@@ -408,22 +491,73 @@
 }
 
 .map-container {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 0;
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-  overflow: hidden;
+  display: flex;
   height: 500px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.station-list {
+  width: 300px;
+  background: #fff;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.station-list h3 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.station-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.station-item {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.station-item.is-selected {
+  background-color: #f0f8ff;
+  border-color: #3399ff;
+}
+
+.station-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.station-details {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.station-actions button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #3399ff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 .map-view {
-  position: relative;
-  background: #f8f9fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex: 1;
   height: 100%;
 }
 
@@ -442,9 +576,9 @@
   background: #fff;
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   text-align: center;
-  
+
   h2 {
     font-size: 1.8rem;
     font-weight: 600;
@@ -457,7 +591,7 @@
   display: flex;
   gap: 16px;
   margin-bottom: 24px;
-  
+
   input {
     flex: 1;
     padding: 12px 20px;
@@ -466,16 +600,16 @@
     font-size: 1rem;
     outline: none;
     transition: border-color 0.2s;
-    
+
     &:focus {
       border-color: #7ed321;
     }
-    
+
     &::placeholder {
       color: #999;
     }
   }
-  
+
   .search-btn {
     background: #7ed321;
     color: #fff;
@@ -485,7 +619,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
-    
+
     &:hover {
       background: #6bb81d;
     }
@@ -506,8 +640,9 @@
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.2s;
-  
-  &:hover, &.active {
+
+  &:hover,
+  &.active {
     background: #7ed321;
     border-color: #7ed321;
     color: #fff;
@@ -541,21 +676,21 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &.btn-primary {
     background: #7ed321;
     color: #fff;
-    
+
     &:hover {
       background: #6bb81d;
     }
   }
-  
+
   &.btn-secondary {
     background: transparent;
     color: #7ed321;
     border: 1px solid #7ed321;
-    
+
     &:hover {
       background: #7ed321;
       color: #fff;
@@ -582,15 +717,26 @@
   padding: 32px 20px;
   background: #fff;
   border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s;
-  animation: fadeInUp 0.8s ease-out both;
-  
-  &:nth-child(1) { animation-delay: 0.1s; }
-  &:nth-child(2) { animation-delay: 0.2s; }
-  &:nth-child(3) { animation-delay: 0.3s; }
-  &:nth-child(4) { animation-delay: 0.4s; }
-  
+
+
+  &:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+
+  &:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  &:nth-child(4) {
+    animation-delay: 0.4s;
+  }
+
   .step-number {
     width: 70px;
     height: 70px;
@@ -606,19 +752,19 @@
     box-shadow: 0 4px 16px rgba(126, 211, 33, 0.3);
     animation: rotateIn 1s ease-out both;
     animation-delay: inherit;
-    
+
     &:hover {
       animation: pulse 1.5s infinite;
     }
   }
-  
+
   h3 {
     font-size: 1.2rem;
     font-weight: 600;
     color: #222;
     margin-bottom: 12px;
   }
-  
+
   p {
     color: #666;
     line-height: 1.5;
@@ -631,6 +777,7 @@
     transform: rotate(-200deg) scale(0);
     opacity: 0;
   }
+
   to {
     transform: rotate(0) scale(1);
     opacity: 1;
@@ -718,22 +865,34 @@
   align-items: center;
   gap: 4px;
 
-  &.status-available { 
-    background: #dcfce7; 
+  &.status-available {
+    background: #dcfce7;
     color: #16a34a;
-    &::before { content: "●"; color: #22c55e; }
+
+    &::before {
+      content: "●";
+      color: #22c55e;
+    }
   }
-  
-  &.status-busy { 
-    background: #fee2e2; 
+
+  &.status-busy {
+    background: #fee2e2;
     color: #dc2626;
-    &::before { content: "●"; color: #ef4444; }
+
+    &::before {
+      content: "●";
+      color: #ef4444;
+    }
   }
-  
-  &.status-maintenance { 
-    background: #fef3c7; 
+
+  &.status-maintenance {
+    background: #fef3c7;
     color: #d97706;
-    &::before { content: "●"; color: #f59e0b; }
+
+    &::before {
+      content: "●";
+      color: #f59e0b;
+    }
   }
 }
 
@@ -781,23 +940,23 @@
   border: 1px solid;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &.btn-primary {
     background: #7ed321;
     border-color: #7ed321;
     color: #fff;
-    
+
     &:hover {
       background: #6bb81d;
       border-color: #6bb81d;
     }
   }
-  
+
   &.btn-secondary {
     background: transparent;
     color: #7ed321;
     border-color: #7ed321;
-    
+
     &:hover {
       background: #7ed321;
       color: #fff;
@@ -812,117 +971,141 @@
     text-align: center;
     gap: 48px;
     min-height: 60vh;
-    
+
     h1 {
       font-size: 2.8rem;
     }
-    
+
     p {
       font-size: 1.1rem;
       max-width: none;
     }
   }
-  
-  .hero-visual {
-    width: 320px;
-    height: 320px;
-    
-    .charging-station, .dashboard, .mobile-app {
-      width: 60px;
-      height: 60px;
-      font-size: 1.8rem;
-    }
-  }
-  
-  .btn {
-    padding: 14px 32px;
-    font-size: 1rem;
-    
-    &--large {
-      padding: 16px 40px;
-      font-size: 1.1rem;
-    }
-  }
-  
-  .map-container {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
-  
-  .map-view {
-    height: 300px;
-  }
-  
-  .station-list h3 {
-    padding: 16px 16px 12px 16px;
-    font-size: 1rem;
-  }
-  
-  .station-item {
-    padding: 14px 16px;
-  }
-  
-  .station-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    
-    h4 {
-      font-size: 0.95rem;
-    }
-  }
-  
-  .station-status {
-    align-self: flex-start;
-  }
-  
-  .station-details {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-  
-  .station-actions {
-    width: 100%;
-    
-    .btn-small {
-      flex: 1;
-      text-align: center;
-    }
-  }
-}
 
-@media (max-width: 600px) {
-  .homepage__hero {
-    gap: 32px;
-    
-    h1 {
+  .hero-visual {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #81C784, #66BB6A);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 30px 60px rgba(102, 187, 106, 0.3);
+
+    /* Xóa dòng animation để không xoay/tỏa */
+    // animation: float 6s ease-in-out infinite;
+
+    .charging-station,
+    .dashboard,
+    .mobile-app {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 2.2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.2);
+      }
     }
-  }
-  
-  .hero-visual {
-    width: 280px;
-    height: 280px;
-  }
-  
-  .homepage__hero-actions {
-    flex-direction: column;
-    align-items: center;
-    
+
     .btn {
+      padding: 14px 32px;
+      font-size: 1rem;
+
+      &--large {
+        padding: 16px 40px;
+        font-size: 1.1rem;
+      }
+    }
+
+    .map-container {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+
+    .map-view {
+      height: 300px;
+    }
+
+    .station-list h3 {
+      padding: 16px 16px 12px 16px;
+      font-size: 1rem;
+    }
+
+    .station-item {
+      padding: 14px 16px;
+    }
+
+    .station-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+
+      h4 {
+        font-size: 0.95rem;
+      }
+    }
+
+    .station-status {
+      align-self: flex-start;
+    }
+
+    .station-details {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .station-actions {
       width: 100%;
-      max-width: 280px;
+
+      .btn-small {
+        flex: 1;
+        text-align: center;
+      }
     }
   }
 
-  .cta-buttons {
-    flex-direction: column;
-    align-items: center;
-  }
+  @media (max-width: 600px) {
+    .homepage__hero {
+      gap: 32px;
 
-  // Fix: use the correct grid class and avoid nested @media
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
+      h1 {
+        font-size: 2.2rem;
+      }
+    }
+
+    .hero-visual {
+      width: 280px;
+      height: 280px;
+    }
+
+    .homepage__hero-actions {
+      flex-direction: column;
+      align-items: center;
+
+      .btn {
+        width: 100%;
+        max-width: 280px;
+      }
+    }
+
+    .cta-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    // Fix: use the correct grid class and avoid nested @media
+    .features-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 }
