@@ -44,7 +44,7 @@ export default function BookingPage() {
       <div className="booking-container">
         {/* Form bên trái */}
         <div className="left-panel">
-          <h1>Đăng ký sạc</h1>
+          <h1>Thuê trụ sạc</h1>
           {selectedStation ? (
             <form className="booking-form" onSubmit={handleSubmit}>
               <div className="station-info">
