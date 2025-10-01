@@ -38,9 +38,9 @@ function MapController({ selectedStation }) {
 
 export default function ChargingMap({ stations, center, zoom = 15, onSelect, selectedStation }) {
   return (
-    <div style={{ 
-      width: "100%", 
-      height: "100%", 
+    <div style={{
+      width: "100%",
+      height: "100%",
       position: "absolute",
       top: 0,
       left: 0
@@ -48,42 +48,42 @@ export default function ChargingMap({ stations, center, zoom = 15, onSelect, sel
       <MapContainer
         center={center}
         zoom={zoom}
-        style={{ 
+        style={{
           height: "100%", // Chiếm 100% chiều cao của div cha
           width: "100%"
         }}
       >
-      {/* Style bản đồ (có thể đổi sang dark/light tuỳ thích) */}
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-        attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OSM</a> &copy; <a href='https://carto.com/'>CARTO</a>"
-        subdomains={["a", "b", "c", "d"]}
-      />
+        {/* Style bản đồ (có thể đổi sang dark/light tuỳ thích) */}
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OSM</a> &copy; <a href='https://carto.com/'>CARTO</a>"
+          subdomains={["a", "b", "c", "d"]}
+        />
 
-      {/* Component điều khiển zoom */}
-      <MapController selectedStation={selectedStation} />
+        {/* Component điều khiển zoom */}
+        <MapController selectedStation={selectedStation} />
 
-      {/* Render các trạm */}
-      {stations.map((station) => {
-        const isSelected = selectedStation && selectedStation.id === station.id;
-        return (
-          <Marker
-            key={station.id}
-            position={station.coords}
-            icon={isSelected ? selectedMarkerIcon : markerIcon}
-            eventHandlers={{
-              click: () => onSelect && onSelect(station),
-            }}
-          >
-            <Popup>
-              <b>{station.name}</b> <br />
-              ⚡ {station.speed} <br />
-              💰 {station.price}
-              {isSelected && <><br /><span style={{ color: 'red', fontWeight: 'bold' }}>✓ Đã chọn</span></>}
-            </Popup>
-          </Marker>
-        );
-      })}
+        {/* Render các trạm */}
+        {stations.map((station) => {
+          const isSelected = selectedStation && selectedStation.id === station.id;
+          return (
+            <Marker
+              key={station.id}
+              position={station.coords}
+              icon={isSelected ? selectedMarkerIcon : markerIcon}
+              eventHandlers={{
+                click: () => onSelect && onSelect(station),
+              }}
+            >
+              <Popup>
+                <b>{station.name}</b> <br />
+                ⚡ {station.speed} <br />
+                💰 {station.price}
+                {isSelected && <><br /><span style={{ color: 'red', fontWeight: 'bold' }}>✓ Đã chọn</span></>}
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );
