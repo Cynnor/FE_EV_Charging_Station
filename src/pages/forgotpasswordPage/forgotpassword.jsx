@@ -1,5 +1,7 @@
 import { useState } from "react"
 import { KeyRound, Mail, Shield, ArrowLeft } from "lucide-react"
+import { Link } from "react-router-dom"
+import api from "../../config/api";
 import "./forgot.scss"
 
 export default function ForgotPassword() {
@@ -18,19 +20,12 @@ export default function ForgotPassword() {
 
     setIsLoading(true)
     try {
-      const res = await fetch(
-        "https://ev-charging-management-latest.onrender.com/users/password/forgot",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      )
-
-      const data = await res.json()
+      
+      const res = await api.post("/users/password/forgot", { email })
+      const data = res.data
       console.log("Forgot password response:", data)
 
-      if (!res.ok) {
+      if (!data.success) {
         setMessage(data.message || "Có lỗi xảy ra từ server!")
         return
       }
@@ -38,10 +33,14 @@ export default function ForgotPassword() {
       setMessage(data.message || "OTP đã được gửi về email")
       setStep(2)
     } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setMessage(err.response.data.message)
+      } else {
+        setMessage("Không thể kết nối tới server!")
+      }
       console.error("Forgot password error:", err)
-      setMessage("Không thể kết nối tới server!")
     } finally {
-      setIsLoading(false) // ✅ luôn tắt loading dù thành công hay thất bại
+      setIsLoading(false)
     }
   }
 
@@ -53,19 +52,12 @@ export default function ForgotPassword() {
 
     setIsLoading(true)
     try {
-      const res = await fetch(
-        "https://ev-charging-management-latest.onrender.com/users/password/reset",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ otp, newPassword }),
-        }
-      )
-
-      const data = await res.json()
+     
+      const res = await api.post("/users/password/reset", { email, otp, newPassword })
+      const data = res.data
       console.log("Reset password response:", data)
 
-      if (!res.ok) {
+      if (!data.success) {
         setMessage(data.message || "Đặt lại mật khẩu thất bại!")
         return
       }
@@ -78,10 +70,14 @@ export default function ForgotPassword() {
         setNewPassword("")
       }, 2000)
     } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setMessage(err.response.data.message)
+      } else {
+        setMessage("Không thể đặt lại mật khẩu!")
+      }
       console.error("Reset password error:", err)
-      setMessage("Không thể đặt lại mật khẩu!")
     } finally {
-      setIsLoading(false) // ✅ không bị xoay mãi
+      setIsLoading(false)
     }
   }
 
@@ -95,18 +91,13 @@ export default function ForgotPassword() {
     }
   }
 
-  const handleBackToLogin = () => {
-    // TODO: thay navigate("/login") nếu bạn có react-router
-    console.log("Navigate to login page")
-  }
-
   return (
     <div className="forgot-password-page">
       <div className="bg-elements">
         <div className="floating-shapes">
           <div className="shape shape-1"></div>
           <div className="shape shape-2"></div>
-          <div className="shape shape-3"></div>
+          <div className="shape shape-3"></div> 
         </div>
         <div className="gradient-overlay"></div>
       </div>
@@ -157,14 +148,16 @@ export default function ForgotPassword() {
                 <div className="input-group">
                   <label className="input-label">Email</label>
                   <div className="input-wrapper">
-                    <Mail className="input-icon" size={18} />
+                    {}
+                    <Mail className="input-icon" size={25} />
                     <input
                       type="email"
                       placeholder="Nhập email của bạn"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => setEmail(e.target.value)}x
                       onKeyPress={handleKeyPress}
                       className="form-input"
+                      
                     />
                   </div>
                 </div>
@@ -191,6 +184,7 @@ export default function ForgotPassword() {
                 <div className="input-group">
                   <label className="input-label">Mã OTP</label>
                   <div className="input-wrapper">
+                    {}
                     <Shield className="input-icon" size={18} />
                     <input
                       type="text"
@@ -199,6 +193,7 @@ export default function ForgotPassword() {
                       onChange={(e) => setOtp(e.target.value)}
                       onKeyPress={handleKeyPress}
                       className="form-input"
+                      
                     />
                   </div>
                 </div>
@@ -206,6 +201,7 @@ export default function ForgotPassword() {
                 <div className="input-group">
                   <label className="input-label">Mật khẩu mới</label>
                   <div className="input-wrapper">
+                    {}
                     <KeyRound className="input-icon" size={18} />
                     <input
                       type="password"
@@ -214,6 +210,7 @@ export default function ForgotPassword() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       onKeyPress={handleKeyPress}
                       className="form-input"
+                      
                     />
                   </div>
                 </div>
@@ -245,13 +242,16 @@ export default function ForgotPassword() {
               </div>
             )}
 
-            <button className="btn-back" onClick={handleBackToLogin}>
+            {}
+            <Link to="/login" className="btn-back">
               <ArrowLeft size={18} />
               Quay lại đăng nhập
-            </button>
+            </Link>
           </div>
         </div>
       </div>
     </div>
   )
 }
+          
+          

@@ -8,7 +8,7 @@ body {
 .header {
   width: 100%;
   background: transparent;
-  padding: 24px 0 0 0;
+  padding: 20px 0 0 0;
   position: fixed;
   top: 0;
   left: 0;
@@ -19,106 +19,143 @@ body {
   width: 100%;
   display: flex;
   justify-content: center;
+  padding: 0 20px;
 }
 
 .header__container {
   max-width: 1200px;
-  background: #fff;
-  border-radius: 40px;
-  box-shadow: 0 0 24px 0 #d6f5b3;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 50px;
+  box-shadow: 0 8px 32px rgba(126, 211, 33, 0.15);
+  border: 1px solid rgba(126, 211, 33, 0.2);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
-  gap: 32px;
+  padding: 16px 32px;
+  gap: 40px;
+  transition: all 0.3s ease;
+}
+
+.header__container:hover {
+  box-shadow: 0 12px 40px rgba(126, 211, 33, 0.2);
+  transform: translateY(-2px);
 }
 
 .header__logo {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 200px;
+  gap: 16px;
+  min-width: 220px;
 }
 
 .header__logo-img {
-  height: 48px;
-  width: 48px;
+  height: 52px;
+  width: 52px;
   border-radius: 50%;
   background: #fff;
   object-fit: contain;
-  box-shadow: 0 2px 8px #d6f5b3;
+  box-shadow: 0 4px 16px rgba(126, 211, 33, 0.3);
+  transition: transform 0.3s ease;
 }
 
+<<<<<<< HEAD
+.header__logo-img:hover {
+  transform: scale(1.05);
+}
+
+=======
+>>>>>>> origin/main
 .header__logo-text {
   display: flex;
   flex-direction: column;
 }
 
+<<<<<<< HEAD
+.header__logo-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #222;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+=======
+>>>>>>> origin/main
 .header__logo-sub {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #666;
   line-height: 1.2;
   font-weight: 500;
+  margin-top: -2px;
 }
 
 .header__nav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 32px;
   flex: 1;
   justify-content: center;
 }
 
 .header__nav a,
 .header__nav Link {
-  color: #222;
-  font-weight: 500;
+  color: #333;
+  font-weight: 600;
   text-decoration: none;
-  font-size: 1.08rem;
-  padding: 8px 0;
-  border-bottom: 2px solid transparent;
-  transition: color 0.2s, border-bottom 0.2s;
+  font-size: 1.05rem;
+  padding: 12px 20px;
+  border-radius: 25px;
+  position: relative;
+  transition: all 0.3s ease;
+  background: transparent;
 }
 
 .header__nav a:hover,
-.header__nav a.active,
-.header__nav Link:hover,
-.header__nav Link.active {
+.header__nav Link:hover {
   color: #7ed321;
-  border-bottom: none;
-  text-decoration: none;
+  background: rgba(126, 211, 33, 0.1);
+  transform: translateY(-1px);
+}
+
+.header__nav a.active,
+.header__nav Link.active {
+  color: #fff;
+  background: linear-gradient(135deg, #7ed321, #6bc91a);
+  box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
 }
 
 .header__actions {
   display: flex;
   align-items: center;
-  gap: 24px;
-  min-width: 200px;
+  gap: 16px;
+  min-width: 220px;
   justify-content: flex-end;
-  margin-left: 32px;
 }
 
 .header__auth {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   border: 2px solid #7ed321;
-  border-radius: 24px;
-  padding: 4px 8px;
-  gap: 8px;
+  border-radius: 30px;
+  padding: 6px 12px;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(126, 211, 33, 0.15);
 }
 
 .header__login,
 .header__register {
   background: transparent;
-  color: #222;
+  color: #333;
   border: none;
-  padding: 6px 12px;
+  padding: 8px 16px;
   font-weight: 600;
   cursor: pointer;
   font-size: 0.95rem;
-  border-radius: 18px;
-  transition: background 0.2s, color 0.2s;
+  border-radius: 20px;
+  transition: all 0.3s ease;
   text-decoration: none;
   display: inline-block;
 }
@@ -127,6 +164,7 @@ body {
 .header__register:hover {
   background: #7ed321;
   color: #fff;
+  transform: translateY(-1px);
 }
 
 .header__auth-divider {
@@ -139,10 +177,76 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   border: 2px solid #7ed321;
-  border-radius: 24px;
-  padding: 4px 8px;
+  border-radius: 30px;
+  padding: 6px 12px;
+  box-shadow: 0 4px 16px rgba(126, 211, 33, 0.15);
+}
+
+.header__notification-btn {
+  background: linear-gradient(135deg, #7ed321, #6bc91a);
+  border: none;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(126, 211, 33, 0.3);
+  width: 48px;
+  height: 48px;
+}
+
+.header__notification-btn:hover {
+  background: linear-gradient(135deg, #6bc91a, #5ab018);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(126, 211, 33, 0.4);
+}
+
+.header__notification-btn:active {
+  transform: translateY(0);
+}
+
+.header__notification-icon {
+  width: 26px;
+  height: 26px;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.header__notification-btn:hover .header__notification-icon {
+  transform: scale(1.1);
+}
+
+.header__notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: linear-gradient(135deg, #ff4757, #ff3838);
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
 }
 
 .header__avatar-link {
@@ -152,33 +256,37 @@ body {
 }
 
 .header__avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #7ed321;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
 }
 
 .header__avatar:hover {
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
 }
 
 .header__logout-btn {
   background: transparent;
-  color: #222;
+  color: #333;
   border: none;
-  padding: 6px 12px;
+  padding: 8px 16px;
   font-weight: 600;
   cursor: pointer;
   font-size: 0.95rem;
-  border-radius: 18px;
-  transition: background 0.2s, color 0.2s;
+  border-radius: 20px;
+  transition: all 0.3s ease;
 }
 
 .header__logout-btn:hover {
   background: #7ed321;
   color: #fff;
+<<<<<<< HEAD
+  transform: translateY(-1px);
+=======
 }
 
 .header__lang-toggle {
@@ -205,32 +313,105 @@ body {
 
 .lang-flag.active {
   opacity: 1;
+>>>>>>> origin/main
 }
 
 @media (max-width: 900px) {
+  .header__wrapper {
+    padding: 0 16px;
+  }
+  
   .header__container {
     flex-direction: column;
-    gap: 16px;
-    padding: 16px;
+    gap: 20px;
+    padding: 20px;
+    border-radius: 40px;
   }
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> origin/main
   .header__logo,
   .header__actions {
     min-width: unset;
   }
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> origin/main
   .header__nav {
-    gap: 20px;
+    gap: 24px;
     flex-wrap: wrap;
     justify-content: center;
   }
+<<<<<<< HEAD
+  
+  .header__nav a,
+  .header__nav Link {
+    padding: 10px 16px;
+    font-size: 1rem;
+  }
+  
+=======
 
+>>>>>>> origin/main
   .header__actions {
     justify-content: center;
-    margin-left: 0;
+  }
+  
+  .header__user {
+    gap: 12px;
+  }
+  
+  .header__notification-btn {
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+  }
+  
+  .header__notification-icon {
+    width: 24px;
+    height: 24px;
   }
 }
 
+<<<<<<< HEAD
+@media (max-width: 600px) {
+  .header__container {
+    padding: 16px;
+  }
+  
+  .header__logo-title {
+    font-size: 1.2rem;
+  }
+  
+  .header__nav {
+    gap: 16px;
+  }
+  
+  .header__nav a,
+  .header__nav Link {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .header__notification-btn {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+  }
+  
+  .header__notification-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    border: 2px solid #fff;
+  }
+}
+=======
 .header__actions {
   justify-content: center;
 }
+>>>>>>> origin/main
