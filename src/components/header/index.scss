@@ -60,15 +60,19 @@ body {
   transition: transform 0.3s ease;
 }
 
+<<<<<<< HEAD
 .header__logo-img:hover {
   transform: scale(1.05);
 }
 
+=======
+>>>>>>> origin/main
 .header__logo-text {
   display: flex;
   flex-direction: column;
 }
 
+<<<<<<< HEAD
 .header__logo-title {
   font-size: 1.4rem;
   font-weight: 700;
@@ -77,6 +81,8 @@ body {
   line-height: 1.2;
 }
 
+=======
+>>>>>>> origin/main
 .header__logo-sub {
   font-size: 0.85rem;
   color: #666;
@@ -278,7 +284,36 @@ body {
 .header__logout-btn:hover {
   background: #7ed321;
   color: #fff;
+<<<<<<< HEAD
   transform: translateY(-1px);
+=======
+}
+
+.header__lang-toggle {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: box-shadow 0.2s;
+}
+
+.header__lang-toggle:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lang-flag {
+  font-size: 1.2rem;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.lang-flag.active {
+  opacity: 1;
+>>>>>>> origin/main
 }
 
 @media (max-width: 900px) {
@@ -292,17 +327,26 @@ body {
     padding: 20px;
     border-radius: 40px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> origin/main
   .header__logo,
   .header__actions {
     min-width: unset;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> origin/main
   .header__nav {
     gap: 24px;
     flex-wrap: wrap;
     justify-content: center;
   }
+<<<<<<< HEAD
   
   .header__nav a,
   .header__nav Link {
@@ -310,6 +354,9 @@ body {
     font-size: 1rem;
   }
   
+=======
+
+>>>>>>> origin/main
   .header__actions {
     justify-content: center;
   }
@@ -330,6 +377,7 @@ body {
   }
 }
 
+<<<<<<< HEAD
 @media (max-width: 600px) {
   .header__container {
     padding: 16px;
@@ -362,3 +410,8 @@ body {
     border: 2px solid #fff;
   }
 }
+=======
+.header__actions {
+  justify-content: center;
+}
+>>>>>>> origin/main

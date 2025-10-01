@@ -16,6 +16,8 @@ import Login from "./pages/loginPage";
 import Register from "./pages/registerPage";
 import BookingPage from "./pages/bookingPage";
 import ProfilePage from "./pages/profilePage/ProfilePage";
+import PaymentPage from "./pages/PaymentPage";
+
 
 
 function App() {
@@ -30,6 +32,7 @@ function App() {
         { path: "support", element: <SupportPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "booking", element: <BookingPage /> },
+        { path: "payment", element: <PaymentPage /> },
       ],
     },
     {

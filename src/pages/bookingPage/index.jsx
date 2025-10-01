@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import ChargingMap from "../../components/ChargingMap"
@@ -210,7 +208,6 @@ const amenityIcons = {
 
 export default function BookingPage() {
   const navigate = useNavigate()
-
   const today = new Date()
   const defaultDate = today.toISOString().split("T")[0]
   const defaultTime = today.toTimeString().slice(0, 5)
@@ -220,6 +217,7 @@ export default function BookingPage() {
   const [selectedCharger, setSelectedCharger] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
+
   const [formData, setFormData] = useState({
     date: defaultDate,
     startTime: defaultTime,
@@ -374,6 +372,26 @@ export default function BookingPage() {
 
           {step === 1 && (
             <div className="station-selection">
+              {/* Hiển thị thông tin trạm đã chọn ở đầu step 1 */}
+              {selectedStation && (
+                <div
+                  className="selected-station-summary"
+                  style={{
+                    margin: "0 0 16px 0",
+                    padding: "12px",
+                    background: "#f0fdf4",
+                    borderRadius: "10px",
+                  }}
+                >
+                  <strong>Trạm đã chọn:</strong>
+                  <div>Tên: {selectedStation.name}</div>
+                  <div>Địa chỉ: {selectedStation.address}</div>
+                  <div>Công suất: {selectedStation.speed}</div>
+                  <div>Giá: {selectedStation.price}</div>
+                  <div>Giờ mở cửa: {selectedStation.hours}</div>
+                  <div>Khoảng cách: {selectedStation.distance}</div>
+                </div>
+              )}
               <div className="search-filters">
                 <div className="search-box">
                   <svg className="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -414,11 +432,10 @@ export default function BookingPage() {
                 {filteredStations.map((station) => (
                   <div
                     key={station.id}
-                    className={`station-card ${station.type.toLowerCase()}`}
-                    onClick={() => {
-                      setSelectedStation(station)
-                      setStep(2)
-                    }}
+                    className={`station-card ${station.type.toLowerCase()}${
+                      selectedStation?.id === station.id ? " selected" : ""
+                    }`}
+                    onClick={() => setSelectedStation(station)}
                   >
                     <div className="station-card-header">
                       <div className="station-badge">
@@ -509,6 +526,26 @@ export default function BookingPage() {
                   </div>
                 ))}
               </div>
+
+              {selectedStation && (
+                <button
+                  className="btn-next-step"
+                  style={{
+                    marginTop: "18px",
+                    padding: "12px 24px",
+                    background: "#10b981",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setStep(2)}
+                >
+                  Tiếp tục chọn trụ &rarr;
+                </button>
+              )}
 
               {filteredStations.length === 0 && (
                 <div className="no-results">
@@ -769,10 +806,7 @@ export default function BookingPage() {
                   stations={stations}
                   center={[10.850268581807446, 106.76508926692969]}
                   zoom={13}
-                  onSelect={(s) => {
-                    setSelectedStation(s)
-                    setStep(2)
-                  }}
+                  onSelect={(s) => setSelectedStation(s)}
                   selectedStation={selectedStation}
                 />
               )}
@@ -798,3 +832,4 @@ export default function BookingPage() {
     </div>
   )
 }
+

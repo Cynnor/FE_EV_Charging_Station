@@ -6,22 +6,27 @@ import api from "../../config/api";
 import "./login.scss"
 
 export default function Login() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [message, setMessage] = useState("")
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Lấy redirect từ query string nếu có
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get("redirect") || "/";
 
   const handleLogin = async () => {
     if (!username || !password) {
-      setMessage("Vui lòng nhập đầy đủ Username và Password!")
-      setIsSuccess(false)
-      return
+      setMessage("Vui lòng nhập đầy đủ Username và Password!");
+      setIsSuccess(false);
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       
       const res = await api.post("/users/login", { username, password })
@@ -47,27 +52,26 @@ export default function Login() {
         } else if (error.response.status === 400) {
           setMessage("Dữ liệu không hợp lệ!")
         } else {
-          setMessage("Lỗi server!")
+          setMessage("Lỗi server!");
         }
       } else {
         setMessage("Lỗi khi gọi API!")
       }
       setIsSuccess(false)
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleLogin = () => {
-    setMessage("Đăng nhập với Google thành công!")
-    setIsSuccess(true)
-  }
+    setMessage("Đăng nhập với Google thành công!");
+    setIsSuccess(true);
+    navigate(decodeURIComponent(redirectPath));
+  };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleLogin()
-    }
-  }
+    if (e.key === "Enter") handleLogin();
+  };
 
   return (
     <div className="login-page">
@@ -208,3 +212,4 @@ export default function Login() {
   )
 }
            
+
