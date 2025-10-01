@@ -3,9 +3,8 @@
 import { useState } from "react"
 import { FcGoogle } from "react-icons/fc"
 import { Eye, EyeOff, Zap } from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import "./login.scss"
-
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -15,6 +14,11 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Lấy redirect từ query string nếu có
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get("redirect") || "/";
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -29,9 +33,7 @@ export default function Login() {
         "https://ev-charging-management-latest.onrender.com/users/login",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password }),
         }
       );
@@ -52,14 +54,15 @@ export default function Login() {
       console.log("Login response:", data);
 
       if (data.success && data.data && data.data.token) {
+        localStorage.setItem("token", data.data.token);
+        setMessage("Đăng nhập thành công!");
+        setIsSuccess(true);
 
-        setMessage("Đăng nhập thành công!")
-        setIsSuccess(true)
-        localStorage.setItem("token", data.data.token)
-        navigate("/")
+        // Redirect về trang trước khi login (hoặc về home nếu không có)
+        navigate(decodeURIComponent(redirectPath));
       } else {
-        setMessage(data.message || "Phản hồi không hợp lệ từ server!")
-        setIsSuccess(false)
+        setMessage(data.message || "Phản hồi không hợp lệ từ server!");
+        setIsSuccess(false);
       }
 
     } catch (error) {
@@ -74,12 +77,11 @@ export default function Login() {
   const handleGoogleLogin = () => {
     setMessage("Đăng nhập với Google thành công!");
     setIsSuccess(true);
+    navigate(decodeURIComponent(redirectPath));
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleLogin();
-    }
+    if (e.key === "Enter") handleLogin();
   };
 
   return (
