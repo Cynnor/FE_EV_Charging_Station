@@ -1,9 +1,8 @@
-"use client"
-
 import { useState } from "react"
 import { FcGoogle } from "react-icons/fc"
 import { Eye, EyeOff, Zap } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
+import api from "../../config/api";
 import "./login.scss"
 
 export default function Login() {
@@ -24,42 +23,35 @@ export default function Login() {
 
     setIsLoading(true)
     try {
-      const res = await fetch("https://ev-charging-management-latest.onrender.com/users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      })
+      
+      const res = await api.post("/users/login", { username, password })
 
-      if (!res.ok) {
-        if (res.status === 401) {
+      
+      const data = res.data
+      console.log("Login response:", data)
+
+      if (data.success && data.data && data.data.token) {
+        setMessage("Đăng nhập thành công!")
+        setIsSuccess(true)
+        localStorage.setItem("token", data.data.token)
+        navigate("/") 
+      } else {
+        setMessage(data.message || "Phản hồi không hợp lệ từ server!")
+        setIsSuccess(false)
+      }
+    } catch (error) {
+      
+      if (error.response) {
+        if (error.response.status === 401) {
           setMessage("Sai tài khoản hoặc mật khẩu!")
-        } else if (res.status === 400) {
+        } else if (error.response.status === 400) {
           setMessage("Dữ liệu không hợp lệ!")
         } else {
           setMessage("Lỗi server!")
         }
-        setIsSuccess(false)
-        return
+      } else {
+        setMessage("Lỗi khi gọi API!")
       }
-
-      const data = await res.json()
-      console.log("Login response:", data)
-
-      if (data.success && data.data && data.data.token) {
-  setMessage("Đăng nhập thành công!")
-  setIsSuccess(true)
-  localStorage.setItem("token", data.data.token)
-  navigate("/") 
-} else {
-  setMessage(data.message || "Phản hồi không hợp lệ từ server!")
-  setIsSuccess(false)
-}
-
-    } catch (error) {
-      console.error(error)
-      setMessage("Lỗi khi gọi API!")
       setIsSuccess(false)
     } finally {
       setIsLoading(false)
@@ -215,3 +207,4 @@ export default function Login() {
     </div>
   )
 }
+           

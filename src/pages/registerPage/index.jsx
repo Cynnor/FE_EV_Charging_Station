@@ -1,8 +1,7 @@
-"use client"
-
 import { useState } from "react"
 import { Eye, EyeOff, UserPlus, Zap } from "lucide-react"
 import { FcGoogle } from "react-icons/fc"
+import api from "../../config/api";
 import "./register.scss"
 
 export default function Register() {
@@ -28,46 +27,42 @@ export default function Register() {
 
     // basic validation
     if (!username || !password || !email || !fullname) {
-      setMessage("⚠️ Vui lòng nhập đầy đủ: username, email, full name, password.")
+      setMessage(" Vui lòng nhập đầy đủ: username, email, full name, password.")
       return
     }
     if (!validateEmail(email)) {
-      setMessage("⚠️ Email không hợp lệ.")
+      setMessage(" Email không hợp lệ.")
       return
     }
     if (password.length < 6) {
-      setMessage("⚠️ Mật khẩu phải có ít nhất 6 ký tự.")
+      setMessage(" Mật khẩu phải có ít nhất 6 ký tự.")
       return
     }
 
     setIsLoading(true)
 
-    // build payload with exact keys BE expects (note: fullName with capital N)
+    
     const payload = {
       username: String(username),
       password: String(password),
       email: String(email),
-      fullName: String(fullname), // <- quan trọng: đúng key theo BE
-      dob: dob ? String(dob) : "", // giữ dạng string
+      fullName: String(fullname), 
+      dob: dob ? String(dob) : "", 
       address: String(address || ""),
     }
 
     console.log("Register payload:", payload)
 
     try {
-      const res = await fetch("https://ev-charging-management-latest.onrender.com/users/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
+      
+      const res = await api.post("/users/create", payload)
 
-      // đọc response body (bảo đảm không crash nếu body không phải JSON)
-      const data = await res.json().catch(() => ({}))
+      
+      const data = res.data
       console.log("Register response:", res.status, data)
 
-      if (res.ok) {
+      if (res.status === 200 || res.status === 201) {
         setMessage("✅ Đăng ký thành công! Chuyển sang trang đăng nhập...")
-        // clear form (nếu cần)
         setUsername("")
         setEmail("")
         setFullname("")
@@ -76,19 +71,23 @@ export default function Register() {
         setAddress("")
         setTimeout(() => (window.location.href = "/login"), 1200)
       } else {
-        // show server message nếu có
-        setMessage(data.message || `❌ Đăng ký thất bại (status ${res.status})`)
+        setMessage(data.message || ` Đăng ký thất bại (status ${res.status})`)
       }
     } catch (err) {
+      // axios trả về err.response nếu có
+      if (err.response && err.response.data && err.response.data.message) {
+        setMessage(err.response.data.message)
+      } else {
+        setMessage(" Lỗi khi gọi API hoặc kết nối bị chặn (xem console/network).")
+      }
       console.error(err)
-      setMessage("❌ Lỗi khi gọi API hoặc kết nối bị chặn (xem console/network).")
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleGoogleRegister = () => {
-    setMessage("🔑 Đăng ký với Google (chưa tích hợp)")
+    setMessage(" Đăng ký với Google (chưa tích hợp)")
   }
 
   return (
