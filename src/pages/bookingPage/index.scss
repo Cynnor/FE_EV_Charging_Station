@@ -120,6 +120,8 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
       }
 
+      
+
       .step-divider {
         flex: 1;
         height: 2px;
@@ -1181,6 +1183,7 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     position: relative;
   }
 }
+
 
 // Responsive
 @media (max-width: 1024px) {

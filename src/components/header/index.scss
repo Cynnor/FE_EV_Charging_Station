@@ -60,14 +60,17 @@ body {
   transition: transform 0.3s ease;
 }
 
+
 .header__logo-img:hover {
   transform: scale(1.05);
 }
+
 
 .header__logo-text {
   display: flex;
   flex-direction: column;
 }
+
 
 .header__logo-title {
   font-size: 1.4rem;
@@ -76,6 +79,7 @@ body {
   letter-spacing: 0.5px;
   line-height: 1.2;
 }
+
 
 .header__logo-sub {
   font-size: 0.85rem;
@@ -278,7 +282,11 @@ body {
 .header__logout-btn:hover {
   background: #7ed321;
   color: #fff;
+
+
   transform: translateY(-1px);
+
+  
 }
 
 @media (max-width: 900px) {
@@ -292,23 +300,35 @@ body {
     padding: 20px;
     border-radius: 40px;
   }
-  
+
+
+
+
+
+
+
   .header__logo,
   .header__actions {
     min-width: unset;
   }
-  
+
   .header__nav {
     gap: 24px;
     flex-wrap: wrap;
     justify-content: center;
   }
+
   
   .header__nav a,
   .header__nav Link {
     padding: 10px 16px;
     font-size: 1rem;
   }
+  
+
+
+
+
   
   .header__actions {
     justify-content: center;
@@ -329,6 +349,7 @@ body {
     height: 24px;
   }
 }
+
 
 @media (max-width: 600px) {
   .header__container {
@@ -362,3 +383,4 @@ body {
     border: 2px solid #fff;
   }
 }
+
