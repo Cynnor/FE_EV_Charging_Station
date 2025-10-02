@@ -1,0 +1,73 @@
+/* Reset cơ bản */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Container map chiếm toàn bộ màn hình */
+#root,
+body,
+html {
+    width: 100%;
+    height: 100%;
+}
+
+.charging-map-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Map chiếm toàn bộ div cha */
+.leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 0;
+}
+
+/* Popup */
+.leaflet-popup-content-wrapper {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.4;
+    padding: 8px 10px;
+    border-radius: 8px;
+}
+
+.leaflet-popup-content b {
+    font-weight: 600;
+}
+
+.leaflet-popup-tip {
+    background: #fff;
+}
+
+/* Marker hover animation */
+.leaflet-marker-icon {
+    transition: transform 0.2s ease;
+}
+
+.leaflet-marker-icon:hover {
+    transform: scale(1.1);
+    cursor: pointer;
+}
+
+/* Marker selected popup style */
+.selected-popup {
+    color: red;
+    font-weight: bold;
+}
+
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 768px) {
+    .leaflet-popup-content {
+        font-size: 12px;
+    }
+
+    .leaflet-marker-icon {
+        width: 20px !important;
+        height: 33px !important;
+    }
+}
