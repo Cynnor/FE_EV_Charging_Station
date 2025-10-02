@@ -146,7 +146,7 @@ const HomePage = () => {
          {/* Map + Station List */}
     <section className="homepage__map" ref={mapSectionRef}>
       <div className="section-header">
-            <h2>Bản đồ trụ sạc</h2>
+            <h2>Bản đồ trạm sạc</h2>
             <p>Tìm kiếm và xem thông tin chi tiết các trụ sạc gần bạn</p>
           </div>
       <div className="map-container">

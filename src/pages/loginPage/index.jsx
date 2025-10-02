@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { FcGoogle } from "react-icons/fc"
 import { Eye, EyeOff, Zap } from "lucide-react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
+import { Link, useNavigate} from "react-router-dom"
 import "./login.scss"
 
 export default function Login() {
@@ -14,7 +14,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
+  
 
   // Lấy redirect từ query string nếu có
   const searchParams = new URLSearchParams(location.search);
