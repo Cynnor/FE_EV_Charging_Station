@@ -19,8 +19,6 @@ import ProfilePage from "./pages/profilePage/ProfilePage";
 import PaymentPage from "./pages/PaymentPage";
 import MembershipPage from "./pages/MembershipPage";
 
-
-
 function App() {
   const router = createBrowserRouter([
     {

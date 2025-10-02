@@ -1,12 +1,48 @@
-<<<<<<< HEAD
-import { Link } from "react-router-dom";
-import React from "react";
-=======
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
->>>>>>> origin/main
 import "./index.scss";
+import { Link } from "react-router-dom";
+
+function ChargingStationCard({
+  image,
+  title,
+  sockets,
+  power,
+  plugTypes,
+  installTypes,
+  protection,
+}) {
+  return (
+    <div className="card">
+      <img src={image} alt={title} />
+      <h3>{title}</h3>
+      <ul>
+        <li>
+          <b>Cách lắp đặt:</b> {installTypes}
+        </li>
+        <li>
+          <b>Số lượng cổng:</b> {sockets}
+        </li>
+        <li>
+          <b>Công suất:</b> {power}
+        </li>
+        <li>
+          <b>Dạng ổ cắm:</b> {plugTypes}
+        </li>
+        <li>
+          <b>Bảo vệ:</b> {protection}
+        </li>
+      </ul>
+      <div className="card-actions">
+        <button className="btn-detail">Chi tiết</button>
+        <Link to="/booking">
+          <button className="btn-rent">Đặt chỗ</button>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 // Icon cho người dùng
 const userIcon = new L.Icon({
@@ -35,9 +71,20 @@ const ChangeView = ({ center, zoom }) => {
   return null;
 };
 
-const ChargingMap = ({ stations, center, zoom = 13, onSelect, userLocation, onUpdateLocation }) => {
+const ChargingMap = ({
+  stations,
+  center,
+  zoom = 13,
+  onSelect,
+  userLocation,
+  onUpdateLocation,
+}) => {
   return (
-    <MapContainer center={center} zoom={zoom} style={{ height: "100%", width: "100%" }}>
+    <MapContainer
+      center={center}
+      zoom={zoom}
+      style={{ height: "100%", width: "100%" }}
+    >
       <ChangeView center={center} zoom={zoom} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -56,8 +103,7 @@ const ChargingMap = ({ stations, center, zoom = 13, onSelect, userLocation, onUp
         >
           <Popup>
             <b>{station.name}</b>
-            <br />
-            ⚡ {station.speed}
+            <br />⚡ {station.speed}
             <br />
             💰 {station.price}
           </Popup>
@@ -81,8 +127,6 @@ const ChargingMap = ({ stations, center, zoom = 13, onSelect, userLocation, onUp
     </MapContainer>
   );
 };
-
-<<<<<<< HEAD
 /* ----- Hero section ----- */
 function ChargingStationHero() {
   return (
@@ -98,7 +142,7 @@ function ChargingStationHero() {
         </a>
       </div>
       <div className="hero-image">
-        <img src={Banner} alt="Banner EV Charging" />
+        <img src={"./src/assets/banner.jpg"} alt="Banner EV Charging" />
       </div>
     </section>
   );
@@ -114,10 +158,9 @@ function TitleSupport() {
 }
 /* ----- Trang chính hiển thị danh sách ----- */
 function ChargingStationsPage() {
-
   const stations = [
     {
-      image: AC10,
+      image: "./src/assets/sacAC4.jpg",
       title: "Trạm sạc xe máy xoay chiều AC 4 cổng",
       sockets: "4 cổng",
       power: "Tối đa 2000W / 1 cổng",
@@ -126,7 +169,7 @@ function ChargingStationsPage() {
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch",
     },
     {
-      image: sacAC4,
+      image: "./src/assets/AC10.jpg",
       title: "Trạm sạc xe máy xoay chiều AC 10 cổng",
       sockets: "10 cổng",
       power: "Tối đa 2000W / 1 cổng",
@@ -135,7 +178,7 @@ function ChargingStationsPage() {
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống nước IP54",
     },
     {
-      image: DC60,
+      image: "./src/assets/DC60.jpg",
       title: "Trạm sạc nhanh DC 60 kW",
       sockets: "3 cổng",
       power: "60 kW",
@@ -144,7 +187,7 @@ function ChargingStationsPage() {
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống sét",
     },
     {
-      image: DC120,
+      image: "./src/assets/DC120.jpg",
       title: "Trạm sạc nhanh DC 120 kW",
       sockets: "3 cổng",
       power: "120 kW",
@@ -177,6 +220,3 @@ function ChargingStationsPage() {
 }
 
 export default ChargingStationsPage;
-=======
-export default ChargingMap;
->>>>>>> origin/main

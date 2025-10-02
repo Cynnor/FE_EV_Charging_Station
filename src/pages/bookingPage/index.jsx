@@ -1,7 +1,7 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import ChargingMap from "../../components/ChargingMap"
-import "./index.scss"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "./index.scss";
+import ChargingMap from "../../components/chargingMap";
 
 const stations = [
   {
@@ -196,7 +196,7 @@ const stations = [
     hours: "24/7",
     amenities: ["wifi", "restroom", "parking"],
   },
-]
+];
 
 const amenityIcons = {
   wifi: "📶",
@@ -204,39 +204,42 @@ const amenityIcons = {
   restroom: "🚻",
   parking: "🅿️",
   shopping: "🛍️",
-}
+};
 
 export default function BookingPage() {
-  const navigate = useNavigate()
-  const today = new Date()
-  const defaultDate = today.toISOString().split("T")[0]
-  const defaultTime = today.toTimeString().slice(0, 5)
+  const navigate = useNavigate();
+  const today = new Date();
+  const defaultDate = today.toISOString().split("T")[0];
+  const defaultTime = today.toTimeString().slice(0, 5);
 
-  const [step, setStep] = useState(1)
-  const [selectedStation, setSelectedStation] = useState(null)
-  const [selectedCharger, setSelectedCharger] = useState(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterType, setFilterType] = useState("all")
+  const [step, setStep] = useState(1);
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [selectedCharger, setSelectedCharger] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
 
   const [formData, setFormData] = useState({
     date: defaultDate,
     startTime: defaultTime,
-  })
+  });
 
   const filteredStations = stations.filter((station) => {
     const matchesSearch =
       station.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      station.address.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = filterType === "all" || station.type === filterType
-    return matchesSearch && matchesType
-  })
+      station.address.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === "all" || station.type === filterType;
+    return matchesSearch && matchesType;
+  });
 
   const chargers = selectedStation
     ? [
         {
           id: 1,
           name: "Trụ A1",
-          coords: [selectedStation.coords[0] + 0.0002, selectedStation.coords[1]],
+          coords: [
+            selectedStation.coords[0] + 0.0002,
+            selectedStation.coords[1],
+          ],
           power: "7 kW",
           price: "3.500 đ/kWh",
           status: "available",
@@ -245,7 +248,10 @@ export default function BookingPage() {
         {
           id: 2,
           name: "Trụ A2",
-          coords: [selectedStation.coords[0], selectedStation.coords[1] + 0.0002],
+          coords: [
+            selectedStation.coords[0],
+            selectedStation.coords[1] + 0.0002,
+          ],
           power: "11 kW",
           price: "3.800 đ/kWh",
           status: "available",
@@ -254,7 +260,10 @@ export default function BookingPage() {
         {
           id: 3,
           name: "Trụ B1",
-          coords: [selectedStation.coords[0] - 0.0002, selectedStation.coords[1]],
+          coords: [
+            selectedStation.coords[0] - 0.0002,
+            selectedStation.coords[1],
+          ],
           power: "22 kW",
           price: "4.000 đ/kWh",
           status: "available",
@@ -263,7 +272,10 @@ export default function BookingPage() {
         {
           id: 4,
           name: "Trụ B2",
-          coords: [selectedStation.coords[0], selectedStation.coords[1] - 0.0002],
+          coords: [
+            selectedStation.coords[0],
+            selectedStation.coords[1] - 0.0002,
+          ],
           power: "30 kW",
           price: "4.200 đ/kWh",
           status: "occupied",
@@ -272,7 +284,10 @@ export default function BookingPage() {
         {
           id: 5,
           name: "Trụ C1",
-          coords: [selectedStation.coords[0] + 0.00015, selectedStation.coords[1] + 0.00015],
+          coords: [
+            selectedStation.coords[0] + 0.00015,
+            selectedStation.coords[1] + 0.00015,
+          ],
           power: "43 kW",
           price: "4.500 đ/kWh",
           status: "available",
@@ -281,7 +296,10 @@ export default function BookingPage() {
         {
           id: 6,
           name: "Trụ C2",
-          coords: [selectedStation.coords[0] - 0.00015, selectedStation.coords[1] + 0.00015],
+          coords: [
+            selectedStation.coords[0] - 0.00015,
+            selectedStation.coords[1] + 0.00015,
+          ],
           power: "50 kW",
           price: "4.800 đ/kWh",
           status: "available",
@@ -290,7 +308,10 @@ export default function BookingPage() {
         {
           id: 7,
           name: "Trụ D1",
-          coords: [selectedStation.coords[0] + 0.00015, selectedStation.coords[1] - 0.00015],
+          coords: [
+            selectedStation.coords[0] + 0.00015,
+            selectedStation.coords[1] - 0.00015,
+          ],
           power: "60 kW",
           price: "5.000 đ/kWh",
           status: "available",
@@ -299,7 +320,10 @@ export default function BookingPage() {
         {
           id: 8,
           name: "Trụ D2",
-          coords: [selectedStation.coords[0] - 0.00015, selectedStation.coords[1] - 0.00015],
+          coords: [
+            selectedStation.coords[0] - 0.00015,
+            selectedStation.coords[1] - 0.00015,
+          ],
           power: "90 kW",
           price: "5.200 đ/kWh",
           status: "maintenance",
@@ -308,7 +332,10 @@ export default function BookingPage() {
         {
           id: 9,
           name: "Trụ E1",
-          coords: [selectedStation.coords[0] + 0.00025, selectedStation.coords[1] - 0.0001],
+          coords: [
+            selectedStation.coords[0] + 0.00025,
+            selectedStation.coords[1] - 0.0001,
+          ],
           power: "120 kW",
           price: "5.500 đ/kWh",
           status: "available",
@@ -317,25 +344,28 @@ export default function BookingPage() {
         {
           id: 10,
           name: "Trụ E2",
-          coords: [selectedStation.coords[0] - 0.00025, selectedStation.coords[1] + 0.0001],
+          coords: [
+            selectedStation.coords[0] - 0.00025,
+            selectedStation.coords[1] + 0.0001,
+          ],
           power: "150 kW",
           price: "6.000 đ/kWh",
           status: "available",
           connector: "CCS2",
         },
       ]
-    : []
+    : [];
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!selectedStation || !selectedCharger) {
-      alert("⚠️ Vui lòng chọn trạm và trụ!")
-      return
+      alert("⚠️ Vui lòng chọn trạm và trụ!");
+      return;
     }
     navigate("/payment", {
       state: {
@@ -343,12 +373,14 @@ export default function BookingPage() {
         charger: selectedCharger,
         formData,
       },
-    })
-  }
+    });
+  };
 
   return (
     <div className="booking-wrapper">
-      <div className={`booking-container ${step === 3 ? "confirmation-mode" : ""}`}>
+      <div
+        className={`booking-container ${step === 3 ? "confirmation-mode" : ""}`}
+      >
         <div className="left-panel">
           <div className="panel-header">
             <h1>Đặt chỗ sạc xe</h1>
@@ -394,7 +426,13 @@ export default function BookingPage() {
               )}
               <div className="search-filters">
                 <div className="search-box">
-                  <svg className="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <svg
+                    className="search-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                  >
                     <path
                       d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM19 19l-4.35-4.35"
                       stroke="currentColor"
@@ -411,13 +449,20 @@ export default function BookingPage() {
                     className="search-input"
                   />
                   {searchTerm && (
-                    <button className="clear-search" onClick={() => setSearchTerm("")}>
+                    <button
+                      className="clear-search"
+                      onClick={() => setSearchTerm("")}
+                    >
                       ×
                     </button>
                   )}
                 </div>
 
-                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="filter-select">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="filter-select"
+                >
                   <option value="all">Tất cả loại trạm</option>
                   <option value="AC">⚡ AC - Sạc chậm</option>
                   <option value="DC">⚡⚡ DC - Sạc nhanh</option>
@@ -439,13 +484,25 @@ export default function BookingPage() {
                   >
                     <div className="station-card-header">
                       <div className="station-badge">
-                        <span className={`badge-type ${station.type.toLowerCase()}`}>
+                        <span
+                          className={`badge-type ${station.type.toLowerCase()}`}
+                        >
                           {station.type === "AC" ? "⚡ AC" : "⚡⚡ DC"}
                         </span>
                       </div>
                       <div className="station-distance">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 14 14"
+                          fill="none"
+                        >
+                          <path
+                            d="M7 1v12M1 7h12"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
                         </svg>
                         {station.distance}
                       </div>
@@ -457,7 +514,14 @@ export default function BookingPage() {
                     <div className="station-rating">
                       <div className="stars">
                         {[...Array(5)].map((_, i) => (
-                          <span key={i} className={i < Math.floor(station.rating) ? "star filled" : "star"}>
+                          <span
+                            key={i}
+                            className={
+                              i < Math.floor(station.rating)
+                                ? "star filled"
+                                : "star"
+                            }
+                          >
                             ★
                           </span>
                         ))}
@@ -496,7 +560,9 @@ export default function BookingPage() {
                         <span className="info-icon">🔌</span>
                         <div className="info-content">
                           <span className="info-label">Trụ sạc</span>
-                          <span className="info-value">{station.total} trụ</span>
+                          <span className="info-value">
+                            {station.total} trụ
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -505,7 +571,11 @@ export default function BookingPage() {
                       <span className="amenities-label">Tiện ích:</span>
                       <div className="amenities-list">
                         {station.amenities.map((amenity) => (
-                          <span key={amenity} className="amenity-icon" title={amenity}>
+                          <span
+                            key={amenity}
+                            className="amenity-icon"
+                            title={amenity}
+                          >
                             {amenityIcons[amenity]}
                           </span>
                         ))}
@@ -516,7 +586,11 @@ export default function BookingPage() {
                       <div className="availability-bar">
                         <div
                           className="availability-fill"
-                          style={{ width: `${(station.available / station.total) * 100}%` }}
+                          style={{
+                            width: `${
+                              (station.available / station.total) * 100
+                            }%`,
+                          }}
                         ></div>
                       </div>
                       <span className="availability-text">
@@ -550,14 +624,26 @@ export default function BookingPage() {
               {filteredStations.length === 0 && (
                 <div className="no-results">
                   <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                    <circle cx="32" cy="32" r="30" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-                    <path d="M32 20v16M32 44h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="30"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      opacity="0.2"
+                    />
+                    <path
+                      d="M32 20v16M32 44h.01"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                    />
                   </svg>
                   <p>Không tìm thấy trạm sạc phù hợp</p>
                   <button
                     onClick={() => {
-                      setSearchTerm("")
-                      setFilterType("all")
+                      setSearchTerm("");
+                      setFilterType("all");
                     }}
                   >
                     Xóa bộ lọc
@@ -584,7 +670,11 @@ export default function BookingPage() {
                 </button>
                 <h2>{selectedStation.name}</h2>
                 <div className="station-quick-info">
-                  <span className={`badge ${selectedStation.type.toLowerCase()}`}>{selectedStation.type}</span>
+                  <span
+                    className={`badge ${selectedStation.type.toLowerCase()}`}
+                  >
+                    {selectedStation.type}
+                  </span>
                   <span>⚡ {selectedStation.speed}</span>
                   <span>💰 {selectedStation.price}</span>
                 </div>
@@ -596,11 +686,13 @@ export default function BookingPage() {
                 {chargers.map((charger) => (
                   <div
                     key={charger.id}
-                    className={`charger-card ${charger.status} ${selectedCharger?.id === charger.id ? "selected" : ""}`}
+                    className={`charger-card ${charger.status} ${
+                      selectedCharger?.id === charger.id ? "selected" : ""
+                    }`}
                     onClick={() => {
                       if (charger.status === "available") {
-                        setSelectedCharger(charger)
-                        setStep(3)
+                        setSelectedCharger(charger);
+                        setStep(3);
                       }
                     }}
                   >
@@ -633,7 +725,9 @@ export default function BookingPage() {
 
                     <div className="charger-connector">
                       <span className="connector-label">Đầu cắm:</span>
-                      <span className="connector-type">{charger.connector}</span>
+                      <span className="connector-type">
+                        {charger.connector}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -660,7 +754,9 @@ export default function BookingPage() {
                 <div className="confirmation-header">
                   <div className="success-icon">✓</div>
                   <h2>Xác nhận đặt chỗ</h2>
-                  <p className="confirmation-subtitle">Vui lòng kiểm tra thông tin và xác nhận đặt chỗ của bạn</p>
+                  <p className="confirmation-subtitle">
+                    Vui lòng kiểm tra thông tin và xác nhận đặt chỗ của bạn
+                  </p>
                 </div>
 
                 <div className="confirmation-grid">
@@ -670,24 +766,33 @@ export default function BookingPage() {
                       <h3>Thông tin trạm sạc</h3>
                       <div className="summary-item">
                         <span className="summary-label">Tên trạm:</span>
-                        <span className="summary-value">{selectedStation.name}</span>
+                        <span className="summary-value">
+                          {selectedStation.name}
+                        </span>
                       </div>
                       <div className="summary-item">
                         <span className="summary-label">Địa chỉ:</span>
-                        <span className="summary-value">{selectedStation.address}</span>
+                        <span className="summary-value">
+                          {selectedStation.address}
+                        </span>
                       </div>
                       <div className="summary-item">
                         <span className="summary-label">Khoảng cách:</span>
-                        <span className="summary-value">{selectedStation.distance}</span>
+                        <span className="summary-value">
+                          {selectedStation.distance}
+                        </span>
                       </div>
                       <div className="summary-item">
                         <span className="summary-label">Giờ mở cửa:</span>
-                        <span className="summary-value">{selectedStation.hours}</span>
+                        <span className="summary-value">
+                          {selectedStation.hours}
+                        </span>
                       </div>
                       <div className="summary-item">
                         <span className="summary-label">Đánh giá:</span>
                         <span className="summary-value">
-                          ⭐ {selectedStation.rating} ({selectedStation.reviews} đánh giá)
+                          ⭐ {selectedStation.rating} ({selectedStation.reviews}{" "}
+                          đánh giá)
                         </span>
                       </div>
                     </div>
@@ -697,23 +802,33 @@ export default function BookingPage() {
                       <h3>Thông tin trụ sạc</h3>
                       <div className="summary-item">
                         <span className="summary-label">Trụ sạc:</span>
-                        <span className="summary-value">{selectedCharger.name}</span>
+                        <span className="summary-value">
+                          {selectedCharger.name}
+                        </span>
                       </div>
                       <div className="summary-item highlight-item">
                         <span className="summary-label">Công suất:</span>
-                        <span className="summary-value highlight">⚡ {selectedCharger.power}</span>
+                        <span className="summary-value highlight">
+                          ⚡ {selectedCharger.power}
+                        </span>
                       </div>
                       <div className="summary-item highlight-item">
                         <span className="summary-label">Giá:</span>
-                        <span className="summary-value highlight">💰 {selectedCharger.price}</span>
+                        <span className="summary-value highlight">
+                          💰 {selectedCharger.price}
+                        </span>
                       </div>
                       <div className="summary-item">
                         <span className="summary-label">Đầu cắm:</span>
-                        <span className="summary-value">{selectedCharger.connector}</span>
+                        <span className="summary-value">
+                          {selectedCharger.connector}
+                        </span>
                       </div>
                       <div className="summary-item">
                         <span className="summary-label">Trạng thái:</span>
-                        <span className="summary-value status-available">✓ Sẵn sàng</span>
+                        <span className="summary-value status-available">
+                          ✓ Sẵn sàng
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -727,8 +842,21 @@ export default function BookingPage() {
 
                       <div className="form-group">
                         <label htmlFor="date">
-                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <rect x="3" y="4" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 20 20"
+                            fill="none"
+                          >
+                            <rect
+                              x="3"
+                              y="4"
+                              width="14"
+                              height="14"
+                              rx="2"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            />
                             <path
                               d="M3 8h14M7 2v4M13 2v4"
                               stroke="currentColor"
@@ -750,9 +878,25 @@ export default function BookingPage() {
 
                       <div className="form-group">
                         <label htmlFor="startTime">
-                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" />
-                            <path d="M10 6v4l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 20 20"
+                            fill="none"
+                          >
+                            <circle
+                              cx="10"
+                              cy="10"
+                              r="8"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            />
+                            <path
+                              d="M10 6v4l3 2"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
                           </svg>
                           Giờ bắt đầu
                         </label>
@@ -767,11 +911,15 @@ export default function BookingPage() {
                       </div>
 
                       <div className="price-estimate">
-                        <div className="estimate-label">Ước tính chi phí (1 giờ):</div>
+                        <div className="estimate-label">
+                          Ước tính chi phí (1 giờ):
+                        </div>
                         <div className="estimate-value">
                           {(
                             (Number.parseFloat(selectedCharger.power) *
-                              Number.parseFloat(selectedCharger.price.replace(/[^\d]/g, ""))) /
+                              Number.parseFloat(
+                                selectedCharger.price.replace(/[^\d]/g, "")
+                              )) /
                             1000
                           ).toLocaleString("vi-VN")}{" "}
                           đ
@@ -780,7 +928,12 @@ export default function BookingPage() {
 
                       <button type="submit" className="submit-button">
                         <span>Xác nhận & Thanh toán</span>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                        >
                           <path
                             d="M4 10h12M12 6l4 4-4 4"
                             stroke="currentColor"
@@ -818,8 +971,8 @@ export default function BookingPage() {
                   zoom={17}
                   onSelect={(c) => {
                     if (c.status === "available") {
-                      setSelectedCharger(c)
-                      setStep(3)
+                      setSelectedCharger(c);
+                      setStep(3);
                     }
                   }}
                   selectedStation={selectedCharger}
@@ -830,6 +983,5 @@ export default function BookingPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
-
