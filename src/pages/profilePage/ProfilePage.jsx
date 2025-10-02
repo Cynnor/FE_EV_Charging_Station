@@ -72,7 +72,7 @@ const ProfilePage = () => {
     const newErrors = {};
 
     if (!userInfo.fullname?.trim()) {
-      newErrors.fullname = "Tên không được để trống";
+      newErrors.fullName = "Tên không được để trống";
     }
 
     if (!userInfo.phone?.trim()) {
@@ -130,9 +130,6 @@ const ProfilePage = () => {
         setOriginalUserInfo({ ...userInfo });
         setIsEditing(false);
         setErrors({});
-
-        // Optionally refresh data from server
-        // await fetchUserData();
       }
     } catch (error) {
       console.error("Error updating profile:", error);
