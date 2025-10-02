@@ -1,62 +1,70 @@
-import { useState, useEffect } from "react"
-import { Link, useLocation } from "react-router-dom"
-import api from "../../config/api"
-import "./index.scss"
-import "../../assets/logo.jpg"
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import api from "../../config/api";
+import "./index.scss";
+import "../../assets/logo.jpg";
 
 const Header = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [userName, setUserName] = useState("User")
-  const [notificationCount, setNotificationCount] = useState(3) // Mock notification count
-  const location = useLocation()
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState("User");
+  // const [notificationCount, setNotificationCount] = useState(3) // Mock notification count
+  const location = useLocation();
 
   // Kiểm tra token và lấy thông tin user
   useEffect(() => {
     const checkAuthStatus = async () => {
-      const token = localStorage.getItem("token")
-      setIsLoggedIn(!!token)
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
 
       if (token) {
         try {
-          const response = await api.get("/users/profile")
+          const response = await api.get("/users/profile");
           if (response.data.data) {
-            const name = String(response.data.data.fullname || response.data.data.email || "User")
-            setUserName(name)
+            const name = String(
+              response.data.data.fullname || response.data.data.email || "User"
+            );
+            setUserName(name);
           }
         } catch (error) {
-          console.error("Error fetching user data in header:", error)
-          setUserName("User")
+          console.error("Error fetching user data in header:", error);
+          setUserName("User");
         }
       }
-    }
+    };
 
-    checkAuthStatus()
-    window.addEventListener("storage", checkAuthStatus)
-    return () => window.removeEventListener("storage", checkAuthStatus)
-  }, [])
+    checkAuthStatus();
+    window.addEventListener("storage", checkAuthStatus);
+    return () => window.removeEventListener("storage", checkAuthStatus);
+  }, []);
 
   const isActive = (path) => {
-    return location.pathname === path
-  }
+    return location.pathname === path;
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    setIsLoggedIn(false)
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
     // Redirect về trang chủ sau khi đăng xuất
-    window.location.href = "/"
-  }
+    window.location.href = "/";
+  };
 
-  const handleNotificationClick = () => {
-    console.log("Notification clicked")
-    // Add your notification logic here
-  }
+  // const handleNotificationClick = () => {
+  //   console.log("Notification clicked")
+  //   // Add your notification logic here
+  // }
 
   return (
     <header className="header">
       <div className="header__wrapper">
         <div className="header__container">
           <div className="header__logo">
-            <img src="https://i.postimg.cc/15px6VJv/logo-part-1.png" alt="S. TOUCH Logo" className="header__logo-img" />
+            <Link to="/" className="header__logo-link">
+              <img
+                src="https://i.postimg.cc/15px6VJv/logo-part-1.png"
+                alt="S. TOUCH Logo"
+                className="header__logo-img"
+              />
+            </Link>
             <div className="header__logo-text">
               <span className="header__logo-title">S. TOUCH</span>
               <span className="header__logo-sub">Touch To Charge</span>
@@ -66,15 +74,24 @@ const Header = () => {
             <Link to="/" className={isActive("/") ? "active" : ""}>
               Trang chủ
             </Link>
-            <Link to="/charging-stations" className={isActive("/charging-stations") ? "active" : ""}>
-              Trụ sạc
+            <Link
+              to="/charging-stations"
+              className={isActive("/charging-stations") ? "active" : ""}
+            >
+              Đặt lịch sạc
             </Link>
             <Link to="/about" className={isActive("/about") ? "active" : ""}>
               Giới thiệu
             </Link>
-            <Link to="/support" className={isActive("/support") ? "active" : ""}>
-              Hỗ trợ
+            <Link to="/membership" className={isActive("/membership") ? "active" : ""}>
+              Gói dịch vụ
             </Link>
+            {/* <Link
+              to="/support"
+              className={isActive("/support") ? "active" : ""}
+            >
+              Hỗ trợ
+            </Link> */}
           </nav>
           <div className="header__actions">
             {!isLoggedIn ? (
@@ -91,7 +108,9 @@ const Header = () => {
               <div className="header__user">
                 <Link to="/profile" className="header__avatar-link">
                   <img
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=7ed321&color=fff`}
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      userName
+                    )}&background=7ed321&color=fff`}
                     alt="avatar"
                     className="header__avatar"
                   />
@@ -101,7 +120,7 @@ const Header = () => {
                 </button>
               </div>
             )}
-            {isLoggedIn && (
+            {/* {isLoggedIn && (
               <button className="header__notification-btn" onClick={handleNotificationClick} title="Thông báo">
                 <svg className="header__notification-icon" viewBox="0 0 24 24" fill="none">
                   <path
@@ -111,12 +130,12 @@ const Header = () => {
                 </svg>
                 {notificationCount > 0 && <span className="header__notification-badge">{notificationCount}</span>}
               </button>
-            )}
+            )} */}
           </div>
         </div>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;
