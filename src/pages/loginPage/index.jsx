@@ -1,10 +1,9 @@
-"use client";
-
-import { useState } from "react"
-import { FcGoogle } from "react-icons/fc"
-import { Eye, EyeOff, Zap } from "lucide-react"
-import { Link, useNavigate} from "react-router-dom"
-import "./login.scss"
+import { useState } from "react";
+import { FcGoogle } from "react-icons/fc";
+import { Eye, EyeOff, Zap } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import api from "../../config/api";
+import "./login.scss";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -13,8 +12,9 @@ export default function Login() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
-  
+  const location = useLocation();
 
   // Lấy redirect từ query string nếu có
   const searchParams = new URLSearchParams(location.search);
@@ -29,45 +29,33 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(
-        "https://ev-charging-management-latest.onrender.com/users/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
-        }
-      );
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          setMessage("Sai tài khoản hoặc mật khẩu!");
-        } else if (res.status === 400) {
-          setMessage("Dữ liệu không hợp lệ!");
-        } else {
-          setMessage("Lỗi server!");
-        }
-        setIsSuccess(false);
-        return;
-      }
-
-      const data = await res.json();
+      const res = await api.post("/users/login", { username, password });
+      const data = res.data;
       console.log("Login response:", data);
 
       if (data.success && data.data && data.data.token) {
-        localStorage.setItem("token", data.data.token);
         setMessage("Đăng nhập thành công!");
         setIsSuccess(true);
+        localStorage.setItem("token", data.data.token);
 
-        // Redirect về trang trước khi login (hoặc về home nếu không có)
+        // Chuyển tới redirectPath nếu có
         navigate(decodeURIComponent(redirectPath));
       } else {
         setMessage(data.message || "Phản hồi không hợp lệ từ server!");
         setIsSuccess(false);
       }
-
     } catch (error) {
-      console.error(error);
-      setMessage("Lỗi khi gọi API!");
+      if (error.response) {
+        if (error.response.status === 401) {
+          setMessage("Sai tài khoản hoặc mật khẩu!");
+        } else if (error.response.status === 400) {
+          setMessage("Dữ liệu không hợp lệ!");
+        } else {
+          setMessage("Lỗi server!");
+        }
+      } else {
+        setMessage("Lỗi khi gọi API!");
+      }
       setIsSuccess(false);
     } finally {
       setIsLoading(false);
@@ -113,16 +101,6 @@ export default function Login() {
               <span className="brand-highlight">EV</span> Charging Station
             </h1>
             <p>Tương lai xanh, di chuyển thông minh</p>
-            <div className="brand-features">
-              <div className="feature-item">
-                <Zap size={16} />
-                <span>Sạc nhanh</span>
-              </div>
-              <div className="feature-item">
-                <Zap size={16} />
-                <span>Thân thiện môi trường</span>
-              </div>
-            </div>
           </div>
         </div>
 

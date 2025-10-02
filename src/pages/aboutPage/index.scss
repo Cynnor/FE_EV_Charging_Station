@@ -2,34 +2,50 @@
   font-family: "Arial", sans-serif;
   color: #333;
 
+  /* Hero Banner Video */
   .about-banner {
-    background: url("https://greencharge.vn/wp-content/uploads/2023/04/greencharge-38.jpg") center/cover no-repeat;
-    height: 300px;
+    position: relative;
+    height: 500px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
+
+    .video-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
 
     .overlay {
-      padding: 40px;
-      border-radius: 12px;
+      position: relative;
+      z-index: 2;
       text-align: center;
       color: #fff;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 40px;
+      border-radius: 12px;
 
       h1 {
-        font-size: 36px;
-        margin-bottom: 10px;
+        font-size: 48px;
+        margin-bottom: 15px;
+        font-weight: 700;
       }
 
       p {
-        font-size: 18px;
+        font-size: 20px;
+        font-style: italic;
       }
     }
   }
 
-  /* Phần mô tả */
+  /* Giới thiệu */
   .about-intro {
-    padding: 60px 20px;
+    padding: 80px 20px;
     background: #f9fff4;
 
     .intro-flex {
@@ -42,9 +58,16 @@
 
     .intro-image {
       flex: 1;
+
       img {
-        max-width: 75%;
-        border-radius: 12px;
+        max-width: 100%;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+
+        &:hover {
+          transform: scale(1.03);
+        }
       }
     }
 
@@ -52,20 +75,62 @@
       flex: 1;
 
       h2 {
-        font-size: 28px;
+        font-size: 32px;
         color: #2e7d32;
         margin-bottom: 20px;
+        font-weight: 700;
         text-transform: uppercase;
       }
 
       p {
-        margin-bottom: 15px;
-        line-height: 1.6;
         font-size: 16px;
+        line-height: 1.7;
+        margin-bottom: 20px;
+        color: #444;
+      }
+
+      .slogan {
+        font-size: 20px;
+        font-style: italic;
+        font-weight: 600;
+        color: #1b5e20;
+        background: #e8f5e9;
+        padding: 10px 15px;
+        border-left: 5px solid #43a047;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        display: inline-block;
+      }
+
+      h3 {
+        font-size: 22px;
+        margin-top: 25px;
+        margin-bottom: 15px;
+        color: #2e7d32;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+
+        li {
+          margin-bottom: 15px;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          line-height: 1.5;
+          color: #333;
+
+          &::before {
+            content: "✔";
+            color: #43a047;
+            font-weight: bold;
+          }
+        }
       }
     }
 
-    /* Responsive: mobile thì ảnh lên trên, text xuống dưới */
     @media (max-width: 768px) {
       .intro-flex {
         flex-direction: column;
@@ -74,7 +139,7 @@
 
       .intro-content {
         h2 {
-          font-size: 24px;
+          font-size: 26px;
         }
       }
     }
@@ -82,27 +147,40 @@
 
   /* Đội ngũ */
   .about-team {
-    padding: 60px 20px;
+    padding: 80px 20px;
     background: #fff;
 
     h2 {
       text-align: center;
-      font-size: 28px;
+      font-size: 32px;
       margin-bottom: 40px;
       color: #2e7d32;
+      font-weight: 700;
     }
 
     .team-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
+      gap: 25px;
 
       .team-card {
         background: #f0fff4;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 30px 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+        &:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        }
+
+        .icon {
+          font-size: 40px;
+          color: #2e7d32;
+          margin-bottom: 15px;
+        }
 
         h3 {
           color: #388e3c;
@@ -113,6 +191,7 @@
         p {
           font-size: 14px;
           color: #555;
+          line-height: 1.6;
         }
       }
     }

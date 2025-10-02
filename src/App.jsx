@@ -17,8 +17,7 @@ import Register from "./pages/registerPage";
 import BookingPage from "./pages/bookingPage";
 import ProfilePage from "./pages/profilePage/ProfilePage";
 import PaymentPage from "./pages/PaymentPage";
-
-
+import MembershipPage from "./pages/MembershipPage";
 
 function App() {
   const router = createBrowserRouter([
@@ -33,6 +32,7 @@ function App() {
         { path: "profile", element: <ProfilePage /> },
         { path: "booking", element: <BookingPage /> },
         { path: "payment", element: <PaymentPage /> },
+        { path: "membership", element: <MembershipPage /> },
       ],
     },
     {

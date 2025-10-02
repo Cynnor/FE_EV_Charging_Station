@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../../config/api";
 import "./index.scss";
-import "../../assets/logo.jpg"
+import "../../assets/logo.jpg";
+
 const Header = () => {
-  const [currentLang, setCurrentLang] = useState("vi");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("User");
+  // const [notificationCount, setNotificationCount] = useState(3) // Mock notification count
   const location = useLocation();
 
   // Kiểm tra token và lấy thông tin user
@@ -36,10 +37,6 @@ const Header = () => {
     return () => window.removeEventListener("storage", checkAuthStatus);
   }, []);
 
-  const toggleLanguage = () => {
-    setCurrentLang(currentLang === "vi" ? "en" : "vi");
-  };
-
   const isActive = (path) => {
     return location.pathname === path;
   };
@@ -51,17 +48,25 @@ const Header = () => {
     window.location.href = "/";
   };
 
+  // const handleNotificationClick = () => {
+  //   console.log("Notification clicked")
+  //   // Add your notification logic here
+  // }
+
   return (
     <header className="header">
       <div className="header__wrapper">
         <div className="header__container">
           <div className="header__logo">
-            <img
-              src="https://i.postimg.cc/15px6VJv/logo-part-1.png"
-              alt="S. TOUCH Logo"
-              className="header__logo-img"
-            />
+            <Link to="/" className="header__logo-link">
+              <img
+                src="https://i.postimg.cc/15px6VJv/logo-part-1.png"
+                alt="S. TOUCH Logo"
+                className="header__logo-img"
+              />
+            </Link>
             <div className="header__logo-text">
+              <span className="header__logo-title">S. TOUCH</span>
               <span className="header__logo-sub">Touch To Charge</span>
             </div>
           </div>
@@ -73,17 +78,20 @@ const Header = () => {
               to="/charging-stations"
               className={isActive("/charging-stations") ? "active" : ""}
             >
-              Trụ sạc
+              Đặt lịch sạc
             </Link>
             <Link to="/about" className={isActive("/about") ? "active" : ""}>
               Giới thiệu
             </Link>
-            <Link
+            <Link to="/membership" className={isActive("/membership") ? "active" : ""}>
+              Gói dịch vụ
+            </Link>
+            {/* <Link
               to="/support"
               className={isActive("/support") ? "active" : ""}
             >
               Hỗ trợ
-            </Link>
+            </Link> */}
           </nav>
           <div className="header__actions">
             {!isLoggedIn ? (
@@ -112,18 +120,17 @@ const Header = () => {
                 </button>
               </div>
             )}
-            <button className="header__lang-toggle" onClick={toggleLanguage}>
-              <span
-                className={`lang-flag ${currentLang === "vi" ? "active" : ""}`}
-              >
-                🇻🇳
-              </span>
-              <span
-                className={`lang-flag ${currentLang === "en" ? "active" : ""}`}
-              >
-                🇺🇸
-              </span>
-            </button>
+            {/* {isLoggedIn && (
+              <button className="header__notification-btn" onClick={handleNotificationClick} title="Thông báo">
+                <svg className="header__notification-icon" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.37 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.64 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                {notificationCount > 0 && <span className="header__notification-badge">{notificationCount}</span>}
+              </button>
+            )} */}
           </div>
         </div>
       </div>

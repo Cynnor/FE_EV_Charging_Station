@@ -74,16 +74,19 @@ const HomePage = () => {
     setSelectedId(id);
   };
 
- const handleBooking = (stationId) => {
+ // Trong HomePage.jsx
+const handleBooking = (stationId) => {
   const token = localStorage.getItem("token");
   const redirectUrl = `/booking?station=${stationId}`;
   if (!token) {
-    // encode URL để tránh lỗi query string
+    // Nếu chưa login, chuyển sang login với redirect
     navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
   } else {
+    // Nếu đã login, chuyển trực tiếp đến booking
     navigate(redirectUrl);
   }
 };
+
 
   return (
     <div className="homepage">
