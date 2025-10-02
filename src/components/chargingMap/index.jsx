@@ -3,12 +3,16 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./index.scss";
+//import { useLocation } from "react-router-dom"
 
 // Icon user
 const userIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
   iconSize: [40, 40],
 });
+
+//const location = useLocation();
+
 
 // Icon station
 const stationIcon = new L.Icon({
