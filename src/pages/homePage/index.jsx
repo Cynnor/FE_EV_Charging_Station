@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ChargingMap from "../../components/chargingMap";
 import "./index.scss";
 
+// ===== Data =====
 const features = [
   { icon: "🗺️", title: "Tìm kiếm trụ sạc gần bạn", description: "Dễ dàng tìm kiếm các trụ sạc xe điện gần nhất với vị trí hiện tại của bạn trên bản đồ" },
   { icon: "⚡", title: "Thông tin chi tiết trụ sạc", description: "Xem thông tin đầy đủ về loại sạc, công suất, giá cả và tình trạng hoạt động" },
@@ -26,13 +27,34 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
     Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
+// ===== About Component (top-level) =====
+const About = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  return (
+    <section className="homepage__about">
+      <div className="section-header">
+        <h2>Về chúng tôi</h2>
+        <p>Ứng dụng tìm trạm sạc xe điện tiện lợi và nhanh chóng</p>
+      </div>
+      <p>
+        Chúng tôi cung cấp thông tin chi tiết các trạm sạc, hỗ trợ đặt trước và thanh toán tiện lợi.
+        Hơn 500 trạm sạc phủ khắp cả nước.
+      </p>
+    </section>
+  );
+};
+
+// ===== HomePage Component =====
 const HomePage = () => {
   const featuresRef = useRef(null);
   const stepsRef = useRef(null);
@@ -44,7 +66,6 @@ const HomePage = () => {
   const [nearbyStations, setNearbyStations] = useState([]);
   const navigate = useNavigate();
 
-  // Lấy vị trí người dùng
   const updateLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -53,7 +74,6 @@ const HomePage = () => {
           const coords = [latitude, longitude];
           setUserLocation(coords);
 
-          // Cập nhật danh sách trạm gần nhất
           const withDistance = mapStations.map((s) => ({
             ...s,
             distance: getDistanceKm(latitude, longitude, s.coords[0], s.coords[1]),
@@ -70,28 +90,21 @@ const HomePage = () => {
     updateLocation();
   }, []);
 
-  const handleMarkerClick = (id) => {
-    setSelectedId(id);
+  const handleMarkerClick = (id) => setSelectedId(id);
+
+  const handleBooking = (stationId) => {
+    const token = localStorage.getItem("token");
+    const redirectUrl = `/booking?station=${stationId}`;
+    if (!token) {
+      navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
+    } else {
+      navigate(redirectUrl);
+    }
   };
-
- // Trong HomePage.jsx
-const handleBooking = (stationId) => {
-  const token = localStorage.getItem("token");
-  const redirectUrl = `/booking?station=${stationId}`;
-  if (!token) {
-    // Nếu chưa login, chuyển sang login với redirect
-    navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
-  } else {
-    // Nếu đã login, chuyển trực tiếp đến booking
-    navigate(redirectUrl);
-  }
-};
-
 
   return (
     <div className="homepage">
       <main className="homepage__main">
-
         {/* Hero Section */}
         <section className="homepage__hero">
           <div className="homepage__hero-content">
@@ -106,10 +119,7 @@ const handleBooking = (stationId) => {
                 onClick={() => {
                   if (mapSectionRef.current) {
                     const topPos = mapSectionRef.current.getBoundingClientRect().top + window.scrollY;
-                    window.scrollTo({
-                      top: topPos - 70,
-                      behavior: "smooth",
-                    });
+                    window.scrollTo({ top: topPos - 120, behavior: "smooth" });
                   }
                 }}
               >
@@ -129,70 +139,54 @@ const handleBooking = (stationId) => {
           </div>
         </section>
 
-        {/* Quick Search
-        <section className="homepage__search">
-          <div className="search-container">
-            <h2>Tìm trạm sạc gần bạn</h2>
-            <div className="search-box">
-              <input type="text" placeholder="Nhập địa chỉ hoặc tên địa điểm..." />
-              <button className="search-btn">Tìm kiếm</button>
-            </div>
-            <div className="quick-filters">
-              <button className="filter-btn active">Tất cả</button>
-              <button className="filter-btn">Sạc nhanh</button>
-              <button className="filter-btn">Sạc siêu tốc</button>
-              <button className="filter-btn">Miễn phí</button>
-            </div>
-          </div>
-        </section> */}
-
-         {/* Map + Station List */}
-    <section className="homepage__map" ref={mapSectionRef}>
-      <div className="section-header">
+        {/* Map + Station List */}
+        <section className="homepage__map" ref={mapSectionRef}>
+          <div className="section-header">
             <h2>Bản đồ trạm sạc</h2>
             <p>Tìm kiếm và xem thông tin chi tiết các trụ sạc gần bạn</p>
           </div>
-      <div className="map-container">
-        <div className="station-list">
-          <h3>Trạm sạc gần bạn</h3>
-          <div className="station-scroll">
-            {nearbyStations.map((station) => (
-              <div
-                key={station.id}
-                ref={(el) => (itemRefs.current[station.id] = el)}
-                className={`station-item ${selectedId === station.id ? "is-selected" : ""}`}
-                onClick={() => setSelectedId(station.id)}
-              >
-                <div className="station-header">
-                  <h4>{station.name}</h4>
-                  <span className="distance">{station.distance.toFixed(1)} km</span>
-                </div>
-                <div className="station-details">
-                  <div>⚡ {station.speed}</div>
-                  <div>💰 {station.price}</div>
-                  <div>🔌 AC: {station.slots.ac} | DC: {station.slots.dc} | Ultra: {station.slots.ultra}</div>
-                </div>
-                <div className="station-actions">
-                  <button className="btn-small btn-primary" onClick={() => handleBooking(station.id)}>Đặt chỗ</button>
-                </div>
+          <div className="map-container">
+            <div className="station-list">
+              <h3>Trạm sạc gần bạn</h3>
+              <div className="station-scroll">
+                {nearbyStations.map((station) => (
+                  <div
+                    key={station.id}
+                    ref={(el) => (itemRefs.current[station.id] = el)}
+                    className={`station-item ${selectedId === station.id ? "is-selected" : ""}`}
+                    onClick={() => setSelectedId(station.id)}
+                  >
+                    <div className="station-header">
+                      <h4>{station.name}</h4>
+                      <span className="distance">{station.distance.toFixed(1)} km</span>
+                    </div>
+                    <div className="station-details">
+                      <div className="item">⚡ {station.speed}</div>
+                      <div className="item">💰 {station.price}</div>
+                      <div className="item">🔌 AC: {station.slots.ac} | DC: {station.slots.dc} | Ultra: {station.slots.ultra}</div>
+                    </div>
+                    <div className="station-actions">
+                      <button className="btn-small btn-primary" onClick={() => handleBooking(station.id)}>Đặt chỗ</button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        <div className="map-view">
-          <ChargingMap
-            stations={mapStations}
-            center={userLocation || [10.7769, 106.7009]}
-            zoom={12}
-            onSelect={(station) => handleMarkerClick(station.id)}
-            selectedStation={selectedId ? mapStations.find((s) => s.id === selectedId) : null}
-            userLocation={userLocation}
-            onUpdateLocation={updateLocation}
-          />
-        </div>
-      </div>
-    </section>
+            <div className="map-view">
+              <ChargingMap
+                stations={mapStations}
+                center={userLocation || [10.7769, 106.7009]}
+                zoom={12}
+                onSelect={(station) => handleMarkerClick(station.id)}
+                selectedStation={selectedId ? mapStations.find((s) => s.id === selectedId) : null}
+                userLocation={userLocation}
+                onUpdateLocation={updateLocation}
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Features Section */}
         <section className="homepage__features" ref={featuresRef}>
           <div className="section-header">
@@ -243,12 +237,10 @@ const handleBooking = (stationId) => {
         {/* CTA Section */}
         <section className="homepage__cta">
           <h2>Bắt đầu hành trình xe điện của bạn</h2>
-          {/* <p>Tải ứng dụng ngay để trải nghiệm sạc xe điện tiện lợi nhất</p>
-          <div className="cta-buttons">
-            <button className="btn btn--primary btn--large">Tải cho Android</button>
-            <button className="btn btn--primary btn--large">Tải cho iOS</button>
-          </div> */}
         </section>
+
+        {/* About Section */}
+        <About />
 
       </main>
     </div>
