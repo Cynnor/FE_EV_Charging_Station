@@ -134,7 +134,7 @@ body {
     right: 0;
     height: 4px;
 
-background: linear-gradient(90deg, #16a34a, #22c55e);
+    background: linear-gradient(90deg, #16a34a, #22c55e);
   }
 }
 
@@ -145,14 +145,14 @@ background: linear-gradient(90deg, #16a34a, #22c55e);
 
 .card img {
   width: 100%;
+  height: 200px;
+  /* chiều cao cố định */
+  object-fit: cover;
+  /* ảnh được cắt nếu cần, không méo */
   border-radius: 16px;
   margin-bottom: 1.5rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
-
-  &:hover {
-    transform: scale(1.02);
-  }
 }
 
 .card h3 {
@@ -194,6 +194,7 @@ background: linear-gradient(90deg, #16a34a, #22c55e);
 /* ===== CARD ACTIONS ===== */
 .card-actions {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-top: auto;
 }
@@ -220,11 +221,12 @@ background: linear-gradient(90deg, #16a34a, #22c55e);
 }
 
 .btn-rent {
-  flex: 1;
+  flex: none;
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
+  width: 100%;
   border: none;
   background: #7ed321;
   color: #fff;
@@ -274,5 +276,6 @@ background: linear-gradient(90deg, #16a34a, #22c55e);
 html {
   scroll-behavior: smooth;
 }
+
 
 //cuộn mượt hơn

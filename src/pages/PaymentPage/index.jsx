@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./index.scss";
 const PRICE_TABLE = {
@@ -12,6 +12,10 @@ const PRICE_TABLE = {
 };
 
 export default function PaymentPage() {
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     const navigate = useNavigate();
     const { state } = useLocation();
     const station = state?.station || null;

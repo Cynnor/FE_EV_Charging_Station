@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./index.scss";
 import ChargingMap from "../../components/chargingMap";
@@ -207,6 +207,9 @@ const amenityIcons = {
 };
 
 export default function BookingPage() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const navigate = useNavigate();
   const today = new Date();
   const defaultDate = today.toISOString().split("T")[0];
@@ -233,127 +236,127 @@ export default function BookingPage() {
 
   const chargers = selectedStation
     ? [
-        {
-          id: 1,
-          name: "Trụ A1",
-          coords: [
-            selectedStation.coords[0] + 0.0002,
-            selectedStation.coords[1],
-          ],
-          power: "7 kW",
-          price: "3.500 đ/kWh",
-          status: "available",
-          connector: "Type 2",
-        },
-        {
-          id: 2,
-          name: "Trụ A2",
-          coords: [
-            selectedStation.coords[0],
-            selectedStation.coords[1] + 0.0002,
-          ],
-          power: "11 kW",
-          price: "3.800 đ/kWh",
-          status: "available",
-          connector: "Type 2",
-        },
-        {
-          id: 3,
-          name: "Trụ B1",
-          coords: [
-            selectedStation.coords[0] - 0.0002,
-            selectedStation.coords[1],
-          ],
-          power: "22 kW",
-          price: "4.000 đ/kWh",
-          status: "available",
-          connector: "Type 2",
-        },
-        {
-          id: 4,
-          name: "Trụ B2",
-          coords: [
-            selectedStation.coords[0],
-            selectedStation.coords[1] - 0.0002,
-          ],
-          power: "30 kW",
-          price: "4.200 đ/kWh",
-          status: "occupied",
-          connector: "CCS2",
-        },
-        {
-          id: 5,
-          name: "Trụ C1",
-          coords: [
-            selectedStation.coords[0] + 0.00015,
-            selectedStation.coords[1] + 0.00015,
-          ],
-          power: "43 kW",
-          price: "4.500 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-        {
-          id: 6,
-          name: "Trụ C2",
-          coords: [
-            selectedStation.coords[0] - 0.00015,
-            selectedStation.coords[1] + 0.00015,
-          ],
-          power: "50 kW",
-          price: "4.800 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-        {
-          id: 7,
-          name: "Trụ D1",
-          coords: [
-            selectedStation.coords[0] + 0.00015,
-            selectedStation.coords[1] - 0.00015,
-          ],
-          power: "60 kW",
-          price: "5.000 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-        {
-          id: 8,
-          name: "Trụ D2",
-          coords: [
-            selectedStation.coords[0] - 0.00015,
-            selectedStation.coords[1] - 0.00015,
-          ],
-          power: "90 kW",
-          price: "5.200 đ/kWh",
-          status: "maintenance",
-          connector: "CCS2",
-        },
-        {
-          id: 9,
-          name: "Trụ E1",
-          coords: [
-            selectedStation.coords[0] + 0.00025,
-            selectedStation.coords[1] - 0.0001,
-          ],
-          power: "120 kW",
-          price: "5.500 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-        {
-          id: 10,
-          name: "Trụ E2",
-          coords: [
-            selectedStation.coords[0] - 0.00025,
-            selectedStation.coords[1] + 0.0001,
-          ],
-          power: "150 kW",
-          price: "6.000 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-      ]
+      {
+        id: 1,
+        name: "Trụ A1",
+        coords: [
+          selectedStation.coords[0] + 0.0002,
+          selectedStation.coords[1],
+        ],
+        power: "7 kW",
+        price: "3.500 đ/kWh",
+        status: "available",
+        connector: "Type 2",
+      },
+      {
+        id: 2,
+        name: "Trụ A2",
+        coords: [
+          selectedStation.coords[0],
+          selectedStation.coords[1] + 0.0002,
+        ],
+        power: "11 kW",
+        price: "3.800 đ/kWh",
+        status: "available",
+        connector: "Type 2",
+      },
+      {
+        id: 3,
+        name: "Trụ B1",
+        coords: [
+          selectedStation.coords[0] - 0.0002,
+          selectedStation.coords[1],
+        ],
+        power: "22 kW",
+        price: "4.000 đ/kWh",
+        status: "available",
+        connector: "Type 2",
+      },
+      {
+        id: 4,
+        name: "Trụ B2",
+        coords: [
+          selectedStation.coords[0],
+          selectedStation.coords[1] - 0.0002,
+        ],
+        power: "30 kW",
+        price: "4.200 đ/kWh",
+        status: "occupied",
+        connector: "CCS2",
+      },
+      {
+        id: 5,
+        name: "Trụ C1",
+        coords: [
+          selectedStation.coords[0] + 0.00015,
+          selectedStation.coords[1] + 0.00015,
+        ],
+        power: "43 kW",
+        price: "4.500 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+      {
+        id: 6,
+        name: "Trụ C2",
+        coords: [
+          selectedStation.coords[0] - 0.00015,
+          selectedStation.coords[1] + 0.00015,
+        ],
+        power: "50 kW",
+        price: "4.800 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+      {
+        id: 7,
+        name: "Trụ D1",
+        coords: [
+          selectedStation.coords[0] + 0.00015,
+          selectedStation.coords[1] - 0.00015,
+        ],
+        power: "60 kW",
+        price: "5.000 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+      {
+        id: 8,
+        name: "Trụ D2",
+        coords: [
+          selectedStation.coords[0] - 0.00015,
+          selectedStation.coords[1] - 0.00015,
+        ],
+        power: "90 kW",
+        price: "5.200 đ/kWh",
+        status: "maintenance",
+        connector: "CCS2",
+      },
+      {
+        id: 9,
+        name: "Trụ E1",
+        coords: [
+          selectedStation.coords[0] + 0.00025,
+          selectedStation.coords[1] - 0.0001,
+        ],
+        power: "120 kW",
+        price: "5.500 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+      {
+        id: 10,
+        name: "Trụ E2",
+        coords: [
+          selectedStation.coords[0] - 0.00025,
+          selectedStation.coords[1] + 0.0001,
+        ],
+        power: "150 kW",
+        price: "6.000 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+    ]
     : [];
 
   const handleChange = (e) => {
@@ -477,9 +480,8 @@ export default function BookingPage() {
                 {filteredStations.map((station) => (
                   <div
                     key={station.id}
-                    className={`station-card ${station.type.toLowerCase()}${
-                      selectedStation?.id === station.id ? " selected" : ""
-                    }`}
+                    className={`station-card ${station.type.toLowerCase()}${selectedStation?.id === station.id ? " selected" : ""
+                      }`}
                     onClick={() => setSelectedStation(station)}
                   >
                     <div className="station-card-header">
@@ -587,9 +589,8 @@ export default function BookingPage() {
                         <div
                           className="availability-fill"
                           style={{
-                            width: `${
-                              (station.available / station.total) * 100
-                            }%`,
+                            width: `${(station.available / station.total) * 100
+                              }%`,
                           }}
                         ></div>
                       </div>
@@ -686,9 +687,8 @@ export default function BookingPage() {
                 {chargers.map((charger) => (
                   <div
                     key={charger.id}
-                    className={`charger-card ${charger.status} ${
-                      selectedCharger?.id === charger.id ? "selected" : ""
-                    }`}
+                    className={`charger-card ${charger.status} ${selectedCharger?.id === charger.id ? "selected" : ""
+                      }`}
                     onClick={() => {
                       if (charger.status === "available") {
                         setSelectedCharger(charger);
