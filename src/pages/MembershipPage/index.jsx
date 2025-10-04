@@ -1,8 +1,11 @@
-import React from "react";
+import { useEffect, React } from "react";
 import { FaBatteryFull, FaCheckCircle, FaBolt } from "react-icons/fa"; // Import các icon
 import "./index.scss";
 
-function ChargingStationRentalPage() {
+function MembershipPage() {
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
     const packages = [
         {
             name: "Gói Basic",
@@ -48,7 +51,7 @@ function ChargingStationRentalPage() {
     return (
         <div className="membership-page">
             <h1>Nâng cấp gói thành viên</h1>
-            <p>Chọn gói thuê phù hợp với nhu cầu của bạn.</p>
+            <p><strong>Chọn gói thuê phù hợp với nhu cầu của bạn.</strong></p>
             <div className="packages">
                 {packages.map((pkg, index) => (
                     <div key={index} className="package">
@@ -60,7 +63,7 @@ function ChargingStationRentalPage() {
                         <ul className="features">
                             {pkg.features.map((feature, i) => (
                                 <li key={i}>
-                                    <FaCheckCircle /> {feature} {/* Thêm icon trước mỗi tính năng */}
+                                    {feature} {/* Thêm icon trước mỗi tính năng */}
                                 </li>
                             ))}
                         </ul>
@@ -74,4 +77,4 @@ function ChargingStationRentalPage() {
     );
 }
 
-export default ChargingStationRentalPage;
+export default MembershipPage;
