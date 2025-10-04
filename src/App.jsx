@@ -5,10 +5,9 @@ import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
 import SupportPage from "./pages/supportPage/index";
-import Overview from "./pages/adminDashboard/Overview";
 import StationManagement from "./pages/adminDashboard/stationManagement";
 import UserManagement from "./pages/adminDashboard/userManagement";
-import Analytics from "./pages/adminDashboard/analytics";
+import Analytics from "./pages/adminDashboard/analyticsManagement";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement";
 import SettingManagement from "./pages/adminDashboard/settingManagement/index";
 import ForgotPassword from "./pages/forgotpasswordPage/forgotpassword";
@@ -18,6 +17,7 @@ import BookingPage from "./pages/bookingPage";
 import ProfilePage from "./pages/profilePage/ProfilePage";
 import PaymentPage from "./pages/PaymentPage";
 import MembershipPage from "./pages/MembershipPage";
+import Overview from "./pages/adminDashboard/overViewManagement";
 
 function App() {
   const router = createBrowserRouter([

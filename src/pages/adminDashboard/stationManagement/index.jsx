@@ -4,60 +4,74 @@ import "./index.scss";
 const StationManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
 
   const stations = [
     {
       id: 1,
       name: "Vincom Đồng Khởi",
-      location: "Q1, TP.HCM",
+      location: "Quận 1",
       status: "active",
-      power: "150kW",
-      revenue: "₫450K",
-      usage: 95,
       connectors: 4,
     },
     {
       id: 2,
       name: "Landmark 81",
-      location: "Bình Thạnh, TP.HCM",
+      location: "Bình Thạnh",
       status: "maintenance",
-      power: "150kW",
-      revenue: "₫380K",
-      usage: 87,
       connectors: 6,
     },
     {
       id: 3,
       name: "Crescent Mall",
-      location: "Q7, TP.HCM",
+      location: "Quận 7",
       status: "active",
-      power: "50kW",
-      revenue: "₫320K",
-      usage: 78,
       connectors: 2,
     },
     {
       id: 4,
       name: "AEON Bình Tân",
-      location: "Bình Tân, TP.HCM",
+      location: "Bình Tân",
       status: "active",
-      power: "22kW",
-      revenue: "₫290K",
-      usage: 65,
       connectors: 3,
     },
     {
       id: 5,
       name: "GIGAMALL",
-      location: "Thủ Đức, TP.HCM",
+      location: "Thủ Đức",
       status: "offline",
-      power: "50kW",
-      revenue: "₫270K",
-      usage: 0,
       connectors: 4,
     },
+    {
+      id: 6,
+      name: "AEON Tân Phú",
+      location: "Tân Phú",
+      status: "active",
+      connectors: 2,
+    },
+    {
+      id: 7,
+      name: "Pearl Plaza",
+      location: "Bình Thạnh",
+      status: "maintenance",
+      connectors: 3,
+    },
   ];
+
+  // Tính toán thống kê từ data
+  const totalStations = stations.length;
+  const activeStations = stations.filter((s) => s.status === "active").length;
+  const maintenanceStations = stations.filter(
+    (s) => s.status === "maintenance"
+  ).length;
+  const offlineStations = stations.filter((s) => s.status === "offline").length;
+  // const efficiency = Math.round((activeStations / totalStations) * 100);
+
+  // Lấy danh sách quận từ data
+  const districts = [
+    ...new Set(stations.map((station) => station.location)),
+  ].sort();
 
   const filteredStations = stations.filter((station) => {
     const matchesSearch =
@@ -65,23 +79,27 @@ const StationManagement = () => {
       station.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "all" || station.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesLocation =
+      locationFilter === "all" || station.location === locationFilter;
+    return matchesSearch && matchesStatus && matchesLocation;
   });
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case "active":
+        return "🟢 Hoạt động";
+      case "maintenance":
+        return "🔧 Bảo trì";
+      case "offline":
+        return "🔴 Offline";
+      default:
+        return status;
+    }
+  };
 
   return (
     <div className="station-management">
-      {/* Header */}
-      <div className="page-header">
-        <div className="header-content">
-          <h2>Quản lý trạm sạc</h2>
-          <p>Quản lý tất cả trạm sạc trong hệ thống</p>
-        </div>
-        <button className="btn-primary" onClick={() => setShowAddModal(true)}>
-          <span>➕</span> Thêm trạm sạc
-        </button>
-      </div>
-
-      {/* Filters */}
+      {/* Filters Section */}
       <div className="filters-section">
         <div className="search-box">
           <input
@@ -92,16 +110,33 @@ const StationManagement = () => {
             className="search-input"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="status-filter"
-        >
-          <option value="all">Tất cả trạng thái</option>
-          <option value="active">Hoạt động</option>
-          <option value="maintenance">Bảo trì</option>
-          <option value="offline">Offline</option>
-        </select>
+        <div className="filters-group">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="status-filter"
+          >
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Hoạt động</option>
+            <option value="maintenance">Bảo trì</option>
+            <option value="offline">Offline</option>
+          </select>
+          <select
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+            className="location-filter"
+          >
+            <option value="all">Tất cả quận</option>
+            {districts.map((district) => (
+              <option key={district} value={district}>
+                {district}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+          <span>➕</span> Thêm trạm sạc
+        </button>
       </div>
 
       {/* Statistics Cards */}
@@ -109,29 +144,29 @@ const StationManagement = () => {
         <div className="stat-mini">
           <div className="stat-icon">⚡</div>
           <div className="stat-info">
-            <span className="stat-number">524</span>
+            <span className="stat-number">{totalStations}</span>
             <span className="stat-label">Tổng trạm</span>
           </div>
         </div>
         <div className="stat-mini">
           <div className="stat-icon">🟢</div>
           <div className="stat-info">
-            <span className="stat-number">498</span>
+            <span className="stat-number">{activeStations}</span>
             <span className="stat-label">Hoạt động</span>
           </div>
         </div>
         <div className="stat-mini">
           <div className="stat-icon">🔧</div>
           <div className="stat-info">
-            <span className="stat-number">26</span>
+            <span className="stat-number">{maintenanceStations}</span>
             <span className="stat-label">Bảo trì</span>
           </div>
         </div>
         <div className="stat-mini">
-          <div className="stat-icon">📊</div>
+          <div className="stat-icon">⏸️</div>
           <div className="stat-info">
-            <span className="stat-number">85%</span>
-            <span className="stat-label">Hiệu suất</span>
+            <span className="stat-number">{offlineStations}</span>
+            <span className="stat-label">Tạm ngưng</span>
           </div>
         </div>
       </div>
@@ -141,21 +176,16 @@ const StationManagement = () => {
         <table className="stations-table">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Tên trạm</th>
               <th>Địa điểm</th>
-              <th>Công suất</th>
               <th>Trạng thái</th>
               <th>Số cổng</th>
-              <th>Sử dụng</th>
-              <th>Doanh thu</th>
               <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {filteredStations.map((station) => (
               <tr key={station.id}>
-                <td>#{station.id}</td>
                 <td className="station-name">
                   <div className="name-with-icon">
                     <span className="station-icon">⚡</span>
@@ -163,27 +193,12 @@ const StationManagement = () => {
                   </div>
                 </td>
                 <td>{station.location}</td>
-                <td className="power">{station.power}</td>
                 <td>
                   <span className={`status-badge ${station.status}`}>
-                    {station.status === "active" && "🟢 Hoạt động"}
-                    {station.status === "maintenance" && "🔧 Bảo trì"}
-                    {station.status === "offline" && "🔴 Offline"}
+                    {getStatusText(station.status)}
                   </span>
                 </td>
                 <td>{station.connectors} cổng</td>
-                <td>
-                  <div className="usage-indicator">
-                    <div className="usage-bar">
-                      <div
-                        className="usage-fill"
-                        style={{ width: `${station.usage}%` }}
-                      ></div>
-                    </div>
-                    <span className="usage-text">{station.usage}%</span>
-                  </div>
-                </td>
-                <td className="revenue">{station.revenue}</td>
                 <td>
                   <div className="action-buttons">
                     <button className="btn-icon view" title="Xem chi tiết">
@@ -240,11 +255,14 @@ const StationManagement = () => {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Công suất (kW)</label>
+                    <label>Quận/Huyện</label>
                     <select>
-                      <option value="22">22kW</option>
-                      <option value="50">50kW</option>
-                      <option value="150">150kW</option>
+                      <option value="">Chọn quận/huyện</option>
+                      {districts.map((district) => (
+                        <option key={district} value={district}>
+                          {district}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="form-group">
