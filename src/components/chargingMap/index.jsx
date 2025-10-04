@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -7,7 +7,7 @@ import "./index.scss";
 
 // Icon user
 const userIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
+  iconUrl: "/src/assets/UserIcon.png",
   iconSize: [40, 40],
 });
 
@@ -21,33 +21,40 @@ const stationIcon = new L.Icon({
 });
 
 // Controller để fly map khi user hoặc selected station thay đổi
-function MapController({ selectedStation, userLocation }) {
+function MapController({ selectedStation, userLocation, markerRefs }) {
   const map = useMap();
 
   // Focus vào vị trí người dùng khi load map
   useEffect(() => {
     if (userLocation) {
-      map.setView(userLocation, 15); // setView không gây scroll trang
+      map.setView(userLocation, 15);
     }
   }, [userLocation, map]);
 
-  // Fly tới trạm khi chọn marker
+  // Fly tới trạm khi chọn từ list
   useEffect(() => {
     if (selectedStation) {
       map.flyTo(selectedStation.coords, 18, { duration: 1.5 });
+
+      // mở popup marker
+      const marker = markerRefs.current[selectedStation.id];
+      if (marker) marker.openPopup();
     }
-  }, [selectedStation, map]);
+  }, [selectedStation, map, markerRefs]);
 
   return null;
 }
 
 const ChargingMap = ({ stations, selectedStation, userLocation, onSelect }) => {
+  // lưu ref các marker
+  const markerRefs = useRef({});
+
   return (
     <MapContainer
       center={userLocation || [10.7769, 106.7009]}
       zoom={12}
       className="charging-map"
-      scrollWheelZoom={true} // zoom bằng chuột mà không cuộn page
+      scrollWheelZoom={true}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -66,6 +73,9 @@ const ChargingMap = ({ stations, selectedStation, userLocation, onSelect }) => {
           position={station.coords}
           icon={stationIcon}
           eventHandlers={{ click: () => onSelect(station) }}
+          ref={(el) => {
+            if (el) markerRefs.current[station.id] = el;
+          }}
         >
           <Popup>
             <b>{station.name}</b><br />
@@ -75,7 +85,11 @@ const ChargingMap = ({ stations, selectedStation, userLocation, onSelect }) => {
         </Marker>
       ))}
 
-      <MapController selectedStation={selectedStation} userLocation={userLocation} />
+      <MapController
+        selectedStation={selectedStation}
+        userLocation={userLocation}
+        markerRefs={markerRefs}
+      />
     </MapContainer>
   );
 };
