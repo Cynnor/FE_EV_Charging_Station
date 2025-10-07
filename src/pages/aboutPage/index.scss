@@ -50,10 +50,18 @@
 
     .intro-flex {
       display: flex;
-      align-items: center;
-      gap: 40px;
+      align-items: flex-start;
+      gap: 10px;
       max-width: 1200px;
       margin: 0 auto;
+
+
+      /* Đảm bảo emoji không co lại */
+      .icon {
+        flex-shrink: 0; // icon không bị co lại
+        font-size: 20px; // cỡ emoji
+        line-height: 1; // tránh lệch dòng
+      }
     }
 
     .intro-image {

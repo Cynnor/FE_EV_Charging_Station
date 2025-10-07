@@ -44,10 +44,25 @@ const About = () => {
 
             <h3>Giá trị cốt lõi</h3>
             <ul>
-              <li>🌱 <strong>Khách hàng là trung tâm</strong> – luôn lắng nghe và nâng cao trải nghiệm người dùng.</li>
-              <li>⚡ <strong>Công nghệ tiên tiến</strong> – áp dụng giải pháp sạc nhanh, thanh toán điện tử và quản lý thông minh.</li>
-              <li>🤝 <strong>Kết nối mở rộng</strong> – dễ dàng tích hợp với hệ thống và đối tác để phát triển mạng lưới.</li>
-              <li>🌍 <strong>Phát triển bền vững</strong> – góp phần thúc đẩy giao thông xanh và bảo vệ môi trường.</li>
+              <ul>
+                <li>
+                  <span className="icon">🌱</span>
+                  <span><strong>Khách hàng là trung tâm</strong> luôn lắng nghe và nâng cao trải nghiệm người dùng.</span>
+                </li>
+                <li>
+                  <span className="icon">⚡</span>
+                  <span><strong>Công nghệ tiên tiến</strong> áp dụng giải pháp sạc nhanh, thanh toán điện tử và quản lý thông minh.</span>
+                </li>
+                <li>
+                  <span className="icon">🤝</span>
+                  <span><strong>Kết nối mở rộng</strong> dễ dàng tích hợp với hệ thống và đối tác để phát triển mạng lưới.</span>
+                </li>
+                <li>
+                  <span className="icon">🌍</span>
+                  <span><strong>Phát triển bền vững</strong> góp phần thúc đẩy giao thông xanh và bảo vệ môi trường.</span>
+                </li>
+              </ul>
+
             </ul>
           </div>
         </div>
