@@ -1,88 +1,66 @@
+<<<<<<< HEAD
 import { Link } from "react-router-dom";
 import React from "react";
+=======
+import { useEffect } from "react";
+>>>>>>> origin/main
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+<<<<<<< HEAD
 import AC10 from "../../assets/AC10.jpg";
 import sacAC4 from "../../assets/sacAC4.jpg";
 import DC60 from "../../assets/DC60.jpg";
 import DC120 from "../../assets/DC120.jpg";
+=======
+>>>>>>> origin/main
 import "./index.scss";
+import { Link } from "react-router-dom";
 
-// Icon cho người dùng
-const userIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
-});
-
-// Icon cho trạm AC
-const acIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/833/833314.png",
-  iconSize: [35, 35],
-  iconAnchor: [17, 35],
-});
-
-// Icon cho trạm DC
-const dcIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/833/833322.png",
-  iconSize: [35, 35],
-  iconAnchor: [17, 35],
-});
-
-const ChangeView = ({ center, zoom }) => {
-  const map = useMap();
-  map.setView(center, zoom);
-  return null;
-};
-
-const ChargingMap = ({ stations, center, zoom = 13, onSelect, userLocation, onUpdateLocation }) => {
+function ChargingStationCard({
+  image,
+  title,
+  //sockets,
+  power,
+  plugTypes,
+  installTypes,
+  protection,
+  locationType,
+}) {
   return (
-    <MapContainer center={center} zoom={zoom} style={{ height: "100%", width: "100%" }}>
-      <ChangeView center={center} zoom={zoom} />
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-
-      {/* Marker trạm sạc */}
-      {stations.map((station) => (
-        <Marker
-          key={station.id}
-          position={station.coords}
-          icon={station.type === "AC" ? acIcon : dcIcon}
-          eventHandlers={{
-            click: () => onSelect && onSelect(station),
-          }}
-        >
-          <Popup>
-            <b>{station.name}</b>
-            <br />
-            ⚡ {station.speed}
-            <br />
-            💰 {station.price}
-          </Popup>
-        </Marker>
-      ))}
-
-      {/* Marker người dùng */}
-      {userLocation && (
-        <Marker
-          position={userLocation}
-          icon={userIcon}
-          eventHandlers={{
-            click: () => {
-              if (onUpdateLocation) onUpdateLocation();
-            },
-          }}
-        >
-          <Popup>Vị trí của bạn</Popup>
-        </Marker>
-      )}
-    </MapContainer>
+    <div className="card">
+      <img src={image} alt={title} />
+      <h3>{title}</h3>
+      <ul>
+        <li>
+          <b>Kiểu lắp đặt:</b> {installTypes}
+        </li>
+        {/* <li>
+          <b>Số lượng cổng:</b> {sockets}
+        </li> */}
+        <li>
+          <b>Công suất:</b> {power}
+        </li>
+        <li>
+          <b>Dạng ổ cắm:</b> {plugTypes}
+        </li>
+        <li>
+          <b>Bảo vệ:</b> {protection}
+        </li>
+        <li>
+          <b>Vị trí:</b> {locationType}
+        </li>
+      </ul>
+      <div className="card-actions">
+        {/* <button className="btn-detail">Chi tiết</button> */}
+        <Link to="/booking">
+          <button className="btn-rent">Đặt chỗ</button>
+        </Link>
+      </div>
+    </div>
   );
-};
+}
 
+<<<<<<< HEAD
 /* ----- Hero section ----- */
 function ChargingStationHero() {
   return (
@@ -149,6 +127,24 @@ function ChargingStationHero() {
             </div>
           </div>
         </div>
+=======
+// /* ----- Hero section ----- */
+function ChargingStationHero() {
+  return (
+    <section className="charging-hero">
+      <div className="hero-text">
+        <h2>BỘ SẠC XE ĐIỆN </h2>
+        <p className="highlight">
+          SẠC THÔNG MINH, DỄ DÀNG SỬ DỤNG, LẮP ĐẶT NHANH CHÓNG !
+        </p>
+        <p>SẢN PHẨM AN TOÀN, ĐẠT TIÊU CHUẨN OCPP</p>
+        <a href="#charging-stations" className="btn">
+          Xem chi tiết sản phẩm
+        </a>
+      </div>
+      <div className="hero-image">
+        <img src={"./src/assets/banner.jpg"} alt="Banner EV Charging" />
+>>>>>>> origin/main
       </div>
     </section>
   )
@@ -175,46 +171,92 @@ function TitleSupport() {
 
 /* ----- Trang chính hiển thị danh sách ----- */
 function ChargingStationsPage() {
+<<<<<<< HEAD
+=======
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+>>>>>>> origin/main
   const stations = [
     {
-      image: AC10,
-      title: "Trạm sạc xe máy xoay chiều AC 4 cổng",
-      sockets: "4 cổng",
-      power: "Tối đa 2000W / 1 cổng",
-      plugTypes: "2 chấu / 3 chấu",
+      image: "./src/assets/AC4.jpg",
+      title: "Trụ sạc xe máy xoay chiều AC 4 cổng",
+      power: "2 kW / cổng",
+      plugTypes: "2 chấu /3 chấu",
       installTypes: "Trụ đứng / Treo tường",
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch",
+<<<<<<< HEAD
       type: "AC",
+=======
+      locationType: "Nhà riêng / Công cộng",
+>>>>>>> origin/main
     },
     {
-      image: sacAC4,
-      title: "Trạm sạc xe máy xoay chiều AC 10 cổng",
-      sockets: "10 cổng",
-      power: "Tối đa 2000W / 1 cổng",
+      image: "./src/assets/AC10.jpg",
+      title: "Trụ sạc xe máy xoay chiều AC 10 cổng",
+      power: "2 kW / cổng",
       plugTypes: "2 chấu / 3 chấu",
       installTypes: "Tường nhà / Trụ",
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống nước IP54",
+<<<<<<< HEAD
       type: "AC",
+=======
+      locationType: "Công cộng / Bãi xe"
+>>>>>>> origin/main
     },
     {
-      image: DC60,
-      title: "Trạm sạc nhanh DC 60 kW",
-      sockets: "3 cổng",
+      image: "./src/assets/DC60.jpg",
+      title: "Trụ sạc nhanh DC 60 kW",
       power: "60 kW",
       plugTypes: "CCS / CHAdeMO",
       installTypes: "Ngoài trời / Trong nhà",
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống sét",
+<<<<<<< HEAD
       type: "DC Fast",
+=======
+      locationType: "Bãi xe / Trạm xăng"
+>>>>>>> origin/main
     },
     {
-      image: DC120,
-      title: "Trạm sạc nhanh DC 120 kW",
+      image: "./src/assets/DC120.jpg",
+      title: "Trụ sạc nhanh DC 120 kW",
       sockets: "3 cổng",
       power: "120 kW",
       plugTypes: "CCS / CHAdeMO",
       installTypes: "Ngoài trời / Trong nhà",
+<<<<<<< HEAD
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
       type: "DC Ultra Fast",
+=======
+      protection:
+        "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
+
+      image: "./src/assets/DC120.jpg",
+      title: "Trụ sạc nhanh DC 120 kW",
+      power: "120 kW",
+      plugTypes: "CCS / CHAdeMO",
+      installTypes: "Ngoài trời / Trong nhà",
+      protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
+      locationType: "Cao tốc / Bãi xe"
+    },
+    {
+      image: "./src/assets/DC150.jpg",
+      title: "Trụ sạc siêu nhanh DC 150 kW",
+      power: "150 kW / cổng",
+      plugTypes: "CCS2 DC",
+      installTypes: "Tủ đứng ngoài trời",
+      protection: "Quá tải / Quá nhiệt / Ngắn mạch / IP54",
+      locationType: "Cao tốc / Lộ trình dài"
+    },
+    {
+      image: "./src/assets/DC250.jpg",
+      title: "Trụ sạc siêu nhanh DC 250 kW",
+      power: "250 kW / cổng",
+      plugTypes: "CCS2 DC",
+      installTypes: "Tủ đứng ngoài trời",
+      protection: "Quá tải / Quá nhiệt / Ngắn mạch / IP54",
+      locationType: "Cao tốc / Lộ trình dài"
+>>>>>>> origin/main
     },
   ]
 

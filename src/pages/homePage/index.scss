@@ -59,13 +59,19 @@
   animation: fadeInRight 1s ease-out 0.3s both;
 }
 .logo-image {
-  width: 150px;       /* Kích thước logo */
-  height: 150px;      /* Chiều cao = chiều rộng để tạo hình tròn */
-  border-radius: 50%; /* Biến ảnh thành hình tròn */
-  object-fit: cover;  /* Cắt ảnh vừa với khung mà không méo */
-  display: block;     /* Tránh khoảng trống */
+  width: 150px;        /* Kích thước logo */
+  height: 150px;       /* Chiều cao bằng chiều rộng để tạo hình tròn */
+  border-radius: 50%;  /* Biến ảnh thành hình tròn */
+  object-fit: cover;   /* Cắt ảnh vừa với khung mà không méo */
+  display: block;      /* Tránh khoảng trống */
 }
 
+.hero-logo{
+  width: 400px;       
+  border-radius: 50%; 
+  object-fit: cover;  
+  overflow: hidden;   
+}
 .hero-visual {
   position: relative;
   width: 400px;
@@ -77,10 +83,6 @@
   justify-content: center;
   box-shadow: 0 30px 60px rgba(102, 187, 106, 0.3);
 
-  // Xóa animation float cho logo
-  // animation: float 6s ease-in-out infinite;
-
-  // Icon nhỏ vẫn có animation bình thường
   .charging-station,
   .dashboard,
   .mobile-app {
@@ -542,9 +544,21 @@
 }
 
 .station-details {
-  font-size: 14px;
-  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;   
+  align-items: flex-start;  
+  // justify-content: space-between; 
+  height: 100px;          
 }
+
+.item {
+  flex: 1;                
+  padding: 2.5px 5px;       /* giảm padding nếu container thấp */ 
+  text-align: left;        /* text căn trái */
+  width: 100%;             /* đảm bảo item chiếm toàn bộ chiều ngang */
+  box-sizing: border-box;  /* padding + border không làm rộng vượt */
+}
+
 
 .station-actions button {
   padding: 6px 12px;
