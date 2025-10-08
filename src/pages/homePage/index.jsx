@@ -14,12 +14,63 @@ const features = [
 ];
 
 const mapStations = [
-  { id: 1, name: "Trạm sạc Vincom Đồng Khởi", speed: "50 kW", price: "3.500 đ/kWh", coords: [10.7769, 106.7009], type: "DC", slots: { ac: 2, dc: 1, ultra: 0 } },
-  { id: 2, name: "Trạm sạc Landmark 81", speed: "150 kW", price: "4.000 đ/kWh", coords: [10.7944, 106.7219], type: "DC", slots: { ac: 1, dc: 3, ultra: 1 } },
-  { id: 3, name: "Trạm sạc Crescent Mall", speed: "50 kW", price: "3.200 đ/kWh", coords: [10.7374, 106.7223], type: "DC", slots: { ac: 0, dc: 2, ultra: 0 } },
-  { id: 4, name: "Trạm sạc AEON Bình Tân", speed: "22 kW", price: "2.800 đ/kWh", coords: [10.75, 106.6], type: "AC", slots: { ac: 4, dc: 0, ultra: 0 } },
-  { id: 5, name: "Trạm sạc GIGAMALL", speed: "50 kW", price: "3.300 đ/kWh", coords: [10.85, 106.75], type: "DC", slots: { ac: 1, dc: 1, ultra: 1 } },
+  { 
+    id: 1, 
+    name: "Trạm sạc Vincom Đồng Khởi", 
+    speed: "50 kW", 
+    price: "3.500 đ/kWh", 
+    coords: [10.7769, 106.7009], 
+    type: "DC", 
+    slots: { ac: 2, dc: 1, ultra: 0 }, 
+    status: "available",
+    address: "72 Lê Thánh Tôn, Quận 1, TP.HCM"
+  },
+  { 
+    id: 2, 
+    name: "Trạm sạc Landmark 81", 
+    speed: "150 kW", 
+    price: "4.000 đ/kWh", 
+    coords: [10.7944, 106.7219], 
+    type: "DC", 
+    slots: { ac: 1, dc: 3, ultra: 1 }, 
+    status: "busy",
+    address: "720A Điện Biên Phủ, Bình Thạnh, TP.HCM"
+  },
+  { 
+    id: 3, 
+    name: "Trạm sạc Crescent Mall", 
+    speed: "50 kW", 
+    price: "3.200 đ/kWh", 
+    coords: [10.7374, 106.7223], 
+    type: "DC", 
+    slots: { ac: 0, dc: 2, ultra: 0 }, 
+    status: "maintenance",
+    address: "101 Tôn Dật Tiên, Quận 7, TP.HCM"
+  },
+  { 
+    id: 4, 
+    name: "Trạm sạc AEON Bình Tân", 
+    speed: "22 kW", 
+    price: "2.800 đ/kWh", 
+    coords: [10.75, 106.6], 
+    type: "AC", 
+    slots: { ac: 4, dc: 0, ultra: 0 }, 
+    status: "available",
+    address: "1 Đường Số 17A, Bình Trị Đông B, Bình Tân, TP.HCM"
+  },
+  { 
+    id: 5, 
+    name: "Trạm sạc GIGAMALL", 
+    speed: "50 kW", 
+    price: "3.300 đ/kWh", 
+    coords: [10.85, 106.75], 
+    type: "DC", 
+    slots: { ac: 1, dc: 1, ultra: 1 }, 
+    status: "available",
+    address: "240 Phạm Văn Đồng, Thủ Đức, TP.HCM"
+  }
 ];
+
 
 // Haversine formula
 const getDistanceKm = (lat1, lon1, lat2, lon2) => {
@@ -39,19 +90,6 @@ const About = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  return (
-    <section className="homepage__about">
-      <div className="section-header">
-        <h2>Về chúng tôi</h2>
-        <p>Ứng dụng tìm trạm sạc xe điện tiện lợi và nhanh chóng</p>
-      </div>
-      <p>
-        Chúng tôi cung cấp thông tin chi tiết các trạm sạc, hỗ trợ đặt trước và thanh toán tiện lợi.
-        Hơn 500 trạm sạc phủ khắp cả nước.
-      </p>
-    </section>
-  );
 };
 
 // ===== HomePage Component =====
@@ -159,6 +197,11 @@ const HomePage = () => {
                     <div className="station-header">
                       <h4>{station.name}</h4>
                       <span className="distance">{station.distance.toFixed(1)} km</span>
+                    <div className={`status-indicator ${station.status}`}>
+                        {station.status === "available" && "🟢"}
+                        {station.status === "busy" && "🟡"}
+                        {station.status === "maintenance" && "🔴"}
+                      </div>
                     </div>
                     <div className="station-details">
                       <div className="item">⚡ {station.speed}</div>

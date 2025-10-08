@@ -539,8 +539,20 @@
 
 .station-header {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
+  align-items: center;
+  gap: 8px;
+
+  .status-indicator {
+    font-size: 12px;
+    min-width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &.available { color: #2ecc71; }
+    &.busy { color: #f1c40f; }
+    &.maintenance { color: #e74c3c; }
+  }
 }
 
 .station-details {
@@ -854,18 +866,19 @@
 
 .station-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 8px;
+  align-items: center;
+  gap: 8px;
 
-  h4 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    line-height: 1.3;
-    flex: 1;
+  .status-indicator {
+    font-size: 12px;
+    min-width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &.available { color: #2ecc71; }
+    &.busy { color: #f1c40f; }
+    &.maintenance { color: #e74c3c; }
   }
 }
 

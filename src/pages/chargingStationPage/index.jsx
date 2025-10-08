@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./index.scss";
 import { Link } from "react-router-dom";
@@ -119,7 +119,8 @@ function ChargingStationsPage() {
       installTypes: "Ngoài trời / Trong nhà",
       protection:
         "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
-
+    },
+    {
       image: "./src/assets/DC120.jpg",
       title: "Trụ sạc nhanh DC 120 kW",
       power: "120 kW",
