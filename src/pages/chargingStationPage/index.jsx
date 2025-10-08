@@ -1,18 +1,6 @@
-<<<<<<< HEAD
-import { Link } from "react-router-dom";
-import React from "react";
-=======
 import { useEffect } from "react";
->>>>>>> origin/main
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-<<<<<<< HEAD
-import AC10 from "../../assets/AC10.jpg";
-import sacAC4 from "../../assets/sacAC4.jpg";
-import DC60 from "../../assets/DC60.jpg";
-import DC120 from "../../assets/DC120.jpg";
-=======
->>>>>>> origin/main
 import "./index.scss";
 import { Link } from "react-router-dom";
 
@@ -60,74 +48,6 @@ function ChargingStationCard({
   );
 }
 
-<<<<<<< HEAD
-/* ----- Hero section ----- */
-function ChargingStationHero() {
-  return (
-    <section className="charging-hero">
-      <div className="hero-background-pattern"></div>
-
-      <div className="hero-content">
-        <div className="hero-text">
-          <div className="hero-badge">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" />
-            </svg>
-            <span>Công nghệ tiên tiến</span>
-          </div>
-
-          <h2>BỘ SẠC XE ĐIỆN</h2>
-          <p className="highlight">SẠC THÔNG MINH, DỄ DÀNG SỬ DỤNG, LẮP ĐẶT NHANH CHÓNG !</p>
-          <p className="description">SẢN PHẨM AN TOÀN, ĐẠT TIÊU CHUẨN OCPP</p>
-
-          <div className="hero-features">
-            <div className="feature-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-              <span>Tiêu chuẩn OCPP</span>
-            </div>
-            <div className="feature-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              <span>An toàn tuyệt đối</span>
-            </div>
-            <div className="feature-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-              </svg>
-              <span>Hiệu suất cao</span>
-            </div>
-          </div>
-
-          <a href="#charging-stations" className="btn">
-            <span>Xem chi tiết sản phẩm</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </a>
-        </div>
-
-        <div className="hero-image">
-          <div className="image-decoration"></div>
-          <img src={Banner || "/placeholder.svg"} alt="Banner EV Charging" />
-
-          <div className="floating-card">
-            <div className="floating-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" />
-              </svg>
-            </div>
-            <div className="floating-content">
-              <span className="floating-label">Sạc nhanh</span>
-              <span className="floating-value">Lên đến 120kW</span>
-            </div>
-          </div>
-        </div>
-=======
 // /* ----- Hero section ----- */
 function ChargingStationHero() {
   return (
@@ -144,7 +64,7 @@ function ChargingStationHero() {
       </div>
       <div className="hero-image">
         <img src={"./src/assets/banner.jpg"} alt="Banner EV Charging" />
->>>>>>> origin/main
+
       </div>
     </section>
   )
@@ -171,12 +91,9 @@ function TitleSupport() {
 
 /* ----- Trang chính hiển thị danh sách ----- */
 function ChargingStationsPage() {
-<<<<<<< HEAD
-=======
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
->>>>>>> origin/main
   const stations = [
     {
       image: "./src/assets/AC4.jpg",
@@ -185,11 +102,8 @@ function ChargingStationsPage() {
       plugTypes: "2 chấu /3 chấu",
       installTypes: "Trụ đứng / Treo tường",
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch",
-<<<<<<< HEAD
-      type: "AC",
-=======
+
       locationType: "Nhà riêng / Công cộng",
->>>>>>> origin/main
     },
     {
       image: "./src/assets/AC10.jpg",
@@ -198,11 +112,7 @@ function ChargingStationsPage() {
       plugTypes: "2 chấu / 3 chấu",
       installTypes: "Tường nhà / Trụ",
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống nước IP54",
-<<<<<<< HEAD
-      type: "AC",
-=======
       locationType: "Công cộng / Bãi xe"
->>>>>>> origin/main
     },
     {
       image: "./src/assets/DC60.jpg",
@@ -211,11 +121,7 @@ function ChargingStationsPage() {
       plugTypes: "CCS / CHAdeMO",
       installTypes: "Ngoài trời / Trong nhà",
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống sét",
-<<<<<<< HEAD
-      type: "DC Fast",
-=======
       locationType: "Bãi xe / Trạm xăng"
->>>>>>> origin/main
     },
     {
       image: "./src/assets/DC120.jpg",
@@ -224,10 +130,6 @@ function ChargingStationsPage() {
       power: "120 kW",
       plugTypes: "CCS / CHAdeMO",
       installTypes: "Ngoài trời / Trong nhà",
-<<<<<<< HEAD
-      protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
-      type: "DC Ultra Fast",
-=======
       protection:
         "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
 
@@ -256,7 +158,6 @@ function ChargingStationsPage() {
       installTypes: "Tủ đứng ngoài trời",
       protection: "Quá tải / Quá nhiệt / Ngắn mạch / IP54",
       locationType: "Cao tốc / Lộ trình dài"
->>>>>>> origin/main
     },
   ]
 

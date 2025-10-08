@@ -59,28 +59,13 @@ body {
   box-shadow: 0 4px 16px rgba(126, 211, 33, 0.3);
   transition: transform 0.3s ease;
 }
-
-<<<<<<< HEAD
-
 .header__logo-img:hover {
   transform: scale(1.05);
 }
-
-
-=======
-.header__logo-img:hover {
-  transform: scale(1.05);
-}
->>>>>>> origin/main
 .header__logo-text {
   display: flex;
   flex-direction: column;
 }
-
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
 .header__logo-title {
   font-size: 1.4rem;
   font-weight: 700;
@@ -89,10 +74,6 @@ body {
   line-height: 1.2;
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
 .header__logo-sub {
   font-size: 0.85rem;
   color: #666;
@@ -122,8 +103,8 @@ body {
   background: transparent;
 }
 
-.header__nav a:hover,
-.header__nav Link:hover {
+.header__nav a.hover,
+.header__nav Link.hover {
   color: #7ed321;
   background: rgba(126, 211, 33, 0.1);
   transform: translateY(-1px);
@@ -294,15 +275,7 @@ body {
 .header__logout-btn:hover {
   background: #7ed321;
   color: #fff;
-<<<<<<< HEAD
-
-
-  transform: translateY(-1px);
-
-  
-=======
 }
-
 .header__lang-toggle {
   background: #fff;
   border: 1px solid #e0e0e0;
@@ -327,7 +300,6 @@ body {
 
 .lang-flag.active {
   opacity: 1;
->>>>>>> origin/main
 }
 
 @media (max-width: 900px) {
@@ -341,16 +313,6 @@ body {
     padding: 20px;
     border-radius: 40px;
   }
-<<<<<<< HEAD
-
-
-
-
-
-
-
-=======
->>>>>>> origin/main
   .header__logo,
   .header__actions {
     min-width: unset;
@@ -362,24 +324,12 @@ body {
     justify-content: center;
   }
 
-<<<<<<< HEAD
-  
-=======
->>>>>>> origin/main
   .header__nav a,
   .header__nav Link {
     padding: 10px 16px;
     font-size: 1rem;
   }
   
-<<<<<<< HEAD
-
-
-
-
-  
-=======
->>>>>>> origin/main
   .header__actions {
     justify-content: center;
   }
@@ -400,10 +350,6 @@ body {
   }
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
 @media (max-width: 600px) {
   .header__container {
     padding: 16px;
