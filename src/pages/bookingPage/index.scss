@@ -317,7 +317,7 @@ body {
   background: $bg-white;
   border: 2px solid $border-color;
   border-radius: $radius-md;
-  padding: $spacing-md;
+  padding: $spacing-md $spacing-lg;
   cursor: pointer;
   transition: all $transition-base;
   display: flex;
@@ -355,17 +355,17 @@ body {
 .station-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: $spacing-sm;
-  margin-bottom: 4px;
+  align-items: flex-start;  
+  gap: 3px;
+  margin-bottom: 1px;
 }
 
 .station-name {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 6;
   color: $text-primary;
-  line-height: 1.4;
-  flex: 1;
+  line-height: 1;
+  flex: 10;  
 }
 
 // Type Badge
@@ -716,13 +716,14 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: $spacing-lg;
-  align-items: start;
+  align-items: stretch; // Changed from stretch to start for better control
 }
 
 .summary-section {
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
+  height: 100%; // Make section take full height
 }
 
 .summary-card {
@@ -731,17 +732,16 @@ body {
   border-radius: $radius-md;
   padding: $spacing-md;
   box-shadow: $shadow-sm;
+  flex: 1; // Make cards grow equally to fill available space
+  display: flex;
+  flex-direction: column;
+  transition: all $transition-base;
 
-  .card-icon {
-    width: 40px;
-    height: 40px;
-    background: $primary-pale;
-    border-radius: $radius-sm;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    margin-bottom: $spacing-sm;
+  &:hover {
+    border-color: $primary;
+    box-shadow: $shadow-lg;
+    transform: translateY(-4px);
+    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
   }
 
   h3 {
@@ -749,6 +749,10 @@ body {
     font-weight: 700;
     color: $text-primary;
     margin-bottom: $spacing-md;
+    text-align: center;
+    padding-bottom: $spacing-sm;
+    border-bottom: 2px solid $primary;
+    flex-shrink: 0;
   }
 }
 
@@ -764,14 +768,6 @@ body {
     border-bottom: none;
   }
 
-  &.highlight-item {
-    background: $primary-pale;
-    padding: $spacing-xs $spacing-sm;
-    border-radius: $radius-sm;
-    margin: 4px 0;
-    border-bottom: none;
-  }
-
   .summary-label {
     font-size: 13px;
     color: $text-secondary;
@@ -784,6 +780,7 @@ body {
     color: $text-primary;
     font-weight: 600;
     text-align: right;
+    flex: 1;
 
     &.highlight {
       color: $primary-dark;
@@ -796,12 +793,21 @@ body {
       font-weight: 700;
     }
   }
+
+  &.highlight-item {
+    background: $primary-pale;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $radius-sm;
+    margin: $spacing-xs 0;
+    border-bottom: none;
+  }
 }
 
 // Form Section
 .form-section {
   position: sticky;
   top: 0;
+  height: fit-content; // Let form determine its own height
 }
 
 .booking-form {
@@ -810,11 +816,15 @@ body {
   border-radius: $radius-md;
   padding: $spacing-lg;
   box-shadow: $shadow-sm;
+  height: 100%; // Make form take full height to match summary cards
+  display: flex; // Use flexbox for better layout control
+  flex-direction: column;
 
   .form-header {
     margin-bottom: $spacing-lg;
     padding-bottom: $spacing-md;
     border-bottom: 2px solid $bg-gray;
+    flex-shrink: 0; // Prevent header from shrinking
 
     h3 {
       font-size: 16px;
@@ -1052,6 +1062,128 @@ body {
 
   > div {
     border-radius: $radius-lg;
+  }
+}
+
+// Modal Styles for Date/Time Picker
+.datetime-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.datetime-modal {
+  background: $bg-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  width: 90%;
+  max-width: 400px;
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 28px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all $transition-base;
+    line-height: 1;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+  }
+}
+
+.modal-body {
+  padding: $spacing-xl;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  .modal-date-input,
+  .modal-time-input {
+    width: 100%;
+    padding: $spacing-md;
+    border: 2px solid $primary;
+    border-radius: $radius-md;
+    font-size: 18px;
+    font-weight: 600;
+    color: $text-primary;
+    background: $primary-pale;
+    cursor: pointer;
+    transition: all $transition-base;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-dark;
+      box-shadow: 0 0 0 4px rgba(126, 211, 33, 0.2);
+    }
+
+    &::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      font-size: 20px;
+      padding: $spacing-xs;
+      border-radius: $radius-sm;
+      transition: all $transition-base;
+
+      &:hover {
+        background: rgba($primary, 0.2);
+      }
+    }
   }
 }
 
