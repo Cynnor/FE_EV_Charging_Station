@@ -120,12 +120,39 @@ h3 {
 
 .invoice-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 12px;
-}
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
 
-@media (max-width: 900px) {
-    .payment-container {
-        grid-template-columns: 1fr;
+    button {
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        border: none;
+        transition: all 0.25s ease;
+    }
+
+    .print-btn {
+        background: #4CAF50;
+        color: white;
+
+        &:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+        }
+    }
+
+    .close-btn {
+        background: #f44336;
+        color: white;
+
+        &:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+        }
     }
 }

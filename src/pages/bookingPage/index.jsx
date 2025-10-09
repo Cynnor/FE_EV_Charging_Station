@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import "./index.scss"
 import ChargingMap from "../../components/chargingMap"
 
@@ -179,6 +179,7 @@ const stations = [
 
 export default function BookingPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const today = new Date()
   const defaultDate = today.toISOString().split("T")[0]
   const defaultTime = today.toTimeString().slice(0, 5)
@@ -192,6 +193,14 @@ export default function BookingPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
 
+  // Tự động set filterType từ URL params
+  useEffect(() => {
+    const typeFromUrl = searchParams.get('type');
+    if (typeFromUrl && ['AC', 'DC', 'DC_ULTRA'].includes(typeFromUrl)) {
+      setFilterType(typeFromUrl);
+    }
+  }, [searchParams]);
+
   const [formData, setFormData] = useState({
     date: defaultDate,
     startTime: defaultTime,
@@ -203,103 +212,113 @@ export default function BookingPage() {
     const matchesSearch =
       station.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       station.address.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = filterType === "all" || station.type === filterType
+
+    let matchesType = false;
+    if (filterType === "all") {
+      matchesType = true;
+    } else if (filterType === "DC_ULTRA") {
+      // DC Ultra: loại DC ULTRA
+      matchesType = station.type === "DC ULTRA";
+    } else {
+      matchesType = station.type === filterType;
+    }
+
     return matchesSearch && matchesType
   })
 
   const chargers = selectedStation
     ? [
-        {
-          id: 1,
-          name: "Trụ A1",
-          coords: [selectedStation.coords[0] + 0.0002, selectedStation.coords[1]],
-          power: "7 kW",
-          price: "3.500 đ/kWh",
-          status: "available",
-          connector: "Type 2",
-        },
-        {
-          id: 2,
-          name: "Trụ A2",
-          coords: [selectedStation.coords[0], selectedStation.coords[1] + 0.0002],
-          power: "11 kW",
-          price: "3.800 đ/kWh",
-          status: "available",
-          connector: "Type 2",
-        },
-        {
-          id: 3,
-          name: "Trụ B1",
-          coords: [selectedStation.coords[0] - 0.0002, selectedStation.coords[1]],
-          power: "22 kW",
-          price: "4.000 đ/kWh",
-          status: "available",
-          connector: "Type 2",
-        },
-        {
-          id: 4,
-          name: "Trụ B2",
-          coords: [selectedStation.coords[0], selectedStation.coords[1] - 0.0002],
-          power: "30 kW",
-          price: "4.200 đ/kWh",
-          status: "occupied",
-          connector: "CCS2",
-        },
-        {
-          id: 5,
-          name: "Trụ C1",
-          coords: [selectedStation.coords[0] + 0.00015, selectedStation.coords[1] + 0.00015],
-          power: "43 kW",
-          price: "4.500 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-        {
-          id: 6,
-          name: "Trụ C2",
-          coords: [selectedStation.coords[0] - 0.00015, selectedStation.coords[1] + 0.00015],
-          power: "50 kW",
-          price: "4.800 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-        {
-          id: 7,
-          name: "Trụ D1",
-          coords: [selectedStation.coords[0] + 0.00015, selectedStation.coords[1] - 0.00015],
-          power: "60 kW",
-          price: "5.000 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-        {
-          id: 8,
-          name: "Trụ D2",
-          coords: [selectedStation.coords[0] - 0.00015, selectedStation.coords[1] - 0.00015],
-          power: "90 kW",
-          price: "5.200 đ/kWh",
-          status: "maintenance",
-          connector: "CCS2",
-        },
-        {
-          id: 9,
-          name: "Trụ E1",
-          coords: [selectedStation.coords[0] + 0.00025, selectedStation.coords[1] - 0.0001],
-          power: "120 kW",
-          price: "5.500 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-        {
-          id: 10,
-          name: "Trụ E2",
-          coords: [selectedStation.coords[0] - 0.00025, selectedStation.coords[1] + 0.0001],
-          power: "150 kW",
-          price: "6.000 đ/kWh",
-          status: "available",
-          connector: "CCS2",
-        },
-      ]
+      {
+        id: 1,
+        name: "Trụ A1",
+        coords: [selectedStation.coords[0] + 0.0002, selectedStation.coords[1]],
+        power: "7 kW",
+        price: "3.500 đ/kWh",
+        status: "available",
+        connector: "Type 2",
+      },
+      {
+        id: 2,
+        name: "Trụ A2",
+        coords: [selectedStation.coords[0], selectedStation.coords[1] + 0.0002],
+        power: "11 kW",
+        price: "3.800 đ/kWh",
+        status: "available",
+        connector: "Type 2",
+      },
+      {
+        id: 3,
+        name: "Trụ B1",
+        coords: [selectedStation.coords[0] - 0.0002, selectedStation.coords[1]],
+        power: "22 kW",
+        price: "4.000 đ/kWh",
+        status: "available",
+        connector: "Type 2",
+      },
+      {
+        id: 4,
+        name: "Trụ B2",
+        coords: [selectedStation.coords[0], selectedStation.coords[1] - 0.0002],
+        power: "30 kW",
+        price: "4.200 đ/kWh",
+        status: "occupied",
+        connector: "CCS2",
+      },
+      {
+        id: 5,
+        name: "Trụ C1",
+        coords: [selectedStation.coords[0] + 0.00015, selectedStation.coords[1] + 0.00015],
+        power: "43 kW",
+        price: "4.500 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+      {
+        id: 6,
+        name: "Trụ C2",
+        coords: [selectedStation.coords[0] - 0.00015, selectedStation.coords[1] + 0.00015],
+        power: "50 kW",
+        price: "4.800 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+      {
+        id: 7,
+        name: "Trụ D1",
+        coords: [selectedStation.coords[0] + 0.00015, selectedStation.coords[1] - 0.00015],
+        power: "60 kW",
+        price: "5.000 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+      {
+        id: 8,
+        name: "Trụ D2",
+        coords: [selectedStation.coords[0] - 0.00015, selectedStation.coords[1] - 0.00015],
+        power: "90 kW",
+        price: "5.200 đ/kWh",
+        status: "maintenance",
+        connector: "CCS2",
+      },
+      {
+        id: 9,
+        name: "Trụ E1",
+        coords: [selectedStation.coords[0] + 0.00025, selectedStation.coords[1] - 0.0001],
+        power: "120 kW",
+        price: "5.500 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+      {
+        id: 10,
+        name: "Trụ E2",
+        coords: [selectedStation.coords[0] - 0.00025, selectedStation.coords[1] + 0.0001],
+        power: "150 kW",
+        price: "6.000 đ/kWh",
+        status: "available",
+        connector: "CCS2",
+      },
+    ]
     : []
 
   const handleChange = (e) => {
