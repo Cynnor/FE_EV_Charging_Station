@@ -557,14 +557,23 @@
       }
 
       .station-details {
-        font-size: 14px;
-        color: #555;
-        margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 8px;
+  align-items: flex-start; 
 
-        .item {
-          margin: 2px 0;
-        }
-      }
+  .item {
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+}
+
 
       .station-actions {
         text-align: right;
