@@ -157,7 +157,7 @@ const HomePage = () => {
                 onClick={() => {
                   if (mapSectionRef.current) {
                     const topPos = mapSectionRef.current.getBoundingClientRect().top + window.scrollY;
-                    window.scrollTo({ top: topPos - 120, behavior: "smooth" });
+                    window.scrollTo({ top: topPos , behavior: "smooth" });
                   }
                 }}
               >
@@ -219,7 +219,7 @@ const HomePage = () => {
             <div className="map-view">
               <ChargingMap
                 stations={mapStations}
-                center={userLocation || [10.7769, 106.7009]}
+                center={userLocation}
                 zoom={12}
                 onSelect={(station) => handleMarkerClick(station.id)}
                 selectedStation={selectedId ? mapStations.find((s) => s.id === selectedId) : null}
