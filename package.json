@@ -12,9 +12,11 @@
   "dependencies": {
     "antd": "^5.27.3",
     "axios": "^1.12.2",
+    "date-fns": "^4.1.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
+    "react-datepicker": "^8.7.0",
     "react-dom": "^19.1.1",
     "react-icons": "^5.5.0",
     "react-leaflet": "^5.0.0",

@@ -59,7 +59,6 @@ body {
   box-shadow: 0 4px 16px rgba(126, 211, 33, 0.3);
   transition: transform 0.3s ease;
 }
-
 .header__logo-img:hover {
   transform: scale(1.05);
 }
@@ -67,7 +66,6 @@ body {
   display: flex;
   flex-direction: column;
 }
-
 .header__logo-title {
   font-size: 1.4rem;
   font-weight: 700;
@@ -105,8 +103,8 @@ body {
   background: transparent;
 }
 
-.header__nav a:hover,
-.header__nav Link:hover {
+.header__nav a.hover,
+.header__nav Link.hover {
   color: #7ed321;
   background: rgba(126, 211, 33, 0.1);
   transform: translateY(-1px);
@@ -278,7 +276,6 @@ body {
   background: #7ed321;
   color: #fff;
 }
-
 .header__lang-toggle {
   background: #fff;
   border: 1px solid #e0e0e0;

@@ -1,1271 +1,1355 @@
-// Variables
-$primary-color: #10b981;
-$primary-dark: #059669;
-$primary-light: #d1fae5;
-$secondary-color: #3b82f6;
-$danger-color: #ef4444;
-$warning-color: #f59e0b;
-$text-dark: #1f2937;
-$text-gray: #6b7280;
-$text-light: #9ca3af;
-$bg-light: #f9fafb;
+// Color System
+$primary: #7ed321;
+$primary-dark: #6bb91c;
+$primary-light: #9de04a;
+$primary-pale: #f0f9e6;
+
+$text-primary: #1a1a1a;
+$text-secondary: #666666;
+$text-muted: #999999;
+
 $bg-white: #ffffff;
-$border-color: #e5e7eb;
-$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+$bg-light: #f8f9fa;
+$bg-gray: #e9ecef;
 
-// Mixins
-@mixin transition($property: all, $duration: 0.3s) {
-  transition: $property $duration ease;
+$success: #28a745;
+$warning: #ffc107;
+$danger: #dc3545;
+$info: #17a2b8;
+
+$border-color: #dee2e6;
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+// Typography
+$font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+$font-size-base: 15px;
+$line-height-base: 1.6;
+
+// Spacing
+$spacing-xs: 8px;
+$spacing-sm: 12px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// Border Radius
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+
+// Transitions
+$transition-fast: 0.15s ease;
+$transition-base: 0.25s ease;
+$transition-slow: 0.35s ease;
+
+// Reset & Base
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@mixin card-hover {
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: $shadow-xl;
-  }
+body {
+  font-family: $font-family;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-primary;
+  background: $bg-light;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-// Main wrapper
+// Main Wrapper
 .booking-wrapper {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  margin-top: 80px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 50%, #dcfce7 100%);
+  padding: $spacing-lg;
+  padding-top: 100px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+// Container
 .booking-container {
-  display: flex;
   width: 100%;
-  max-width: 1400px;
-  height: calc(100vh - 120px);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: $shadow-xl;
-  background: $bg-white;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-lg;
+  height: 600px;
 
   &.confirmation-mode {
-    .left-panel {
-      flex: 1;
-      max-width: 100%;
-    }
+    grid-template-columns: 1fr;
+    max-width: 1200px;
   }
 }
 
-// Left panel
+// Left Panel
 .left-panel {
-  flex: 0 0 480px;
+  background: $bg-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
   display: flex;
   flex-direction: column;
-  background: $bg-white;
-  border-right: 1px solid $border-color;
   overflow: hidden;
-
-  .panel-header {
-    padding: 24px;
-    background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
-    color: white;
-
-    h1 {
-      margin: 0 0 20px 0;
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .step-indicator {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        opacity: 0.5;
-        @include transition(opacity);
-
-        &.active {
-          opacity: 1;
-        }
-
-        .step-number {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          font-size: 14px;
-        }
-
-        &.active .step-number {
-          background: white;
-          color: $primary-color;
-        }
-
-        .step-label {
-          font-size: 11px;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-      }
-
-      select {
-        margin-top: 5px;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
-        background: #fff;
-        transition: border-color 0.2s, box-shadow 0.2s;
-
-        &:focus {
-          outline: none;
-          border-color: #28a745;
-          box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
-        }
-      }
-    }
-
-      .step-divider {
-        flex: 1;
-        height: 2px;
-        background: rgba(255, 255, 255, 0.2);
-        margin: 0 4px;
-        margin-bottom: 20px;
-      }
-    }
-  }
-
-  // Station selection
-  .station-selection {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-    padding: 20px;
-
-    .search-filters {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 16px;
-
-      .search-box {
-        position: relative;
-        display: flex;
-        align-items: center;
-
-        .search-icon {
-          position: absolute;
-          left: 14px;
-          color: $text-gray;
-          pointer-events: none;
-        }
-
-        .search-input {
-          width: 100%;
-          padding: 12px 40px 12px 44px;
-          border: 2px solid $border-color;
-          border-radius: 12px;
-          font-size: 14px;
-          @include transition(all);
-
-          &:focus {
-            outline: none;
-            border-color: $primary-color;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-          }
-
-          &::placeholder {
-            color: $text-light;
-          }
-        }
-
-        .clear-search {
-          position: absolute;
-          right: 12px;
-          width: 24px;
-          height: 24px;
-          border: none;
-          background: $text-light;
-          color: white;
-          border-radius: 50%;
-          cursor: pointer;
-          font-size: 18px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          @include transition(all);
-
-          &:hover {
-            background: $text-gray;
-          }
-        }
-      }
-
-      .filter-select {
-        padding: 12px 14px;
-        border: 2px solid $border-color;
-        border-radius: 12px;
-        font-size: 14px;
-        background: white;
-        cursor: pointer;
-        font-weight: 500;
-        color: $text-dark;
-        @include transition(all);
-
-        &:focus {
-          outline: none;
-          border-color: $primary-color;
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-      }
-    }
-
-    .results-count {
-      font-size: 14px;
-      color: $text-gray;
-      margin-bottom: 12px;
-
-      strong {
-        color: $primary-color;
-        font-weight: 600;
-      }
-    }
-
-    .stations-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding-right: 8px;
-
-      &::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      &::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: $border-color;
-        border-radius: 3px;
-
-        &:hover {
-          background: $text-light;
-        }
-      }
-
-      .station-card {
-        background: white;
-        border: 2px solid $border-color;
-        border-radius: 16px;
-        padding: 20px;
-        cursor: pointer;
-        @include transition(all);
-        position: relative;
-        overflow: hidden;
-
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 4px;
-          height: 100%;
-          background: $primary-color;
-          transform: scaleY(0);
-          @include transition(transform);
-        }
-
-        &:hover {
-          border-color: $primary-color;
-          box-shadow: $shadow-lg;
-          transform: translateX(4px);
-
-          &::before {
-            transform: scaleY(1);
-          }
-        }
-
-        &.ac {
-          &:hover {
-            border-color: $secondary-color;
-          }
-
-          &::before {
-            background: $secondary-color;
-          }
-        }
-
-        &.dc {
-          &:hover {
-            border-color: $warning-color;
-          }
-
-          &::before {
-            background: $warning-color;
-          }
-        }
-
-        .station-card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 12px;
-
-          .station-distance {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 6px 10px;
-            background: $bg-light;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            color: $text-gray;
-
-            svg {
-              width: 12px;
-              height: 12px;
-            }
-          }
-        }
-
-        .station-badge {
-          .badge-type {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-
-            &.ac {
-              background: #dbeafe;
-              color: #1e40af;
-            }
-
-            &.dc {
-              background: #fef3c7;
-              color: #92400e;
-            }
-          }
-        }
-
-        .station-name {
-          margin: 0 0 8px 0;
-          font-size: 18px;
-          font-weight: 700;
-          color: $text-dark;
-          line-height: 1.3;
-        }
-
-        .station-address {
-          margin: 0 0 12px 0;
-          font-size: 13px;
-          color: $text-gray;
-          line-height: 1.5;
-        }
-
-        .station-rating {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 16px;
-          padding: 10px;
-          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-          border-radius: 10px;
-
-          .stars {
-            display: flex;
-            gap: 2px;
-
-            .star {
-              color: #d1d5db;
-              font-size: 16px;
-
-              &.filled {
-                color: #f59e0b;
-              }
-            }
-          }
-
-          .rating-text {
-            font-size: 12px;
-            font-weight: 600;
-            color: #92400e;
-          }
-        }
-
-        .station-info-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin-bottom: 16px;
-
-          .info-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: $bg-light;
-            border-radius: 10px;
-            @include transition(all);
-
-            &:hover {
-              background: #e0f2fe;
-              transform: translateY(-2px);
-            }
-
-            .info-icon {
-              font-size: 20px;
-            }
-
-            .info-content {
-              display: flex;
-              flex-direction: column;
-              gap: 2px;
-
-              .info-label {
-                font-size: 10px;
-                color: $text-gray;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                font-weight: 600;
-              }
-
-              .info-value {
-                font-size: 14px;
-                font-weight: 700;
-                color: $text-dark;
-              }
-            }
-          }
-        }
-
-        .station-amenities {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 16px;
-          padding: 12px;
-          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-          border-radius: 10px;
-
-          .amenities-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: $text-gray;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-
-          .amenities-list {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-
-            .amenity-icon {
-              font-size: 18px;
-              padding: 6px;
-              background: white;
-              border-radius: 8px;
-              @include transition(all);
-              cursor: help;
-
-              &:hover {
-                transform: scale(1.2);
-              }
-            }
-          }
-        }
-
-        .station-availability {
-          .availability-bar {
-            height: 8px;
-            background: $border-color;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 8px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-
-            .availability-fill {
-              height: 100%;
-              background: linear-gradient(90deg, $primary-color 0%, $primary-dark 100%);
-              border-radius: 4px;
-              @include transition(width, 0.5s);
-              box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-            }
-          }
-
-          .availability-text {
-            font-size: 12px;
-            color: $text-gray;
-            font-weight: 600;
-          }
-        }
-      }
-    }
-
-    .no-results {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      color: $text-gray;
-
-      svg {
-        color: $text-light;
-      }
-
-      p {
-        font-size: 16px;
-        font-weight: 500;
-      }
-
-      button {
-        padding: 10px 20px;
-        border: 2px solid $primary-color;
-        background: white;
-        color: $primary-color;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        @include transition(all);
-
-        &:hover {
-          background: $primary-color;
-          color: white;
-        }
-      }
-    }
-  }
-
-  // Charger selection
-  .charger-selection {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-    padding: 20px;
-
-    .selected-station-info {
-      margin-bottom: 20px;
-
-      .back-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 14px;
-        border: none;
-        background: $bg-light;
-        color: $text-dark;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
-        margin-bottom: 16px;
-        @include transition(all);
-
-        &:hover {
-          background: $border-color;
-        }
-
-        svg {
-          width: 16px;
-          height: 16px;
-        }
-      }
-
-      h2 {
-        margin: 0 0 12px 0;
-        font-size: 22px;
-        font-weight: 700;
-        color: $text-dark;
-      }
-
-      .station-quick-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-
-        .badge {
-          padding: 6px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 700;
-          text-transform: uppercase;
-
-          &.ac {
-            background: #dbeafe;
-            color: #1e40af;
-          }
-
-          &.dc {
-            background: #fef3c7;
-            color: #92400e;
-          }
-        }
-
-        span {
-          font-size: 14px;
-          color: $text-gray;
-          font-weight: 500;
-        }
-      }
-    }
-
-    .selection-hint {
-      font-size: 14px;
-      color: $text-gray;
-      margin-bottom: 16px;
-      font-weight: 500;
-    }
-
-    .chargers-grid {
-      flex: 1;
-      overflow-y: auto;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      padding-right: 8px;
-
-      &::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      &::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: $border-color;
-        border-radius: 3px;
-
-        &:hover {
-          background: $text-light;
-        }
-      }
-
-      .charger-card {
-        background: white;
-        border: 2px solid $border-color;
-        border-radius: 14px;
-        padding: 16px;
-        cursor: pointer;
-        @include transition(all);
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-
-        &.available {
-          &:hover {
-            border-color: $primary-color;
-            box-shadow: $shadow-md;
-            transform: translateY(-2px);
-          }
-        }
-
-        &.occupied {
-          opacity: 0.6;
-          cursor: not-allowed;
-          background: $bg-light;
-        }
-
-        &.maintenance {
-          opacity: 0.5;
-          cursor: not-allowed;
-          background: #fef2f2;
-          border-color: #fecaca;
-        }
-
-        &.selected {
-          border-color: $primary-color;
-          background: $primary-light;
-          box-shadow: $shadow-md;
-        }
-
-        .charger-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 8px;
-
-          h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 700;
-            color: $text-dark;
-          }
-
-          .status-badge {
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            white-space: nowrap;
-
-            &.available {
-              background: #d1fae5;
-              color: #065f46;
-            }
-
-            &.occupied {
-              background: #fef3c7;
-              color: #92400e;
-            }
-
-            &.maintenance {
-              background: #fee2e2;
-              color: #991b1b;
-            }
-          }
-        }
-
-        .charger-specs {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-
-          .spec-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: $bg-light;
-            border-radius: 8px;
-
-            .spec-icon {
-              font-size: 18px;
-            }
-
-            .spec-label {
-              font-size: 11px;
-              color: $text-gray;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              font-weight: 600;
-            }
-
-            .spec-value {
-              font-size: 14px;
-              font-weight: 700;
-              color: $text-dark;
-            }
-          }
-        }
-
-        .charger-connector {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-top: 8px;
-          border-top: 1px solid $border-color;
-
-          .connector-label {
-            font-size: 12px;
-            color: $text-gray;
-            font-weight: 500;
-          }
-
-          .connector-type {
-            font-size: 12px;
-            font-weight: 700;
-            color: $text-dark;
-            padding: 4px 8px;
-            background: $bg-light;
-            border-radius: 6px;
-          }
-        }
-      }
-    }
-  }
-
-  // Booking confirmation
-  .booking-confirmation {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #d1fae5 100%);
-    position: relative;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: 
-        radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-      pointer-events: none;
-    }
-
-    .back-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border: none;
-      background: white;
-      color: $text-dark;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      margin-bottom: 12px;
-      align-self: flex-start;
-      @include transition(all);
-      box-shadow: $shadow-sm;
-      position: relative;
-      z-index: 1;
-
-      &:hover {
-        background: $bg-light;
-        box-shadow: $shadow-md;
-        transform: translateX(-4px);
-      }
-
-      svg {
-        width: 16px;
-        height: 16px;
-      }
-    }
-
-    .confirmation-content {
-      position: relative;
-      z-index: 1;
-
-      .confirmation-header {
-        text-align: center;
-        margin-bottom: 20px;
-        padding: 16px;
-        background: white;
-        border-radius: 14px;
-        box-shadow: $shadow-md;
-        position: relative;
-        overflow: hidden;
-
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 4px;
-          background: linear-gradient(90deg, $primary-color 0%, $primary-dark 100%);
-        }
-
-        .success-icon {
-          width: 48px;
-          height: 48px;
-          margin: 0 auto 10px;
-          background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 28px;
-          color: white;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-          animation: successPulse 2s ease-in-out infinite;
-        }
-
-        h2 {
-          margin: 0 0 8px 0;
-          font-size: 22px;
-          font-weight: 800;
-          color: $text-dark;
-          letter-spacing: -0.5px;
-        }
-
-        .confirmation-subtitle {
-          margin: 0;
-          font-size: 13px;
-          color: $text-gray;
-          font-weight: 500;
-        }
-      }
-
-      .confirmation-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin-bottom: 16px;
-
-        @media (max-width: 1024px) {
-          grid-template-columns: 1fr;
-        }
-
-        .summary-section {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .summary-card {
-          background: white;
-          border-radius: 12px;
-          padding: 16px;
-          box-shadow: $shadow-md;
-          border: 2px solid $border-color;
-          @include transition(all);
-          position: relative;
-          overflow: hidden;
-
-          &::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, $primary-color 0%, $primary-dark 100%);
-          }
-
-          &:hover {
-            box-shadow: $shadow-lg;
-            transform: translateY(-2px);
-            border-color: $primary-color;
-          }
-
-          .card-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, $primary-light 0%, #a7f3d0 100%);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
-          }
-
-          h3 {
-            margin: 0 0 12px 0;
-            font-size: 16px;
-            font-weight: 800;
-            color: $text-dark;
-            padding-bottom: 10px;
-            border-bottom: 2px solid $primary-light;
-          }
-
-          .summary-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 10px 0;
-            border-bottom: 1px solid $border-color;
-            gap: 10px;
-
-            &:last-child {
-              border-bottom: none;
-            }
-
-            &.highlight-item {
-              background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-              padding: 10px;
-              margin: 6px -6px;
-              border-radius: 10px;
-              border-bottom: none;
-            }
-
-            .summary-label {
-              font-size: 13px;
-              color: $text-gray;
-              font-weight: 600;
-              flex-shrink: 0;
-            }
-
-            .summary-value {
-              font-size: 13px;
-              color: $text-dark;
-              font-weight: 700;
-              text-align: right;
-
-              &.highlight {
-                color: $primary-color;
-                font-weight: 900;
-                font-size: 15px;
-                padding: 4px 10px;
-                background: white;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
-              }
-
-              &.status-available {
-                color: $primary-color;
-                font-weight: 800;
-                padding: 4px 8px;
-                background: $primary-light;
-                border-radius: 6px;
-              }
-            }
-          }
-        }
-
-        .form-section {
-          .booking-form {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            background: white;
-            padding: 16px;
-            border-radius: 12px;
-            box-shadow: $shadow-md;
-            border: 2px solid $primary-light;
-            position: relative;
-            overflow: hidden;
-
-            &::before {
-              content: '';
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              height: 4px;
-              background: linear-gradient(90deg, $primary-color 0%, $primary-dark 100%);
-            }
-
-            .form-header {
-              margin-bottom: 4px;
-
-              h3 {
-                margin: 0 0 6px 0;
-                font-size: 17px;
-                font-weight: 800;
-                color: $text-dark;
-              }
-
-              p {
-                margin: 0;
-                font-size: 12px;
-                color: $text-gray;
-                font-weight: 500;
-              }
-            }
-
-            .form-group {
-              display: flex;
-              flex-direction: column;
-              gap: 8px;
-
-              label {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 13px;
-                font-weight: 700;
-                color: $text-dark;
-
-                svg {
-                  color: $primary-color;
-                }
-              }
-
-              input {
-                padding: 12px;
-                border: 2px solid $border-color;
-                border-radius: 10px;
-                font-size: 14px;
-                font-weight: 600;
-                color: $text-dark;
-                @include transition(all);
-                background: $bg-light;
-
-                &:focus {
-                  outline: none;
-                  border-color: $primary-color;
-                  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-                  background: white;
-                }
-              }
-            }
-
-            .price-estimate {
-              padding: 14px;
-              background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-              border-radius: 10px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
-
-              .estimate-label {
-                font-size: 13px;
-                font-weight: 700;
-                color: #92400e;
-              }
-
-              .estimate-value {
-                font-size: 18px;
-                font-weight: 900;
-                color: #92400e;
-              }
-            }
-
-            .submit-button {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 8px;
-              padding: 14px;
-              border: none;
-              border-radius: 10px;
-              background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
-              color: white;
-              font-size: 15px;
-              font-weight: 900;
-              cursor: pointer;
-              @include transition(all);
-              margin-top: 4px;
-              box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-              position: relative;
-              overflow: hidden;
-
-              &::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-                @include transition(left, 0.6s);
-              }
-
-              &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-
-                &::before {
-                  left: 100%;
-                }
-              }
-
-              &:active {
-                transform: translateY(-1px);
-              }
-
-              svg {
-                width: 18px;
-                height: 18px;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .confirmation-summary {
-      display: none;
-    }
-  }
-
-// Right panel
-.right-panel {
-  flex: 1;
-  height: 100%;
-  background: $bg-light;
-  position: relative;
-
-  .map-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
+}
+
+// Panel Header
+.panel-header {
+  padding: $spacing-md $spacing-lg;
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: $spacing-md;
+    letter-spacing: -0.5px;
   }
 }
 
-// Responsive
-@media (max-width: 1024px) {
-  .booking-container {
+// Step Indicator
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-xs;
+  background: rgba(255, 255, 255, 0.15);
+  padding: $spacing-sm;
+  border-radius: $radius-md;
+  backdrop-filter: blur(10px);
+
+  .step {
+    display: flex;
     flex-direction: column;
-    height: auto;
-    min-height: calc(100vh - 120px);
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    opacity: 0.5;
+    transition: all $transition-base;
+
+    &.active {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      transition: all $transition-base;
+    }
+
+    &.active .step-number {
+      background: white;
+      color: $primary;
+      border-color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .step-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+    }
   }
 
-  .left-panel {
-    flex: 0 0 auto;
-    max-height: 60vh;
+  .step-divider {
+    flex: 0 0 30px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    margin: 0 4px;
+    margin-bottom: 20px;
+  }
+}
+
+// Station Selection
+.station-selection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// Search & Filters
+.search-filters {
+  padding: $spacing-md;
+  display: flex;
+  gap: $spacing-sm;
+  border-bottom: 1px solid $border-color;
+  background: $bg-white;
+  flex-shrink: 0;
+}
+
+.search-box {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .search-icon {
+    position: absolute;
+    left: $spacing-md;
+    color: $text-muted;
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: $spacing-sm $spacing-md $spacing-sm 44px;
+    border: 2px solid $border-color;
+    border-radius: $radius-md;
+    font-size: 15px;
+    transition: all $transition-base;
+    background: $bg-white;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba(126, 211, 33, 0.1);
+    }
+
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+
+  .clear-search {
+    position: absolute;
+    right: $spacing-sm;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: $bg-gray;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: $text-secondary;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: $danger;
+      color: white;
+    }
+  }
+}
+
+.filter-select {
+  padding: $spacing-sm $spacing-md;
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  font-size: 15px;
+  background: $bg-white;
+  cursor: pointer;
+  transition: all $transition-base;
+  min-width: 200px;
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba(126, 211, 33, 0.1);
+  }
+}
+
+// Results Count
+.results-count {
+  padding: $spacing-sm $spacing-md;
+  font-size: 13px;
+  color: $text-secondary;
+  background: $bg-light;
+  flex-shrink: 0;
+
+  strong {
+    color: $primary;
+    font-weight: 700;
+  }
+}
+
+// Stations List
+.stations-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-md;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: $spacing-sm;
+  align-content: start;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-light;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-color;
+    border-radius: 3px;
+
+    &:hover {
+      background: $text-muted;
+    }
+  }
+}
+
+// Station Card
+.station-card {
+  background: $bg-white;
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-lg;
+  cursor: pointer;
+  transition: all $transition-base;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  min-height: 80px;
+  justify-content: center;
+
+  &:hover {
+    border-color: $primary;
+    box-shadow: $shadow-lg;
+    transform: translateY(-2px);
+  }
+
+  &.selected {
+    border-color: $primary;
+    background: $primary-pale;
+    box-shadow: $shadow-md;
+  }
+
+  &.ac {
+    border-left: 4px solid $info;
+  }
+
+  &.dc {
+    border-left: 4px solid $warning;
+  }
+
+  &.dc-ultra {
+    border-left: 4px solid $danger;
+  }
+}
+
+// Station Header
+.station-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;  
+  gap: 3px;
+  margin-bottom: 1px;
+}
+
+.station-name {
+  font-size: 16px;
+  font-weight: 6;
+  color: $text-primary;
+  line-height: 1;
+  flex: 10;  
+}
+
+// Type Badge
+.type-badge {
+  padding: 4px 8px;
+  border-radius: $radius-sm;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.ac {
+    background: rgba($info, 0.15);
+    color: $info;
+    border: 1px solid rgba($info, 0.3);
+  }
+
+  &.dc {
+    background: rgba($warning, 0.15);
+    color: darken($warning, 15%);
+    border: 1px solid rgba($warning, 0.3);
+  }
+
+  &.dc-ultra {
+    background: rgba($danger, 0.15);
+    color: $danger;
+    border: 1px solid rgba($danger, 0.3);
+  }
+}
+
+// Station Availability
+.station-availability {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .availability-bar {
+    width: 100%;
+    height: 6px;
+    background: $bg-gray;
+    border-radius: 3px;
+    overflow: hidden;
+
+    .availability-fill {
+      height: 100%;
+      background: linear-gradient(90deg, $primary 0%, $primary-dark 100%);
+      transition: width $transition-base;
+    }
+  }
+
+  .availability-text {
+    font-size: 12px;
+    color: $text-secondary;
+    font-weight: 600;
+  }
+}
+
+// Charger Selection
+.charger-selection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.selected-station-info {
+  padding: $spacing-md;
+  border-bottom: 1px solid $border-color;
+  background: $bg-light;
+  flex-shrink: 0;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: $spacing-xs;
+    margin-top: $spacing-xs;
+  }
+
+  .station-quick-info {
+    display: flex;
+    gap: $spacing-sm;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: $text-secondary;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: $radius-sm;
+      font-weight: 600;
+      font-size: 11px;
+
+      &.ac {
+        background: rgba($info, 0.1);
+        color: $info;
+      }
+
+      &.dc {
+        background: rgba($warning, 0.1);
+        color: darken($warning, 10%);
+      }
+    }
+  }
+}
+
+.selection-hint {
+  padding: $spacing-sm $spacing-md;
+  font-size: 13px;
+  color: $text-secondary;
+  background: $primary-pale;
+  border-left: 4px solid $primary;
+  flex-shrink: 0;
+}
+
+// Chargers Grid
+.chargers-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-md;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: $spacing-sm;
+  align-content: start;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-light;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-color;
+    border-radius: 3px;
+
+    &:hover {
+      background: $text-muted;
+    }
+  }
+}
+
+// Charger Card
+.charger-card {
+  background: $bg-white;
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  cursor: pointer;
+  transition: all $transition-base;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+
+  &.available:hover {
+    border-color: $primary;
+    box-shadow: $shadow-lg;
+    transform: translateY(-2px);
+  }
+
+  &.selected {
+    border-color: $primary;
+    background: $primary-pale;
+    box-shadow: $shadow-md;
+  }
+
+  &.occupied {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: $bg-light;
+  }
+
+  &.maintenance {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: repeating-linear-gradient(
+      45deg,
+      $bg-white,
+      $bg-white 10px,
+      $bg-light 10px,
+      $bg-light 20px
+    );
+  }
+}
+
+.charger-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: $spacing-xs;
+  border-bottom: 2px solid $bg-gray;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: $text-primary;
+  }
+}
+
+.status-badge {
+  padding: 3px 8px;
+  border-radius: $radius-sm;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.available {
+    background: rgba($success, 0.1);
+    color: $success;
+  }
+
+  &.occupied {
+    background: rgba($warning, 0.1);
+    color: darken($warning, 10%);
+  }
+
+  &.maintenance {
+    background: rgba($text-muted, 0.1);
+    color: $text-muted;
+  }
+}
+
+.charger-specs {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.spec-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+
+  .spec-icon {
+    font-size: 20px;
+    width: 28px;
+    text-align: center;
+  }
+
+  .spec-label {
+    font-size: 11px;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+  }
+
+  .spec-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: $text-primary;
+  }
+}
+
+.charger-connector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-xs $spacing-sm;
+  background: $bg-light;
+  border-radius: $radius-sm;
+  font-size: 13px;
+
+  .connector-label {
+    color: $text-secondary;
+    font-weight: 600;
+  }
+
+  .connector-type {
+    color: $text-primary;
+    font-weight: 700;
+  }
+}
+
+// Booking Confirmation
+.booking-confirmation {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: $spacing-md;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-light;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-color;
+    border-radius: 3px;
+
+    &:hover {
+      background: $text-muted;
+    }
+  }
+
+  > .back-button {
+    margin-bottom: $spacing-md;
+  }
+}
+
+.confirmation-content {
+  flex: 1;
+}
+
+.confirmation-header {
+  text-align: center;
+  margin-bottom: $spacing-lg;
+
+  .success-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto $spacing-md;
+    background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    box-shadow: $shadow-lg;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .confirmation-subtitle {
+    font-size: 13px;
+    color: $text-secondary;
+    line-height: 1.5;
+  }
+}
+
+.confirmation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-lg;
+  align-items: stretch; // Changed from stretch to start for better control
+}
+
+.summary-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  height: 100%; // Make section take full height
+}
+
+.summary-card {
+  background: $bg-white;
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  box-shadow: $shadow-sm;
+  flex: 1; // Make cards grow equally to fill available space
+  display: flex;
+  flex-direction: column;
+  transition: all $transition-base;
+
+  &:hover {
+    border-color: $primary;
+    box-shadow: $shadow-lg;
+    transform: translateY(-4px);
+    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: $spacing-md;
+    text-align: center;
+    padding-bottom: $spacing-sm;
+    border-bottom: 2px solid $primary;
+    flex-shrink: 0;
+  }
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: $spacing-xs 0;
+  border-bottom: 1px solid $bg-gray;
+  gap: $spacing-sm;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .summary-label {
+    font-size: 13px;
+    color: $text-secondary;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .summary-value {
+    font-size: 13px;
+    color: $text-primary;
+    font-weight: 600;
+    text-align: right;
+    flex: 1;
+
+    &.highlight {
+      color: $primary-dark;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    &.status-available {
+      color: $success;
+      font-weight: 700;
+    }
+  }
+
+  &.highlight-item {
+    background: $primary-pale;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $radius-sm;
+    margin: $spacing-xs 0;
+    border-bottom: none;
+  }
+}
+
+// Form Section
+.form-section {
+  position: sticky;
+  top: 0;
+  height: fit-content; // Let form determine its own height
+}
+
+.booking-form {
+  background: $bg-white;
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  padding: $spacing-lg;
+  box-shadow: $shadow-sm;
+  height: 100%; // Make form take full height to match summary cards
+  display: flex; // Use flexbox for better layout control
+  flex-direction: column;
+
+  .form-header {
+    margin-bottom: $spacing-lg;
+    padding-bottom: $spacing-md;
+    border-bottom: 2px solid $bg-gray;
+    flex-shrink: 0; // Prevent header from shrinking
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: $text-primary;
+      margin-bottom: 4px;
+    }
+
+    p {
+      font-size: 13px;
+      color: $text-secondary;
+      line-height: 1.5;
+    }
+  }
+}
+
+.form-group {
+  margin-bottom: $spacing-lg;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    font-size: 14px;
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: $spacing-sm;
+
+    svg {
+      color: $primary;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.custom-datetime-picker {
+  position: relative;
+  
+  .datetime-display {
+    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
+    border: 2px solid $primary;
+    border-radius: $radius-lg;
+    padding: $spacing-md $spacing-lg;
+    cursor: pointer;
+    transition: all $transition-base;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(126, 211, 33, 0.15);
+    position: relative;
+    overflow: visible;
+    min-height: 70px;
+
+    &:hover {
+      border-color: $primary-dark;
+      box-shadow: 0 6px 20px rgba(126, 211, 33, 0.3);
+      transform: translateY(-3px);
+      background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.2) 100%);
+
+      .datetime-arrow {
+        transform: translateX(6px) scale(1.1);
+        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(126, 211, 33, 0.4);
+      }
+
+      .datetime-icon {
+        transform: scale(1.1);
+        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
+      }
+    }
+
+    &:active {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(126, 211, 33, 0.2);
+    }
+
+    .datetime-value {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+      font-size: 16px;
+      font-weight: 700;
+      color: $text-primary;
+      flex: 1;
+
+      .datetime-icon {
+        font-size: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.25) 100%);
+        border-radius: $radius-md;
+        flex-shrink: 0;
+        transition: all $transition-base;
+        box-shadow: 0 2px 8px rgba(126, 211, 33, 0.15);
+        border: 2px solid rgba($primary, 0.3);
+      }
+
+      span:last-child {
+        line-height: 1.4;
+        letter-spacing: -0.3px;
+      }
+    }
+
+    .datetime-arrow {
+      color: $primary;
+      font-size: 20px;
+      font-weight: 700;
+      transition: all $transition-base;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: rgba($primary, 0.15);
+      border-radius: 50%;
+      border: 2px solid rgba($primary, 0.3);
+      flex-shrink: 0;
+    }
+  }
+
+  .datetime-helper {
+    margin-top: $spacing-sm;
+    font-size: 12px;
+    color: $text-secondary;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-left: 6px;
+    font-weight: 600;
+    font-style: italic;
+  }
+
+  input[type="date"],
+  input[type="time"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .react-datepicker-popper {
+    z-index: 1000 !important;
+  }
+
+  .react-datepicker {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    left: 0 !important;
+    z-index: 1000 !important;
+    box-shadow: $shadow-lg;
+    border: 2px solid $primary;
+    border-radius: $radius-md;
+  }
+}
+
+.price-estimate {
+  background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.05) 100%);
+  border: 2px solid $primary;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+  text-align: center;
+
+  .estimate-label {
+    font-size: 12px;
+    color: $text-secondary;
+    font-weight: 600;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .estimate-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: $primary-dark;
+  }
+}
+
+.submit-button {
+  width: 100%;
+  padding: $spacing-md $spacing-lg;
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  color: white;
+  border: none;
+  border-radius: $radius-md;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all $transition-base;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  box-shadow: $shadow-md;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  svg {
+    transition: transform $transition-base;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover svg {
+    transform: translateX(4px);
+  }
+}
+
+// Right Panel (Map)
+.right-panel {
+  background: $bg-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+  height: 600px;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+
+  > div {
+    border-radius: $radius-lg;
+  }
+}
+
+// Modal Styles for Date/Time Picker
+.datetime-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.datetime-modal {
+  background: $bg-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  width: 90%;
+  max-width: 400px;
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 28px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all $transition-base;
+    line-height: 1;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+  }
+}
+
+.modal-body {
+  padding: $spacing-xl;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  .modal-date-input,
+  .modal-time-input {
+    width: 100%;
+    padding: $spacing-md;
+    border: 2px solid $primary;
+    border-radius: $radius-md;
+    font-size: 18px;
+    font-weight: 600;
+    color: $text-primary;
+    background: $primary-pale;
+    cursor: pointer;
+    transition: all $transition-base;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-dark;
+      box-shadow: 0 0 0 4px rgba(126, 211, 33, 0.2);
+    }
+
+    &::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      font-size: 20px;
+      padding: $spacing-xs;
+      border-radius: $radius-sm;
+      transition: all $transition-base;
+
+      &:hover {
+        background: rgba($primary, 0.2);
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .booking-container {
+    grid-template-columns: 1fr;
+    gap: $spacing-md;
   }
 
   .right-panel {
-    flex: 0 0 400px;
+    position: relative;
+    top: 0;
+    height: 500px;
   }
 
-  .chargers-grid {
-    grid-template-columns: 1fr !important;
+  .confirmation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-section {
+    position: relative;
+    top: 0;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .booking-wrapper {
-    padding: 10px;
-    margin-top: 60px;
+    padding: $spacing-sm;
   }
 
-  .booking-container {
-    border-radius: 12px;
-  }
+  .panel-header {
+    padding: $spacing-lg $spacing-md;
 
-  .left-panel {
-    .panel-header {
-      padding: 16px;
-
-      h1 {
-        font-size: 22px;
-      }
-
-      .step-indicator {
-        .step {
-          .step-label {
-            font-size: 9px;
-          }
-        }
-      }
+    h1 {
+      font-size: 22px;
     }
   }
 
-  .station-selection,
-  .charger-selection,
-  .booking-confirmation {
-    padding: 16px;
+  .step-indicator {
+    padding: $spacing-sm;
+
+    .step {
+      .step-number {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+      }
+
+      .step-label {
+        font-size: 11px;
+      }
+    }
+
+    .step-divider {
+      flex: 0 0 20px;
+      margin-bottom: 20px;
+    }
   }
 
-  .station-info-grid {
-    grid-template-columns: 1fr !important;
+  .search-filters {
+    flex-direction: column;
+    padding: $spacing-md;
+  }
+
+  .filter-select {
+    min-width: auto;
+  }
+
+  .stations-list {
+    grid-template-columns: 1fr;
+    padding: $spacing-md;
+  }
+
+  .chargers-grid {
+    grid-template-columns: 1fr;
+    padding: $spacing-md;
+  }
+
+  .confirmation-header {
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto $spacing-md;
+      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: $shadow-lg;
+    }
+
+    h2 {
+      font-size: 22px;
+    }
+  }
+
+  .booking-form {
+    padding: $spacing-lg;
+  }
+
+  .price-estimate {
+    .estimate-value {
+      font-size: 24px;
+    }
   }
 }
 
-@keyframes successPulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+@media (max-width: 480px) {
+  .station-info-grid {
+    grid-template-columns: 1fr;
   }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+
+  .info-item {
+    padding: $spacing-xs 0;
+  }
+
+  .booking-form {
+    padding: $spacing-md;
+  }
+
+  .submit-button {
+    font-size: 15px;
+    padding: $spacing-sm $spacing-md;
+  }
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-md;
+  background: linear-gradient(135deg, $bg-white 0%, $bg-light 100%);
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+  cursor: pointer;
+  transition: all $transition-base;
+  box-shadow: $shadow-sm;
+  width: fit-content;
+  
+  svg {
+    width: 16px;
+    height: 16px;
+    transition: transform $transition-base;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+    color: white;
+    border-color: $primary;
+    transform: translateX(-4px);
+    box-shadow: $shadow-md;
+
+    svg {
+      transform: translateX(-2px);
+    }
+  }
+
+  &:active {
+    transform: translateX(-2px);
+    box-shadow: $shadow-sm;
   }
 }
