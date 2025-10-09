@@ -69,14 +69,14 @@ body {
 .header__logo-title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #222;
+  color: #000;
   letter-spacing: 0.5px;
   line-height: 1.2;
 }
 
 .header__logo-sub {
   font-size: 0.85rem;
-  color: #666;
+  color: #333;
   line-height: 1.2;
   font-weight: 500;
   margin-top: -2px;
@@ -92,7 +92,7 @@ body {
 
 .header__nav a,
 .header__nav Link {
-  color: #333;
+  color: #000;
   font-weight: 600;
   text-decoration: none;
   font-size: 1.05rem;
@@ -139,7 +139,7 @@ body {
 .header__login,
 .header__register {
   background: transparent;
-  color: #333;
+  color: #000;
   border: none;
   padding: 8px 16px;
   font-weight: 600;
@@ -262,7 +262,7 @@ body {
 
 .header__logout-btn {
   background: transparent;
-  color: #333;
+  color: #000;
   border: none;
   padding: 8px 16px;
   font-weight: 600;

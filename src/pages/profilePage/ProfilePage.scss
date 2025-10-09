@@ -1,7 +1,7 @@
 .profile-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  color: #fff;
+  background: rgba(239, 250, 213, 1);
+  color: #000;
   padding: 120px 20px 40px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
@@ -11,7 +11,7 @@
     align-items: center;
     height: 50vh;
     font-size: 1.2rem;
-    color: #90caf9;
+    color: #000;
   }
 }
 
@@ -20,27 +20,24 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 40px;
-  background: linear-gradient(45deg, #7ed321, #90caf9);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #000;
 }
 
 .profile-section {
   max-width: 1200px;
   margin: 0 auto 40px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-radius: 20px;
   padding: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(126, 211, 33, 0.2);
+  box-shadow: 0 8px 32px rgba(126, 211, 33, 0.1);
 
   h2 {
     font-size: 1.8rem;
     font-weight: 600;
     margin-bottom: 25px;
-    color: #90caf9;
+    color: #000;
     border-bottom: 2px solid #7ed321;
     padding-bottom: 10px;
     display: inline-block;
@@ -74,7 +71,7 @@
 }
 
 .edit-btn {
-  background: linear-gradient(45deg, #7ed321, #90caf9);
+  background: linear-gradient(45deg, #7ed321, #6bc91a);
   color: #fff;
 
   &:hover {
@@ -114,14 +111,14 @@
 }
 
 .change-password-btn {
-  background: rgba(144, 202, 249, 0.2);
-  color: #90caf9;
-  border: 2px solid #90caf9;
+  background: rgba(126, 211, 33, 0.1);
+  color: #7ed321;
+  border: 2px solid #7ed321;
   margin-top: 20px;
 
   &:hover {
-    background: #90caf9;
-    color: #1a1a2e;
+    background: #7ed321;
+    color: #fff;
     transform: translateY(-2px);
   }
 }
@@ -131,6 +128,7 @@
     margin: 15px 0;
     font-size: 1.1rem;
     line-height: 1.6;
+    color: #000;
 
     b {
       color: #7ed321;
@@ -159,27 +157,39 @@
       padding: 12px 16px;
       border-radius: 10px;
       border: 2px solid rgba(126, 211, 33, 0.3);
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
+      background: rgba(255, 255, 255, 0.9);
+      color: #000;
       font-size: 1rem;
       transition: all 0.3s ease;
 
       &:focus {
         outline: none;
         border-color: #7ed321;
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 1);
         box-shadow: 0 0 10px rgba(126, 211, 33, 0.3);
       }
 
       &.disabled-input {
         opacity: 0.6;
         cursor: not-allowed;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(240, 240, 240, 0.9);
+        color: #666;
+      }
+
+      &.error {
+        border-color: #f44336;
+        box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
       }
 
       &::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(0, 0, 0, 0.5);
       }
+    }
+
+    .error-message {
+      color: #f44336;
+      font-size: 0.875rem;
+      margin-top: 4px;
     }
   }
 }
@@ -187,7 +197,8 @@
 .history-table-wrapper {
   overflow-x: auto;
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(126, 211, 33, 0.2);
 }
 
 .history-table {
@@ -196,7 +207,7 @@
   font-size: 1rem;
 
   thead {
-    background: linear-gradient(45deg, #7ed321, #90caf9);
+    background: linear-gradient(45deg, #7ed321, #6bc91a);
 
     th {
       padding: 15px 12px;
@@ -209,16 +220,16 @@
 
   tbody {
     tr {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(126, 211, 33, 0.1);
       transition: background 0.3s ease;
 
       &:hover {
-        background: rgba(126, 211, 33, 0.1);
+        background: rgba(126, 211, 33, 0.05);
       }
 
       td {
         padding: 15px 12px;
-        color: #e0e0e0;
+        color: #000;
         border: none;
       }
     }
@@ -233,7 +244,7 @@
 }
 
 .analysis-card {
-  background: linear-gradient(135deg, rgba(126, 211, 33, 0.1), rgba(144, 202, 249, 0.1));
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 15px;
   padding: 25px;
   display: flex;
@@ -241,6 +252,7 @@
   gap: 20px;
   border: 1px solid rgba(126, 211, 33, 0.2);
   transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(126, 211, 33, 0.1);
 
   &:hover {
     transform: translateY(-5px);
@@ -277,7 +289,7 @@
 
   .analysis-label {
     font-size: 0.95rem;
-    color: #b0bec5;
+    color: #555;
     margin-bottom: 5px;
     font-weight: 500;
   }
@@ -285,7 +297,7 @@
   .analysis-value {
     font-size: 1.4rem;
     font-weight: 700;
-    color: #fff;
+    color: #000;
     line-height: 1.2;
   }
 }
