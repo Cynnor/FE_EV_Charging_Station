@@ -1,8 +1,8 @@
-"use client"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import "./index.scss"
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import ChargingMap from "../../components/chargingMap"
 
 const stations = [
@@ -179,9 +179,21 @@ const stations = [
 
 export default function BookingPage() {
   const navigate = useNavigate()
+
+    // Hàm làm tròn thời gian hiện tại LÊN mốc 15 phút gần nhất
+const roundUpToNext15Minutes = (date) => {
+  const minutes = date.getMinutes()
+  const next15 = Math.ceil(minutes / 15) * 15
+  const newDate = new Date(date)
+  newDate.setMinutes(next15, 0, 0) // Đặt giây = 0, mili = 0
+  return newDate
+}
+
   const today = new Date()
+  const roundedNow = roundUpToNext15Minutes(today)
+  const defaultTime = roundedNow.toTimeString().slice(0, 5) // "HH:MM"
+  const minTime = defaultTime // Dùng làm min cho input time - luôn là thời gian hiện tại làm tròn lên
   const defaultDate = today.toISOString().split("T")[0]
-  const defaultTime = today.toTimeString().slice(0, 5)
 
   const minDate = today.toISOString().split("T")[0]
   const maxDate = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
@@ -191,6 +203,13 @@ export default function BookingPage() {
   const [selectedCharger, setSelectedCharger] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
+
+  // Hàm tính thời gian mặc định động
+  const getCurrentDefaultTime = () => {
+    const now = new Date()
+    const roundedNow = roundUpToNext15Minutes(now)
+    return roundedNow.toTimeString().slice(0, 5)
+  }
 
   const [formData, setFormData] = useState({
     date: defaultDate,
@@ -304,7 +323,32 @@ export default function BookingPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (name === "startTime") {
+      // Làm tròn thời gian theo mốc 15 phút
+      const [hours, minutes] = value.split(':').map(Number)
+      const roundedMinutes = Math.round(minutes / 15) * 15
+      const finalMinutes = roundedMinutes === 60 ? 0 : roundedMinutes
+      const finalHours = roundedMinutes === 60 ? hours + 1 : hours
+      const roundedTime = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`
+      setFormData((prev) => ({ ...prev, [name]: roundedTime }))
+    } else if (name === "date") {
+      // Khi thay đổi ngày, cập nhật thời gian mặc định nếu chọn ngày hôm nay
+      const selectedDate = value
+      const now = new Date() // Lấy thời gian hiện tại thực tế
+      const currentDate = now.toISOString().split("T")[0]
+      
+      if (selectedDate === currentDate) {
+        // Nếu chọn ngày hôm nay, cập nhật thời gian mặc định là thời gian hiện tại làm tròn lên
+        const roundedCurrentTime = roundUpToNext15Minutes(now)
+        const newDefaultTime = roundedCurrentTime.toTimeString().slice(0, 5)
+        setFormData((prev) => ({ ...prev, [name]: value, startTime: newDefaultTime }))
+      } else {
+        // Nếu chọn ngày khác, đặt thời gian mặc định là 00:00
+        setFormData((prev) => ({ ...prev, [name]: value, startTime: "00:00" }))
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }))
+    }
   }
 
   const handleSubmit = (e) => {
@@ -338,6 +382,71 @@ export default function BookingPage() {
 
   const [showDateModal, setShowDateModal] = useState(false)
   const [showTimeModal, setShowTimeModal] = useState(false)
+
+  // Tạo danh sách các ngày có thể chọn (3 ngày: hôm nay, ngày mai, ngày kia)
+  const generateDateSlots = () => {
+    const slots = []
+    const currentDate = today.toISOString().split("T")[0]
+    
+    for (let i = 0; i < 3; i++) {
+      const date = new Date(today.getTime() + i * 24 * 60 * 60 * 1000)
+      const dateString = date.toISOString().split("T")[0]
+      const dayName = i === 0 ? "Hôm nay" : i === 1 ? "Ngày mai" : "Ngày kia"
+      const dayNumber = date.getDate()
+      const monthNumber = date.getMonth() + 1
+      
+      slots.push({
+        value: dateString,
+        label: `${dayName}`,
+        subLabel: `${dayNumber}/${monthNumber}`,
+        isCurrent: dateString === formData.date
+      })
+    }
+    
+    return slots
+  }
+
+  // Tạo danh sách các mốc thời gian có thể chọn (15 phút một mốc)
+  const generateTimeSlots = (selectedDate) => {
+    const slots = []
+    const now = new Date() // Lấy thời gian hiện tại thực tế
+    const currentDate = now.toISOString().split("T")[0]
+    
+    if (selectedDate === currentDate) {
+      // Nếu chọn ngày hôm nay, bắt đầu từ thời gian hiện tại làm tròn lên
+      const startTime = roundUpToNext15Minutes(now)
+      const startHour = startTime.getHours()
+      const startMinute = startTime.getMinutes()
+      
+      
+      // Tạo các mốc thời gian từ thời gian hiện tại đến 23:45
+      for (let hour = startHour; hour < 24; hour++) {
+        const startMin = hour === startHour ? startMinute : 0
+        for (let min = startMin; min < 60; min += 15) {
+          const timeString = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
+          slots.push({
+            value: timeString,
+            label: timeString,
+            isCurrent: timeString === formData.startTime
+          })
+        }
+      }
+    } else {
+      // Nếu chọn ngày khác, có thể chọn từ 00:00
+      for (let hour = 0; hour < 24; hour++) {
+        for (let min = 0; min < 60; min += 15) {
+          const timeString = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
+          slots.push({
+            value: timeString,
+            label: timeString,
+            isCurrent: timeString === formData.startTime
+          })
+        }
+      }
+    }
+    
+    return slots
+  }
 
   return (
     <div className="booking-wrapper">
@@ -610,7 +719,8 @@ export default function BookingPage() {
                         <p>Chọn thời gian bạn muốn bắt đầu sạc xe</p>
                       </div>
 
-                      <div className="form-group">
+                      <div className="form-content">
+                        <div className="form-group">
                         <label htmlFor="date">
                           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                             <rect x="3" y="4" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
@@ -644,7 +754,14 @@ export default function BookingPage() {
                           Giờ bắt đầu
                         </label>
                         <div className="custom-datetime-picker">
-                          <div className="datetime-display" onClick={() => setShowTimeModal(true)}>
+                          <div className="datetime-display" onClick={() => {
+                            // Cập nhật thời gian mặc định khi mở modal
+                            const currentDefaultTime = getCurrentDefaultTime()
+                            if (formData.date === defaultDate) {
+                              setFormData((prev) => ({ ...prev, startTime: currentDefaultTime }))
+                            }
+                            setShowTimeModal(true)
+                          }}>
                             <div className="datetime-value">
                               <span className="datetime-icon">🕐</span>
                               <span>{formatTime(formData.startTime)}</span>
@@ -665,9 +782,9 @@ export default function BookingPage() {
                           ).toLocaleString("vi-VN")}{" "}
                           đ
                         </div>
-                      </div>
+                        </div>
 
-                      <button type="submit" className="submit-button">
+                        <button type="submit" className="submit-button">
                         <span>Xác nhận & Thanh toán</span>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                           <path
@@ -678,7 +795,8 @@ export default function BookingPage() {
                             strokeLinejoin="round"
                           />
                         </svg>
-                      </button>
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </div>
@@ -729,19 +847,28 @@ export default function BookingPage() {
               </button>
             </div>
             <div className="modal-body">
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={(e) => {
-                  handleChange(e)
-                  setShowDateModal(false)
-                }}
-                min={minDate}
-                max={maxDate}
-                required
-                className="modal-date-input"
-              />
+              <div className="custom-date-picker">
+                <div className="date-slots-container">
+                  {generateDateSlots().map((slot) => (
+                    <button
+                      key={slot.value}
+                      type="button"
+                      className={`date-slot ${slot.isCurrent ? 'selected' : ''}`}
+                      onClick={() => {
+                        handleChange({ target: { name: 'date', value: slot.value } })
+                        setShowDateModal(false)
+                      }}
+                    >
+                      <div className="date-label">{slot.label}</div>
+                      <div className="date-sublabel">{slot.subLabel}</div>
+                    </button>
+                  ))}
+                </div>
+                <div className="date-picker-info">
+                  <p>📅 Chọn ngày sạc xe</p>
+                  <p>🗓️ Có thể đặt trước tối đa 2 ngày</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -757,18 +884,27 @@ export default function BookingPage() {
               </button>
             </div>
             <div className="modal-body">
-              <input
-                type="time"
-                name="startTime"
-                value={formData.startTime}
-                onChange={(e) => {
-                  handleChange(e)
-                  setShowTimeModal(false)
-                }}
-                step="900"
-                required
-                className="modal-time-input"
-              />
+              <div className="custom-time-picker">
+                <div className="time-slots-container">
+                  {generateTimeSlots(formData.date).map((slot) => (
+                    <button
+                      key={slot.value}
+                      type="button"
+                      className={`time-slot ${slot.isCurrent ? 'selected' : ''}`}
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, startTime: slot.value }))
+                        setShowTimeModal(false)
+                      }}
+                    >
+                      {slot.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="time-picker-info">
+                  <p>💡 Chọn thời gian bắt đầu sạc xe</p>
+                  <p>⏰ Các mốc thời gian cách nhau 15 phút</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
