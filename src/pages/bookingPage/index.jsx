@@ -73,7 +73,7 @@ const stations = [
   },
   {
     id: 6,
-    name: "Bệnh viện Đa khoa Quốc tế Hoàn Mỹ Thủ Đức",
+    name: "Bệnh viện Hoàn Mỹ Thủ Đức",
     address: "Bệnh viện Đa khoa Quốc tế Hoàn Mỹ Thủ Đức",
     speed: "50 kW",
     price: "5.000 đ/kWh",
@@ -125,7 +125,7 @@ const stations = [
   },
   {
     id: 10,
-    name: "Xưởng dịch vụ VinFast Thảo Điền",
+    name: "Trạm dịch vụ VinFast Thảo Điền",
     address: "Xa Lộ Hà Nội (VinFast Thảo Điền)",
     speed: "50 kW",
     price: "5.000 đ/kWh",
@@ -335,6 +335,9 @@ export default function BookingPage() {
   const formatTime = (timeString) => {
     return timeString
   }
+
+  const [showDateModal, setShowDateModal] = useState(false)
+  const [showTimeModal, setShowTimeModal] = useState(false)
 
   return (
     <div className="booking-wrapper">
@@ -552,8 +555,7 @@ export default function BookingPage() {
                 <div className="confirmation-grid">
                   <div className="summary-section">
                     <div className="summary-card station-card">
-                      <div className="card-icon">📍</div>
-                      <h3>Thông tin trạm sạc</h3>
+                      <h3 style={{ textAlign: "center" }}>Thông tin trạm sạc</h3>
                       <div className="summary-item">
                         <span className="summary-label">Tên trạm:</span>
                         <span className="summary-value">{selectedStation.name}</span>
@@ -570,15 +572,14 @@ export default function BookingPage() {
                         <span className="summary-label">Loại trạm:</span>
                         <span className="summary-value">{selectedStation.type}</span>
                       </div>
-                      <div className="summary-item">
+                      {/* <div className="summary-item">
                         <span className="summary-label">Đánh giá:</span>
                         <span className="summary-value">⭐ {selectedStation.rating}/5</span>
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="summary-card charger-card">
-                      <div className="card-icon">🔌</div>
-                      <h3>Thông tin trụ sạc</h3>
+                      <h3 style={{ textAlign: "center" }}>Thông tin trụ sạc</h3>
                       <div className="summary-item">
                         <span className="summary-label">Trụ sạc:</span>
                         <span className="summary-value">{selectedCharger.name}</span>
@@ -623,27 +624,13 @@ export default function BookingPage() {
                           Ngày sạc
                         </label>
                         <div className="custom-datetime-picker">
-                          <div
-                            className="datetime-display"
-                            onClick={() => document.getElementById("date").showPicker()}
-                          >
+                          <div className="datetime-display" onClick={() => setShowDateModal(true)}>
                             <div className="datetime-value">
                               <span className="datetime-icon">📅</span>
                               <span>{formatDate(formData.date)}</span>
                             </div>
                             <span className="datetime-arrow">→</span>
                           </div>
-                          <input
-                            id="date"
-                            type="date"
-                            name="date"
-                            value={formData.date}
-                            onChange={handleChange}
-                            min={minDate}
-                            max={maxDate}
-                            required
-                            style={{ display: "none" }}
-                          />
                           <div className="datetime-helper">💡 Nhấn vào để chọn ngày khác</div>
                         </div>
                       </div>
@@ -657,26 +644,13 @@ export default function BookingPage() {
                           Giờ bắt đầu
                         </label>
                         <div className="custom-datetime-picker">
-                          <div
-                            className="datetime-display"
-                            onClick={() => document.getElementById("startTime").showPicker()}
-                          >
+                          <div className="datetime-display" onClick={() => setShowTimeModal(true)}>
                             <div className="datetime-value">
                               <span className="datetime-icon">🕐</span>
                               <span>{formatTime(formData.startTime)}</span>
                             </div>
                             <span className="datetime-arrow">→</span>
                           </div>
-                          <input
-                            id="startTime"
-                            type="time"
-                            name="startTime"
-                            value={formData.startTime}
-                            onChange={handleChange}
-                            step="900" // ← 15 phút = 900 giây
-                            required
-                            style={{ display: "none" }}
-                          />
                           <div className="datetime-helper">💡 Nhấn vào để chọn giờ khác</div>
                         </div>
                       </div>
@@ -744,6 +718,61 @@ export default function BookingPage() {
           </div>
         )}
       </div>
+
+      {showDateModal && (
+        <div className="datetime-modal-overlay" onClick={() => setShowDateModal(false)}>
+          <div className="datetime-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Chọn ngày sạc</h3>
+              <button className="modal-close" onClick={() => setShowDateModal(false)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={(e) => {
+                  handleChange(e)
+                  setShowDateModal(false)
+                }}
+                min={minDate}
+                max={maxDate}
+                required
+                className="modal-date-input"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTimeModal && (
+        <div className="datetime-modal-overlay" onClick={() => setShowTimeModal(false)}>
+          <div className="datetime-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Chọn giờ bắt đầu</h3>
+              <button className="modal-close" onClick={() => setShowTimeModal(false)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <input
+                type="time"
+                name="startTime"
+                value={formData.startTime}
+                onChange={(e) => {
+                  handleChange(e)
+                  setShowTimeModal(false)
+                }}
+                step="900"
+                required
+                className="modal-time-input"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
