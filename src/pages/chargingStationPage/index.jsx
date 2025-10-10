@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./index.scss";
 import { Link } from "react-router-dom";
@@ -103,7 +102,7 @@ function ChargingStationsPage() {
       plugTypes: "2 chấu /3 chấu",
       installTypes: "Trụ đứng / Treo tường",
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch",
-      locationType: "Nhà riêng / Công cộng",
+locationType: "Nhà riêng / Công cộng",
       chargerType: "AC",
     },
     {
