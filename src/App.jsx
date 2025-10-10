@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/layout";
 import AdminLayout from "./components/adminLayout";
+import StaffLayout from "./components/staffLayout";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
@@ -17,6 +18,12 @@ import BookingPage from "./pages/bookingPage";
 import ProfilePage from "./pages/profilePage/ProfilePage";
 import PaymentPage from "./pages/PaymentPage";
 import MembershipPage from "./pages/MembershipPage";
+import StaffOverview from "./pages/staffDashboard/Overview";
+import ChargingSessions from "./pages/staffDashboard/chargingSessions";
+import StaffPayment from "./pages/staffDashboard/payment";
+import StationStatus from "./pages/staffDashboard/stationStatus";
+import Reports from "./pages/staffDashboard/reports";
+import StaffProfile from "./pages/staffDashboard/profile";
 import Overview from "./pages/adminDashboard/overViewManagement";
 
 function App() {
@@ -57,6 +64,18 @@ function App() {
         { path: "revenue-management", element: <RevenueManagement /> },
         { path: "analytics-management", element: <Analytics /> },
         { path: "settings-management", element: <SettingManagement /> },
+      ],
+    },
+    {
+      path: "staff",
+      element: <StaffLayout />,
+      children: [
+        { path: "", element: <StaffOverview /> },
+        { path: "charging-sessions", element: <ChargingSessions /> },
+        { path: "payment", element: <StaffPayment /> },
+        { path: "station-status", element: <StationStatus /> },
+        { path: "reports", element: <Reports /> },
+        { path: "profile", element: <StaffProfile /> },
       ],
     },
   ]);
