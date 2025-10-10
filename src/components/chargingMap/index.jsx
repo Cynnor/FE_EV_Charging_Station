@@ -79,9 +79,10 @@ const ChargingMap = ({ stations, selectedStation, userLocation, onSelect }) => {
         >
           <Popup>
             <b>{station.name}</b><br />
-            ⚡ {station.speed}<br />
-            💰 {station.price}
-          </Popup>
+            ⚡ {station.speed}<br/>
+            💰 {station.price}<br/>
+            📌 {station.address}
+           </Popup>
         </Marker>
       ))}
 
