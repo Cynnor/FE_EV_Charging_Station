@@ -491,7 +491,8 @@
   flex-direction: column;
   gap: 20px;
   padding: 40px 40px;
-
+  max-width: 1200px;   // 👈 Giới hạn chiều rộng
+  margin: 0 auto;      // 👈 Căn giữa
   .map-container {
     display: flex;
     gap: 20px;
@@ -1060,7 +1061,7 @@
 
     .map-container {
 
-  width: 100px;  /* 👈 cố định chiều rộng tổng */
+  width: 1200px;  /* 👈 cố định chiều rộng tổng */
   height: 600px; /* 👈 cố định chiều cao tổng */
   gap: 20px;
 

@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ChargingMap from "../../components/chargingMap";
 import "./index.scss";
+import api from "../../config/api";
 
-// ===== Data =====
+// ===== Static Data =====
 const features = [
   { icon: "🗺️", title: "Tìm kiếm trụ sạc gần bạn", description: "Dễ dàng tìm kiếm các trụ sạc xe điện gần nhất với vị trí hiện tại của bạn trên bản đồ" },
   { icon: "⚡", title: "Thông tin chi tiết trụ sạc", description: "Xem thông tin đầy đủ về loại sạc, công suất, giá cả và tình trạng hoạt động" },
@@ -13,66 +14,7 @@ const features = [
   { icon: "🔔", title: "Thông báo thông minh", description: "Nhận thông báo khi sạc hoàn tất, cảnh báo khi trụ sạc gặp sự cố" },
 ];
 
-const mapStations = [
-  { 
-    id: 1, 
-    name: "Trạm sạc Vincom Đồng Khởi", 
-    speed: "50 kW", 
-    price: "3.500 đ/kWh", 
-    coords: [10.7769, 106.7009], 
-    type: "DC", 
-    slots: { ac: 2, dc: 1, ultra: 0 }, 
-    status: "available",
-    address: "72 Lê Thánh Tôn, Quận 1, TP.HCM"
-  },
-  { 
-    id: 2, 
-    name: "Trạm sạc Landmark 81", 
-    speed: "150 kW", 
-    price: "4.000 đ/kWh", 
-    coords: [10.7944, 106.7219], 
-    type: "DC", 
-    slots: { ac: 1, dc: 3, ultra: 1 }, 
-    status: "busy",
-    address: "720A Điện Biên Phủ, Bình Thạnh, TP.HCM"
-  },
-  { 
-    id: 3, 
-    name: "Trạm sạc Crescent Mall", 
-    speed: "50 kW", 
-    price: "3.200 đ/kWh", 
-    coords: [10.7374, 106.7223], 
-    type: "DC", 
-    slots: { ac: 0, dc: 2, ultra: 0 }, 
-    status: "maintenance",
-    address: "101 Tôn Dật Tiên, Quận 7, TP.HCM"
-  },
-  { 
-    id: 4, 
-    name: "Trạm sạc AEON Bình Tân", 
-    speed: "22 kW", 
-    price: "2.800 đ/kWh", 
-    coords: [10.75, 106.6], 
-    type: "AC", 
-    slots: { ac: 4, dc: 0, ultra: 0 }, 
-    status: "available",
-    address: "1 Đường Số 17A, Bình Trị Đông B, Bình Tân, TP.HCM"
-  },
-  { 
-    id: 5, 
-    name: "Trạm sạc GIGAMALL", 
-    speed: "50 kW", 
-    price: "3.300 đ/kWh", 
-    coords: [10.85, 106.75], 
-    type: "DC", 
-    slots: { ac: 1, dc: 1, ultra: 1 }, 
-    status: "available",
-    address: "240 Phạm Văn Đồng, Thủ Đức, TP.HCM"
-  }
-];
-
-
-// Haversine formula
+// ===== Helper Function =====
 const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -80,30 +22,102 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
-// ===== About Component (top-level) =====
+// ===== About Section =====
 const About = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 };
 
-// ===== HomePage Component =====
+// ===== HomePage =====
 const HomePage = () => {
   const featuresRef = useRef(null);
   const stepsRef = useRef(null);
   const mapSectionRef = useRef(null);
-
-  const [selectedId, setSelectedId] = useState(null);
-  const itemRefs = useRef({});
-  const [userLocation, setUserLocation] = useState(null);
-  const [nearbyStations, setNearbyStations] = useState([]);
   const navigate = useNavigate();
 
+  const [selectedId, setSelectedId] = useState(null);
+  const [mapStations, setMapStations] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [nearbyStations, setNearbyStations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const itemRefs = useRef({});
+
+  // ===== Fetch Station Data from API =====
+  useEffect(() => {
+  let isMounted = true; // tránh lỗi khi unmount
+
+  const fetchStations = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/stations");
+      // console.log("Station API result:", res.data);
+
+      // Trường hợp API trả về mảng hoặc object
+      let stationsData = [];
+      if (Array.isArray(res.data)) {
+        stationsData = res.data;
+      } else if (Array.isArray(res.data.items)) {
+        stationsData = res.data.items;
+      } else if (res.data && typeof res.data === "object") {
+        stationsData = [res.data];
+      }
+
+      // Lọc trạm có tọa độ hợp lệ
+      stationsData = stationsData.filter(
+        (s) => s.latitude && s.longitude
+      );
+
+      // Format lại dữ liệu
+      const formatted = stationsData.map((s, index) => ({
+        id: s.id || index + 1,
+        name: s.name || "Trạm sạc không tên",
+        coords: [s.latitude, s.longitude],
+        status: s.status === "active" ? "available" : "maintenance",
+        address: s.address || "Không rõ địa chỉ",
+        speed: s.ports?.[0]?.speed || "N/A",
+        price: s.ports?.[0]?.price
+          ? `${s.ports[0].price.toLocaleString()} đ/kWh`
+          : "N/A",
+        slots: {
+          ac: s.ports?.filter((p) => p.type === "AC").length || 0,
+          dc: s.ports?.filter((p) => p.type === "DC").length || 0,
+          ultra: s.ports?.filter((p) => p.type === "Ultra").length || 0,
+        },
+      }));
+
+      if (isMounted) {
+        setMapStations(formatted);
+        console.log("✅ Cập nhật danh sách trạm:", formatted);
+      }
+    } catch (err) {
+      console.error("Error fetching stations:", err);
+      if (isMounted) setError("Không thể tải dữ liệu trạm sạc.");
+    } finally {
+      if (isMounted) setLoading(false);
+    }
+  };
+
+  // Gọi lần đầu
+  fetchStations();
+
+  // 🔁 Gọi lại API mỗi 30 giây để cập nhật danh sách trạm mới
+  const interval = setInterval(fetchStations, 300000);
+
+  return () => {
+    isMounted = false;
+    clearInterval(interval);
+  };
+}, []);
+
+
+  // ===== Get User Location =====
   const updateLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -112,11 +126,15 @@ const HomePage = () => {
           const coords = [latitude, longitude];
           setUserLocation(coords);
 
-          const withDistance = mapStations.map((s) => ({
-            ...s,
-            distance: getDistanceKm(latitude, longitude, s.coords[0], s.coords[1]),
-          }));
-          setNearbyStations(withDistance.sort((a, b) => a.distance - b.distance).slice(0, 5));
+          if (mapStations.length > 0) {
+            const withDistance = mapStations.map((s) => ({
+              ...s,
+              distance: getDistanceKm(latitude, longitude, s.coords[0], s.coords[1]),
+            }));
+            setNearbyStations(
+              withDistance.sort((a, b) => a.distance - b.distance).slice(0, 5)
+            );
+          }
         },
         (err) => console.error("Không lấy được vị trí:", err),
         { enableHighAccuracy: true }
@@ -125,8 +143,8 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    updateLocation();
-  }, []);
+    if (mapStations.length > 0) updateLocation();
+  }, [mapStations]);
 
   const handleMarkerClick = (id) => setSelectedId(id);
 
@@ -140,10 +158,27 @@ const HomePage = () => {
     }
   };
 
+  // ===== Render =====
+  if (loading) {
+    return (
+      <div className="homepage__loading">
+        <p>Đang tải dữ liệu trạm sạc...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="homepage__error">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="homepage">
       <main className="homepage__main">
-        {/* Hero Section */}
+        {/* ===== Hero Section ===== */}
         <section className="homepage__hero">
           <div className="homepage__hero-content">
             <h1>Tìm trạm sạc xe điện dễ dàng, sạc nhanh chóng</h1>
@@ -156,8 +191,10 @@ const HomePage = () => {
                 className="btn btn--primary"
                 onClick={() => {
                   if (mapSectionRef.current) {
-                    const topPos = mapSectionRef.current.getBoundingClientRect().top + window.scrollY;
-                    window.scrollTo({ top: topPos , behavior: "smooth" });
+                    const topPos =
+                      mapSectionRef.current.getBoundingClientRect().top +
+                      window.scrollY;
+                    window.scrollTo({ top: topPos, behavior: "smooth" });
                   }
                 }}
               >
@@ -177,7 +214,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Map + Station List */}
+        {/* ===== Map + Station List ===== */}
         <section className="homepage__map" ref={mapSectionRef}>
           <div className="section-header">
             <h2>Bản đồ trạm sạc</h2>
@@ -191,13 +228,19 @@ const HomePage = () => {
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${selectedId === station.id ? "is-selected" : ""}`}
+                    className={`station-item ${
+                      selectedId === station.id ? "is-selected" : ""
+                    }`}
                     onClick={() => setSelectedId(station.id)}
                   >
                     <div className="station-header">
                       <h4>{station.name}</h4>
-                      <span className="distance">{station.distance.toFixed(1)} km</span>
-                    <div className={`status-indicator ${station.status}`}>
+                      {station.distance && (
+                        <span className="distance">
+                          {station.distance.toFixed(1)} km
+                        </span>
+                      )}
+                      <div className={`status-indicator ${station.status}`}>
                         {station.status === "available" && "🟢"}
                         {station.status === "busy" && "🟡"}
                         {station.status === "maintenance" && "🔴"}
@@ -206,10 +249,19 @@ const HomePage = () => {
                     <div className="station-details">
                       <div className="item">⚡ {station.speed}</div>
                       <div className="item">💰 {station.price}</div>
-                      <div className="item">🔌 AC: {station.slots.ac} | DC: {station.slots.dc} | Ultra: {station.slots.ultra}</div>
+                      <div className="item">
+                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} | Ultra:{" "}
+                        {station.slots.ultra}
+                      </div>
+                      <div className="item">📍 {station.address}</div>
                     </div>
                     <div className="station-actions">
-                      <button className="btn-small btn-primary" onClick={() => handleBooking(station.id)}>Đặt chỗ</button>
+                      <button
+                        className="btn-small btn-primary"
+                        onClick={() => handleBooking(station.id)}
+                      >
+                        Đặt chỗ
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -222,7 +274,9 @@ const HomePage = () => {
                 center={userLocation}
                 zoom={12}
                 onSelect={(station) => handleMarkerClick(station.id)}
-                selectedStation={selectedId ? mapStations.find((s) => s.id === selectedId) : null}
+                selectedStation={
+                  selectedId ? mapStations.find((s) => s.id === selectedId) : null
+                }
                 userLocation={userLocation}
                 onUpdateLocation={updateLocation}
               />
