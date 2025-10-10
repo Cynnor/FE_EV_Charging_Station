@@ -716,8 +716,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: $spacing-lg;
-  align-items: stretch;
-  min-height: 600px; // Đảm bảo chiều cao tối thiểu
+  align-items: stretch; // Changed from stretch to start for better control
 }
 
 .summary-section {
@@ -808,10 +807,7 @@ body {
 .form-section {
   position: sticky;
   top: 0;
-  height: 100%; // Make form section take full height
-  display: flex;
-  flex-direction: column;
-
+  height: fit-content; // Let form determine its own height
 }
 
 .booking-form {
@@ -820,7 +816,7 @@ body {
   border-radius: $radius-md;
   padding: $spacing-lg;
   box-shadow: $shadow-sm;
-  flex: 1; // Make form take full available height
+  height: 100%; // Make form take full height to match summary cards
   display: flex; // Use flexbox for better layout control
   flex-direction: column;
 
@@ -829,13 +825,6 @@ body {
     padding-bottom: $spacing-md;
     border-bottom: 2px solid $bg-gray;
     flex-shrink: 0; // Prevent header from shrinking
-  }
-
-  .form-content {
-    flex: 1; // Make form content take remaining space
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
 
     h3 {
       font-size: 16px;
@@ -1196,182 +1185,6 @@ body {
       }
     }
   }
-
-  // Custom Time Picker Styles
-  .custom-time-picker {
-    width: 100%;
-    
-    .time-slots-container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: $spacing-sm;
-      max-height: 300px;
-      overflow-y: auto;
-      padding: $spacing-sm;
-      border: 2px solid $bg-gray;
-      border-radius: $radius-md;
-      background: $bg-light;
-      margin-bottom: $spacing-md;
-
-      &::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      &::-webkit-scrollbar-track {
-        background: $bg-white;
-        border-radius: 3px;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: $border-color;
-        border-radius: 3px;
-
-        &:hover {
-          background: $text-muted;
-        }
-      }
-    }
-
-    .time-slot {
-      padding: $spacing-sm;
-      border: 2px solid $border-color;
-      border-radius: $radius-sm;
-      background: $bg-white;
-      color: $text-primary;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all $transition-base;
-      text-align: center;
-      min-height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      &:hover {
-        border-color: $primary;
-        background: $primary-pale;
-        transform: translateY(-2px);
-        box-shadow: $shadow-sm;
-      }
-
-      &.selected {
-        border-color: $primary;
-        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-        color: white;
-        box-shadow: $shadow-md;
-        transform: translateY(-2px);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-    }
-
-    .time-picker-info {
-      text-align: center;
-      padding: $spacing-sm;
-      background: $primary-pale;
-      border-radius: $radius-md;
-      border: 1px solid rgba($primary, 0.3);
-
-      p {
-        margin: 0;
-        font-size: 12px;
-        color: $text-secondary;
-        font-weight: 600;
-        line-height: 1.4;
-
-        &:first-child {
-          margin-bottom: 4px;
-        }
-      }
-    }
-  }
-
-  // Custom Date Picker Styles
-  .custom-date-picker {
-    width: 100%;
-    
-    .date-slots-container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: $spacing-md;
-      padding: $spacing-sm;
-      border: 2px solid $bg-gray;
-      border-radius: $radius-md;
-      background: $bg-light;
-      margin-bottom: $spacing-md;
-    }
-
-    .date-slot {
-      padding: $spacing-md;
-      border: 2px solid $border-color;
-      border-radius: $radius-md;
-      background: $bg-white;
-      color: $text-primary;
-      cursor: pointer;
-      transition: all $transition-base;
-      text-align: center;
-      min-height: 80px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-
-      &:hover {
-        border-color: $primary;
-        background: $primary-pale;
-        transform: translateY(-2px);
-        box-shadow: $shadow-sm;
-      }
-
-      &.selected {
-        border-color: $primary;
-        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-        color: white;
-        box-shadow: $shadow-md;
-        transform: translateY(-2px);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-
-      .date-label {
-        font-size: 16px;
-        font-weight: 700;
-        line-height: 1.2;
-      }
-
-      .date-sublabel {
-        font-size: 14px;
-        font-weight: 600;
-        opacity: 0.8;
-      }
-    }
-
-    .date-picker-info {
-      text-align: center;
-      padding: $spacing-sm;
-      background: $primary-pale;
-      border-radius: $radius-md;
-      border: 1px solid rgba($primary, 0.3);
-
-      p {
-        margin: 0;
-        font-size: 12px;
-        color: $text-secondary;
-        font-weight: 600;
-        line-height: 1.4;
-
-        &:first-child {
-          margin-bottom: 4px;
-        }
-      }
-    }
-  }
 }
 
 // Responsive Design
@@ -1450,16 +1263,6 @@ body {
     padding: $spacing-md;
   }
 
-  // Custom pickers responsive
-  .custom-time-picker .time-slots-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .custom-date-picker .date-slots-container {
-    grid-template-columns: 1fr;
-    gap: $spacing-sm;
-  }
-
   .confirmation-header {
     .success-icon {
       width: 64px;
@@ -1507,15 +1310,6 @@ body {
   .submit-button {
     font-size: 15px;
     padding: $spacing-sm $spacing-md;
-  }
-
-  // Custom pickers responsive for mobile
-  .custom-time-picker .time-slots-container {
-    grid-template-columns: 1fr;
-  }
-
-  .custom-date-picker .date-slots-container {
-    grid-template-columns: 1fr;
   }
 }
 
