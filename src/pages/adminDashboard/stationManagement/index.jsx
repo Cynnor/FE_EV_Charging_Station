@@ -8,12 +8,10 @@ const StationManagement = () => {
   const [locationFilter, setLocationFilter] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingStation, setEditingStation] = useState(null);
-  const [viewStation, setViewStation] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     longitude: "",
@@ -25,14 +23,20 @@ const StationManagement = () => {
       {
         type: "DC",
         status: "available",
-        powerKw: 60,
+        powerKw: 120,
         speed: "fast",
-        price: 3500,
+        price: 3858,
       },
     ],
   });
+
+  // Thêm state cho modal xem chi tiết
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewStation, setViewStation] = useState(null);
+
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const pageSize = 7;
 
   // GET - Lấy danh sách trạm sạc
   const fetchStations = async () => {
@@ -168,25 +172,46 @@ const StationManagement = () => {
         {
           type: "DC",
           status: "available",
-          powerKw: 60,
+          powerKw: 120,
           speed: "fast",
-          price: 3500,
+          price: 3858,
         },
       ],
     });
   };
 
+  // Đóng modal Thêm + reset form
+  const closeAddModal = () => {
+    resetForm();
+    setShowAddModal(false);
+  };
+
   const openEditModal = (station) => {
     setEditingStation(station);
     setFormData({
-      name: station.name,
+      name: station.name || "",
+      longitude: station.longitude ?? "",
+      latitude: station.latitude ?? "",
+      status: station.status || "active",
       address: station.address || "",
-      ports: station.ports || [],
-      price: station.price || 3500,
+      provider: station.provider || "",
+      ports:
+        Array.isArray(station.ports) && station.ports.length > 0
+          ? station.ports
+          : [
+              {
+                type: "DC",
+                status: "available",
+                powerKw: 120,
+                speed: "fast",
+                price: 3858,
+              },
+            ],
     });
     setShowEditModal(true);
   };
 
+  // Hàm mở modal xem chi tiết
   const openViewModal = (station) => {
     setViewStation(station);
     setShowViewModal(true);
@@ -231,7 +256,7 @@ const StationManagement = () => {
         {
           type: "DC",
           status: "available",
-          powerKw: 60,
+          powerKw: 120,
           speed: "fast",
           price: 3858,
         },
@@ -251,6 +276,11 @@ const StationManagement = () => {
   useEffect(() => {
     fetchStations();
   }, []);
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, locationFilter]);
 
   // Tính toán thống kê từ data - đảm bảo stations là array
   const safeStations = Array.isArray(stations) ? stations : [];
@@ -302,16 +332,18 @@ const StationManagement = () => {
     return matchesSearch && matchesStatus && matchesLocation;
   });
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredStations.length / itemsPerPage);
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filteredStations.length / pageSize));
   const paginatedStations = filteredStations.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
+  // Clamp current page if data shrinks
+  useEffect(() => {
+    const newTotal = Math.max(1, Math.ceil(filteredStations.length / pageSize));
+    if (currentPage > newTotal) setCurrentPage(newTotal);
+  }, [filteredStations.length]);
 
   const getStatusText = (status) => {
     switch (status) {
@@ -495,44 +527,42 @@ const StationManagement = () => {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="pagination">
+      <div className="pagination">
+        <button
+          className="page-btn"
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+        >
+          ‹ Trước
+        </button>
+
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
           <button
-            className="page-btn"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            key={p}
+            className={`page-btn ${p === currentPage ? "active" : ""}`}
+            onClick={() => setCurrentPage(p)}
           >
-            ‹ Trước
+            {p}
           </button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i + 1}
-              className={`page-btn${currentPage === i + 1 ? " active" : ""}`}
-              onClick={() => handlePageChange(i + 1)}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            className="page-btn"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Sau ›
-          </button>
-        </div>
-      )}
+        ))}
+
+        <button
+          className="page-btn"
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+        >
+          Sau ›
+        </button>
+      </div>
 
       {/* Add Station Modal */}
       {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+        // Loại bỏ onClick đóng modal khi bấm ra ngoài
+        <div className="modal-overlay">
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Thêm trạm sạc mới</h3>
-              <button
-                className="close-btn"
-                onClick={() => setShowAddModal(false)}
-              >
+              <button className="close-btn" onClick={closeAddModal}>
                 ✕
               </button>
             </div>
@@ -598,7 +628,7 @@ const StationManagement = () => {
                       name="provider"
                       value={formData.provider}
                       onChange={handleInputChange}
-                      placeholder="VinFast, EVN, ..."
+                      placeholder="VinFast, EVOne, ..."
                       required
                     />
                   </div>
@@ -692,7 +722,7 @@ const StationManagement = () => {
                           >
                             <option value="slow">Chậm</option>
                             <option value="fast">Nhanh</option>
-                            <option value="ultra_fast">Siêu nhanh</option>
+                            <option value="super_fast">Siêu nhanh</option>
                           </select>
                         </div>
                       </div>
@@ -726,7 +756,7 @@ const StationManagement = () => {
                   <button
                     type="button"
                     className="btn-secondary"
-                    onClick={() => setShowAddModal(false)}
+                    onClick={closeAddModal}
                   >
                     Hủy
                   </button>
@@ -766,6 +796,61 @@ const StationManagement = () => {
                     required
                   />
                 </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Kinh độ</label>
+                    <input
+                      type="number"
+                      step="0.000001"
+                      name="longitude"
+                      value={formData.longitude}
+                      onChange={handleInputChange}
+                      placeholder="106.700981"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Vĩ độ</label>
+                    <input
+                      type="number"
+                      step="0.000001"
+                      name="latitude"
+                      value={formData.latitude}
+                      onChange={handleInputChange}
+                      placeholder="10.776889"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Trạng thái</label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="active">Hoạt động</option>
+                      <option value="maintenance">Bảo trì</option>
+                      <option value="inactive">Vô hiệu hóa</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Nhà cung cấp</label>
+                    <input
+                      type="text"
+                      name="provider"
+                      value={formData.provider}
+                      onChange={handleInputChange}
+                      placeholder="VinFast, EVOne, ..."
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div className="form-group">
                   <label>Địa chỉ</label>
                   <input
@@ -777,47 +862,113 @@ const StationManagement = () => {
                     required
                   />
                 </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Quận/Huyện</label>
-                    <select
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="">Chọn quận/huyện</option>
-                      {hcmDistricts.map((district) => (
-                        <option key={district} value={district}>
-                          {district}
-                        </option>
-                      ))}
-                    </select>
+
+                <div className="chargers-section">
+                  <div className="chargers-header">
+                    <label>Trụ sạc</label>
                   </div>
-                  <div className="form-group">
-                    <label>Số cổng sạc</label>
-                    <input
-                      type="number"
-                      name="connectors"
-                      value={formData.connectors}
-                      onChange={handleInputChange}
-                      min="1"
-                      max="10"
-                      required
-                    />
-                  </div>
+
+                  {formData.ports.map((port, index) => (
+                    <div key={index} className="charger-item">
+                      <div className="charger-header">
+                        <h4>Trụ sạc {index + 1}</h4>
+                        {formData.ports.length > 1 && (
+                          <button
+                            type="button"
+                            className="btn-remove-charger"
+                            onClick={() => removePort(index)}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Loại</label>
+                          <select
+                            value={port.type}
+                            onChange={(e) =>
+                              handlePortChange(index, "type", e.target.value)
+                            }
+                            required
+                          >
+                            <option value="AC">AC</option>
+                            <option value="DC">DC</option>
+                            <option value="Ultra">Ultra</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>Trạng thái</label>
+                          <select
+                            value={port.status}
+                            onChange={(e) =>
+                              handlePortChange(index, "status", e.target.value)
+                            }
+                            required
+                          >
+                            <option value="available">Có sẵn</option>
+                            <option value="in_use">Đang sử dụng</option>
+                            <option value="inactive">Không hoạt động</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Công suất (kW)</label>
+                          <input
+                            type="number"
+                            value={port.powerKw}
+                            onChange={(e) =>
+                              handlePortChange(index, "powerKw", e.target.value)
+                            }
+                            min="1"
+                            max="350"
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Tốc độ</label>
+                          <select
+                            value={port.speed}
+                            onChange={(e) =>
+                              handlePortChange(index, "speed", e.target.value)
+                            }
+                            required
+                          >
+                            <option value="slow">Chậm</option>
+                            <option value="fast">Nhanh</option>
+                            <option value="super_fast">Siêu nhanh</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Giá tiền (VNĐ/kWh)</label>
+                        <input
+                          type="number"
+                          value={port.price}
+                          onChange={(e) =>
+                            handlePortChange(index, "price", e.target.value)
+                          }
+                          min="1000"
+                          max="10000"
+                          required
+                        />
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="btn-add-charger"
+                    onClick={addPort}
+                  >
+                    + Thêm trụ sạc
+                  </button>
                 </div>
-                <div className="form-group">
-                  <label>Giá điện (VNĐ/kWh)</label>
-                  <input
-                    type="number"
-                    name="electricityPrice"
-                    value={formData.electricityPrice}
-                    onChange={handleInputChange}
-                    placeholder="3500"
-                    required
-                  />
-                </div>
+
                 <div className="modal-footer">
                   <button
                     type="button"
@@ -827,7 +978,7 @@ const StationManagement = () => {
                     Hủy
                   </button>
                   <button type="submit" className="btn-primary">
-                    Cập nhật
+                    Cập nhật trạm sạc
                   </button>
                 </div>
               </form>
@@ -836,8 +987,8 @@ const StationManagement = () => {
         </div>
       )}
 
-      {/* View Station Modal */}
-      {showViewModal && viewStation && (
+      {/* View Station Modal - chỉ xem (read-only) */}
+      {showViewModal && (
         <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -853,18 +1004,31 @@ const StationManagement = () => {
               <form className="station-form">
                 <div className="form-group">
                   <label>Tên trạm sạc</label>
-                  <input type="text" value={viewStation.name} disabled />
+                  <input
+                    type="text"
+                    value={viewStation?.name || ""}
+                    readOnly
+                    disabled
+                  />
                 </div>
+
                 <div className="form-group">
                   <label>Địa chỉ</label>
-                  <input type="text" value={viewStation.address} disabled />
+                  <input
+                    type="text"
+                    value={viewStation?.address || ""}
+                    readOnly
+                    disabled
+                  />
                 </div>
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>Kinh độ</label>
                     <input
                       type="number"
-                      value={viewStation.longitude}
+                      value={viewStation?.longitude ?? ""}
+                      readOnly
                       disabled
                     />
                   </div>
@@ -872,97 +1036,115 @@ const StationManagement = () => {
                     <label>Vĩ độ</label>
                     <input
                       type="number"
-                      value={viewStation.latitude}
+                      value={viewStation?.latitude ?? ""}
+                      readOnly
                       disabled
                     />
                   </div>
                 </div>
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>Trạng thái</label>
-                    <input
-                      type="text"
-                      value={getStatusText(viewStation.status)}
-                      disabled
-                    />
+                    <select value={viewStation?.status || ""} disabled>
+                      <option value="active">Hoạt động</option>
+                      <option value="maintenance">Bảo trì</option>
+                      <option value="inactive">Vô hiệu hóa</option>
+                    </select>
                   </div>
                   <div className="form-group">
                     <label>Nhà cung cấp</label>
-                    <input type="text" value={viewStation.provider} disabled />
+                    <input
+                      type="text"
+                      value={viewStation?.provider || ""}
+                      readOnly
+                      disabled
+                    />
                   </div>
                 </div>
+
                 <div className="form-group">
-                  <label>Quận/Huyện</label>
+                  <label>Số trụ</label>
                   <input
-                    type="text"
+                    type="number"
                     value={
-                      hcmDistricts.find((d) =>
-                        viewStation.address?.includes(d)
-                      ) || ""
+                      Array.isArray(viewStation?.ports)
+                        ? viewStation.ports.length
+                        : viewStation?.connectors || 0
                     }
+                    readOnly
                     disabled
                   />
                 </div>
-                <div className="chargers-section">
-                  <div className="chargers-header">
-                    <label>Trụ sạc</label>
-                  </div>
-                  {(viewStation.ports || []).map((port, idx) => (
-                    <div key={idx} className="charger-item">
-                      <div className="charger-header">
-                        <h4>Trụ sạc {idx + 1}</h4>
+
+                {Array.isArray(viewStation?.ports) &&
+                  viewStation.ports.length > 0 && (
+                    <div className="chargers-section">
+                      <div className="chargers-header">
+                        <label>Danh sách trụ sạc</label>
                       </div>
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Loại</label>
-                          <input type="text" value={port.type} disabled />
+
+                      {viewStation.ports.map((port, index) => (
+                        <div key={index} className="charger-item">
+                          <div className="charger-header">
+                            <h4>Trụ sạc {index + 1}</h4>
+                          </div>
+
+                          <div className="form-row">
+                            <div className="form-group">
+                              <label>Loại</label>
+                              <select value={port.type} disabled>
+                                <option value="AC">AC</option>
+                                <option value="DC">DC</option>
+                                <option value="Ultra">Ultra</option>
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label>Trạng thái</label>
+                              <select value={port.status} disabled>
+                                <option value="available">Có sẵn</option>
+                                <option value="in_use">Đang sử dụng</option>
+                                <option value="inactive">
+                                  Không hoạt động
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="form-row">
+                            <div className="form-group">
+                              <label>Công suất (kW)</label>
+                              <input
+                                type="number"
+                                value={port.powerKw}
+                                readOnly
+                                disabled
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Tốc độ</label>
+                              <select value={port.speed} disabled>
+                                <option value="slow">Chậm</option>
+                                <option value="fast">Nhanh</option>
+                                <option value="super_fast">Siêu nhanh</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="form-group">
+                            <label>Giá tiền (VNĐ/kWh)</label>
+                            <input
+                              type="number"
+                              value={port.price}
+                              readOnly
+                              disabled
+                            />
+                          </div>
                         </div>
-                        <div className="form-group">
-                          <label>Trạng thái</label>
-                          <input
-                            type="text"
-                            value={
-                              port.status === "available"
-                                ? "Có sẵn"
-                                : port.status === "in_use"
-                                ? "Đang sử dụng"
-                                : port.status === "inactive"
-                                ? "Không hoạt động"
-                                : port.status
-                            }
-                            disabled
-                          />
-                        </div>
-                      </div>
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Công suất (kW)</label>
-                          <input type="number" value={port.powerKw} disabled />
-                        </div>
-                        <div className="form-group">
-                          <label>Tốc độ</label>
-                          <input
-                            type="text"
-                            value={
-                              port.speed === "slow"
-                                ? "Chậm"
-                                : port.speed === "fast"
-                                ? "Nhanh"
-                                : port.speed === "ultra_fast"
-                                ? "Siêu nhanh"
-                                : port.speed
-                            }
-                            disabled
-                          />
-                        </div>
-                      </div>
-                      <div className="form-group">
-                        <label>Giá tiền (VNĐ/kWh)</label>
-                        <input type="number" value={port.price} disabled />
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  )}
+
                 <div className="modal-footer">
                   <button
                     type="button"

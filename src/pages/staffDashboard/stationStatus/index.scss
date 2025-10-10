@@ -1,0 +1,646 @@
+.station-status-content {
+    .status-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        padding: 24px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #f1f5f9;
+
+        .header-left {
+            h2 {
+                margin: 0 0 4px 0;
+                font-size: 24px;
+                font-weight: 700;
+                color: #1e293b;
+            }
+
+            p {
+                margin: 0;
+                color: #64748b;
+                font-size: 14px;
+            }
+        }
+
+        .header-right {
+            .status-summary {
+                display: flex;
+                gap: 32px;
+
+                .summary-item {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 4px;
+
+                    .label {
+                        font-size: 12px;
+                        color: #64748b;
+                    }
+
+                    .value {
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: #1e293b;
+
+                        &.green {
+                            color: #059669;
+                        }
+
+                        &.red {
+                            color: #dc2626;
+                        }
+
+                        &.blue {
+                            color: #2563eb;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .status-filters {
+        margin-bottom: 24px;
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #f1f5f9;
+
+            .filter-tab {
+                flex: 1;
+                padding: 12px 16px;
+                background: none;
+                border: none;
+                border-radius: 8px;
+                color: #64748b;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+
+                &:hover {
+                    background: #f8fafc;
+                    color: #475569;
+                }
+
+                &.active {
+                    background: linear-gradient(135deg, #7ed321, #a3e635);
+                    color: white;
+                    box-shadow: 0 2px 8px rgba(126, 211, 33, 0.3);
+                }
+            }
+        }
+    }
+
+    .stations-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 24px;
+
+        .station-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 2px solid #f1f5f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            &.green {
+                border-left: 4px solid #059669;
+            }
+
+            &.red {
+                border-left: 4px solid #dc2626;
+            }
+
+            &.orange {
+                border-left: 4px solid #f59e0b;
+            }
+
+            .card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 16px;
+                border-bottom: 1px solid #f1f5f9;
+
+                .station-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+
+                    .station-id {
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: #1e293b;
+                    }
+
+                    .station-type {
+                        font-size: 14px;
+                        color: #64748b;
+                    }
+                }
+
+                .status-indicator {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 14px;
+                    font-weight: 500;
+
+                    &.green {
+                        color: #059669;
+                    }
+
+                    &.red {
+                        color: #dc2626;
+                    }
+
+                    .status-dot {
+                        width: 8px;
+                        height: 8px;
+                        border-radius: 50%;
+                        background: currentColor;
+                        animation: pulse 2s infinite;
+                    }
+                }
+            }
+
+            .card-content {
+                .availability-section {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+
+                    .availability-badge {
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        font-size: 12px;
+                        font-weight: 600;
+
+                        &.green {
+                            background: #dcfce7;
+                            color: #166534;
+                        }
+
+                        &.blue {
+                            background: #dbeafe;
+                            color: #1e40af;
+                        }
+
+                        &.orange {
+                            background: #fed7aa;
+                            color: #9a3412;
+                        }
+
+                        &.red {
+                            background: #fee2e2;
+                            color: #991b1b;
+                        }
+                    }
+
+                    .location {
+                        font-size: 13px;
+                        color: #64748b;
+                    }
+                }
+
+                .current-session {
+                    margin-bottom: 20px;
+                    padding: 16px;
+                    background: #f8fafc;
+                    border-radius: 12px;
+                    border: 1px solid #e2e8f0;
+
+                    .session-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 12px;
+
+                        .license-plate {
+                            font-size: 16px;
+                            font-weight: 700;
+                            color: #7ed321;
+                        }
+
+                        .start-time {
+                            font-size: 13px;
+                            color: #64748b;
+                        }
+                    }
+
+                    .session-progress {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 8px;
+
+                        .progress-bar {
+                            flex: 1;
+                            height: 6px;
+                            background: #e2e8f0;
+                            border-radius: 3px;
+                            overflow: hidden;
+
+                            .progress-fill {
+                                height: 100%;
+                                background: linear-gradient(90deg, #7ed321, #a3e635);
+                                border-radius: 3px;
+                                transition: width 0.3s ease;
+                            }
+                        }
+
+                        .progress-text {
+                            font-size: 12px;
+                            font-weight: 600;
+                            color: #7ed321;
+                        }
+                    }
+
+                    .estimated-end {
+                        font-size: 12px;
+                        color: #64748b;
+                    }
+                }
+
+                .issue-section {
+                    margin-bottom: 20px;
+
+                    .issue-alert {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 12px;
+                        background: #fef2f2;
+                        border: 1px solid #fecaca;
+                        border-radius: 8px;
+
+                        .issue-icon {
+                            font-size: 16px;
+                        }
+
+                        .issue-text {
+                            font-size: 13px;
+                            color: #991b1b;
+                            font-weight: 500;
+                        }
+                    }
+                }
+
+                .station-stats {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+
+                    .stat-item {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+
+                        .label {
+                            font-size: 13px;
+                            color: #64748b;
+                        }
+
+                        .value {
+                            font-size: 14px;
+                            font-weight: 600;
+                            color: #1e293b;
+                        }
+                    }
+                }
+            }
+
+            .card-actions {
+                display: flex;
+                gap: 12px;
+                margin-top: 20px;
+                padding-top: 16px;
+                border-top: 1px solid #f1f5f9;
+
+                .btn-secondary {
+                    flex: 1;
+                    padding: 8px 16px;
+                    background: #f1f5f9;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    color: #64748b;
+                    font-size: 14px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.2s;
+
+                    &:hover {
+                        background: #e2e8f0;
+                        color: #475569;
+                    }
+                }
+
+                .btn-primary {
+                    flex: 1;
+                    padding: 8px 16px;
+                    background: linear-gradient(135deg, #7ed321, #a3e635);
+                    border: none;
+                    border-radius: 8px;
+                    color: white;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+
+                    &:hover {
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
+                    }
+                }
+            }
+        }
+    }
+
+    // Station Detail Modal
+    .station-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .station-modal {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid #f1f5f9;
+
+            h3 {
+                margin: 0;
+                font-size: 20px;
+                font-weight: 700;
+                color: #1e293b;
+            }
+
+            .close-btn {
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                color: #94a3b8;
+                padding: 4px;
+
+                &:hover {
+                    color: #64748b;
+                }
+            }
+        }
+
+        .modal-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+
+            .detail-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+                margin-bottom: 24px;
+            }
+
+            .detail-section {
+                h4 {
+                    margin: 0 0 16px 0;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #1e293b;
+                }
+
+                .detail-items {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+
+                    .detail-item {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #f1f5f9;
+
+                        &:last-child {
+                            border-bottom: none;
+                        }
+
+                        .label {
+                            font-size: 14px;
+                            color: #64748b;
+                        }
+
+                        .value {
+                            font-size: 14px;
+                            font-weight: 600;
+                            color: #1e293b;
+
+                            &.green {
+                                color: #059669;
+                            }
+
+                            &.red {
+                                color: #dc2626;
+                            }
+
+                            &.blue {
+                                color: #2563eb;
+                            }
+
+                            &.orange {
+                                color: #f59e0b;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .current-session-detail {
+                .session-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+
+                    .info-item {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #f1f5f9;
+
+                        &:last-child {
+                            border-bottom: none;
+                        }
+
+                        .label {
+                            font-size: 14px;
+                            color: #64748b;
+                        }
+
+                        .value {
+                            font-size: 14px;
+                            font-weight: 600;
+                            color: #1e293b;
+                        }
+                    }
+                }
+            }
+
+            .issue-detail {
+                .issue-alert {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 16px;
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    border-radius: 12px;
+
+                    .issue-icon {
+                        font-size: 20px;
+                    }
+
+                    .issue-text {
+                        font-size: 14px;
+                        color: #991b1b;
+                        font-weight: 500;
+                    }
+                }
+            }
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            padding: 24px;
+            border-top: 1px solid #f1f5f9;
+
+            .btn-secondary {
+                flex: 1;
+                padding: 12px 16px;
+                background: #f1f5f9;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                color: #64748b;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+
+                &:hover {
+                    background: #e2e8f0;
+                    color: #475569;
+                }
+            }
+
+            .btn-primary {
+                flex: 1;
+                padding: 12px 16px;
+                background: linear-gradient(135deg, #7ed321, #a3e635);
+                border: none;
+                border-radius: 8px;
+                color: white;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+
+                &:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
+                }
+            }
+        }
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@media (max-width: 1200px) {
+    .station-status-content {
+        .stations-grid {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .detail-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .station-status-content {
+        .status-header {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .status-summary {
+            justify-content: space-around;
+        }
+
+        .filter-tabs {
+            flex-wrap: wrap;
+        }
+
+        .stations-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .station-modal {
+            margin: 10px;
+            max-height: 90vh;
+        }
+    }
+}
