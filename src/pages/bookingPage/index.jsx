@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import "./index.scss"
+
 import ChargingMap from "../../components/chargingMap"
 
 const stations = [
@@ -786,6 +787,7 @@ export default function BookingPage() {
                 required
                 className="modal-time-input"
               />
+
             </div>
           </div>
         </div>

@@ -67,7 +67,9 @@ const ChargingMap = ({ stations, selectedStation, userLocation, onSelect }) => {
         </Marker>
       )}
 
-      {stations.map((station) => (
+      {stations
+  .filter((s) => Array.isArray(s.coords) && s.coords.length === 2 && s.coords[0] && s.coords[1])
+  .map((station) => (
         <Marker
           key={station.id}
           position={station.coords}
