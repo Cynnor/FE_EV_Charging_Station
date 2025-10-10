@@ -374,8 +374,10 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;           // show full modal top-to-bottom
+  justify-content: center;           // center modal horizontally
+  overflow-y: auto;                  // page-level scroll if needed
+  padding: 24px 0;                   // breathing space
   z-index: 1000;
 }
 
@@ -383,11 +385,13 @@
   background: #2a3142;
   border-radius: 12px;
   padding: 0;
-  max-width: 800px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-width: 900px;
+  width: 100%;
+  max-height: none;                  // remove inner height limit
+  overflow-y: visible;               // no inner scroll, let overlay scroll
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
 
   .modal-header {
     padding: 20px 24px;
@@ -397,7 +401,11 @@
     align-items: center;
     background: #1f2937;
     border-radius: 12px 12px 0 0;
-    
+    flex: 0 0 auto;
+    position: relative;
+    top: 0;
+    z-index: 2;
+
     h3 {
       color: #f3f4f6;
       margin: 0;
@@ -415,7 +423,7 @@
     padding: 4px;
     border-radius: 4px;
     transition: all 0.2s;
-    
+
     &:hover {
       background: #374151;
       color: #f3f4f6;
@@ -423,9 +431,10 @@
   }
 
   .modal-body {
-    padding: 24px;
-    max-height: calc(90vh - 120px);
-    overflow-y: auto;
+    flex: 1 1 auto;
+    overflow: visible;               // remove inner scroll
+    max-height: none;                // allow body to grow
+    padding: 24px;                   // consistent padding
   }
 
   .modal-footer {
@@ -435,6 +444,7 @@
     margin-top: 32px;
     padding-top: 20px;
     border-top: 1px solid #374151;
+    flex: 0 0 auto;
 
     .btn-secondary,
     .btn-primary {
@@ -479,7 +489,7 @@
 .station-form {
   .form-group {
     margin-bottom: 20px;
-    
+
     label {
       display: block;
       color: #e5e7eb;
@@ -487,7 +497,7 @@
       margin-bottom: 6px;
       font-size: 0.875rem;
     }
-    
+
     input, select {
       width: 100%;
       padding: 10px 12px;
@@ -497,39 +507,46 @@
       color: #f3f4f6;
       font-size: 0.875rem;
       transition: all 0.2s;
-      
+
       &:focus {
         outline: none;
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
       }
-      
+
       &::placeholder {
         color: #9ca3af;
       }
     }
   }
-  
+
   .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    
-    @media (max-width: 640px) {
+    gap: 12px;
+
+    @media (max-width: 768px) {
       grid-template-columns: 1fr;
     }
   }
 }
 
 .chargers-section {
+  // turn into 2-column grid, header and add button span full width
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: auto;
+  gap: 16px;
+  align-items: start;
   margin-top: 24px;
-  
+
   .chargers-header {
+    grid-column: 1 / -1;
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
-    
+
     label {
       color: #e5e7eb;
       font-weight: 600;
@@ -539,6 +556,7 @@
   }
 
   .btn-add-charger {
+    grid-column: 1 / -1;             // full width below the grid
     width: 100%;
     margin-top: 15px;
     padding: 12px 20px;
@@ -567,73 +585,53 @@
       box-shadow: 0 1px 4px rgba(0, 123, 255, 0.2);
     }
   }
-}
 
-.btn-add-charger {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  
-  &:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  }
-}
-
-.charger-item {
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 16px;
-  transition: all 0.2s;
-  
-  &:hover {
-    border-color: #4b5563;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-  
-  .charger-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .charger-item {
+    // each card occupies one grid cell (2 columns total)
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 20px;
     margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #374151;
-    
-    h4 {
-      color: #f3f4f6;
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 600;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: #4b5563;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .charger-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #374151;
+
+      h4 {
+        color: #f3f4f6;
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
     }
   }
-}
 
-.btn-remove-charger {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover {
-    background: #dc2626;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  .btn-remove-charger {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
   }
 }
 
@@ -643,19 +641,22 @@
     width: 95%;
     margin: 20px;
   }
-  
+
   .modal-body {
+    // keep padding for small screens
     padding: 16px;
   }
-  
+
+  .chargers-section {
+    grid-template-columns: 1fr;      // 1 column on small screens
+  }
+
   .charger-item {
-    padding: 16px;
+    // ...existing code...
   }
-  
+
   .chargers-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    // ...existing code...
   }
 }
 
@@ -672,7 +673,16 @@
 .modal-body::-webkit-scrollbar-thumb {
   background: #6b7280;
   border-radius: 3px;
-  
+
+  &:hover {
+    background: #9ca3af;
+  }
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 3px;
+
   &:hover {
     background: #9ca3af;
   }
