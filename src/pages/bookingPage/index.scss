@@ -337,18 +337,6 @@ body {
     background: $primary-pale;
     box-shadow: $shadow-md;
   }
-
-  &.ac {
-    border-left: 4px solid $info;
-  }
-
-  &.dc {
-    border-left: 4px solid $warning;
-  }
-
-  &.dc-ultra {
-    border-left: 4px solid $danger;
-  }
 }
 
 // Station Header
@@ -569,28 +557,65 @@ body {
     font-weight: 700;
     color: $text-primary;
   }
+
+  .speed-badge {
+    margin: 0 $spacing-sm;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    border: 2px solid transparent;
+
+    &.slow {
+      background: rgba($info, 0.12);
+      color: darken($info, 5%);
+      border-color: rgba($info, 0.3);
+    }
+
+    &.fast {
+      background: rgba($warning, 0.12);
+      color: darken($warning, 10%);
+      border-color: rgba($warning, 0.3);
+    }
+
+    &.super_fast {
+      background: rgba($danger, 0.12);
+      color: $danger;
+      border-color: rgba($danger, 0.3);
+    }
+  }
 }
 
-.status-badge {
-  padding: 3px 8px;
+.type-row {
+  margin-top: 6px;
+}
+
+.type-badge {
+  padding: 4px 8px;
   border-radius: $radius-sm;
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
+  flex-shrink: 0;
 
-  &.available {
-    background: rgba($success, 0.1);
-    color: $success;
+  &.ac {
+    background: rgba($info, 0.15);
+    color: $info;
+    border: 1px solid rgba($info, 0.3);
   }
 
-  &.occupied {
-    background: rgba($warning, 0.1);
-    color: darken($warning, 10%);
+  &.dc {
+    background: rgba($warning, 0.15);
+    color: darken($warning, 15%);
+    border: 1px solid rgba($warning, 0.3);
   }
 
-  &.maintenance {
-    background: rgba($text-muted, 0.1);
-    color: $text-muted;
+  &.dc-ultra {
+    background: rgba($danger, 0.15);
+    color: $danger;
+    border: 1px solid rgba($danger, 0.3);
   }
 }
 
@@ -1352,4 +1377,86 @@ body {
     transform: translateX(-2px);
     box-shadow: $shadow-sm;
   }
+}
+// Step 3 custom date/time pickers
+.date-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-sm;
+  width: 100%;
+}
+
+.date-card {
+  padding: $spacing-md;
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  background: linear-gradient(135deg, $bg-white 0%, $bg-light 100%);
+  font-weight: 700;
+  color: $text-primary;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:hover {
+    border-color: $primary;
+    background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.08) 100%);
+    box-shadow: $shadow-sm;
+  }
+
+  &.selected {
+    border-color: $primary;
+    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
+    box-shadow: $shadow-md;
+  }
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-sm;
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.time-slot {
+  padding: $spacing-sm $spacing-md;
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  background: $bg-light;
+  font-weight: 700;
+  color: $text-primary;
+  cursor: pointer;
+  text-align: center;
+  transition: all $transition-base;
+
+  &:hover {
+    border-color: $primary;
+    background: $primary-pale;
+    box-shadow: $shadow-sm;
+  }
+
+  &.selected {
+    border-color: $primary;
+    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
+    box-shadow: $shadow-md;
+  }
+}
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.status-badge.available {
+  background-color: #e6f4ea; /* Xanh lá nhạt – tone "sẵn sàng" nhẹ nhàng */
+  color: #137333;            /* Xanh đậm vừa đủ để dễ đọc */
+  border: 1px solid #a5d6a7; /* Viền mờ để tăng độ tinh tế */
+}
+
+.status-badge.in_use {
+  background-color: #fff8e1; /* Vàng nhạt – cho trạng thái đang dùng */
+  color: #9a6e02;
+  border: 1px solid #ffcc80;
 }
