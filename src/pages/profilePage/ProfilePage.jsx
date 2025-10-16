@@ -8,6 +8,12 @@ const ProfilePage = () => {
   const [originalUserInfo, setOriginalUserInfo] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  // ===== Vehicle states =====
+const [vehicles, setVehicles] = useState([]);
+const [selectedVehicle, setSelectedVehicle] = useState(null);
+const [isEditingVehicle, setIsEditingVehicle] = useState(false);
+const [vehicleErrors, setVehicleErrors] = useState({});
+
 
   // Mock data - replace with actual API call
   const mockHistory = [
@@ -37,6 +43,7 @@ const ProfilePage = () => {
   // Fetch user data on component mount
   useEffect(() => {
     fetchUserData();
+    fetchVehicleData(); 
   }, []);
 
   const fetchUserData = async () => {
@@ -67,6 +74,23 @@ const ProfilePage = () => {
       setIsLoading(false);
     }
   };
+  const fetchVehicleData = async () => {
+  try {
+    const res = await api.get("/vehicles");
+    console.log("Vehicle data:", res.data);
+
+    // Extract vehicles array from response
+    const vehiclesList = res.data?.items || res.data?.data || [];
+    setVehicles(Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean));
+  } catch (error) {
+    console.error("Error fetching vehicle:", error);
+    if (error.response?.status !== 404) {
+      alert("Không thể tải thông tin phương tiện!");
+    }
+  }
+};
+
+
 
   const validateForm = () => {
     const newErrors = {};
@@ -176,7 +200,72 @@ const ProfilePage = () => {
       </div>
     );
   }
+//   const handleVehicleChange = (field, value) => {
+//   setSelectedVehicle(prev => ({
+//     ...prev,
+//     [field]: value
+//   }));
+//   if (vehicleErrors[field]) {
+//     setVehicleErrors(prev => ({ ...prev, [field]: "" }));
+//   }
+// };
 
+const validateVehicle = () => {
+  const errs = {};
+  if (!selectedVehicle?.plateNumber?.trim()) errs.plateNumber = "Biển số xe không được để trống";
+  if (!selectedVehicle?.make?.trim()) errs.make = "Hãng xe không được để trống";
+  if (!selectedVehicle?.model?.trim()) errs.model = "Mẫu xe không được để trống";
+  setVehicleErrors(errs);
+  return Object.keys(errs).length === 0;
+};
+
+const handleVehicleSave = async () => {
+  if (!validateVehicle()) return;
+  try {
+    const endpoint = selectedVehicle?.id ? `/vehicles/${selectedVehicle.id}` : "/vehicles";
+    const method = selectedVehicle?.id ? api.put : api.post;
+    const payload = {
+      ...selectedVehicle,
+      year: Number(selectedVehicle.year),
+      batteryCapacityKwh: Number(selectedVehicle.batteryCapacityKwh),
+      status: selectedVehicle.status || "active",
+    };
+
+    const res = await method(endpoint, payload);
+    const savedVehicle = res.data?.data || payload;
+
+    setVehicles(prev => {
+      if (selectedVehicle?.id) {
+        return prev.map(v => v.id === selectedVehicle.id ? savedVehicle : v);
+      }
+      return [...prev, savedVehicle];
+    });
+
+    alert("Lưu thông tin xe thành công!");
+    setIsEditingVehicle(false);
+    setSelectedVehicle(null);
+  } catch (error) {
+    console.error("Error saving vehicle:", error);
+    alert("Không thể lưu thông tin xe, vui lòng thử lại!");
+  }
+};
+// const handleVehicleCancel = () => {
+//   setIsEditingVehicle(false);
+//   setSelectedVehicle(null);
+//   setVehicleErrors({});
+// };
+const handleDeleteVehicle = async (vehicleId) => {
+  if (window.confirm('Bạn có chắc chắn muốn xóa xe này?')) {
+    try {
+      await api.delete(`/vehicles/${vehicleId}`);
+      setVehicles(prev => prev.filter(v => v.id !== vehicleId));
+      alert('Xóa xe thành công!');
+    } catch (error) {
+      console.error('Error deleting vehicle:', error);
+      alert('Không thể xóa xe, vui lòng thử lại!');
+    }
+  }
+};
   return (
     <div className="profile-page dark-theme">
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
@@ -305,6 +394,199 @@ const ProfilePage = () => {
           <button className="change-password-btn">Đổi mật khẩu</button>
         </div>
       </section>
+
+      {/* === VEHICLE SECTION === */}
+      <section className="profile-section vehicle-section">
+        <div className="section-header">
+          <h2>Thông tin phương tiện</h2>
+          {!isEditingVehicle && (
+            <button className="edit-btn" onClick={() => {
+              setSelectedVehicle({});
+              setIsEditingVehicle(true);
+            }}>
+              Thêm xe mới
+            </button>
+          )}
+        </div>
+
+        {vehicles.length === 0 && !isEditingVehicle ? (
+          <p style={{ color: "#90caf9" }}>Chưa có thông tin xe. Nhấn "Thêm xe mới" để bắt đầu.</p>
+        ) : !isEditingVehicle ? (
+          <div className="vehicles-grid">
+            {vehicles.map(vehicle => (
+              <div key={vehicle.id} className="vehicle-card">
+  <h3>
+    <span className="plate-number">{vehicle.plateNumber}</span>
+    <span 
+      className="delete-icon" 
+      onClick={(e) => {
+        e.stopPropagation();
+        handleDeleteVehicle(vehicle.id);
+      }}
+    >
+      ✕
+    </span>
+  </h3>
+  <div className="vehicle-info">
+    <p><b>Hãng:</b> {vehicle.make || "Chưa cập nhật"}</p>
+    <p><b>Mẫu:</b> {vehicle.model || "Chưa cập nhật"}</p>
+    <p><b>Năm:</b> {vehicle.year || "Chưa cập nhật"}</p>
+    <p><b>Loại sạc:</b> {vehicle.connectorType + "-" + vehicle.batteryCapacityKwh || "Chưa cập nhật"} kWh</p>
+
+  </div>
+  <div className="vehicle-actions">
+    <button className="edit-btn" onClick={() => {
+      setSelectedVehicle(vehicle);
+      setIsEditingVehicle(true);
+    }}>
+      Chỉnh sửa
+    </button>
+  </div>
+</div>
+            ))}
+          </div>
+        ) : (
+          <div className="edit-form vehicle-edit-form">
+  <div className="form-grid">
+    <div className="form-group">
+      <label><b>Biển số xe:</b></label>
+      <input
+        type="text"
+        value={selectedVehicle?.plateNumber || ""}
+        onChange={(e) => setSelectedVehicle(prev => ({
+          ...prev,
+          plateNumber: e.target.value
+        }))}
+        className={vehicleErrors.plateNumber ? "error" : ""}
+        placeholder="VD: 51H-123.45"
+      />
+      {vehicleErrors.plateNumber && (
+        <span className="error-message">{vehicleErrors.plateNumber}</span>
+      )}
+    </div>
+
+    <div className="form-group">
+      <label><b>Hãng xe:</b></label>
+      <input
+        type="text"
+        value={selectedVehicle?.make || ""}
+        onChange={(e) => setSelectedVehicle(prev => ({
+          ...prev,
+          make: e.target.value
+        }))}
+        placeholder="VD: VinFast"
+      />
+    </div>
+
+    <div className="form-group">
+      <label><b>Mẫu xe:</b></label>
+      <input
+        type="text"
+        value={selectedVehicle?.model || ""}
+        onChange={(e) => setSelectedVehicle(prev => ({
+          ...prev,
+          model: e.target.value
+        }))}
+        placeholder="VD: VF8"
+      />
+    </div>
+
+    <div className="form-group">
+      <label><b>Năm sản xuất:</b></label>
+      <input
+        type="number"
+        value={selectedVehicle?.year || ""}
+        onChange={(e) => setSelectedVehicle(prev => ({
+          ...prev,
+          year: e.target.value
+        }))}
+        placeholder="VD: 2023"
+      />
+    </div>
+
+    <div className="form-group">
+      <label><b>Màu xe:</b></label>
+      <input
+        type="text"
+        value={selectedVehicle?.color || ""}
+        onChange={(e) => setSelectedVehicle(prev => ({
+          ...prev,
+          color: e.target.value
+        }))}
+        placeholder="VD: White"
+      />
+    </div>
+
+    <div className="form-group">
+      <label><b>Số khung (VIN):</b></label>
+      <input
+        type="text"
+        value={selectedVehicle?.vin || ""}
+        onChange={(e) => setSelectedVehicle(prev => ({
+          ...prev,
+          vin: e.target.value
+        }))}
+        placeholder="VD: WVWAA71K08W201030"
+      />
+    </div>
+
+    <div className="form-group">
+      <label><b>Loại xe:</b></label>
+      <select
+        value={selectedVehicle?.type || ""}
+        onChange={(e) => setSelectedVehicle(prev => ({
+          ...prev,
+          type: e.target.value
+        }))}
+      >
+        <option value="">Chọn loại xe</option>
+        <option value="car">Ô tô</option>
+        <option value="bike">Xe máy</option>
+      </select>
+    </div>
+
+    <div className="form-group">
+      <label><b>Dung lượng pin (kWh):</b></label>
+      <input
+        type="number"
+        value={selectedVehicle?.batteryCapacityKwh || ""}
+        onChange={(e) => setSelectedVehicle(prev => ({
+          ...prev,
+          batteryCapacityKwh: e.target.value
+        }))}
+        placeholder="VD: 82"
+      />
+    </div>
+
+    <div className="form-group">
+      <label><b>Loại cổng sạc:</b></label>
+      <select
+        value={selectedVehicle?.connectorType || ""}
+        onChange={(e) => setSelectedVehicle(prev => ({
+          ...prev,
+          connectorType: e.target.value
+        }))}
+      >
+        <option value="">Chọn loại cổng sạc</option>
+        <option value="AC">AC</option>
+        <option value="DC">DC</option>
+      </select>
+    </div>
+  </div>
+
+  <div className="edit-actions">
+    <button className="save-btn" onClick={handleVehicleSave}>Lưu</button>
+    <button className="cancel-btn" onClick={() => {
+      setIsEditingVehicle(false);
+      setSelectedVehicle(null);
+      setVehicleErrors({});
+    }}>Hủy</button>
+  </div>
+</div>
+        )}
+      </section>
+
+      
       <section className="profile-section history-section">
         <h2>Lịch sử sạc</h2>
         <div className="history-table-wrapper">
@@ -317,7 +599,7 @@ const ProfilePage = () => {
                 <th>Công suất (kWh)</th>
                 <th>Chi phí (VND)</th>
               </tr>
-            </thead>
+            </thead>  
             <tbody>
               {Array.isArray(mockHistory) && mockHistory.length > 0 ? (
                 mockHistory.map((h, idx) => (
