@@ -1,0 +1,12 @@
+import ProtectedRoute from "./components/ProtectedRoute";
+import StationManagement from "./pages/adminDashboard/stationManagement";
+
+// Trong routes:
+<Route 
+  path="/admin/stations" 
+  element={
+    <ProtectedRoute requiredRole="admin">
+      <StationManagement />
+    </ProtectedRoute>
+  } 
+/>

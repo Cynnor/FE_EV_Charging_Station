@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./index.scss";
 import api from "../../../config/api";
 
 const StationManagement = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -11,6 +13,7 @@ const StationManagement = () => {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [authError, setAuthError] = useState(null);
   const [editingStation, setEditingStation] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -357,6 +360,49 @@ const StationManagement = () => {
         return status;
     }
   };
+
+  // Kiểm tra quyền admin
+  useEffect(() => {
+    const checkAdminRole = () => {
+      // Lấy thông tin user từ localStorage hoặc context
+      const userStr = localStorage.getItem("user");
+
+      if (!userStr) {
+        setAuthError("Vui lòng đăng nhập để tiếp tục");
+        setTimeout(() => navigate("/login"), 2000);
+        return;
+      }
+
+      try {
+        const user = JSON.parse(userStr);
+
+        // Kiểm tra role (có thể là 'admin', 'role', hoặc key khác tùy API)
+        if (user.role !== "ADMIN" && user.userRole !== "ADMIN") {
+          setAuthError("Bạn không có quyền truy cập trang này");
+          setTimeout(() => navigate("/"), 2000);
+          return;
+        }
+      } catch (err) {
+        console.error("Error parsing user data:", err);
+        setAuthError("Lỗi xác thực. Vui lòng đăng nhập lại");
+        setTimeout(() => navigate("/login"), 2000);
+      }
+    };
+
+    checkAdminRole();
+  }, [navigate]);
+
+  // Hiển thị lỗi authentication trước khi load data
+  if (authError) {
+    return (
+      <div className="station-management">
+        <div className="error-container">
+          <p>🚫 {authError}</p>
+          <p>Đang chuyển hướng...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
