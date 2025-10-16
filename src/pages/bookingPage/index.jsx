@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import "./index.scss";
 import ChargingMap from "../../components/chargingMap";
+// Removed unused import
 import api from "../../config/api";
+
 
 /** ============== MAPPERS & TYPES (JS) ============== */
 // Danh sách quận cố định theo yêu cầu (đã loại bỏ trùng lặp)
@@ -157,6 +159,7 @@ function mapPortToCharger(port, idx, baseLatLng) {
 export default function BookingPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { stationId } = useParams();
 
   const today = new Date();
   const defaultDate = today.toISOString().split("T")[0];
@@ -180,6 +183,7 @@ export default function BookingPage() {
   const [districtFilter, setDistrictFilter] = useState("all"); // "all" | <districtName>
 
   const [userLocation, setUserLocation] = useState(null);
+  
 
   // Lấy filter từ URL (?type=AC|DC|DC_ULTRA)
   useEffect(() => {
@@ -210,6 +214,15 @@ export default function BookingPage() {
         setStations(mapped);
         // Hiển thị danh sách quận cố định
         setDistricts(FIXED_DISTRICTS);
+        
+        // Nếu có stationId từ URL, tự động chọn trạm và chuyển sang Step 2
+        if (stationId && !cancelled) {
+          const found = mapped.find(s => String(s.id) === String(stationId));
+          if (found) {
+            setSelectedStation(found);
+            setStep(2);
+          }
+        }
         // Nếu chưa có center chọn, bạn có thể chọn trạm đầu tiên
         // if (!selectedStation && mapped[0]) setSelectedStation(mapped[0]);
       } catch (e) {
@@ -282,8 +295,8 @@ export default function BookingPage() {
       (station.name && station.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (station.address && station.address.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    // Bỏ lọc theo loại trạm ở Step 1
-    const matchesType = true;
+    // Lọc theo loại trạm nếu có filterType từ URL
+    const matchesType = filterType === "all" ? true : station.type === filterType;
 
     // 3. Lọc theo quận
     // So khớp theo văn bản địa chỉ chứa tên quận được chọn (không phân biệt hoa/thường)
@@ -489,7 +502,16 @@ export default function BookingPage() {
                   )}
                 </div>
 
-                {/* Đã bỏ dropdown lọc loại trạm theo yêu cầu */}
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="all">Tất cả loại trạm</option>
+                  <option value="AC">⚡ AC - Sạc chậm</option>
+                  <option value="DC">⚡⚡ DC - Sạc nhanh</option>
+                  <option value="DC ULTRA">⚡⚡⚡ DC Ultra - Siêu nhanh</option>
+                </select>
 
                 <select
                   value={districtFilter}

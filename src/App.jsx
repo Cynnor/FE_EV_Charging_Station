@@ -37,6 +37,7 @@ function App() {
         { path: "about", element: <AboutPage /> },
         { path: "support", element: <SupportPage /> },
         { path: "profile", element: <ProfilePage /> },
+        { path: "booking/:stationId", element: <BookingPage /> },
         { path: "booking", element: <BookingPage /> },
         { path: "payment", element: <PaymentPage /> },
         { path: "membership", element: <MembershipPage /> },
