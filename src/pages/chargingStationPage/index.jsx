@@ -12,7 +12,7 @@ function ChargingStationCard({
   installTypes,
   protection,
   locationType,
-  // chargerType,
+  chargerType,
 }) {
   return (
     <div className="card">
@@ -40,7 +40,7 @@ function ChargingStationCard({
       </ul>
       <div className="card-actions">
         {/* <button className="btn-detail">Chi tiết</button> */}
-        <Link to={`/booking`}>
+        <Link to={`/booking?type=${chargerType === "DC_SUPER" ? "DC_ULTRA" : chargerType}`}>
           <button className="btn-rent">Đặt chỗ</button>
         </Link>
       </div>
@@ -64,7 +64,6 @@ function ChargingStationHero() {
       </div>
       <div className="hero-image">
         <img src={"./src/assets/banner.jpg"} alt="Banner EV Charging" />
-
       </div>
     </section>
   )
@@ -80,7 +79,7 @@ function TitleSupport() {
         {/* <p>Giải pháp sạc điện toàn diện cho mọi nhu cầu</p> */}
       </div>
 
-      <div className="title-decoration">
+      <div className="title-deczoration">
         <div className="decoration-circle"></div>
         <div className="decoration-circle"></div>
         <div className="decoration-circle"></div>
@@ -102,7 +101,7 @@ function ChargingStationsPage() {
       plugTypes: "2 chấu /3 chấu",
       installTypes: "Trụ đứng / Treo tường",
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch",
-locationType: "Nhà riêng / Công cộng",
+      locationType: "Nhà riêng / Công cộng",
       chargerType: "AC",
     },
     {

@@ -33,7 +33,7 @@ function App() {
       element: <Layout />,
       children: [
         { path: "", element: <HomePage /> },
-        { path: "charging-stations", element: <ChargingStationsPage /> },~
+        { path: "charging-stations", element: <ChargingStationsPage /> },
         { path: "about", element: <AboutPage /> },
         { path: "support", element: <SupportPage /> },
         { path: "profile", element: <ProfilePage /> },

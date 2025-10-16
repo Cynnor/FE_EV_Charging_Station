@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { FaBolt, FaMoneyBillWave, FaMobileAlt, FaProjectDiagram } from "react-icons/fa";
 import "./index.scss";
 import videobanner from "../../assets/videobanner.mp4";
-const About = () => {
+
+const AboutPage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -100,4 +101,4 @@ const About = () => {
   );
 };
 
-export default About;
+export default AboutPage;
