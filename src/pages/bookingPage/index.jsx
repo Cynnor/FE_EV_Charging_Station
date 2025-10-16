@@ -28,6 +28,10 @@ const FIXED_DISTRICTS = [
   "Quận Tân Bình",
   "Quận Tân Phú",
 ];
+
+
+  
+
 // Chuyển danh sách cổng sạc (ports) → kiểu trạm hiển thị
 function chooseStationType(ports = []) {
   if (!ports.length) return "AC";
@@ -183,6 +187,9 @@ export default function BookingPage() {
   const [districtFilter, setDistrictFilter] = useState("all"); // "all" | <districtName>
 
   const [userLocation, setUserLocation] = useState(null);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
 
   // Lấy filter từ URL (?type=AC|DC|DC_ULTRA)
