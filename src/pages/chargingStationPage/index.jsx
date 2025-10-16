@@ -40,8 +40,10 @@ function ChargingStationCard({
       </ul>
       <div className="card-actions">
         {/* <button className="btn-detail">Chi tiết</button> */}
-        <Link to={`/booking?type=${chargerType === "DC_SUPER" ? "DC_ULTRA" : chargerType}`}>
-          <button className="btn-rent">Đặt chỗ</button>
+        <Link
+          to={`/booking?type=${chargerType === "DC_SUPER" ? "DC_ULTRA" : chargerType
+            }`}
+        >
         </Link>
       </div>
     </div>
