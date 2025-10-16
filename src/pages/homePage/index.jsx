@@ -150,7 +150,7 @@ const HomePage = () => {
 
   const handleBooking = (stationId) => {
     const token = localStorage.getItem("token");
-    const redirectUrl = `/booking?station=${stationId}`;
+    const redirectUrl = `/booking/${stationId}`;
     if (!token) {
       navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
     } else {
