@@ -612,11 +612,12 @@ body {
     border: 1px solid rgba($warning, 0.3);
   }
 
-  &.dc-ultra {
-    background: rgba($danger, 0.15);
-    color: $danger;
-    border: 1px solid rgba($danger, 0.3);
-  }
+ &.dc-ultra {
+  background: rgba($danger, 0.12);
+  color: $danger;
+  border: 2px solid transparent;
+  border-color: rgba($danger, 0.3);
+}
 }
 
 .charger-specs {
