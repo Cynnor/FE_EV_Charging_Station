@@ -146,14 +146,14 @@ function mapPortToCharger(port, idx, baseLatLng) {
     DC: port.powerKw >= 120 ? "Ultra" : "DC", // hoặc nếu API có sẵn "Ultra", thì dùng port.type luôn
   };
   return {
-    id: port.id || idx + 1,
+    id: port.id, // LUÔN lấy id thực tế từ API
     name: `Trụ ${idx + 1}`,
     coords,
     power: `${port.powerKw ?? "-"} kW`,
     price: toPriceVND(port.price),
     status: port.status || "available",
     connector,
-     // 👇 Dùng trực tiếp từ API + map sang nhãn đẹp
+    // 👇 Dùng trực tiếp từ API + map sang nhãn đẹp
     typeLabel: typeLabels[port.type] || port.type,
     speedLabel: speedLabels[port.speed] || "Unknown",
   };
@@ -181,6 +181,12 @@ export default function BookingPage() {
 
   const [selectedStation, setSelectedStation] = useState(null);
   const [selectedCharger, setSelectedCharger] = useState(null);
+
+  // Step 3: slots
+  const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all"); // giữ state nhưng không áp dụng lọc loại trạm
@@ -353,12 +359,12 @@ export default function BookingPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedStation || !selectedCharger) {
-      alert("⚠️ Vui lòng chọn trạm và trụ!");
+    if (!selectedStation || !selectedCharger || !selectedSlot) {
+      alert("⚠️ Vui lòng chọn trạm, trụ và slot!");
       return;
     }
     navigate("/payment", {
-      state: { station: selectedStation, charger: selectedCharger, formData },
+      state: { station: selectedStation, charger: selectedCharger, slot: selectedSlot, formData },
     });
   };
 
@@ -390,7 +396,7 @@ export default function BookingPage() {
     return options;
   }, [today]);
 
-  // Sinh các slot giờ theo bước 15 phút, không cho chọn quá khứ
+  // Sinh các slot giờ theo bước 30 phút, không cho chọn quá khứ
   const timeSlots = useMemo(() => {
     const slots = [];
     const selectedDateIso = formData.date;
@@ -457,9 +463,33 @@ export default function BookingPage() {
     setFormData((prev) => ({ ...prev, endTime: endTimeSlots[0] }));
   }, [endTimeSlots]);
 
+  // Fetch slots when entering step 3
+  useEffect(() => {
+  async function fetchSlots() {
+    if (step === 3 && selectedCharger && selectedCharger.id) {
+      const url = `/stations/ports/${encodeURIComponent(selectedCharger.id)}/slots`;
+      console.log('🚀 Gọi API với URL:', url);
+      setSlotsLoading(true);
+      setSlotsError(null);
+      try {
+        const { data } = await api.get(url);
+        setSlots(data?.slots || []);
+      } catch (e) {
+        console.error("❌ Lỗi khi gọi API slots:", e);
+        setSlotsError(`Không thể tải slot. Chi tiết: ${e.message}`);
+      } finally {
+        setSlotsLoading(false);
+      }
+    } else {
+      setSlots([]);
+    }
+  }
+  fetchSlots();
+}, [step, selectedCharger]);
+
   return (
     <div className="booking-wrapper">
-      <div className={`booking-container ${step === 3 ? "confirmation-mode" : ""}`}>
+      <div className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}>
         <div className="left-panel">
           <div className="panel-header">
             <h1>Đặt chỗ sạc xe</h1>
@@ -476,6 +506,11 @@ export default function BookingPage() {
               <div className="step-divider"></div>
               <div className={`step ${step >= 3 ? "active" : ""}`}>
                 <span className="step-number">3</span>
+                <span className="step-label">Chọn slot</span>
+              </div>
+              <div className="step-divider"></div>
+              <div className={`step ${step >= 4 ? "active" : ""}`}>
+                <span className="step-number">4</span>
                 <span className="step-label">Xác nhận</span>
               </div>
             </div>
@@ -685,8 +720,51 @@ export default function BookingPage() {
             </div>
           )}
 
-          {/* STEP 3 */}
-          {step === 3 && selectedStation && selectedCharger && (
+          {/* STEP 3: Slot selection */}
+          {step === 3 && selectedCharger && (
+            <div className="slot-selection">
+              <button className="back-button" onClick={() => setStep(2)}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M12 4L6 10l6 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Quay lại
+              </button>
+              <h2>Chọn slot cho trụ sạc</h2>
+              {slotsLoading && <div>Đang tải slot…</div>}
+              {slotsError && <div style={{ color: "tomato" }}>Lỗi: {slotsError}</div>}
+              {!slotsLoading && !slotsError && (
+                <div className="slots-grid">
+                  {slots.length === 0 && <div>Không có slot khả dụng</div>}
+                  {slots.map((slot) => (
+                    <div
+                      key={slot.id}
+                      className={`slot-card ${selectedSlot?.id === slot.id ? "selected" : ""}`}
+                      onClick={() => setSelectedSlot(slot)}
+                    >
+                      <div className="slot-time">{slot.time}</div>
+                      <div className="slot-status">{slot.status}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                className="next-button"
+                disabled={!selectedSlot}
+                onClick={() => selectedSlot && setStep(4)}
+              >
+                Tiếp tục xác nhận
+              </button>
+            </div>
+          )}
+
+          {/* STEP 4: Confirmation */}
+          {step === 4 && selectedStation && selectedCharger && selectedSlot && (
             <div className="booking-confirmation">
               <button className="back-button" onClick={() => setStep(2)}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -774,7 +852,7 @@ export default function BookingPage() {
                             </div>
                             <span className="datetime-arrow">→</span>
                           </div>
-                          <div className="datetime-helper">💡 Nhấn để chọn 1 trong 3 ngày</div>
+                          {/* <div className="datetime-helper">💡 Nhấn để chọn 1 trong 3 ngày</div> */}
                         </div>
                       </div>
 
@@ -794,7 +872,7 @@ export default function BookingPage() {
                             </div>
                             <span className="datetime-arrow">→</span>
                           </div>
-                          <div className="datetime-helper">💡 Chọn theo bước 15 phút, không chọn quá khứ</div>
+                          {/* <div className="datetime-helper">💡 Chọn theo bước 15 phút, không chọn quá khứ</div> */}
                         </div>
                       </div>
 
@@ -814,12 +892,12 @@ export default function BookingPage() {
                             </div>
                             <span className="datetime-arrow">→</span>
                           </div>
-                          <div className="datetime-helper">💡 Chỉ +30m, +60m, +90m sau giờ bắt đầu</div>
+                          {/* <div className="datetime-helper">💡 Chỉ +30m, +60m, +90m sau giờ bắt đầu</div> */}
                         </div>
                       </div>
 
                       <div className="price-estimate">
-                        <div className="estimate-label">Ước tính chi phí (1 giờ):</div>
+                        <div className="estimate-label">Ước tính chi phí:</div>
                         <div className="estimate-value">{priceEstimate1h}</div>
                       </div>
 
@@ -843,8 +921,8 @@ export default function BookingPage() {
           )}
         </div>
 
-        {/* RIGHT PANEL: MAP */}
-        {step !== 3 && (
+  {/* RIGHT PANEL: MAP */}
+  {step !== 4 && (
           <div className="right-panel">
             <div className="map-container">
               {step === 1 && (
