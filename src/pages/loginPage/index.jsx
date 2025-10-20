@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeOff, Zap } from "lucide-react";
@@ -21,7 +20,8 @@ export default function Login() {
   const searchParams = new URLSearchParams(location.search);
   const redirectPath = searchParams.get("redirect") || "/";
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
     if (!username || !password) {
       setMessage("Vui lòng nhập đầy đủ Username và Password!");
       setIsSuccess(false);
@@ -39,8 +39,19 @@ export default function Login() {
         setIsSuccess(true);
         localStorage.setItem("token", data.data.token);
 
-        // Chuyển tới redirectPath nếu có
-        navigate(decodeURIComponent(redirectPath));
+        // Giả sử response trả về user info và token
+        const user = data.data.user;
+        localStorage.setItem("user", JSON.stringify(user));
+
+        // Điều hướng theo role
+        const role = user.role || user.userRole || user.accountRole;
+        if (role === "admin" ) {
+          navigate("/admin", { replace: true });
+        } else if (role === "STAFF") {
+          navigate("/staff", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
       } else {
         setMessage(data.message || "Phản hồi không hợp lệ từ server!");
         setIsSuccess(false);
@@ -201,4 +212,3 @@ export default function Login() {
     </div>
   );
 }
-

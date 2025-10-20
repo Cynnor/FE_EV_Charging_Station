@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import "./index.scss";
 import api from "../../../config/api";
 
 const StationManagement = () => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -13,7 +11,6 @@ const StationManagement = () => {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [authError, setAuthError] = useState(null);
   const [editingStation, setEditingStation] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -29,8 +26,19 @@ const StationManagement = () => {
         powerKw: 120,
         speed: "fast",
         price: 3858,
+        tempSlots: [], // Thêm lại tempSlots để quản lý slots tạm thời
       },
     ],
+  });
+
+  // State riêng cho việc quản lý slots
+  const [portSlots, setPortSlots] = useState({}); // { portId: [slots] }
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [showSlotModal, setShowSlotModal] = useState(false);
+  const [selectedPort, setSelectedPort] = useState(null);
+  const [newSlot, setNewSlot] = useState({
+    slotNumber: 1,
+    status: "available",
   });
 
   // Thêm state cho modal xem chi tiết
@@ -72,11 +80,13 @@ const StationManagement = () => {
     e.preventDefault();
     try {
       console.log("Sending station data:", formData);
+
       const response = await api.post("/stations", formData);
       console.log("Add station response:", response);
 
       // Xử lý response data
       const newStation = response.data.data || response.data;
+
       setStations((prev) => [...prev, newStation]);
       setShowAddModal(false);
       resetForm();
@@ -99,23 +109,38 @@ const StationManagement = () => {
     }
   };
 
-  // PUT - Cập nhật trạm sạc
+  // PUT - Cập nhật trạm sạc (không cần tạo slots nữa vì đã tạo rồi)
   const handleEditStation = async (e) => {
     e.preventDefault();
     try {
+      // Tách tempSlots ra khỏi ports trước khi gửi
+      const portsWithoutTempSlots = formData.ports.map(
+        ({ tempSlots, ...port }) => port
+      );
+      const stationDataToSend = {
+        ...formData,
+        ports: portsWithoutTempSlots,
+      };
+
       const response = await api.put(
         `/stations/${editingStation.id}`,
-        formData
+        stationDataToSend
       );
+
+      const updatedStation = response.data.data || response.data;
+
       setStations((prev) =>
         prev.map((station) =>
-          station.id === editingStation.id ? response.data : station
+          station.id === editingStation.id ? updatedStation : station
         )
       );
       setShowEditModal(false);
       setEditingStation(null);
       resetForm();
       alert("Cập nhật trạm sạc thành công!");
+
+      // Refresh để lấy dữ liệu mới nhất
+      await fetchStations();
     } catch (err) {
       console.error("Error updating station:", err);
       alert("Có lỗi xảy ra khi cập nhật trạm sạc");
@@ -162,6 +187,179 @@ const StationManagement = () => {
     }
   };
 
+  // API: Lấy danh sách slots của một port
+  const fetchPortSlots = async (portId) => {
+    try {
+      setLoadingSlots(true);
+      const response = await api.get(`/stations/ports/${portId}/slots`);
+
+      console.log(`Raw response for port ${portId}:`, response.data);
+
+      // Xử lý response data
+      let slotsData = [];
+      if (Array.isArray(response.data)) {
+        slotsData = response.data;
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        slotsData = response.data.data;
+      }
+
+      console.log(
+        `Processed ${slotsData.length} slots for port ${portId}:`,
+        slotsData
+      );
+
+      setPortSlots((prev) => ({
+        ...prev,
+        [portId]: slotsData,
+      }));
+    } catch (err) {
+      console.error(`Error fetching slots for port ${portId}:`, err);
+      // Set empty array nếu có lỗi
+      setPortSlots((prev) => ({
+        ...prev,
+        [portId]: [],
+      }));
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  // API: Thêm slot mới vào port
+  const addTempSlotToPort = async (portIndex) => {
+    const port = formData.ports[portIndex];
+
+    if (!port.id) {
+      alert("Port chưa được lưu. Vui lòng lưu trạm sạc trước!");
+      return;
+    }
+
+    const existingSlots = portSlots[port.id] || [];
+    const nextSlotNumber = existingSlots.length + 1;
+
+    const newSlotData = {
+      slotNumber: nextSlotNumber,
+      status: "available",
+    };
+
+    try {
+      console.log(`Creating slot for port ${port.id}:`, newSlotData);
+
+      // POST: /stations/ports/{portId}/slots
+      const response = await api.post(
+        `/stations/ports/${port.id}/slots`,
+        newSlotData
+      );
+
+      console.log("Slot created response:", response.data);
+
+      alert(`Thêm slot #${nextSlotNumber} thành công!`);
+
+      // Refresh lại danh sách slots từ server
+      await fetchPortSlots(port.id);
+    } catch (err) {
+      console.error("Error adding slot:", err);
+      if (err.response) {
+        console.error("Error response:", err.response.data);
+      }
+      alert("Có lỗi xảy ra khi thêm slot!");
+    }
+  };
+
+  // API: Xóa slot
+  const removeTempSlot = async (portIndex, slotId) => {
+    const port = formData.ports[portIndex];
+
+    if (!port.id) {
+      return;
+    }
+
+    if (!window.confirm("Bạn có chắc chắn muốn xóa slot này?")) {
+      return;
+    }
+
+    try {
+      console.log(`Deleting slot ${slotId}`);
+
+      // DELETE: /stations/slots/{slotId}
+      await api.delete(`/stations/slots/${slotId}`);
+
+      console.log("Slot deleted successfully");
+
+      alert("Xóa slot thành công!");
+
+      // Refresh lại danh sách slots
+      await fetchPortSlots(port.id);
+    } catch (err) {
+      console.error("Error deleting slot:", err);
+      if (err.response) {
+        console.error("Error response:", err.response.data);
+      }
+      alert("Có lỗi xảy ra khi xóa slot!");
+    }
+  };
+
+  // API: Cập nhật slot
+  const handleTempSlotChange = async (portIndex, slotId, field, value) => {
+    const port = formData.ports[portIndex];
+
+    if (!port.id) {
+      return;
+    }
+
+    // Tìm slot hiện tại
+    const currentSlot = portSlots[port.id]?.find((slot) => slot.id === slotId);
+    if (!currentSlot) {
+      return;
+    }
+
+    const updatedSlotData = {
+      ...currentSlot,
+      [field]: value,
+    };
+
+    try {
+      console.log(`Updating slot ${slotId}:`, updatedSlotData);
+
+      // PUT: /stations/slots/{slotId}
+      const response = await api.put(
+        `/stations/slots/${slotId}`,
+        updatedSlotData
+      );
+
+      console.log("Slot updated response:", response.data);
+
+      // Refresh lại danh sách slots
+      await fetchPortSlots(port.id);
+    } catch (err) {
+      console.error("Error updating slot:", err);
+      if (err.response) {
+        console.error("Error response:", err.response.data);
+      }
+      alert("Có lỗi xảy ra khi cập nhật slot!");
+    }
+  };
+
+  // Hàm mở modal thêm slot
+  const openSlotModal = (port) => {
+    setSelectedPort(port);
+    const existingSlots = Array.isArray(portSlots[port.id])
+      ? portSlots[port.id]
+      : [];
+    setNewSlot({
+      slotNumber: existingSlots.length + 1,
+      status: "available",
+    });
+    setShowSlotModal(true);
+  };
+
+  // Reset slot form
+  const resetSlotForm = () => {
+    setNewSlot({
+      slotNumber: 1,
+      status: "available",
+    });
+  };
+
   // Utility functions
   const resetForm = () => {
     setFormData({
@@ -178,6 +376,7 @@ const StationManagement = () => {
           powerKw: 120,
           speed: "fast",
           price: 3858,
+          tempSlots: [],
         },
       ],
     });
@@ -200,7 +399,10 @@ const StationManagement = () => {
       provider: station.provider || "",
       ports:
         Array.isArray(station.ports) && station.ports.length > 0
-          ? station.ports
+          ? station.ports.map((port) => ({
+              ...port,
+              tempSlots: [], // Khởi tạo tempSlots rỗng
+            }))
           : [
               {
                 type: "DC",
@@ -208,15 +410,36 @@ const StationManagement = () => {
                 powerKw: 120,
                 speed: "fast",
                 price: 3858,
+                tempSlots: [],
               },
             ],
     });
+
+    // Fetch slots cho tất cả các ports
+    if (Array.isArray(station.ports)) {
+      station.ports.forEach((port) => {
+        if (port.id) {
+          fetchPortSlots(port.id);
+        }
+      });
+    }
+
     setShowEditModal(true);
   };
 
   // Hàm mở modal xem chi tiết
   const openViewModal = (station) => {
     setViewStation(station);
+
+    // Fetch slots cho tất cả các ports
+    if (Array.isArray(station.ports)) {
+      station.ports.forEach((port) => {
+        if (port.id) {
+          fetchPortSlots(port.id);
+        }
+      });
+    }
+
     setShowViewModal(true);
   };
 
@@ -262,6 +485,7 @@ const StationManagement = () => {
           powerKw: 120,
           speed: "fast",
           price: 3858,
+          tempSlots: [],
         },
       ],
     }));
@@ -346,7 +570,7 @@ const StationManagement = () => {
   useEffect(() => {
     const newTotal = Math.max(1, Math.ceil(filteredStations.length / pageSize));
     if (currentPage > newTotal) setCurrentPage(newTotal);
-  }, [filteredStations.length]);
+  }, [filteredStations.length, currentPage, pageSize]);
 
   const getStatusText = (status) => {
     switch (status) {
@@ -361,49 +585,7 @@ const StationManagement = () => {
     }
   };
 
-  // Kiểm tra quyền admin
-  useEffect(() => {
-    const checkAdminRole = () => {
-      // Lấy thông tin user từ localStorage hoặc context
-      const userStr = localStorage.getItem("user");
-
-      if (!userStr) {
-        setAuthError("Vui lòng đăng nhập để tiếp tục");
-        setTimeout(() => navigate("/login"), 2000);
-        return;
-      }
-
-      try {
-        const user = JSON.parse(userStr);
-
-        // Kiểm tra role (có thể là 'admin', 'role', hoặc key khác tùy API)
-        if (user.role !== "ADMIN" && user.userRole !== "ADMIN") {
-          setAuthError("Bạn không có quyền truy cập trang này");
-          setTimeout(() => navigate("/"), 2000);
-          return;
-        }
-      } catch (err) {
-        console.error("Error parsing user data:", err);
-        setAuthError("Lỗi xác thực. Vui lòng đăng nhập lại");
-        setTimeout(() => navigate("/login"), 2000);
-      }
-    };
-
-    checkAdminRole();
-  }, [navigate]);
-
   // Hiển thị lỗi authentication trước khi load data
-  if (authError) {
-    return (
-      <div className="station-management">
-        <div className="error-container">
-          <p>🚫 {authError}</p>
-          <p>Đang chuyển hướng...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="station-management">
@@ -603,7 +785,6 @@ const StationManagement = () => {
 
       {/* Add Station Modal */}
       {showAddModal && (
-        // Loại bỏ onClick đóng modal khi bấm ra ngoài
         <div className="modal-overlay">
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -786,6 +967,11 @@ const StationManagement = () => {
                           required
                         />
                       </div>
+
+                      <p className="info-message">
+                        💡 Sau khi tạo trạm sạc, bạn có thể thêm slots cho trụ
+                        này
+                      </p>
                     </div>
                   ))}
 
@@ -1003,6 +1189,91 @@ const StationManagement = () => {
                           required
                         />
                       </div>
+
+                      {/* Quản lý slots cho port đã có ID */}
+                      {port.id && (
+                        <>
+                          {/* Hiển thị slots hiện có từ server */}
+                          <div className="slots-section">
+                            <div className="slots-header">
+                              <label>
+                                Slots sạc ({portSlots[port.id]?.length || 0})
+                              </label>
+                              <button
+                                type="button"
+                                className="btn-add-slot"
+                                onClick={() => addTempSlotToPort(index)}
+                              >
+                                + Thêm slot
+                              </button>
+                            </div>
+
+                            {loadingSlots ? (
+                              <p className="loading-slots">Đang tải slots...</p>
+                            ) : portSlots[port.id] &&
+                              portSlots[port.id].length > 0 ? (
+                              <div className="slots-list">
+                                {portSlots[port.id].map((slot) => (
+                                  <div key={slot.id} className="slot-item">
+                                    <div className="slot-info">
+                                      <div className="form-group-inline">
+                                        <label>Slot #{slot.slotNumber}</label>
+                                      </div>
+                                      <div className="form-group-inline">
+                                        <label>Trạng thái:</label>
+                                        <select
+                                          value={slot.status}
+                                          onChange={(e) =>
+                                            handleTempSlotChange(
+                                              index,
+                                              slot.id,
+                                              "status",
+                                              e.target.value
+                                            )
+                                          }
+                                        >
+                                          <option value="available">
+                                            Có sẵn
+                                          </option>
+                                          <option value="in_use">
+                                            Đang dùng
+                                          </option>
+                                          <option value="maintenance">
+                                            Bảo trì
+                                          </option>
+                                          <option value="inactive">
+                                            Vô hiệu
+                                          </option>
+                                        </select>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        className="btn-remove-slot"
+                                        onClick={() =>
+                                          removeTempSlot(index, slot.id)
+                                        }
+                                        title="Xóa slot"
+                                      >
+                                        🗑️
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="no-slots">
+                                Chưa có slot nào. Nhấn "Thêm slot" để tạo mới.
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      )}
+
+                      {!port.id && (
+                        <p className="info-message">
+                          💡 Lưu trụ sạc trước để thêm slots
+                        </p>
+                      )}
                     </div>
                   ))}
 
@@ -1186,6 +1457,56 @@ const StationManagement = () => {
                               disabled
                             />
                           </div>
+
+                          {/* Danh sách slots */}
+                          {port.id && (
+                            <div className="slots-section">
+                              <div className="slots-header">
+                                <label>
+                                  Danh sách slots (
+                                  {portSlots[port.id]?.length || 0})
+                                </label>
+                              </div>
+
+                              {loadingSlots ? (
+                                <p className="loading-slots">
+                                  Đang tải slots...
+                                </p>
+                              ) : portSlots[port.id] &&
+                                portSlots[port.id].length > 0 ? (
+                                <div className="slots-list">
+                                  {portSlots[port.id].map((slot) => (
+                                    <div key={slot.id} className="slot-item">
+                                      <div className="slot-info">
+                                        <div className="form-group-inline">
+                                          <label>Slot #{slot.slotNumber}</label>
+                                        </div>
+                                        <div className="form-group-inline">
+                                          <label>Trạng thái:</label>
+                                          <select value={slot.status} disabled>
+                                            <option value="available">
+                                              Có sẵn
+                                            </option>
+                                            <option value="in_use">
+                                              Đang sử dụng
+                                            </option>
+                                            <option value="maintenance">
+                                              Bảo trì
+                                            </option>
+                                            <option value="inactive">
+                                              Vô hiệu
+                                            </option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="no-slots">Chưa có slot nào</p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1198,6 +1519,79 @@ const StationManagement = () => {
                     onClick={() => setShowViewModal(false)}
                   >
                     Đóng
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Slot Modal - Thêm slot mới */}
+      {showSlotModal && selectedPort && (
+        <div className="modal-overlay" onClick={() => setShowSlotModal(false)}>
+          <div
+            className="modal modal-small"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Thêm Slot cho Trụ sạc {selectedPort.type}</h3>
+              <button
+                className="close-btn"
+                onClick={() => setShowSlotModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAddSlot(selectedPort.id, newSlot);
+                }}
+              >
+                <div className="form-group">
+                  <label>Số thứ tự slot</label>
+                  <input
+                    type="number"
+                    value={newSlot.slotNumber}
+                    onChange={(e) =>
+                      setNewSlot({
+                        ...newSlot,
+                        slotNumber: parseInt(e.target.value),
+                      })
+                    }
+                    min="1"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Trạng thái</label>
+                  <select
+                    value={newSlot.status}
+                    onChange={(e) =>
+                      setNewSlot({ ...newSlot, status: e.target.value })
+                    }
+                    required
+                  >
+                    <option value="available">Có sẵn</option>
+                    <option value="in_use">Đang sử dụng</option>
+                    <option value="maintenance">Bảo trì</option>
+                    <option value="inactive">Vô hiệu</option>
+                  </select>
+                </div>
+
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setShowSlotModal(false)}
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className="btn-primary">
+                    Thêm Slot
                   </button>
                 </div>
               </form>
