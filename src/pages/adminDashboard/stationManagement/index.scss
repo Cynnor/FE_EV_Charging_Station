@@ -548,10 +548,19 @@
       box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
     }
 
+    &.new {
+      border-left: 3px solid #4caf50;
+      background: #f1f8f4;
+    }
+
+    &.existing {
+      border-left: 3px solid #2196f3;
+    }
+
     .slot-info {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 0.5rem;
 
       .form-group-inline {
         display: flex;
@@ -624,6 +633,16 @@
     border-radius: 6px;
     border: 1px dashed #dee2e6;
     margin: 0;
+  }
+
+  .slots-group-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+    margin: 1rem 0 0.5rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
   }
 }
 

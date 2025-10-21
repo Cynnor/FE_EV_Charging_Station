@@ -178,12 +178,13 @@ const UserManagement = () => {
   const staffCount = safeUsers.filter((u) => u.role === "STAFF").length;
   const userCount = safeUsers.filter((u) => u.role === "USER").length;
 
-  // Filter users
+  // Filter users - Cập nhật để search theo các fields mới
   const filteredUsers = safeUsers.filter((user) => {
     const matchesSearch =
       user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phoneNumber?.includes(searchTerm);
+      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.phone?.includes(searchTerm);
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -306,17 +307,17 @@ const UserManagement = () => {
               <th>Username</th>
               <th>Họ và tên</th>
               <th>Email</th>
-              <th>Ngày sinh</th>
-              <th>Số điện thoại</th>
-              <th>Địa chỉ</th>
               <th>Vai trò</th>
+              <th>Ngày sinh</th>
+              <th>Địa chỉ</th>
+              <th>Số điện thoại</th>
               <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {paginatedUsers.length > 0 ? (
               paginatedUsers.map((user) => (
-                <tr key={user.id}>
+                <tr key={user.userId}>
                   <td className="user-info">
                     <div className="user-details">
                       <span className="user-name">{user.username}</span>
@@ -324,14 +325,24 @@ const UserManagement = () => {
                   </td>
                   <td>{user.fullName}</td>
                   <td>{user.email}</td>
-                  <td>{user.dob || "N/A"}</td>
-                  <td>{user.numberphone || "N/A"}</td>
-                  <td>{user.address || "N/A"}</td>
                   <td>
                     <span className={`role-badge ${user.role?.toLowerCase()}`}>
                       {getRoleBadge(user.role)}
                     </span>
                   </td>
+                  <td>{user.dob || "N/A"}</td>
+                  <td>
+                    {user.address?.line1 ? (
+                      <span title={user.address.line1}>
+                        {user.address.line1.length > 30
+                          ? user.address.line1.substring(0, 30) + "..."
+                          : user.address.line1}
+                      </span>
+                    ) : (
+                      "N/A"
+                    )}
+                  </td>
+                  <td>{user.phone || "N/A"}</td>
                   <td>
                     <div className="action-buttons">
                       <button
@@ -357,7 +368,7 @@ const UserManagement = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="no-data">
+                <td colSpan="9" className="no-data">
                   Không tìm thấy người dùng nào
                 </td>
               </tr>
@@ -411,8 +422,8 @@ const UserManagement = () => {
             <div className="modal-body">
               <div className="user-detail-content">
                 <div className="detail-group">
-                  <label>ID:</label>
-                  <span>#{selectedUser.id}</span>
+                  <label>User ID:</label>
+                  <span>#{selectedUser.userId}</span>
                 </div>
                 <div className="detail-group">
                   <label>Username:</label>
@@ -427,24 +438,24 @@ const UserManagement = () => {
                   <span>{selectedUser.email}</span>
                 </div>
                 <div className="detail-group">
-                  <label>Ngày sinh:</label>
-                  <span>{selectedUser.dob || "Chưa cập nhật"}</span>
-                </div>
-                <div className="detail-group">
-                  <label>Số điện thoại:</label>
-                  <span>{selectedUser.numberphone || "Chưa cập nhật"}</span>
-                </div>
-                <div className="detail-group">
-                  <label>Địa chỉ:</label>
-                  <span>{selectedUser.address || "Chưa cập nhật"}</span>
-                </div>
-                <div className="detail-group">
                   <label>Vai trò:</label>
                   <span
                     className={`role-badge ${selectedUser.role?.toLowerCase()}`}
                   >
                     {getRoleBadge(selectedUser.role)}
                   </span>
+                </div>
+                <div className="detail-group">
+                  <label>Ngày sinh:</label>
+                  <span>{selectedUser.dob || "Chưa cập nhật"}</span>
+                </div>
+                <div className="detail-group">
+                  <label>Địa chỉ:</label>
+                  <span>{selectedUser.address?.line1 || "Chưa cập nhật"}</span>
+                </div>
+                <div className="detail-group">
+                  <label>Số điện thoại:</label>
+                  <span>{selectedUser.phone || "Chưa cập nhật"}</span>
                 </div>
               </div>
             </div>

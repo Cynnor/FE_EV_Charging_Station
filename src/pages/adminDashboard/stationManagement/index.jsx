@@ -26,7 +26,7 @@ const StationManagement = () => {
         powerKw: 120,
         speed: "fast",
         price: 3858,
-        tempSlots: [], // Thêm lại tempSlots để quản lý slots tạm thời
+        newSlots: [], // Slots mới chưa lưu (chỉ tồn tại local)
       },
     ],
   });
@@ -75,22 +75,59 @@ const StationManagement = () => {
     }
   };
 
-  // POST - Thêm trạm sạc mới
+  // POST - Thêm trạm sạc mới VÀ tạo slots cho các ports
   const handleAddStation = async (e) => {
     e.preventDefault();
     try {
       console.log("Sending station data:", formData);
 
-      const response = await api.post("/stations", formData);
+      // Tách newSlots ra khỏi ports trước khi gửi
+      const portsWithoutNewSlots = formData.ports.map(
+        ({ newSlots, ...port }) => port
+      );
+      const stationDataToSend = {
+        ...formData,
+        ports: portsWithoutNewSlots,
+      };
+
+      const response = await api.post("/stations", stationDataToSend);
       console.log("Add station response:", response);
 
       // Xử lý response data
       const newStation = response.data.data || response.data;
 
+      // Tạo slots cho các ports vừa tạo
+      if (newStation.ports && Array.isArray(newStation.ports)) {
+        for (let i = 0; i < formData.ports.length; i++) {
+          const formPort = formData.ports[i];
+          const createdPort = newStation.ports[i];
+
+          if (
+            createdPort?.id &&
+            formPort.newSlots &&
+            formPort.newSlots.length > 0
+          ) {
+            for (const slot of formPort.newSlots) {
+              try {
+                await api.post(`/stations/ports/${createdPort.id}/slots`, {
+                  slotNumber: slot.slotNumber,
+                  status: slot.status,
+                });
+              } catch (slotErr) {
+                console.error(
+                  `Error creating slot for port ${createdPort.id}:`,
+                  slotErr
+                );
+              }
+            }
+          }
+        }
+      }
+
       setStations((prev) => [...prev, newStation]);
       setShowAddModal(false);
       resetForm();
-      alert("Thêm trạm sạc thành công!");
+      alert("Thêm trạm sạc và slots thành công!");
 
       // Refresh danh sách để đảm bảo đồng bộ
       await fetchStations();
@@ -109,38 +146,119 @@ const StationManagement = () => {
     }
   };
 
-  // PUT - Cập nhật trạm sạc (không cần tạo slots nữa vì đã tạo rồi)
+  // PUT - Cập nhật trạm sạc VÀ tạo các slots mới (bao gồm cả slots của ports mới)
   const handleEditStation = async (e) => {
     e.preventDefault();
     try {
-      // Tách tempSlots ra khỏi ports trước khi gửi
-      const portsWithoutTempSlots = formData.ports.map(
-        ({ tempSlots, ...port }) => port
+      console.log("=== Starting Edit Station ===");
+      console.log("Current formData:", formData);
+
+      // Tách newSlots ra khỏi ports trước khi gửi
+      const portsWithoutNewSlots = formData.ports.map(
+        ({ newSlots, ...port }) => port
       );
       const stationDataToSend = {
         ...formData,
-        ports: portsWithoutTempSlots,
+        ports: portsWithoutNewSlots,
       };
 
+      console.log("Sending station update:", stationDataToSend);
+
+      // 1. Cập nhật thông tin trạm sạc (bao gồm thêm ports mới)
       const response = await api.put(
         `/stations/${editingStation.id}`,
         stationDataToSend
       );
-
       const updatedStation = response.data.data || response.data;
 
+      console.log("Updated station response:", updatedStation);
+
+      // 2. Map ports mới từ response với formData để biết port nào cần tạo slots
+      if (updatedStation.ports && Array.isArray(updatedStation.ports)) {
+        console.log("Processing slots for ports...");
+
+        for (let i = 0; i < formData.ports.length; i++) {
+          const formPort = formData.ports[i];
+
+          // Tìm port tương ứng trong response (theo index hoặc ID)
+          let matchedPort;
+          if (formPort.id) {
+            // Port cũ - tìm theo ID
+            matchedPort = updatedStation.ports.find(
+              (p) => p.id === formPort.id
+            );
+          } else {
+            // Port mới - lấy theo index (giả sử thứ tự không đổi)
+            const newPortsInResponse = updatedStation.ports.filter(
+              (p) => !formData.ports.some((fp) => fp.id === p.id)
+            );
+            const newPortIndex =
+              formData.ports.slice(0, i + 1).filter((fp) => !fp.id).length - 1;
+            matchedPort = newPortsInResponse[newPortIndex];
+          }
+
+          if (!matchedPort) {
+            console.warn(`Cannot find matched port for index ${i}`);
+            continue;
+          }
+
+          const portId = matchedPort.id;
+          console.log(
+            `Port ${i}: ID=${portId}, newSlots=${
+              formPort.newSlots?.length || 0
+            }`
+          );
+
+          // Tạo slots nếu có
+          if (portId && formPort.newSlots && formPort.newSlots.length > 0) {
+            console.log(
+              `Creating ${formPort.newSlots.length} slots for port ${portId}`
+            );
+
+            for (const newSlot of formPort.newSlots) {
+              try {
+                const slotResponse = await api.post(
+                  `/stations/ports/${portId}/slots`,
+                  {
+                    slotNumber: newSlot.slotNumber,
+                    status: newSlot.status,
+                  }
+                );
+                console.log(`Slot created:`, slotResponse.data);
+              } catch (slotErr) {
+                console.error(
+                  `Error creating slot for port ${portId}:`,
+                  slotErr
+                );
+              }
+            }
+
+            // Refresh lại slots sau khi tạo xong
+            await fetchPortSlots(portId);
+            console.log(`Refreshed slots for port ${portId}`);
+          }
+        }
+      }
+
+      console.log("=== Edit Station Complete ===");
+
+      // Cập nhật UI state
       setStations((prev) =>
         prev.map((station) =>
           station.id === editingStation.id ? updatedStation : station
         )
       );
+
+      // Đóng modal và reset
       setShowEditModal(false);
       setEditingStation(null);
       resetForm();
-      alert("Cập nhật trạm sạc thành công!");
 
-      // Refresh để lấy dữ liệu mới nhất
+      // Refresh lại danh sách từ server
       await fetchStations();
+
+      // Hiện thông báo CUỐI CÙNG sau khi tất cả đã xong
+      alert("Cập nhật trạm sạc, trụ sạc và slots thành công!");
     } catch (err) {
       console.error("Error updating station:", err);
       alert("Có lỗi xảy ra khi cập nhật trạm sạc");
@@ -187,6 +305,19 @@ const StationManagement = () => {
     }
   };
 
+  // Helper: lấy portId an toàn từ object port
+  const getPortId = (port) => port?.id ?? port?.portId ?? port?._id;
+
+  // Helper: chuẩn hóa danh sách slots từ API để luôn có slotNumber
+  const normalizeSlots = (slots) =>
+    Array.isArray(slots)
+      ? slots.map((s) => ({
+          ...s,
+          slotNumber:
+            s.slotNumber ?? s.order ?? s.number ?? s.index ?? s.position ?? 0,
+        }))
+      : [];
+
   // API: Lấy danh sách slots của một port
   const fetchPortSlots = async (portId) => {
     try {
@@ -195,13 +326,22 @@ const StationManagement = () => {
 
       console.log(`Raw response for port ${portId}:`, response.data);
 
-      // Xử lý response data
-      let slotsData = [];
+      // Hỗ trợ nhiều cấu trúc response: items | data | data.items | array
+      let raw = [];
       if (Array.isArray(response.data)) {
-        slotsData = response.data;
-      } else if (response.data.data && Array.isArray(response.data.data)) {
-        slotsData = response.data.data;
+        raw = response.data;
+      } else if (Array.isArray(response.data.items)) {
+        raw = response.data.items;
+      } else if (Array.isArray(response.data.data)) {
+        raw = response.data.data;
+      } else if (
+        response.data?.data?.items &&
+        Array.isArray(response.data.data.items)
+      ) {
+        raw = response.data.data.items;
       }
+
+      const slotsData = normalizeSlots(raw);
 
       console.log(
         `Processed ${slotsData.length} slots for port ${portId}:`,
@@ -214,7 +354,6 @@ const StationManagement = () => {
       }));
     } catch (err) {
       console.error(`Error fetching slots for port ${portId}:`, err);
-      // Set empty array nếu có lỗi
       setPortSlots((prev) => ({
         ...prev,
         [portId]: [],
@@ -224,140 +363,106 @@ const StationManagement = () => {
     }
   };
 
-  // API: Thêm slot mới vào port
-  const addTempSlotToPort = async (portIndex) => {
+  // Thêm slot tạm thời - cho phép thêm ngay cả khi port chưa có ID
+  const addTempSlotToPort = (portIndex) => {
     const port = formData.ports[portIndex];
+    const pid = getPortId(port);
 
-    if (!port.id) {
-      alert("Port chưa được lưu. Vui lòng lưu trạm sạc trước!");
-      return;
-    }
+    // Tính số thứ tự slot tiếp theo
+    const existingSlots = pid ? portSlots[pid] || [] : [];
+    const newSlots = port.newSlots || [];
+    const nextSlotNumber = existingSlots.length + newSlots.length + 1;
 
-    const existingSlots = portSlots[port.id] || [];
-    const nextSlotNumber = existingSlots.length + 1;
-
-    const newSlotData = {
-      slotNumber: nextSlotNumber,
-      status: "available",
-    };
-
-    try {
-      console.log(`Creating slot for port ${port.id}:`, newSlotData);
-
-      // POST: /stations/ports/{portId}/slots
-      const response = await api.post(
-        `/stations/ports/${port.id}/slots`,
-        newSlotData
-      );
-
-      console.log("Slot created response:", response.data);
-
-      alert(`Thêm slot #${nextSlotNumber} thành công!`);
-
-      // Refresh lại danh sách slots từ server
-      await fetchPortSlots(port.id);
-    } catch (err) {
-      console.error("Error adding slot:", err);
-      if (err.response) {
-        console.error("Error response:", err.response.data);
-      }
-      alert("Có lỗi xảy ra khi thêm slot!");
-    }
+    // Thêm slot mới vào mảng tạm
+    setFormData((prev) => ({
+      ...prev,
+      ports: prev.ports.map((p, i) =>
+        i === portIndex
+          ? {
+              ...p,
+              newSlots: [
+                ...(p.newSlots || []),
+                {
+                  tempId: Date.now(), // ID tạm để React key
+                  slotNumber: nextSlotNumber,
+                  status: "available",
+                },
+              ],
+            }
+          : p
+      ),
+    }));
   };
 
-  // API: Xóa slot
-  const removeTempSlot = async (portIndex, slotId) => {
+  // Xóa slot tạm thời (chưa lưu)
+  const removeTempSlot = (portIndex, tempId) => {
+    setFormData((prev) => ({
+      ...prev,
+      ports: prev.ports.map((p, i) =>
+        i === portIndex
+          ? {
+              ...p,
+              newSlots: (p.newSlots || []).filter(
+                (slot) => slot.tempId !== tempId
+              ),
+            }
+          : p
+      ),
+    }));
+  };
+
+  // Xóa slot đã lưu (gọi API ngay)
+  const removeExistingSlot = async (portIndex, slotId) => {
     const port = formData.ports[portIndex];
-
-    if (!port.id) {
-      return;
-    }
-
-    if (!window.confirm("Bạn có chắc chắn muốn xóa slot này?")) {
-      return;
-    }
+    const pid = getPortId(port);
+    if (!pid) return;
+    if (!window.confirm("Bạn có chắc chắn muốn xóa slot này?")) return;
 
     try {
-      console.log(`Deleting slot ${slotId}`);
-
-      // DELETE: /stations/slots/{slotId}
       await api.delete(`/stations/slots/${slotId}`);
-
-      console.log("Slot deleted successfully");
-
       alert("Xóa slot thành công!");
-
-      // Refresh lại danh sách slots
-      await fetchPortSlots(port.id);
+      await fetchPortSlots(pid);
     } catch (err) {
       console.error("Error deleting slot:", err);
-      if (err.response) {
-        console.error("Error response:", err.response.data);
-      }
       alert("Có lỗi xảy ra khi xóa slot!");
     }
   };
 
-  // API: Cập nhật slot
-  const handleTempSlotChange = async (portIndex, slotId, field, value) => {
+  // Cập nhật trạng thái slot tạm thời
+  const handleTempSlotChange = (portIndex, tempId, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      ports: prev.ports.map((p, i) =>
+        i === portIndex
+          ? {
+              ...p,
+              newSlots: (p.newSlots || []).map((slot) =>
+                slot.tempId === tempId ? { ...slot, [field]: value } : slot
+              ),
+            }
+          : p
+      ),
+    }));
+  };
+
+  // Cập nhật trạng thái slot đã lưu (gọi API ngay)
+  const handleExistingSlotChange = async (portIndex, slotId, field, value) => {
     const port = formData.ports[portIndex];
+    const pid = getPortId(port);
+    if (!pid) return;
 
-    if (!port.id) {
-      return;
-    }
+    const currentSlot = portSlots[pid]?.find((slot) => slot.id === slotId);
+    if (!currentSlot) return;
 
-    // Tìm slot hiện tại
-    const currentSlot = portSlots[port.id]?.find((slot) => slot.id === slotId);
-    if (!currentSlot) {
-      return;
-    }
-
-    const updatedSlotData = {
-      ...currentSlot,
-      [field]: value,
-    };
+    const updatedSlotData = { ...currentSlot, [field]: value };
 
     try {
-      console.log(`Updating slot ${slotId}:`, updatedSlotData);
-
-      // PUT: /stations/slots/{slotId}
-      const response = await api.put(
-        `/stations/slots/${slotId}`,
-        updatedSlotData
-      );
-
-      console.log("Slot updated response:", response.data);
-
-      // Refresh lại danh sách slots
-      await fetchPortSlots(port.id);
+      await api.put(`/stations/slots/${slotId}`, updatedSlotData);
+      await fetchPortSlots(pid);
     } catch (err) {
       console.error("Error updating slot:", err);
-      if (err.response) {
-        console.error("Error response:", err.response.data);
-      }
       alert("Có lỗi xảy ra khi cập nhật slot!");
     }
-  };
-
-  // Hàm mở modal thêm slot
-  const openSlotModal = (port) => {
-    setSelectedPort(port);
-    const existingSlots = Array.isArray(portSlots[port.id])
-      ? portSlots[port.id]
-      : [];
-    setNewSlot({
-      slotNumber: existingSlots.length + 1,
-      status: "available",
-    });
-    setShowSlotModal(true);
-  };
-
-  // Reset slot form
-  const resetSlotForm = () => {
-    setNewSlot({
-      slotNumber: 1,
-      status: "available",
-    });
   };
 
   // Utility functions
@@ -376,18 +481,29 @@ const StationManagement = () => {
           powerKw: 120,
           speed: "fast",
           price: 3858,
-          tempSlots: [],
+          newSlots: [],
         },
       ],
     });
   };
 
-  // Đóng modal Thêm + reset form
-  const closeAddModal = () => {
+  // Đóng modal + reset form
+  const closeStationModal = () => {
     resetForm();
+    setEditingStation(null);
     setShowAddModal(false);
+    setShowEditModal(false);
+    setPortSlots({});
   };
 
+  // Mở modal thêm mới
+  const openAddModal = () => {
+    resetForm();
+    setEditingStation(null);
+    setShowAddModal(true);
+  };
+
+  // Hàm mở modal chỉnh sửa
   const openEditModal = (station) => {
     setEditingStation(station);
     setFormData({
@@ -401,7 +517,7 @@ const StationManagement = () => {
         Array.isArray(station.ports) && station.ports.length > 0
           ? station.ports.map((port) => ({
               ...port,
-              tempSlots: [], // Khởi tạo tempSlots rỗng
+              newSlots: [], // Khởi tạo mảng slots mới rỗng
             }))
           : [
               {
@@ -410,7 +526,7 @@ const StationManagement = () => {
                 powerKw: 120,
                 speed: "fast",
                 price: 3858,
-                tempSlots: [],
+                newSlots: [],
               },
             ],
     });
@@ -418,9 +534,8 @@ const StationManagement = () => {
     // Fetch slots cho tất cả các ports
     if (Array.isArray(station.ports)) {
       station.ports.forEach((port) => {
-        if (port.id) {
-          fetchPortSlots(port.id);
-        }
+        const pid = getPortId(port);
+        if (pid) fetchPortSlots(pid);
       });
     }
 
@@ -434,9 +549,8 @@ const StationManagement = () => {
     // Fetch slots cho tất cả các ports
     if (Array.isArray(station.ports)) {
       station.ports.forEach((port) => {
-        if (port.id) {
-          fetchPortSlots(port.id);
-        }
+        const pid = getPortId(port);
+        if (pid) fetchPortSlots(pid);
       });
     }
 
@@ -485,7 +599,7 @@ const StationManagement = () => {
           powerKw: 120,
           speed: "fast",
           price: 3858,
-          tempSlots: [],
+          newSlots: [],
         },
       ],
     }));
@@ -534,17 +648,17 @@ const StationManagement = () => {
     "Quận 10",
     "Quận 11",
     "Quận 12",
-    "Quận Bình Thạnh",
-    "Quận Gò Vấp",
-    "Quận Phú Nhuận",
-    "Quận Tân Bình",
-    "Quận Tân Phú",
+    "Q. Bình Thạnh",
+    "Q. Gò Vấp",
+    "Q. Phú Nhuận",
+    "Q. Tân Bình",
+    "P. Tân Phú",
     "Thủ Đức",
-    "Huyện Bình Chánh",
-    "Huyện Cần Giờ",
-    "Huyện Củ Chi",
-    "Huyện Hóc Môn",
-    "Huyện Nhà Bè",
+    "H. Bình Chánh",
+    "H. Cần Giờ",
+    "H. Củ Chi",
+    "H. Hóc Môn",
+    "H. Nhà Bè",
   ];
 
   const filteredStations = safeStations.filter((station) => {
@@ -645,7 +759,7 @@ const StationManagement = () => {
             ))}
           </select>
         </div>
-        <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+        <button className="btn-primary" onClick={openAddModal}>
           <span>➕</span> Thêm trạm sạc
         </button>
       </div>
@@ -783,240 +897,23 @@ const StationManagement = () => {
         </button>
       </div>
 
-      {/* Add Station Modal */}
-      {showAddModal && (
+      {/* Station Modal - Dùng chung cho Add và Edit */}
+      {(showAddModal || showEditModal) && (
         <div className="modal-overlay">
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Thêm trạm sạc mới</h3>
-              <button className="close-btn" onClick={closeAddModal}>
+              <h3>
+                {editingStation ? "Chỉnh sửa trạm sạc" : "Thêm trạm sạc mới"}
+              </h3>
+              <button className="close-btn" onClick={closeStationModal}>
                 ✕
               </button>
             </div>
             <div className="modal-body">
-              <form className="station-form" onSubmit={handleAddStation}>
-                <div className="form-group">
-                  <label>Tên trạm sạc</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Nhập tên trạm sạc"
-                    required
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Kinh độ</label>
-                    <input
-                      type="number"
-                      step="0.000001"
-                      name="longitude"
-                      value={formData.longitude}
-                      onChange={handleInputChange}
-                      placeholder="106.700981"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Vĩ độ</label>
-                    <input
-                      type="number"
-                      step="0.000001"
-                      name="latitude"
-                      value={formData.latitude}
-                      onChange={handleInputChange}
-                      placeholder="10.776889"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Trạng thái</label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="active">Hoạt động</option>
-                      <option value="maintenance">Bảo trì</option>
-                      <option value="inactive">Vô hiệu hóa</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Nhà cung cấp</label>
-                    <input
-                      type="text"
-                      name="provider"
-                      value={formData.provider}
-                      onChange={handleInputChange}
-                      placeholder="VinFast, EVOne, ..."
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Địa chỉ</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    placeholder="Nhập địa chỉ đầy đủ"
-                    required
-                  />
-                </div>
-
-                <div className="chargers-section">
-                  <div className="chargers-header">
-                    <label>Trụ sạc</label>
-                  </div>
-
-                  {formData.ports.map((port, index) => (
-                    <div key={index} className="charger-item">
-                      <div className="charger-header">
-                        <h4>Trụ sạc {index + 1}</h4>
-                        {formData.ports.length > 1 && (
-                          <button
-                            type="button"
-                            className="btn-remove-charger"
-                            onClick={() => removePort(index)}
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Loại</label>
-                          <select
-                            value={port.type}
-                            onChange={(e) =>
-                              handlePortChange(index, "type", e.target.value)
-                            }
-                            required
-                          >
-                            <option value="AC">AC</option>
-                            <option value="DC">DC</option>
-                            <option value="Ultra">Ultra</option>
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>Trạng thái</label>
-                          <select
-                            value={port.status}
-                            onChange={(e) =>
-                              handlePortChange(index, "status", e.target.value)
-                            }
-                            required
-                          >
-                            <option value="available">Có sẵn</option>
-                            <option value="in_use">Đang sử dụng</option>
-                            <option value="inactive">Không hoạt động</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Công suất (kW)</label>
-                          <input
-                            type="number"
-                            value={port.powerKw}
-                            onChange={(e) =>
-                              handlePortChange(index, "powerKw", e.target.value)
-                            }
-                            min="1"
-                            max="350"
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label>Tốc độ</label>
-                          <select
-                            value={port.speed}
-                            onChange={(e) =>
-                              handlePortChange(index, "speed", e.target.value)
-                            }
-                            required
-                          >
-                            <option value="slow">Chậm</option>
-                            <option value="fast">Nhanh</option>
-                            <option value="super_fast">Siêu nhanh</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="form-group">
-                        <label>Giá tiền (VNĐ/kWh)</label>
-                        <input
-                          type="number"
-                          value={port.price}
-                          onChange={(e) =>
-                            handlePortChange(index, "price", e.target.value)
-                          }
-                          min="1000"
-                          max="10000"
-                          required
-                        />
-                      </div>
-
-                      <p className="info-message">
-                        💡 Sau khi tạo trạm sạc, bạn có thể thêm slots cho trụ
-                        này
-                      </p>
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    className="btn-add-charger"
-                    onClick={addPort}
-                  >
-                    + Thêm trụ sạc
-                  </button>
-                </div>
-
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={closeAddModal}
-                  >
-                    Hủy
-                  </button>
-                  <button type="submit" className="btn-primary">
-                    Thêm trạm sạc
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Station Modal */}
-      {showEditModal && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Chỉnh sửa trạm sạc</h3>
-              <button
-                className="close-btn"
-                onClick={() => setShowEditModal(false)}
+              <form
+                className="station-form"
+                onSubmit={editingStation ? handleEditStation : handleAddStation}
               >
-                ✕
-              </button>
-            </div>
-            <div className="modal-body">
-              <form className="station-form" onSubmit={handleEditStation}>
                 <div className="form-group">
                   <label>Tên trạm sạc</label>
                   <input
@@ -1100,182 +997,259 @@ const StationManagement = () => {
                     <label>Trụ sạc</label>
                   </div>
 
-                  {formData.ports.map((port, index) => (
-                    <div key={index} className="charger-item">
-                      <div className="charger-header">
-                        <h4>Trụ sạc {index + 1}</h4>
-                        {formData.ports.length > 1 && (
-                          <button
-                            type="button"
-                            className="btn-remove-charger"
-                            onClick={() => removePort(index)}
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
+                  {formData.ports.map((port, index) => {
+                    const pid = getPortId(port);
+                    const existingSlots = pid ? portSlots[pid] || [] : [];
+                    const newSlots = port.newSlots || [];
+                    const totalSlots = existingSlots.length + newSlots.length;
 
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Loại</label>
-                          <select
-                            value={port.type}
-                            onChange={(e) =>
-                              handlePortChange(index, "type", e.target.value)
-                            }
-                            required
-                          >
-                            <option value="AC">AC</option>
-                            <option value="DC">DC</option>
-                            <option value="Ultra">Ultra</option>
-                          </select>
+                    return (
+                      <div key={index} className="charger-item">
+                        <div className="charger-header">
+                          <h4>Trụ sạc {index + 1}</h4>
+                          {formData.ports.length > 1 && (
+                            <button
+                              type="button"
+                              className="btn-remove-charger"
+                              onClick={() => removePort(index)}
+                            >
+                              ✕
+                            </button>
+                          )}
                         </div>
-                        <div className="form-group">
-                          <label>Trạng thái</label>
-                          <select
-                            value={port.status}
-                            onChange={(e) =>
-                              handlePortChange(index, "status", e.target.value)
-                            }
-                            required
-                          >
-                            <option value="available">Có sẵn</option>
-                            <option value="in_use">Đang sử dụng</option>
-                            <option value="inactive">Không hoạt động</option>
-                          </select>
-                        </div>
-                      </div>
 
-                      <div className="form-row">
+                        {/* Port fields: type, status, powerKw, speed, price */}
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Loại</label>
+                            <select
+                              value={port.type}
+                              onChange={(e) =>
+                                handlePortChange(index, "type", e.target.value)
+                              }
+                              required
+                            >
+                              <option value="AC">AC</option>
+                              <option value="DC">DC</option>
+                              <option value="Ultra">Ultra</option>
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Trạng thái</label>
+                            <select
+                              value={port.status}
+                              onChange={(e) =>
+                                handlePortChange(
+                                  index,
+                                  "status",
+                                  e.target.value
+                                )
+                              }
+                              required
+                            >
+                              <option value="available">Có sẵn</option>
+                              <option value="in_use">Đang sử dụng</option>
+                              <option value="inactive">Không hoạt động</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Công suất (kW)</label>
+                            <input
+                              type="number"
+                              value={port.powerKw}
+                              onChange={(e) =>
+                                handlePortChange(
+                                  index,
+                                  "powerKw",
+                                  e.target.value
+                                )
+                              }
+                              min="1"
+                              max="350"
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Tốc độ</label>
+                            <select
+                              value={port.speed}
+                              onChange={(e) =>
+                                handlePortChange(index, "speed", e.target.value)
+                              }
+                              required
+                            >
+                              <option value="slow">Chậm</option>
+                              <option value="fast">Nhanh</option>
+                              <option value="super_fast">Siêu nhanh</option>
+                            </select>
+                          </div>
+                        </div>
+
                         <div className="form-group">
-                          <label>Công suất (kW)</label>
+                          <label>Giá tiền (VNĐ/kWh)</label>
                           <input
                             type="number"
-                            value={port.powerKw}
+                            value={port.price}
                             onChange={(e) =>
-                              handlePortChange(index, "powerKw", e.target.value)
+                              handlePortChange(index, "price", e.target.value)
                             }
-                            min="1"
-                            max="350"
+                            min="1000"
+                            max="10000"
                             required
                           />
                         </div>
-                        <div className="form-group">
-                          <label>Tốc độ</label>
-                          <select
-                            value={port.speed}
-                            onChange={(e) =>
-                              handlePortChange(index, "speed", e.target.value)
-                            }
-                            required
-                          >
-                            <option value="slow">Chậm</option>
-                            <option value="fast">Nhanh</option>
-                            <option value="super_fast">Siêu nhanh</option>
-                          </select>
+
+                        {/* Slots Section - Luôn hiển thị */}
+                        <div className="slots-section">
+                          <div className="slots-header">
+                            <label>Slots sạc ({totalSlots})</label>
+                            <button
+                              type="button"
+                              className="btn-add-slot"
+                              onClick={() => addTempSlotToPort(index)}
+                            >
+                              + Thêm slot
+                            </button>
+                          </div>
+
+                          {loadingSlots ? (
+                            <p className="loading-slots">Đang tải slots...</p>
+                          ) : (
+                            <>
+                              {/* Hiển thị slots đã lưu (chỉ khi edit) */}
+                              {pid && existingSlots.length > 0 && (
+                                <div className="slots-list">
+                                  <h5 className="slots-group-title">
+                                    Đã lưu ({existingSlots.length})
+                                  </h5>
+                                  {existingSlots.map((slot) => (
+                                    <div
+                                      key={slot.id}
+                                      className="slot-item existing"
+                                    >
+                                      <div className="slot-info">
+                                        <div className="form-group-inline">
+                                          <label>Slot #{slot.slotNumber}</label>
+                                        </div>
+                                        <div className="form-group-inline">
+                                          <label>Trạng thái:</label>
+                                          <select
+                                            value={slot.status}
+                                            onChange={(e) =>
+                                              handleExistingSlotChange(
+                                                index,
+                                                slot.id,
+                                                "status",
+                                                e.target.value
+                                              )
+                                            }
+                                          >
+                                            <option value="available">
+                                              Có sẵn
+                                            </option>
+                                            <option value="in_use">
+                                              Đang dùng
+                                            </option>
+                                            <option value="booked">
+                                              Đã đặt
+                                            </option>
+                                            <option value="inactive">
+                                              Vô hiệu
+                                            </option>
+                                          </select>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          className="btn-remove-slot"
+                                          onClick={() =>
+                                            removeExistingSlot(index, slot.id)
+                                          }
+                                          title="Xóa slot"
+                                        >
+                                          🗑️
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Hiển thị slots mới chưa lưu */}
+                              {newSlots.length > 0 && (
+                                <div className="slots-list">
+                                  <h5 className="slots-group-title">
+                                    {editingStation
+                                      ? "Mới thêm"
+                                      : "Slots sẽ tạo"}{" "}
+                                    ({newSlots.length})
+                                    {editingStation && " - Chưa lưu"}
+                                  </h5>
+                                  {newSlots.map((slot) => (
+                                    <div
+                                      key={slot.tempId}
+                                      className="slot-item new"
+                                    >
+                                      <div className="slot-info">
+                                        <div className="form-group-inline">
+                                          <label>Slot {slot.slotNumber}</label>
+                                        </div>
+                                        <div className="form-group-inline">
+                                          <label>Trạng thái:</label>
+                                          <select
+                                            value={slot.status}
+                                            onChange={(e) =>
+                                              handleTempSlotChange(
+                                                index,
+                                                slot.tempId,
+                                                "status",
+                                                e.target.value
+                                              )
+                                            }
+                                          >
+                                            <option value="available">
+                                              Có sẵn
+                                            </option>
+                                            <option value="in_use">
+                                              Đang dùng
+                                            </option>
+                                            <option value="booked">
+                                              Đã đặt
+                                            </option>
+                                            <option value="inactive">
+                                              Vô hiệu
+                                            </option>
+                                          </select>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          className="btn-remove-slot"
+                                          onClick={() =>
+                                            removeTempSlot(index, slot.tempId)
+                                          }
+                                          title="Xóa slot"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {totalSlots === 0 && (
+                                <p className="no-slots">
+                                  Nhấn "Thêm slot" để tạo slots cho trụ này.
+                                </p>
+                              )}
+                            </>
+                          )}
                         </div>
                       </div>
-
-                      <div className="form-group">
-                        <label>Giá tiền (VNĐ/kWh)</label>
-                        <input
-                          type="number"
-                          value={port.price}
-                          onChange={(e) =>
-                            handlePortChange(index, "price", e.target.value)
-                          }
-                          min="1000"
-                          max="10000"
-                          required
-                        />
-                      </div>
-
-                      {/* Quản lý slots cho port đã có ID */}
-                      {port.id && (
-                        <>
-                          {/* Hiển thị slots hiện có từ server */}
-                          <div className="slots-section">
-                            <div className="slots-header">
-                              <label>
-                                Slots sạc ({portSlots[port.id]?.length || 0})
-                              </label>
-                              <button
-                                type="button"
-                                className="btn-add-slot"
-                                onClick={() => addTempSlotToPort(index)}
-                              >
-                                + Thêm slot
-                              </button>
-                            </div>
-
-                            {loadingSlots ? (
-                              <p className="loading-slots">Đang tải slots...</p>
-                            ) : portSlots[port.id] &&
-                              portSlots[port.id].length > 0 ? (
-                              <div className="slots-list">
-                                {portSlots[port.id].map((slot) => (
-                                  <div key={slot.id} className="slot-item">
-                                    <div className="slot-info">
-                                      <div className="form-group-inline">
-                                        <label>Slot #{slot.slotNumber}</label>
-                                      </div>
-                                      <div className="form-group-inline">
-                                        <label>Trạng thái:</label>
-                                        <select
-                                          value={slot.status}
-                                          onChange={(e) =>
-                                            handleTempSlotChange(
-                                              index,
-                                              slot.id,
-                                              "status",
-                                              e.target.value
-                                            )
-                                          }
-                                        >
-                                          <option value="available">
-                                            Có sẵn
-                                          </option>
-                                          <option value="in_use">
-                                            Đang dùng
-                                          </option>
-                                          <option value="maintenance">
-                                            Bảo trì
-                                          </option>
-                                          <option value="inactive">
-                                            Vô hiệu
-                                          </option>
-                                        </select>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        className="btn-remove-slot"
-                                        onClick={() =>
-                                          removeTempSlot(index, slot.id)
-                                        }
-                                        title="Xóa slot"
-                                      >
-                                        🗑️
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="no-slots">
-                                Chưa có slot nào. Nhấn "Thêm slot" để tạo mới.
-                              </p>
-                            )}
-                          </div>
-                        </>
-                      )}
-
-                      {!port.id && (
-                        <p className="info-message">
-                          💡 Lưu trụ sạc trước để thêm slots
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   <button
                     type="button"
@@ -1290,12 +1264,12 @@ const StationManagement = () => {
                   <button
                     type="button"
                     className="btn-secondary"
-                    onClick={() => setShowEditModal(false)}
+                    onClick={closeStationModal}
                   >
                     Hủy
                   </button>
                   <button type="submit" className="btn-primary">
-                    Cập nhật trạm sạc
+                    {editingStation ? "Cập nhật trạm sạc" : "Tạo trạm sạc"}
                   </button>
                 </div>
               </form>
@@ -1304,7 +1278,7 @@ const StationManagement = () => {
         </div>
       )}
 
-      {/* View Station Modal - chỉ xem (read-only) */}
+      {/* View Station Modal - giữ nguyên */}
       {showViewModal && (
         <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -1459,54 +1433,67 @@ const StationManagement = () => {
                           </div>
 
                           {/* Danh sách slots */}
-                          {port.id && (
-                            <div className="slots-section">
-                              <div className="slots-header">
-                                <label>
-                                  Danh sách slots (
-                                  {portSlots[port.id]?.length || 0})
-                                </label>
-                              </div>
+                          {(() => {
+                            const pid = getPortId(port);
+                            return (
+                              pid && (
+                                <div className="slots-section">
+                                  <div className="slots-header">
+                                    <label>
+                                      Danh sách slots (
+                                      {portSlots[pid]?.length || 0})
+                                    </label>
+                                  </div>
 
-                              {loadingSlots ? (
-                                <p className="loading-slots">
-                                  Đang tải slots...
-                                </p>
-                              ) : portSlots[port.id] &&
-                                portSlots[port.id].length > 0 ? (
-                                <div className="slots-list">
-                                  {portSlots[port.id].map((slot) => (
-                                    <div key={slot.id} className="slot-item">
-                                      <div className="slot-info">
-                                        <div className="form-group-inline">
-                                          <label>Slot #{slot.slotNumber}</label>
+                                  {loadingSlots ? (
+                                    <p className="loading-slots">
+                                      Đang tải slots...
+                                    </p>
+                                  ) : portSlots[pid] &&
+                                    portSlots[pid].length > 0 ? (
+                                    <div className="slots-list">
+                                      {portSlots[pid].map((slot) => (
+                                        <div
+                                          key={slot.id}
+                                          className="slot-item"
+                                        >
+                                          <div className="slot-info">
+                                            <div className="form-group-inline">
+                                              <label>
+                                                Slot #{slot.slotNumber}
+                                              </label>
+                                            </div>
+                                            <div className="form-group-inline">
+                                              <label>Trạng thái:</label>
+                                              <select
+                                                value={slot.status}
+                                                disabled
+                                              >
+                                                <option value="available">
+                                                  Có sẵn
+                                                </option>
+                                                <option value="in_use">
+                                                  Đang sử dụng
+                                                </option>
+                                                <option value="maintenance">
+                                                  Bảo trì
+                                                </option>
+                                                <option value="inactive">
+                                                  Vô hiệu
+                                                </option>
+                                              </select>
+                                            </div>
+                                          </div>
                                         </div>
-                                        <div className="form-group-inline">
-                                          <label>Trạng thái:</label>
-                                          <select value={slot.status} disabled>
-                                            <option value="available">
-                                              Có sẵn
-                                            </option>
-                                            <option value="in_use">
-                                              Đang sử dụng
-                                            </option>
-                                            <option value="maintenance">
-                                              Bảo trì
-                                            </option>
-                                            <option value="inactive">
-                                              Vô hiệu
-                                            </option>
-                                          </select>
-                                        </div>
-                                      </div>
+                                      ))}
                                     </div>
-                                  ))}
+                                  ) : (
+                                    <p className="no-slots">Chưa có slot nào</p>
+                                  )}
                                 </div>
-                              ) : (
-                                <p className="no-slots">Chưa có slot nào</p>
-                              )}
-                            </div>
-                          )}
+                              )
+                            );
+                          })()}
                         </div>
                       ))}
                     </div>
