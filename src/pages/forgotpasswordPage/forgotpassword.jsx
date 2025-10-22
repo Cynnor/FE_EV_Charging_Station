@@ -9,6 +9,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("")
   const [otp, setOtp] = useState("")
   const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [message, setMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -45,29 +46,30 @@ export default function ForgotPassword() {
   }
 
   const handleResetPassword = async () => {
-    if (!otp || !newPassword) {
+    if (!otp || !newPassword || !confirmPassword) {
       setMessage("Vui lòng nhập đầy đủ thông tin!")
       return
     }
-
+    if (newPassword !== confirmPassword) {
+      setMessage("Mật khẩu nhập lại không khớp!")
+      return
+    }
     setIsLoading(true)
     try {
-     
       const res = await api.post("/users/password/reset", { email, otp, newPassword })
       const data = res.data
       console.log("Reset password response:", data)
-
       if (!data.success) {
         setMessage(data.message || "Đặt lại mật khẩu thất bại!")
         return
       }
-
       setMessage(data.message || "Đặt lại mật khẩu thành công!")
       setTimeout(() => {
         setStep(1)
         setEmail("")
         setOtp("")
         setNewPassword("")
+        setConfirmPassword("")
       }, 2000)
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
@@ -184,7 +186,6 @@ export default function ForgotPassword() {
                 <div className="input-group">
                   <label className="input-label">Mã OTP</label>
                   <div className="input-wrapper">
-                    {}
                     <Shield className="input-icon" size={18} />
                     <input
                       type="text"
@@ -193,7 +194,6 @@ export default function ForgotPassword() {
                       onChange={(e) => setOtp(e.target.value)}
                       onKeyPress={handleKeyPress}
                       className="form-input"
-                      
                     />
                   </div>
                 </div>
@@ -201,7 +201,6 @@ export default function ForgotPassword() {
                 <div className="input-group">
                   <label className="input-label">Mật khẩu mới</label>
                   <div className="input-wrapper">
-                    {}
                     <KeyRound className="input-icon" size={18} />
                     <input
                       type="password"
@@ -210,7 +209,21 @@ export default function ForgotPassword() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       onKeyPress={handleKeyPress}
                       className="form-input"
-                      
+                    />
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">Nhập lại mật khẩu mới</label>
+                  <div className="input-wrapper">
+                    <KeyRound className="input-icon" size={18} />
+                    <input
+                      type="password"
+                      placeholder="Nhập lại mật khẩu mới"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="form-input"
                     />
                   </div>
                 </div>
@@ -235,7 +248,7 @@ export default function ForgotPassword() {
             {message && (
               <div
                 className={`message ${
-                  message.includes("thành công") ? "success" : "error"
+                  /thành công|success|reset/i.test(message) ? "success" : "error"
                 }`}
               >
                 {message}

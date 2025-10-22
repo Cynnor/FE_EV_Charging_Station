@@ -75,20 +75,26 @@
       }
 
       .admin-avatar {
-        width: 44px;
-        height: 44px;
-        background: linear-gradient(135deg, #7ed321, #a3e635);
-        border-radius: 12px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #10b981; // Màu xanh của trang web
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 600;
         color: white;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s ease;
+        position: relative;
 
         &:hover {
           transform: scale(1.05);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        span {
+          font-size: 18px;
         }
       }
     }
@@ -178,6 +184,111 @@
           color: #94a3b8;
         }
       }
+    }
+  }
+}
+
+// Profile Menu Dropdown
+.profile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.profile-menu-dropdown {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  width: 200px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  animation: slideDown 0.3s ease;
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.profile-menu-header {
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+
+  .profile-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .profile-avatar-large {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 22px;
+  }
+
+  .profile-details {
+    flex: 1;
+
+    h4 {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    p {
+      margin: 0;
+      font-size: 13px;
+      color: #666;
+    }
+  }
+}
+
+.profile-menu-content {
+  padding: 8px;
+
+  .menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    color: #ef4444;
+    text-align: left;
+    font-weight: 500;
+
+    .menu-icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+    }
+
+    &:hover {
+      background: #fef2f2;
     }
   }
 }
