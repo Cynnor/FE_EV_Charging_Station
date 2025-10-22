@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useMemo } from "react"
 import { useNavigate, useSearchParams, useParams } from "react-router-dom"
 import "./index.scss"
