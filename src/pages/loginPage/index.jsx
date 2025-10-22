@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeOff, Zap } from "lucide-react";
@@ -24,10 +23,15 @@ export default function Login() {
   const redirectPath = searchParams.get("redirect") || "/";
 
   // Google Client ID (from user)
-  const GOOGLE_CLIENT_ID = "689149719053-mntdte4ogijvhlj69l3hi7ctc2o02o9d.apps.googleusercontent.com";
+  const GOOGLE_CLIENT_ID =
+    "689149719053-mntdte4ogijvhlj69l3hi7ctc2o02o9d.apps.googleusercontent.com";
 
   // Load Google Identity Services script
-  if (typeof window !== "undefined" && !window.google && !document.getElementById("google-gsi")) {
+  if (
+    typeof window !== "undefined" &&
+    !window.google &&
+    !document.getElementById("google-gsi")
+  ) {
     const s = document.createElement("script");
     s.src = "https://accounts.google.com/gsi/client";
     s.async = true;
@@ -57,8 +61,19 @@ export default function Login() {
         setIsSuccess(true);
         localStorage.setItem("token", data.data.token);
 
-        // Chuyển tới redirectPath nếu có
-        navigate(decodeURIComponent(redirectPath));
+        // Giả sử response trả về user info và token
+        const user = data.data.user;
+        localStorage.setItem("user", JSON.stringify(user));
+
+        // Điều hướng theo role
+        const role = user.role || user.userRole || user.accountRole;
+        if (role === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (role === "STAFF") {
+          navigate("/staff", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
       } else {
         setMessage(data.message || "Phản hồi không hợp lệ từ server!");
         setIsSuccess(false);
@@ -236,7 +251,11 @@ export default function Login() {
               <span>Hoặc tiếp tục với</span>
             </div>
 
-            <button className="btn-google" onClick={handleGoogleLogin} disabled={!googleReady}>
+            <button
+              className="btn-google"
+              onClick={handleGoogleLogin}
+              disabled={!googleReady}
+            >
               <FcGoogle size={20} />
               Đăng nhập với Google
             </button>
@@ -259,4 +278,3 @@ export default function Login() {
     </div>
   );
 }
-

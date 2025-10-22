@@ -485,6 +485,195 @@
   }
 }
 
+.slots-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa; // Giữ background nhẹ để phân biệt
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+
+  .slots-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    label {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 0.95rem;
+    }
+  }
+
+  .btn-add-slot {
+    padding: 0.5rem 1rem;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    &:hover {
+      background: #2980b9;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .slot-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: #3498db;
+      box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+    }
+
+    &.new {
+      border-left: 3px solid #4caf50;
+      background: #f1f8f4;
+    }
+
+    &.existing {
+      border-left: 3px solid #2196f3;
+    }
+
+    .slot-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .form-group-inline {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        label {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: #495057;
+          white-space: nowrap;
+          min-width: fit-content;
+        }
+
+        select {
+          padding: 0.5rem 0.75rem;
+          border: 1px solid #ced4da;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          min-width: 130px;
+          background: white;
+          color: #495057;
+          cursor: pointer;
+          transition: all 0.2s;
+
+          &:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+          }
+
+          &:hover {
+            border-color: #3498db;
+          }
+        }
+      }
+
+      .btn-remove-slot {
+        margin-left: auto;
+        padding: 0.4rem 0.8rem;
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+          background: #c0392b;
+          transform: scale(1.05);
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+    }
+  }
+
+  .no-slots {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px dashed #dee2e6;
+    margin: 0;
+  }
+
+  .slots-group-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+    margin: 1rem 0 0.5rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+}
+
+.loading-slots {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin: 0;
+}
+
+.info-message {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  color: #1565c0;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-small {
+  max-width: 500px !important;
+  width: 90%;
+}
+
 // Form Styles
 .station-form {
   .form-group {
@@ -686,4 +875,8 @@
   &:hover {
     background: #9ca3af;
   }
+}
+
+.slots-section-temp {
+  margin-top: 1rem;
 }
