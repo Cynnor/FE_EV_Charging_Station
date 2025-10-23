@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useMemo } from "react"
 import { useNavigate, useSearchParams, useParams } from "react-router-dom"
 import "./index.scss"
 import ChargingMap from "../../components/chargingMap"
-// Removed unused import
+
 import api from "../../config/api"
 
 /** ============== MAPPERS & TYPES (JS) ============== */
@@ -160,6 +161,7 @@ function mapPortToCharger(port, idx, baseLatLng) {
 
 /** =================== COMPONENT =================== */
 export default function BookingPage() {
+
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { stationId } = useParams()
@@ -190,6 +192,7 @@ export default function BookingPage() {
   const [districtFilter, setDistrictFilter] = useState("all") // "all" | <districtName>
 
   const [userLocation, setUserLocation] = useState(null)
+
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
@@ -347,10 +350,12 @@ export default function BookingPage() {
     endTime: "",
   })
 
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
+
 
   const handleSubmit = (e) => {
     e.preventDefault()

@@ -1,0 +1,193 @@
+.charging-session-page {
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+
+    h1 {
+      color: #4caf50;
+      margin: 0;
+      font-size: 2rem;
+      flex: 1;
+      text-align: center;
+    }
+
+    .back-btn,
+    .payment-btn {
+      min-width: 120px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-align: center;
+      flex: 0 0 120px; // Fixed width for both buttons
+    }
+
+    .back-btn {
+      background: #ffffff;
+      border: 1px solid #4caf50;
+      color: #4caf50;
+
+      &:hover {
+        background: #4caf50;
+        color: #ffffff;
+      }
+    }
+
+    .payment-btn {
+      background: #4caf50;
+      color: #ffffff;
+      border: none;
+
+      &:hover {
+        background: #43a047;
+      }
+    }
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .back-btn {
+    padding: 8px 16px;
+    background: #ffffff;
+    border: 2px solid #4caf50;
+    color: #4caf50;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #4caf50;
+      color: #ffffff;
+    }
+  }
+
+  .session-content {
+    max-width: 800px;
+    margin: 60px auto 0;
+
+    h1 {
+      text-align: center;
+      color: #4caf50;
+      margin-bottom: 30px;
+      font-size: 2rem;
+    }
+
+    .info-card {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      h2 {
+        color: #4caf50;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .info-item {
+        .label {
+          color: #666666;
+          font-size: 0.9rem;
+          margin-bottom: 4px;
+          display: block;
+        }
+
+        .value {
+          color: #333333;
+          font-size: 1.1rem;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .charging-status {
+      .battery-indicator {
+        height: 40px;
+        background: #e0e0e0;
+        border-radius: 20px;
+        margin: 20px 0;
+        overflow: hidden;
+        border: 2px solid #4caf50;
+
+        .battery-level {
+          height: 100%;
+          background: linear-gradient(90deg, #4caf50, #81c784);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #ffffff;
+          font-weight: bold;
+          transition: width 0.3s ease;
+        }
+      }
+
+      .charging-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+
+        .detail-item {
+          .label {
+            color: #666666;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            display: block;
+          }
+
+          .value {
+            color: #4caf50;
+            font-size: 1.1rem;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+
+  .payment-btn {
+    padding: 8px 24px;
+    background: #4caf50;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+
+    &:hover {
+      background: #43a047;
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+}
