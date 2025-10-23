@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+// import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import api from "../../config/api";
 import "./login.scss";
 
@@ -13,6 +13,7 @@ export default function Login() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,6 +21,27 @@ export default function Login() {
   // Lấy redirect từ query string nếu có
   const searchParams = new URLSearchParams(location.search);
   const redirectPath = searchParams.get("redirect") || "/";
+
+  // Google Client ID (from user)
+  const GOOGLE_CLIENT_ID =
+    "689149719053-mntdte4ogijvhlj69l3hi7ctc2o02o9d.apps.googleusercontent.com";
+
+  // Load Google Identity Services script
+  if (
+    typeof window !== "undefined" &&
+    !window.google &&
+    !document.getElementById("google-gsi")
+  ) {
+    const s = document.createElement("script");
+    s.src = "https://accounts.google.com/gsi/client";
+    s.async = true;
+    s.defer = true;
+    s.id = "google-gsi";
+    s.onload = () => setGoogleReady(true);
+    document.head.appendChild(s);
+  } else if (typeof window !== "undefined" && window.google && !googleReady) {
+    setGoogleReady(true);
+  }
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -39,8 +61,19 @@ export default function Login() {
         setIsSuccess(true);
         localStorage.setItem("token", data.data.token);
 
-        // Chuyển tới redirectPath nếu có
-        navigate(decodeURIComponent(redirectPath));
+        // Giả sử response trả về user info và token
+        const user = data.data.user;
+        localStorage.setItem("user", JSON.stringify(user));
+
+        // Điều hướng theo role
+        const role = user.role || user.userRole || user.accountRole;
+        if (role === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (role === "STAFF") {
+          navigate("/staff", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
       } else {
         setMessage(data.message || "Phản hồi không hợp lệ từ server!");
         setIsSuccess(false);
@@ -63,10 +96,50 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    setMessage("Đăng nhập với Google thành công!");
-    setIsSuccess(true);
-    navigate(decodeURIComponent(redirectPath));
+  const handleGoogleLogin = async () => {
+    try {
+      if (!window.google) {
+        setMessage("Không thể tải Google Sign-In. Vui lòng thử lại!");
+        setIsSuccess(false);
+        return;
+      }
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          try {
+            const idToken = response?.credential;
+            if (!idToken) {
+              setMessage("Không nhận được mã xác thực từ Google.");
+              setIsSuccess(false);
+              return;
+            }
+
+            // Nếu backend có endpoint xác thực Google, gọi ở đây
+            // const apiRes = await api.post("/users/login/google", { idToken });
+            // const backendToken = apiRes.data?.data?.token;
+            // localStorage.setItem("token", backendToken || idToken);
+
+            // Tạm thời lưu idToken vào localStorage và điều hướng
+            localStorage.setItem("token", idToken);
+            setMessage("Đăng nhập với Google thành công!");
+            setIsSuccess(true);
+            navigate(decodeURIComponent(redirectPath));
+          } catch (err) {
+            console.error("Google login error:", err);
+            setMessage("Không thể đăng nhập với Google.");
+            setIsSuccess(false);
+          }
+        },
+      });
+
+      // Gợi ý đăng nhập (One Tap / Account chooser)
+      window.google.accounts.id.prompt();
+    } catch (e) {
+      console.error(e);
+      setMessage("Xảy ra lỗi khi khởi tạo Google Sign-In");
+      setIsSuccess(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -178,7 +251,11 @@ export default function Login() {
               <span>Hoặc tiếp tục với</span>
             </div>
 
-            <button className="btn-google" onClick={handleGoogleLogin}>
+            <button
+              className="btn-google"
+              onClick={handleGoogleLogin}
+              disabled={!googleReady}
+            >
               <FcGoogle size={20} />
               Đăng nhập với Google
             </button>
@@ -201,4 +278,3 @@ export default function Login() {
     </div>
   );
 }
-

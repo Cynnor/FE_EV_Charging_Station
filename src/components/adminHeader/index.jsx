@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./index.scss";
 
 const AdminHeader = ({ title, subtitle }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const navigate = useNavigate();
 
   const notifications = [
     {
@@ -31,6 +34,17 @@ const AdminHeader = ({ title, subtitle }) => {
     },
   ];
 
+  const handleLogout = () => {
+    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+      // Xóa token và thông tin user
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // Redirect về trang chủ
+      navigate("/");
+    }
+  };
+
   return (
     <>
       <header className="admin-header">
@@ -49,7 +63,10 @@ const AdminHeader = ({ title, subtitle }) => {
               <span className="badge">3</span>
             </button>
 
-            <div className="admin-avatar">
+            <div
+              className="admin-avatar"
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+            >
               <span>H</span>
             </div>
           </div>
@@ -90,6 +107,26 @@ const AdminHeader = ({ title, subtitle }) => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Menu Dropdown */}
+      {showProfileMenu && (
+        <div
+          className="profile-menu-overlay"
+          onClick={() => setShowProfileMenu(false)}
+        >
+          <div
+            className="profile-menu-dropdown"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="profile-menu-content">
+              <button className="menu-item logout" onClick={handleLogout}>
+                <span className="menu-icon">🚪</span>
+                <span>Đăng xuất</span>
+              </button>
             </div>
           </div>
         </div>

@@ -6,12 +6,42 @@ import api from "../../config/api";
 
 // ===== Static Data =====
 const features = [
-  { icon: "🗺️", title: "Tìm kiếm trụ sạc gần bạn", description: "Dễ dàng tìm kiếm các trụ sạc xe điện gần nhất với vị trí hiện tại của bạn trên bản đồ" },
-  { icon: "⚡", title: "Thông tin chi tiết trụ sạc", description: "Xem thông tin đầy đủ về loại sạc, công suất, giá cả và tình trạng hoạt động" },
-  { icon: "📱", title: "Đặt chỗ trước", description: "Đặt trước chỗ sạc để đảm bảo có sẵn khi bạn đến, tiết kiệm thời gian chờ đợi" },
-  { icon: "💳", title: "Thanh toán tiện lợi", description: "Thanh toán dễ dàng qua ví điện tử, thẻ ngân hàng hoặc QR code ngay trên ứng dụng" },
-  { icon: "📊", title: "Theo dõi quá trình sạc", description: "Giám sát thời gian sạc, mức pin hiện tại và chi phí trong thời gian thực" },
-  { icon: "🔔", title: "Thông báo thông minh", description: "Nhận thông báo khi sạc hoàn tất, cảnh báo khi trụ sạc gặp sự cố" },
+  {
+    icon: "🗺️",
+    title: "Tìm kiếm trụ sạc gần bạn",
+    description:
+      "Dễ dàng tìm kiếm các trụ sạc xe điện gần nhất với vị trí hiện tại của bạn trên bản đồ",
+  },
+  {
+    icon: "⚡",
+    title: "Thông tin chi tiết trụ sạc",
+    description:
+      "Xem thông tin đầy đủ về loại sạc, công suất, giá cả và tình trạng hoạt động",
+  },
+  {
+    icon: "📱",
+    title: "Đặt chỗ trước",
+    description:
+      "Đặt trước chỗ sạc để đảm bảo có sẵn khi bạn đến, tiết kiệm thời gian chờ đợi",
+  },
+  {
+    icon: "💳",
+    title: "Thanh toán tiện lợi",
+    description:
+      "Thanh toán dễ dàng qua ví điện tử, thẻ ngân hàng hoặc QR code ngay trên ứng dụng",
+  },
+  {
+    icon: "📊",
+    title: "Theo dõi quá trình sạc",
+    description:
+      "Giám sát thời gian sạc, mức pin hiện tại và chi phí trong thời gian thực",
+  },
+  {
+    icon: "🔔",
+    title: "Thông báo thông minh",
+    description:
+      "Nhận thông báo khi sạc hoàn tất, cảnh báo khi trụ sạc gặp sự cố",
+  },
 ];
 
 // ===== Helper Function =====
@@ -96,71 +126,68 @@ const HomePage = () => {
 
   // ===== Fetch Station Data from API =====
   useEffect(() => {
-  let isMounted = true; // tránh lỗi khi unmount
+    let isMounted = true; // tránh lỗi khi unmount
 
-  const fetchStations = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/stations");
-      // console.log("Station API result:", res.data);
+    const fetchStations = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/stations");
+        // console.log("Station API result:", res.data);
 
-      // Trường hợp API trả về mảng hoặc object
-      let stationsData = [];
-      if (Array.isArray(res.data)) {
-        stationsData = res.data;
-      } else if (Array.isArray(res.data.items)) {
-        stationsData = res.data.items;
-      } else if (res.data && typeof res.data === "object") {
-        stationsData = [res.data];
+        // Trường hợp API trả về mảng hoặc object
+        let stationsData = [];
+        if (Array.isArray(res.data)) {
+          stationsData = res.data;
+        } else if (Array.isArray(res.data.items)) {
+          stationsData = res.data.items;
+        } else if (res.data && typeof res.data === "object") {
+          stationsData = [res.data];
+        }
+
+        // Lọc trạm có tọa độ hợp lệ
+        stationsData = stationsData.filter((s) => s.latitude && s.longitude);
+
+        // Format lại dữ liệu
+        const formatted = stationsData.map((s, index) => ({
+          id: s.id || index + 1,
+          name: s.name || "Trạm sạc không tên",
+          coords: [s.latitude, s.longitude],
+          status: s.status === "active" ? "available" : "maintenance",
+          address: s.address || "Không rõ địa chỉ",
+          speed: s.ports?.[0]?.speed || "N/A",
+          price: s.ports?.[0]?.price
+            ? `${s.ports[0].price.toLocaleString()} đ/kWh`
+            : "N/A",
+          slots: {
+            ac: s.ports?.filter((p) => p.type === "AC").length || 0,
+            dc: s.ports?.filter((p) => p.type === "DC").length || 0,
+            ultra: s.ports?.filter((p) => p.type === "Ultra").length || 0,
+          },
+        }));
+
+        if (isMounted) {
+          setMapStations(formatted);
+          console.log("✅ Cập nhật danh sách trạm:", formatted);
+        }
+      } catch (err) {
+        console.error("Error fetching stations:", err);
+        if (isMounted) setError("Không thể tải dữ liệu trạm sạc.");
+      } finally {
+        if (isMounted) setLoading(false);
       }
+    };
 
-      // Lọc trạm có tọa độ hợp lệ
-      stationsData = stationsData.filter(
-        (s) => s.latitude && s.longitude
-      );
+    // Gọi lần đầu
+    fetchStations();
 
-      // Format lại dữ liệu
-      const formatted = stationsData.map((s, index) => ({
-        id: s.id || index + 1,
-        name: s.name || "Trạm sạc không tên",
-        coords: [s.latitude, s.longitude],
-        status: s.status === "active" ? "available" : "maintenance",
-        address: s.address || "Không rõ địa chỉ",
-        speed: s.ports?.[0]?.speed || "N/A",
-        price: s.ports?.[0]?.price
-          ? `${s.ports[0].price.toLocaleString()} đ/kWh`
-          : "N/A",
-        slots: {
-          ac: s.ports?.filter((p) => p.type === "AC").length || 0,
-          dc: s.ports?.filter((p) => p.type === "DC").length || 0,
-          ultra: s.ports?.filter((p) => p.type === "Ultra").length || 0,
-        },
-      }));
+    // 🔁 Gọi lại API mỗi 30 giây để cập nhật danh sách trạm mới
+    const interval = setInterval(fetchStations, 1000000);
 
-      if (isMounted) {
-        setMapStations(formatted);
-        console.log("✅ Cập nhật danh sách trạm:", formatted);
-      }
-    } catch (err) {
-      console.error("Error fetching stations:", err);
-      if (isMounted) setError("Không thể tải dữ liệu trạm sạc.");
-    } finally {
-      if (isMounted) setLoading(false);
-    }
-  };
-
-  // Gọi lần đầu
-  fetchStations();
-
-  // 🔁 Gọi lại API mỗi 30 giây để cập nhật danh sách trạm mới
-  const interval = setInterval(fetchStations, 300000);
-
-  return () => {
-    isMounted = false;
-    clearInterval(interval);
-  };
-}, []);
-
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // ===== Get User Location =====
   const updateLocation = () => {
@@ -174,7 +201,12 @@ const HomePage = () => {
           if (mapStations.length > 0) {
             const withDistance = mapStations.map((s) => ({
               ...s,
-              distance: getDistanceKm(latitude, longitude, s.coords[0], s.coords[1]),
+              distance: getDistanceKm(
+                latitude,
+                longitude,
+                s.coords[0],
+                s.coords[1]
+              ),
             }));
             setNearbyStations(
               withDistance.sort((a, b) => a.distance - b.distance).slice(0, 5)
@@ -259,7 +291,8 @@ const HomePage = () => {
             <h1>Tìm trạm sạc xe điện dễ dàng, sạc nhanh chóng</h1>
             <p>
               Ứng dụng tìm kiếm và sử dụng trụ sạc xe điện hàng đầu Việt Nam.
-              Hơn 500 trạm sạc trên toàn quốc, đặt chỗ trước, thanh toán tiện lợi.
+              Hơn 500 trạm sạc trên toàn quốc, đặt chỗ trước, thanh toán tiện
+              lợi.
             </p>
             <div className="homepage__hero-actions">
               <button
@@ -280,7 +313,11 @@ const HomePage = () => {
           <div className="homepage__hero-image">
             <div className="hero-visual">
               <div className="center-logo">
-                <img src="/src/assets/logo.jpg" alt="Logo" className="hero-logo" />
+                <img
+                  src="/src/assets/logo.jpg"
+                  alt="Logo"
+                  className="hero-logo"
+                />
               </div>
               <div className="charging-station">🚗</div>
               <div className="dashboard">⚡</div>
@@ -325,8 +362,8 @@ const HomePage = () => {
                       <div className="item">⚡ {station.speed}</div>
                       <div className="item">💰 {station.price}</div>
                       <div className="item">
-                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} | Ultra:{" "}
-                        {station.slots.ultra}
+                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} |
+                        Ultra: {station.slots.ultra}
                       </div>
                       <div className="item">📍 {station.address}</div>
                     </div>
@@ -350,7 +387,9 @@ const HomePage = () => {
                 zoom={12}
                 onSelect={(station) => handleMarkerClick(station.id)}
                 selectedStation={
-                  selectedId ? mapStations.find((s) => s.id === selectedId) : null
+                  selectedId
+                    ? mapStations.find((s) => s.id === selectedId)
+                    : null
                 }
                 userLocation={userLocation}
                 onUpdateLocation={updateLocation}
@@ -496,7 +535,9 @@ const HomePage = () => {
 
         {/* About Section */}
         <About />
-      </div>
+
+      </main>
+
     </div>
   );
 };

@@ -26,6 +26,7 @@ import Reports from "./pages/staffDashboard/reports";
 import StaffProfile from "./pages/staffDashboard/profile";
 import Overview from "./pages/adminDashboard/overViewManagement";
 import ChargingSession from "./pages/chargingSessionPage/index";
+
 function App() {
   const router = createBrowserRouter([
     {
@@ -61,7 +62,11 @@ function App() {
     },
     {
       path: "admin",
-      element: <AdminLayout />,
+      element: (
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <AdminLayout />
+        </ProtectedRoute>
+      ),
       children: [
         { path: "", element: <Overview /> },
         { path: "station-management", element: <StationManagement /> },
@@ -73,7 +78,11 @@ function App() {
     },
     {
       path: "staff",
-      element: <StaffLayout />,
+      element: (
+        <ProtectedRoute allowedRoles={["staff"]}>
+          <StaffLayout />
+        </ProtectedRoute>
+      ),
       children: [
         { path: "", element: <StaffOverview /> },
         { path: "charging-sessions", element: <ChargingSessions /> },

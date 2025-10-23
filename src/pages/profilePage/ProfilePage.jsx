@@ -11,10 +11,13 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   // ===== Vehicle states =====
-  const [vehicles, setVehicles] = useState([]);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [isEditingVehicle, setIsEditingVehicle] = useState(false);
-  const [vehicleErrors, setVehicleErrors] = useState({});
+
+const [vehicles, setVehicles] = useState([]);
+const [selectedVehicle, setSelectedVehicle] = useState(null);
+const [isEditingVehicle, setIsEditingVehicle] = useState(false);
+const [vehicleErrors, setVehicleErrors] = useState({});
+
+
 
   const [transactions, setTransactions] = useState([]); // new
   const [txLoading, setTxLoading] = useState(true); // new
@@ -22,8 +25,9 @@ const ProfilePage = () => {
   // Fetch user data on component mount
   useEffect(() => {
     fetchUserData();
-    fetchVehicleData();
-    
+
+    fetchVehicleData(); 
+
   }, []);
 
   // Update transaction fetch
@@ -87,20 +91,23 @@ const ProfilePage = () => {
     }
   };
   const fetchVehicleData = async () => {
-    try {
-      const res = await api.get("/vehicles");
-      console.log("Vehicle data:", res.data);
 
-      // Extract vehicles array from response
-      const vehiclesList = res.data?.items || res.data?.data || [];
-      setVehicles(Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean));
-    } catch (error) {
-      console.error("Error fetching vehicle:", error);
-      if (error.response?.status !== 404) {
-        alert("Không thể tải thông tin phương tiện!");
-      }
+  try {
+    const res = await api.get("/vehicles");
+    console.log("Vehicle data:", res.data);
+
+    // Extract vehicles array from response
+    const vehiclesList = res.data?.items || res.data?.data || [];
+    setVehicles(Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean));
+  } catch (error) {
+    console.error("Error fetching vehicle:", error);
+    if (error.response?.status !== 404) {
+      alert("Không thể tải thông tin phương tiện!");
     }
-  };
+  }
+};
+
+
 
   const validateForm = () => {
     const newErrors = {};
@@ -224,72 +231,74 @@ const ProfilePage = () => {
       </div>
     );
   }
-  //   const handleVehicleChange = (field, value) => {
-  //   setSelectedVehicle(prev => ({
-  //     ...prev,
-  //     [field]: value
-  //   }));
-  //   if (vehicleErrors[field]) {
-  //     setVehicleErrors(prev => ({ ...prev, [field]: "" }));
-  //   }
-  // };
 
-  const validateVehicle = () => {
-    const errs = {};
-    if (!selectedVehicle?.plateNumber?.trim()) errs.plateNumber = "Biển số xe không được để trống";
-    if (!selectedVehicle?.make?.trim()) errs.make = "Hãng xe không được để trống";
-    if (!selectedVehicle?.model?.trim()) errs.model = "Mẫu xe không được để trống";
-    setVehicleErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
+//   const handleVehicleChange = (field, value) => {
+//   setSelectedVehicle(prev => ({
+//     ...prev,
+//     [field]: value
+//   }));
+//   if (vehicleErrors[field]) {
+//     setVehicleErrors(prev => ({ ...prev, [field]: "" }));
+//   }
+// };
 
-  const handleVehicleSave = async () => {
-    if (!validateVehicle()) return;
-    try {
-      const endpoint = selectedVehicle?.id ? `/vehicles/${selectedVehicle.id}` : "/vehicles";
-      const method = selectedVehicle?.id ? api.put : api.post;
-      const payload = {
-        ...selectedVehicle,
-        year: Number(selectedVehicle.year),
-        batteryCapacityKwh: Number(selectedVehicle.batteryCapacityKwh),
-        status: selectedVehicle.status || "active",
-      };
+const validateVehicle = () => {
+  const errs = {};
+  if (!selectedVehicle?.plateNumber?.trim()) errs.plateNumber = "Biển số xe không được để trống";
+  if (!selectedVehicle?.make?.trim()) errs.make = "Hãng xe không được để trống";
+  if (!selectedVehicle?.model?.trim()) errs.model = "Mẫu xe không được để trống";
+  setVehicleErrors(errs);
+  return Object.keys(errs).length === 0;
+};
 
-      const res = await method(endpoint, payload);
-      const savedVehicle = res.data?.data || payload;
+const handleVehicleSave = async () => {
+  if (!validateVehicle()) return;
+  try {
+    const endpoint = selectedVehicle?.id ? `/vehicles/${selectedVehicle.id}` : "/vehicles";
+    const method = selectedVehicle?.id ? api.put : api.post;
+    const payload = {
+      ...selectedVehicle,
+      year: Number(selectedVehicle.year),
+      batteryCapacityKwh: Number(selectedVehicle.batteryCapacityKwh),
+      status: selectedVehicle.status || "active",
+    };
 
-      setVehicles((prev) => {
-        if (selectedVehicle?.id) {
-          return prev.map((v) => (v.id === selectedVehicle.id ? savedVehicle : v));
-        }
-        return [...prev, savedVehicle];
-      });
+    const res = await method(endpoint, payload);
+    const savedVehicle = res.data?.data || payload;
 
-      alert("Lưu thông tin xe thành công!");
-      setIsEditingVehicle(false);
-      setSelectedVehicle(null);
-    } catch (error) {
-      console.error("Error saving vehicle:", error);
-      alert("Không thể lưu thông tin xe, vui lòng thử lại!");
-    }
-  };
-  // const handleVehicleCancel = () => {
-  //   setIsEditingVehicle(false);
-  //   setSelectedVehicle(null);
-  //   setVehicleErrors({});
-  // };
-  const handleDeleteVehicle = async (vehicleId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa xe này?')) {
-      try {
-        await api.delete(`/vehicles/${vehicleId}`);
-        setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
-        alert('Xóa xe thành công!');
-      } catch (error) {
-        console.error('Error deleting vehicle:', error);
-        alert('Không thể xóa xe, vui lòng thử lại!');
+    setVehicles(prev => {
+      if (selectedVehicle?.id) {
+        return prev.map(v => v.id === selectedVehicle.id ? savedVehicle : v);
       }
+      return [...prev, savedVehicle];
+    });
+
+    alert("Lưu thông tin xe thành công!");
+    setIsEditingVehicle(false);
+    setSelectedVehicle(null);
+  } catch (error) {
+    console.error("Error saving vehicle:", error);
+    alert("Không thể lưu thông tin xe, vui lòng thử lại!");
+  }
+};
+// const handleVehicleCancel = () => {
+//   setIsEditingVehicle(false);
+//   setSelectedVehicle(null);
+//   setVehicleErrors({});
+// };
+const handleDeleteVehicle = async (vehicleId) => {
+  if (window.confirm('Bạn có chắc chắn muốn xóa xe này?')) {
+    try {
+      await api.delete(`/vehicles/${vehicleId}`);
+      setVehicles(prev => prev.filter(v => v.id !== vehicleId));
+      alert('Xóa xe thành công!');
+    } catch (error) {
+      console.error('Error deleting vehicle:', error);
+      alert('Không thể xóa xe, vui lòng thử lại!');
     }
-  };
+  }
+};
+
   return (
     <div className="profile-page dark-theme">
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
@@ -622,7 +631,7 @@ const ProfilePage = () => {
                 <th>Trạng thái</th>
                 <th>Thao tác</th>
               </tr>
-            </thead>
+            </thead>  
             <tbody>
               {txLoading ? (
                 <tr><td colSpan={4} style={{ color: "#666" }}>Đang tải...</td></tr>
