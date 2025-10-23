@@ -414,7 +414,10 @@ const handleDeleteVehicle = async (vehicleId) => {
         ) : !isEditingVehicle ? (
           <div className="vehicles-grid">
             {vehicles.map(vehicle => (
-              <div key={vehicle.id} className="vehicle-card">
+              <div key={vehicle.id} className="vehicle-card" onClick={() => {
+                setSelectedVehicle(vehicle);
+                localStorage.setItem("vehicleId", vehicle.id);
+              }}>
   <h3>
     <span className="plate-number">{vehicle.plateNumber}</span>
     <span 
@@ -437,6 +440,7 @@ const handleDeleteVehicle = async (vehicleId) => {
   <div className="vehicle-actions">
     <button className="edit-btn" onClick={() => {
       setSelectedVehicle(vehicle);
+  localStorage.setItem("vehicleId", vehicle.id);
       setIsEditingVehicle(true);
     }}>
       Chỉnh sửa
