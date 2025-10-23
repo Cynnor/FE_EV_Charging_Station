@@ -25,7 +25,7 @@ import StationStatus from "./pages/staffDashboard/stationStatus";
 import Reports from "./pages/staffDashboard/reports";
 import StaffProfile from "./pages/staffDashboard/profile";
 import Overview from "./pages/adminDashboard/overViewManagement";
-
+import ChargingSession from "./pages/chargingSessionPage/index";
 function App() {
   const router = createBrowserRouter([
     {
@@ -33,10 +33,11 @@ function App() {
       element: <Layout />,
       children: [
         { path: "", element: <HomePage /> },
-        { path: "charging-stations", element: <ChargingStationsPage /> },~
+        { path: "charging-stations", element: <ChargingStationsPage /> },
         { path: "about", element: <AboutPage /> },
         { path: "support", element: <SupportPage /> },
         { path: "profile", element: <ProfilePage /> },
+        { path: "booking/:stationId", element: <BookingPage /> },
         { path: "booking", element: <BookingPage /> },
         { path: "payment", element: <PaymentPage /> },
         { path: "membership", element: <MembershipPage /> },
@@ -53,6 +54,10 @@ function App() {
     {
       path: "/forgot-password",
       element: <ForgotPassword />,
+    },
+    { 
+      path: "/chargingSession", 
+      element: <ChargingSession /> 
     },
     {
       path: "admin",

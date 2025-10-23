@@ -1,50 +1,62 @@
 import { useState, useEffect } from "react";
 import "./ProfilePage.scss";
 import api from "../../config/api";
+import { useNavigate } from "react-router-dom";
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [userInfo, setUserInfo] = useState({});
   const [originalUserInfo, setOriginalUserInfo] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   // ===== Vehicle states =====
-const [vehicles, setVehicles] = useState([]);
-const [selectedVehicle, setSelectedVehicle] = useState(null);
-const [isEditingVehicle, setIsEditingVehicle] = useState(false);
-const [vehicleErrors, setVehicleErrors] = useState({});
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [isEditingVehicle, setIsEditingVehicle] = useState(false);
+  const [vehicleErrors, setVehicleErrors] = useState({});
 
-
-  // Mock data - replace with actual API call
-  const mockHistory = [
-    {
-      date: "2024-05-01",
-      location: "Station A",
-      time: "08:00",
-      power: 20,
-      cost: 100000,
-    },
-    {
-      date: "2024-05-03",
-      location: "Station B",
-      time: "18:30",
-      power: 15,
-      cost: 75000,
-    },
-    {
-      date: "2024-05-10",
-      location: "Station A",
-      time: "07:45",
-      power: 22,
-      cost: 110000,
-    },
-  ];
+  const [transactions, setTransactions] = useState([]); // new
+  const [txLoading, setTxLoading] = useState(true); // new
 
   // Fetch user data on component mount
   useEffect(() => {
     fetchUserData();
-    fetchVehicleData(); 
+    fetchVehicleData();
+    
   }, []);
+
+  // Update transaction fetch
+  useEffect(() => {
+    if (!vehicles.length) return;
+    let mounted = true;
+
+    const fetchVehicleTransactions = async () => {
+      try {
+        setTxLoading(true);
+        const res = await api.get(`/transactions`);
+        console.log("Raw transaction data:", res.data);
+
+        if (mounted) {
+          // Ensure we always have an array of transactions
+          let txList = [];
+          if (res.data?.data) {
+            txList = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+          }
+          console.log("Processed transactions:", txList);
+          setTransactions(txList);
+        }
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+        if (mounted) setTransactions([]);
+      } finally {
+        if (mounted) setTxLoading(false);
+      }
+    };
+
+    fetchVehicleTransactions();
+    return () => mounted = false;
+  }, [vehicles]);
 
   const fetchUserData = async () => {
     try {
@@ -75,22 +87,20 @@ const [vehicleErrors, setVehicleErrors] = useState({});
     }
   };
   const fetchVehicleData = async () => {
-  try {
-    const res = await api.get("/vehicles");
-    console.log("Vehicle data:", res.data);
+    try {
+      const res = await api.get("/vehicles");
+      console.log("Vehicle data:", res.data);
 
-    // Extract vehicles array from response
-    const vehiclesList = res.data?.items || res.data?.data || [];
-    setVehicles(Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean));
-  } catch (error) {
-    console.error("Error fetching vehicle:", error);
-    if (error.response?.status !== 404) {
-      alert("Không thể tải thông tin phương tiện!");
+      // Extract vehicles array from response
+      const vehiclesList = res.data?.items || res.data?.data || [];
+      setVehicles(Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean));
+    } catch (error) {
+      console.error("Error fetching vehicle:", error);
+      if (error.response?.status !== 404) {
+        alert("Không thể tải thông tin phương tiện!");
+      }
     }
-  }
-};
-
-
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -182,16 +192,30 @@ const [vehicleErrors, setVehicleErrors] = useState({});
     setErrors({});
   };
 
-  const monthlyCost = mockHistory.reduce((sum, h) => sum + h.cost, 0);
-  const locationStats = mockHistory.reduce((acc, h) => {
-    acc[h.location] = (acc[h.location] || 0) + 1;
+  // Replace old mock-based stats with transaction-based stats
+  // total bookings
+  const totalBookings = transactions.length;
+  // most used port (count by slot.port)
+  const portCounts = transactions.reduce((acc, t) => {
+    const items = t.items || [];
+    items.forEach((it) => {
+      const port = it.slot?.port || "unknown";
+      acc[port] = (acc[port] || 0) + 1;
+    });
     return acc;
   }, {});
-  const favoriteLocation =
-    Object.entries(locationStats).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
-  const avgPower = (
-    mockHistory.reduce((sum, h) => sum + h.power, 0) / mockHistory.length
-  ).toFixed(2);
+  const favoritePort = Object.entries(portCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+
+  // average booking duration (minutes)
+  const durations = transactions.flatMap((t) =>
+    (t.items || []).map((it) => {
+      if (it.startAt && it.endAt) {
+        return (new Date(it.endAt) - new Date(it.startAt)) / (1000 * 60);
+      }
+      return null;
+    }).filter(Boolean)
+  );
+  const avgDuration = durations.length ? (durations.reduce((s, d) => s + d, 0) / durations.length).toFixed(0) : "N/A";
 
   if (isLoading) {
     return (
@@ -200,72 +224,72 @@ const [vehicleErrors, setVehicleErrors] = useState({});
       </div>
     );
   }
-//   const handleVehicleChange = (field, value) => {
-//   setSelectedVehicle(prev => ({
-//     ...prev,
-//     [field]: value
-//   }));
-//   if (vehicleErrors[field]) {
-//     setVehicleErrors(prev => ({ ...prev, [field]: "" }));
-//   }
-// };
+  //   const handleVehicleChange = (field, value) => {
+  //   setSelectedVehicle(prev => ({
+  //     ...prev,
+  //     [field]: value
+  //   }));
+  //   if (vehicleErrors[field]) {
+  //     setVehicleErrors(prev => ({ ...prev, [field]: "" }));
+  //   }
+  // };
 
-const validateVehicle = () => {
-  const errs = {};
-  if (!selectedVehicle?.plateNumber?.trim()) errs.plateNumber = "Biển số xe không được để trống";
-  if (!selectedVehicle?.make?.trim()) errs.make = "Hãng xe không được để trống";
-  if (!selectedVehicle?.model?.trim()) errs.model = "Mẫu xe không được để trống";
-  setVehicleErrors(errs);
-  return Object.keys(errs).length === 0;
-};
+  const validateVehicle = () => {
+    const errs = {};
+    if (!selectedVehicle?.plateNumber?.trim()) errs.plateNumber = "Biển số xe không được để trống";
+    if (!selectedVehicle?.make?.trim()) errs.make = "Hãng xe không được để trống";
+    if (!selectedVehicle?.model?.trim()) errs.model = "Mẫu xe không được để trống";
+    setVehicleErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
-const handleVehicleSave = async () => {
-  if (!validateVehicle()) return;
-  try {
-    const endpoint = selectedVehicle?.id ? `/vehicles/${selectedVehicle.id}` : "/vehicles";
-    const method = selectedVehicle?.id ? api.put : api.post;
-    const payload = {
-      ...selectedVehicle,
-      year: Number(selectedVehicle.year),
-      batteryCapacityKwh: Number(selectedVehicle.batteryCapacityKwh),
-      status: selectedVehicle.status || "active",
-    };
-
-    const res = await method(endpoint, payload);
-    const savedVehicle = res.data?.data || payload;
-
-    setVehicles(prev => {
-      if (selectedVehicle?.id) {
-        return prev.map(v => v.id === selectedVehicle.id ? savedVehicle : v);
-      }
-      return [...prev, savedVehicle];
-    });
-
-    alert("Lưu thông tin xe thành công!");
-    setIsEditingVehicle(false);
-    setSelectedVehicle(null);
-  } catch (error) {
-    console.error("Error saving vehicle:", error);
-    alert("Không thể lưu thông tin xe, vui lòng thử lại!");
-  }
-};
-// const handleVehicleCancel = () => {
-//   setIsEditingVehicle(false);
-//   setSelectedVehicle(null);
-//   setVehicleErrors({});
-// };
-const handleDeleteVehicle = async (vehicleId) => {
-  if (window.confirm('Bạn có chắc chắn muốn xóa xe này?')) {
+  const handleVehicleSave = async () => {
+    if (!validateVehicle()) return;
     try {
-      await api.delete(`/vehicles/${vehicleId}`);
-      setVehicles(prev => prev.filter(v => v.id !== vehicleId));
-      alert('Xóa xe thành công!');
+      const endpoint = selectedVehicle?.id ? `/vehicles/${selectedVehicle.id}` : "/vehicles";
+      const method = selectedVehicle?.id ? api.put : api.post;
+      const payload = {
+        ...selectedVehicle,
+        year: Number(selectedVehicle.year),
+        batteryCapacityKwh: Number(selectedVehicle.batteryCapacityKwh),
+        status: selectedVehicle.status || "active",
+      };
+
+      const res = await method(endpoint, payload);
+      const savedVehicle = res.data?.data || payload;
+
+      setVehicles((prev) => {
+        if (selectedVehicle?.id) {
+          return prev.map((v) => (v.id === selectedVehicle.id ? savedVehicle : v));
+        }
+        return [...prev, savedVehicle];
+      });
+
+      alert("Lưu thông tin xe thành công!");
+      setIsEditingVehicle(false);
+      setSelectedVehicle(null);
     } catch (error) {
-      console.error('Error deleting vehicle:', error);
-      alert('Không thể xóa xe, vui lòng thử lại!');
+      console.error("Error saving vehicle:", error);
+      alert("Không thể lưu thông tin xe, vui lòng thử lại!");
     }
-  }
-};
+  };
+  // const handleVehicleCancel = () => {
+  //   setIsEditingVehicle(false);
+  //   setSelectedVehicle(null);
+  //   setVehicleErrors({});
+  // };
+  const handleDeleteVehicle = async (vehicleId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa xe này?')) {
+      try {
+        await api.delete(`/vehicles/${vehicleId}`);
+        setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
+        alert('Xóa xe thành công!');
+      } catch (error) {
+        console.error('Error deleting vehicle:', error);
+        alert('Không thể xóa xe, vui lòng thử lại!');
+      }
+    }
+  };
   return (
     <div className="profile-page dark-theme">
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
@@ -588,33 +612,50 @@ const handleDeleteVehicle = async (vehicleId) => {
 
       
       <section className="profile-section history-section">
-        <h2>Lịch sử sạc</h2>
+        <h2>Lịch sử giao dịch</h2>
         <div className="history-table-wrapper">
           <table className="history-table">
             <thead>
               <tr>
-                <th>Ngày</th>
-                <th>Địa điểm</th>
-                <th>Giờ</th>
-                <th>Công suất (kWh)</th>
-                <th>Chi phí (VND)</th>
+                <th>Mã đặt chỗ</th>
+                <th>Số tiền</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
               </tr>
-            </thead>  
+            </thead>
             <tbody>
-              {Array.isArray(mockHistory) && mockHistory.length > 0 ? (
-                mockHistory.map((h, idx) => (
-                  <tr key={idx}>
-                    <td>{h.date}</td>
-                    <td>{h.location}</td>
-                    <td>{h.time}</td>
-                    <td>{h.power}</td>
-                    <td>{h.cost.toLocaleString()}</td>
+              {txLoading ? (
+                <tr><td colSpan={4} style={{ color: "#666" }}>Đang tải...</td></tr>
+              ) : transactions.length > 0 ? (
+                transactions.map((tx) => (
+                  <tr key={tx.id}>
+                    <td>{tx.id}</td>
+                    <td>{tx.amount?.toLocaleString()} VNĐ</td>
+                    <td>
+                      <span className={`status-badge ${tx.status}`}>
+                        {tx.status === 'pending' ? 'Chờ thanh toán' :
+                         tx.status === 'completed' ? 'Hoàn thành' :
+                         tx.status === 'cancelled' ? 'Đã hủy' : tx.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        {tx.status === 'pending' && (
+                          <button 
+                            className="pay-btn"
+                            onClick={() => navigate('/chargingSession')}
+                          >
+                            Bắt đầu sạc
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} style={{ color: "#90caf9" }}>
-                    Không có dữ liệu lịch sử sạc.
+                  <td colSpan={4} style={{ textAlign: 'center', color: "#90caf9" }}>
+                    Chưa có giao dịch nào
                   </td>
                 </tr>
               )}
@@ -622,57 +663,31 @@ const handleDeleteVehicle = async (vehicleId) => {
           </table>
         </div>
       </section>
+
       <section className="profile-section analysis-section">
-        <h2>Phân tích cá nhân</h2>
+        <h2>Phân tích giao dịch</h2>
         <div className="analysis-cards">
           <div className="analysis-card">
-            <div className="icon-box cost">
-              <span role="img" aria-label="cost">
-                💸
-              </span>
-            </div>
+            <div className="icon-box cost"><span>📊</span></div>
             <div>
-              <div className="analysis-label">Tổng chi phí sạc tháng</div>
-              <div className="analysis-value">
-                {monthlyCost.toLocaleString()} VND
-              </div>
+              <div className="analysis-label">Tổng booking</div>
+              <div className="analysis-value">{totalBookings}</div>
             </div>
           </div>
+
           <div className="analysis-card">
-            <div className="icon-box location">
-              <span role="img" aria-label="location">
-                📍
-              </span>
-            </div>
+            <div className="icon-box location"><span>🔌</span></div>
             <div>
-              <div className="analysis-label">Địa điểm sạc thường xuyên</div>
-              <div className="analysis-value">{favoriteLocation}</div>
+              <div className="analysis-label">Cổng sử dụng nhiều nhất</div>
+              <div className="analysis-value">{favoritePort}</div>
             </div>
           </div>
+
           <div className="analysis-card">
-            <div className="icon-box time">
-              <span role="img" aria-label="time">
-                ⏰
-              </span>
-            </div>
+            <div className="icon-box time"><span>⏱️</span></div>
             <div>
-              <div className="analysis-label">Thói quen giờ sạc</div>
-              <div className="analysis-value">
-                {mockHistory.map((h) => h.time).join(", ")}
-              </div>
-            </div>
-          </div>
-          <div className="analysis-card">
-            <div className="icon-box power">
-              <span role="img" aria-label="power">
-                ⚡
-              </span>
-            </div>
-            <div>
-              <div className="analysis-label">
-                Công suất trung bình mỗi lần sạc
-              </div>
-              <div className="analysis-value">{avgPower} kWh</div>
+              <div className="analysis-label">Thời gian TB mỗi booking (phút)</div>
+              <div className="analysis-value">{avgDuration}</div>
             </div>
           </div>
         </div>
