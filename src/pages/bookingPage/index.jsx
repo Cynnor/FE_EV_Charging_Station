@@ -185,6 +185,7 @@ export default function BookingPage() {
   const [selectedStation, setSelectedStation] = useState(null);
   const [selectedCharger, setSelectedCharger] = useState(null);
 
+
   // Step 3: slots
   const [slots, setSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -382,10 +383,12 @@ export default function BookingPage() {
     endTime: "",
   });
 
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
 
   const handleSubmit = (e) => {
     e.preventDefault();

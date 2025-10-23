@@ -65,6 +65,49 @@ const About = () => {
 };
 
 // ===== HomePage =====
+const SAMPLE_TRANSACTION = {
+  success: true,
+  message: "OK",
+  data: {
+    vehicle: {
+      owner: "68d9f66de455b8d4cf0c5b39",
+      make: "VinFast",
+      model: "VF8",
+      year: 2022,
+      color: "White",
+      plateNumber: "51H-123.45",
+      vin: "WVWAA71K08W201030",
+      type: "car",
+      batteryCapacityKwh: 82,
+      connectorType: "DC",
+      status: "active",
+      createdAt: "2025-10-13T03:27:40.357Z",
+      updatedAt: "2025-10-13T03:27:40.357Z",
+      id: "68ec71acb40ef939ab19bc97",
+    },
+    items: [
+      {
+        slot: {
+          port: "68f0633908aa255495796a00",
+          order: 1,
+          status: "available",
+          nextAvailableAt: null,
+          createdAt: "2025-10-20T02:40:10.877Z",
+          updatedAt: "2025-10-20T02:40:10.877Z",
+          id: "68f5a10a00b136b8c9dae65d",
+        },
+        startAt: "2025-10-01T10:00:00.000Z",
+        endAt: "2025-10-01T11:00:00.000Z",
+      },
+    ],
+    status: "pending",
+    qrCheck: false,
+    createdAt: "2025-10-20T02:55:31.929Z",
+    updatedAt: "2025-10-20T02:55:31.929Z",
+    id: "68f5a4a300b136b8c9dae88a",
+  },
+};
+
 const HomePage = () => {
   const featuresRef = useRef(null);
   const stepsRef = useRef(null);
@@ -77,6 +120,8 @@ const HomePage = () => {
   const [nearbyStations, setNearbyStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // const [transaction, setTransaction] = useState(null);
+  // const [txLoading, setTxLoading] = useState(true);
   const itemRefs = useRef({});
 
   // ===== Fetch Station Data from API =====
@@ -190,6 +235,32 @@ const HomePage = () => {
     }
   };
 
+  // // fetch latest transaction
+  // useEffect(() => {
+  //   let mounted = true;
+  //   const fetchLatestTransaction = async () => {
+  //     try {
+  //       setTxLoading(true);
+  //       const res = await api.get("/transactions/latest");
+  //       const payload = res?.data?.data ?? res?.data ?? null;
+  //       if (mounted) {
+  //         setTransaction(payload ?? SAMPLE_TRANSACTION.data);
+  //       }
+  //     } catch (err) {
+  //       console.error("Error fetching transaction:", err);
+  //       if (mounted) setTransaction(SAMPLE_TRANSACTION.data);
+  //     } finally {
+  //       if (mounted) setTxLoading(false);
+  //     }
+  //   };
+
+  //   fetchLatestTransaction();
+
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, []);
+
   // ===== Render =====
   if (loading) {
     return (
@@ -209,7 +280,11 @@ const HomePage = () => {
 
   return (
     <div className="homepage">
-      <main className="homepage__main">
+      {/* move all page sections below a content wrapper so they are shifted under the header */}
+      <div
+        className="homepage__content"
+        style={{ paddingTop: 80 }} // adjust 80 to match your header height
+      >
         {/* ===== Hero Section ===== */}
         <section className="homepage__hero">
           <div className="homepage__hero-content">
@@ -323,6 +398,89 @@ const HomePage = () => {
           </div>
         </section>
 
+        {/* ===== Recent transaction (new) =====
+        <section className="homepage__transaction" aria-live="polite">
+          <div className="section-header">
+            <h2>Giao dịch mới nhất</h2>
+          </div>
+
+          {txLoading ? (
+            <div className="tx-loading">Đang tải giao dịch...</div>
+          ) : transaction ? (
+            <div className="tx-card">
+              <div className="tx-row">
+                <div className="tx-label">Booking ID</div>
+                <div className="tx-value">{transaction.id}</div>
+              </div>
+
+              <div className="tx-row">
+                <div className="tx-label">Trạng thái</div>
+                <div className="tx-value">{transaction.status}</div>
+              </div>
+
+              <div className="tx-divider" />
+
+              <h4>Thông tin xe</h4>
+              <div className="tx-row">
+                <div className="tx-label">Biển số</div>
+                <div className="tx-value">{transaction.vehicle?.plateNumber}</div>
+              </div>
+              <div className="tx-row">
+                <div className="tx-label">Xe</div>
+                <div className="tx-value">
+                  {transaction.vehicle?.make} {transaction.vehicle?.model} ({transaction.vehicle?.year})
+                </div>
+              </div>
+
+              <div className="tx-divider" />
+
+              <h4>Slot & Thời gian</h4>
+              {transaction.items && transaction.items.length > 0 ? (
+                <>
+                  <div className="tx-row">
+                    <div className="tx-label">Cổng (port)</div>
+                    <div className="tx-value">{transaction.items[0].slot?.port}</div>
+                  </div>
+                  <div className="tx-row">
+                    <div className="tx-label">Thứ tự</div>
+                    <div className="tx-value">{transaction.items[0].slot?.order}</div>
+                  </div>
+                  <div className="tx-row">
+                    <div className="tx-label">Trạng thái slot</div>
+                    <div className="tx-value">{transaction.items[0].slot?.status}</div>
+                  </div>
+                  <div className="tx-row">
+                    <div className="tx-label">Bắt đầu</div>
+                    <div className="tx-value">
+                      {transaction.items[0].startAt ? new Date(transaction.items[0].startAt).toLocaleString() : "-"}
+                    </div>
+                  </div>
+                  <div className="tx-row">
+                    <div className="tx-label">Kết thúc</div>
+                    <div className="tx-value">
+                      {transaction.items[0].endAt ? new Date(transaction.items[0].endAt).toLocaleString() : "-"}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div>Không có thông tin slot</div>
+              )}
+
+              <div className="tx-divider" />
+              <div className="tx-row">
+                <div className="tx-label">QR Check</div>
+                <div className="tx-value">{String(transaction.qrCheck)}</div>
+              </div>
+              <div className="tx-row">
+                <div className="tx-label">Tạo lúc</div>
+                <div className="tx-value">{transaction.createdAt ? new Date(transaction.createdAt).toLocaleString() : "-"}</div>
+              </div>
+            </div>
+          ) : (
+            <div>Không có giao dịch nào.</div>
+          )}
+        </section> */}
+
         {/* Features Section */}
         <section className="homepage__features" ref={featuresRef}>
           <div className="section-header">
@@ -372,12 +530,14 @@ const HomePage = () => {
 
         {/* CTA Section */}
         <section className="homepage__cta">
-          <h2>Bắt đầu hành trình xe điện của bạn</h2>
+          <h2>Bắt đầu hành trình xe điện </h2>
         </section>
 
         {/* About Section */}
         <About />
+
       </main>
+
     </div>
   );
 };

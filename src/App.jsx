@@ -25,7 +25,7 @@ import StationStatus from "./pages/staffDashboard/stationStatus";
 import Reports from "./pages/staffDashboard/reports";
 import StaffProfile from "./pages/staffDashboard/profile";
 import Overview from "./pages/adminDashboard/overViewManagement";
-import ProtectedRoute from "./config/ProtectedRoute";
+import ChargingSession from "./pages/chargingSessionPage/index";
 
 function App() {
   const router = createBrowserRouter([
@@ -55,6 +55,10 @@ function App() {
     {
       path: "/forgot-password",
       element: <ForgotPassword />,
+    },
+    { 
+      path: "/chargingSession", 
+      element: <ChargingSession /> 
     },
     {
       path: "admin",
