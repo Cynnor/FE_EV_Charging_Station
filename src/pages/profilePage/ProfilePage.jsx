@@ -574,7 +574,7 @@ const handleDeleteVehicle = async (vehicleId) => {
       >
         <option value="">Chọn loại xe</option>
         <option value="car">Ô tô</option>
-        <option value="bike">Xe máy</option>
+        <option value="motorbike">Xe máy</option>
       </select>
     </div>
 
@@ -638,7 +638,7 @@ const handleDeleteVehicle = async (vehicleId) => {
               ) : transactions.length > 0 ? (
                 transactions.map((tx) => (
                   <tr key={tx.id}>
-                    <td>{tx.id}</td>
+                    <td>  {tx.id}</td>
                     <td>{tx.amount?.toLocaleString()} VNĐ</td>
                     <td>
                       <span className={`status-badge ${tx.status}`}>
