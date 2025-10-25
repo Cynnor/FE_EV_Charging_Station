@@ -885,7 +885,7 @@ const handleDeleteVehicle = async (vehicleId) => {
           <table className="history-table">
             <thead>
               <tr>
-                <th>Mã đặt chỗ</th>
+                {/* <th>Mã đặt chỗ</th> */}
                 <th>Xe</th>
                 <th>Thời gian</th>
                 <th>Trạng thái</th>
@@ -894,17 +894,16 @@ const handleDeleteVehicle = async (vehicleId) => {
             </thead>  
             <tbody>
               {txLoading ? (
-                <tr><td colSpan={5} style={{ color: "#666" }}>Đang tải...</td></tr>
+                <tr><td colSpan={4} style={{ color: "#666" }}>Đang tải...</td></tr>
               ) : getPaginatedReservations().length > 0 ? (
                 getPaginatedReservations().map((reservation) => {
-                  // { changed code }
                   const reservationId = reservation._id || reservation.id;
                   const vehicleId = reservation.vehicle?._id || reservation.vehicle?.id;
                   const firstItem = reservation.items?.[0];
 
                   return (
                     <tr key={reservationId}>
-                      <td>{String(reservationId).slice(-8)}</td>
+                      {/* <td>{String(reservationId).slice(-8)}</td> */}
                       <td>
                         {reservation.vehicle?.plateNumber || "N/A"}<br/>
                         <small style={{ color: "#666" }}>
@@ -1025,7 +1024,7 @@ const handleDeleteVehicle = async (vehicleId) => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', color: "#90caf9" }}>
+                  <td colSpan={4} style={{ textAlign: 'center', color: "#90caf9" }}>
                     Chưa có đặt chỗ nào
                   </td>
                 </tr>
