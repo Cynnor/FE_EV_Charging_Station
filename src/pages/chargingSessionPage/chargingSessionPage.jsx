@@ -255,15 +255,6 @@ const ChargingSession = () => {
           }
         };
         
-        // Debug: Hiển thị dữ liệu sẽ gửi đi
-        // console.log('=== DỮ LIỆU CHUYỂN SANG PAYMENT (SẠC ĐẦY) ===');
-        // console.log('Vehicle Info:', paymentData.chargingData.vehicleInfo);
-        // console.log('Charging Info:', paymentData.chargingData.chargingInfo);
-        // console.log('Tổng chi phí:', paymentData.chargingData.chargingInfo.totalCost.toLocaleString('vi-VN'), 'VNĐ');
-        // console.log('Phí đặt lịch:', paymentData.chargingData.chargingInfo.bookingCost.toLocaleString('vi-VN'), 'VNĐ');
-        // console.log('Phí điện:', paymentData.chargingData.chargingInfo.energyCost.toLocaleString('vi-VN'), 'VNĐ');
-        // console.log('==========================================');
-        
         // Tự động chuyển sang trang payment khi sạc đầy
         setTimeout(() => {
           navigate('/payment', {
@@ -304,11 +295,10 @@ const ChargingSession = () => {
       const remainingCharge = 100 - newCharge;
       const newRemainingTime = remainingCharge;
 
-      // Gọi API để cập nhật giá từ backend (không chặn UI)
-      // Chỉ gọi mỗi 5 phút một lần để tránh spam API
-      if (newTimeElapsed % 5 === 0) {
-        calculatePricingFromAPI(prev, newTimeElapsed);
-      }
+      // TẮT GỌI API - Dùng tính toán local để tránh xung đột
+      // if (newTimeElapsed % 5 === 0) {
+      //   calculatePricingFromAPI(prev, newTimeElapsed);
+      // }
 
       return {
         ...prev,
@@ -325,46 +315,43 @@ const ChargingSession = () => {
     });
   };
 
+  // TẠM THỜI TẮT - Hàm gọi API gây xung đột với tính toán local
   // Hàm gọi API để tính giá chính xác - không block UI
-  const calculatePricingFromAPI = async (currentData, timeElapsed) => {
-    try {
-      // Tính thời gian bắt đầu và kết thúc
-      const startAt = new Date(currentData.startTime).toISOString();
-      const endAt = new Date(currentData.startTime.getTime() + timeElapsed * 60000).toISOString();
-      
-      // Gọi API pricing/estimate
-      const response = await api.post('/pricing/estimate', {
-        portId: portInfo.portId,
-        startAt: startAt,
-        endAt: endAt,
-        assumePowerKw: currentData.chargeRate
-      });
-
-      if (response.data?.success && response.data?.data) {
-        const pricingData = response.data.data;
-        
-        // Chỉ cập nhật nếu giá trị thay đổi đáng kể (tránh re-render liên tục)
-        setChargingData(prev => {
-          const shouldUpdate = 
-            Math.abs((pricingData.bookingCost || 0) - (prev.bookingCost || 0)) > 100 ||
-            Math.abs((pricingData.energyCost || 0) - (prev.energyCost || 0)) > 100;
-          
-          if (!shouldUpdate) return prev;
-          
-          return {
-            ...prev,
-            bookingCost: pricingData.bookingCost || prev.bookingCost,
-            energyCost: pricingData.energyCost || prev.energyCost,
-            energyKwh: pricingData.energyKwh || prev.energyKwh,
-            chargingCost: pricingData.total || prev.chargingCost,
-          };
-        });
-      }
-    } catch (error) {
-      // Nếu API lỗi, tiếp tục dùng tính toán local
-      console.error('Error calculating pricing from API:', error);
-    }
-  };
+  // const calculatePricingFromAPI = async (currentData, timeElapsed) => {
+  //   try {
+  //     const startAt = new Date(currentData.startTime).toISOString();
+  //     const endAt = new Date(currentData.startTime.getTime() + timeElapsed * 60000).toISOString();
+  //     
+  //     const response = await api.post('/pricing/estimate', {
+  //       portId: portInfo.portId,
+  //       startAt: startAt,
+  //       endAt: endAt,
+  //       assumePowerKw: currentData.chargeRate
+  //     });
+  //
+  //     if (response.data?.success && response.data?.data) {
+  //       const pricingData = response.data.data;
+  //       
+  //       setChargingData(prev => {
+  //         const shouldUpdate = 
+  //           Math.abs((pricingData.bookingCost || 0) - (prev.bookingCost || 0)) > 100 ||
+  //           Math.abs((pricingData.energyCost || 0) - (prev.energyCost || 0)) > 100;
+  //         
+  //         if (!shouldUpdate) return prev;
+  //         
+  //         return {
+  //           ...prev,
+  //           bookingCost: pricingData.bookingCost || prev.bookingCost,
+  //           energyCost: pricingData.energyCost || prev.energyCost,
+  //           energyKwh: pricingData.energyKwh || prev.energyKwh,
+  //           chargingCost: pricingData.total || prev.chargingCost,
+  //         };
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error calculating pricing from API:', error);
+  //   }
+  // };
 
   const handlePayment = () => {
     if (!chargingData) {
