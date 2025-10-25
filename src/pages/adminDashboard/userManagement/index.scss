@@ -22,6 +22,26 @@
         font-size: 14px;
       }
     }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+  }
+
+  .info-message {
+    padding: 1rem;
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    border-radius: 4px;
+    color: #1565c0;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+
+    strong {
+      font-weight: 600;
+    }
   }
 
   // Filters

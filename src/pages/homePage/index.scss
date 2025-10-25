@@ -399,11 +399,17 @@
   }
 
   h2 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 16px;
-    position: relative;
-    z-index: 2;
+    font-size: 2.5rem;
+    width: 30ch;
+    font-family: monospace;
+    margin: 0 auto 20px auto;
+    text-wrap: nowrap;
+    overflow: hidden;
+    animation: typing 2s steps(30) infinite alternate-reverse;
+  }
+  @keyframes typing {
+    from { width: 0ch; }
+    to { width: 30ch; }
   }
 
   p {
@@ -993,6 +999,55 @@
     &:hover {
       background: #7ed321;
       color: #fff;
+    }
+  }
+}
+
+// Transaction Section
+.homepage__transaction {
+  max-width: 1200px;
+  margin: 32px auto;
+  padding: 16px;
+
+  .tx-loading {
+    color: #666;
+    padding: 12px;
+  }
+
+  .tx-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+
+    .tx-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-radius: 6px;
+
+      .tx-label {
+        color: #666;
+        font-weight: 600;
+        min-width: 140px;
+      }
+
+      .tx-value {
+        color: #111;
+        text-align: right;
+      }
+    }
+
+    h4 {
+      margin: 12px 0 6px 0;
+      color: #2d3436;
+    }
+
+    .tx-divider {
+      height: 1px;
+      background: #f0f0f0;
+      margin: 8px 0;
     }
   }
 }

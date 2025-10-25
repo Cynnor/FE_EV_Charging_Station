@@ -4,6 +4,21 @@ import { FcGoogle } from "react-icons/fc"
 import api from "../../config/api";
 import "./register.scss"
 
+function decodeJwt(token) {
+  try {
+    const payload = token.split(".")[1];
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function derivePasswordFromSub(sub) {
+  // Deterministic password for Google-created accounts
+  return `GOOGLE_${String(sub || "").slice(0, 24)}`;
+}
+
 export default function Register() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -11,14 +26,32 @@ export default function Register() {
   const [fullname, setFullname] = useState("") // local state
   const [dob, setDob] = useState("")
   const [address, setAddress] = useState("")
+  const [numberphone, setNumberphone] = useState("")
   const [message, setMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [googleReady, setGoogleReady] = useState(false)
 
   const today = new Date().toISOString().split("T")[0] // giới hạn ngày
 
   const validateEmail = (em) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)
+  }
+
+  // Google Client ID (same as login)
+  const GOOGLE_CLIENT_ID = "689149719053-mntdte4ogijvhlj69l3hi7ctc2o02o9d.apps.googleusercontent.com"
+
+  // Load Google Identity Services script
+  if (typeof window !== "undefined" && !window.google && !document.getElementById("google-gsi")) {
+    const s = document.createElement("script")
+    s.src = "https://accounts.google.com/gsi/client"
+    s.async = true
+    s.defer = true
+    s.id = "google-gsi"
+    s.onload = () => setGoogleReady(true)
+    document.head.appendChild(s)
+  } else if (typeof window !== "undefined" && window.google && !googleReady) {
+    setGoogleReady(true)
   }
 
   const handleRegister = async (e) => {
@@ -49,6 +82,7 @@ export default function Register() {
       fullName: String(fullname), 
       dob: dob ? String(dob) : "", 
       address: String(address || ""),
+      numberphone: String(numberphone || ""),
     }
 
     console.log("Register payload:", payload)
@@ -63,12 +97,13 @@ export default function Register() {
 
       if (res.status === 200 || res.status === 201) {
         setMessage("✅ Đăng ký thành công! Chuyển sang trang đăng nhập...")
-        setUsername("")
-        setEmail("")
-        setFullname("")
-        setPassword("")
-        setDob("")
-        setAddress("")
+  setUsername("")
+  setEmail("")
+  setFullname("")
+  setPassword("")
+  setDob("")
+  setAddress("")
+  setNumberphone("")
         setTimeout(() => (window.location.href = "/login"), 1200)
       } else {
         setMessage(data.message || ` Đăng ký thất bại (status ${res.status})`)
@@ -86,8 +121,80 @@ export default function Register() {
     }
   }
 
-  const handleGoogleRegister = () => {
-    setMessage(" Đăng ký với Google (chưa tích hợp)")
+  const handleGoogleRegister = async () => {
+    setMessage("")
+    try {
+      if (!window.google) {
+        setMessage("Không thể tải Google Sign-In. Vui lòng thử lại!")
+        return
+      }
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          try {
+            const idToken = response?.credential
+            if (!idToken) {
+              setMessage("Không nhận được mã xác thực từ Google.")
+              return
+            }
+
+            // Decode để lấy email, name, sub
+            const payload = decodeJwt(idToken) || {};
+            const googleEmail = payload.email;
+            const googleName = payload.name || payload.given_name || "Google User";
+            const googleSub = payload.sub;
+            const derivedPassword = derivePasswordFromSub(googleSub);
+
+            // 1) Thử tạo tài khoản nếu chưa có (bỏ qua lỗi nếu đã tồn tại)
+            try {
+              if (googleEmail) {
+                await api.post("/users/create", {
+                  username: googleEmail,
+                  password: derivedPassword,
+                  email: googleEmail,
+                  fullName: googleName,
+                  dob: "",
+                  address: "",
+                  numberphone: "",
+                });
+              }
+            } catch (e) {
+              // Nếu trùng (409/400) thì bỏ qua
+              // console.warn("Create user skipped:", e?.response?.status);
+            }
+
+            // 2) Đăng nhập bằng cặp (email, derivedPassword)
+            if (googleEmail) {
+              const loginRes = await api.post("/users/login", {
+                username: googleEmail,
+                password: derivedPassword,
+              });
+              const backendToken = loginRes?.data?.data?.token;
+              if (backendToken) {
+                localStorage.setItem("token", backendToken);
+                setMessage("✅ Đăng ký/Đăng nhập với Google thành công!");
+                setTimeout(() => (window.location.href = "/"), 800);
+                return;
+              }
+            }
+
+            // Fallback: lưu idToken (nếu backend chưa sẵn sàng)
+            localStorage.setItem("token", idToken);
+            setMessage("✅ Đăng ký với Google (token tạm thời)");
+            setTimeout(() => (window.location.href = "/"), 800);
+          } catch (err) {
+            console.error("Google register error:", err)
+            setMessage("Không thể đăng ký với Google.")
+          }
+        },
+      })
+
+      window.google.accounts.id.prompt()
+    } catch (e) {
+      console.error(e)
+      setMessage("Xảy ra lỗi khi khởi tạo Google Sign-In")
+    }
   }
 
   return (
@@ -202,6 +309,20 @@ export default function Register() {
                 />
               </div>
             </div>
+            <div className="input-group">
+              <label className="input-label">Số điện thoại</label>
+              <div className="input-wrapper">
+                <input
+                  type="tel"
+                  placeholder="Nhập số điện thoại của bạn"
+                  value={numberphone}
+                  onChange={(e) => setNumberphone(e.target.value)}
+                  className="form-input"
+                  pattern="[0-9]{10,11}"
+                  maxLength={11}
+                />
+              </div>
+            </div>
 
             <div className="input-group">
               <label className="input-label">Mật khẩu</label>
@@ -225,8 +346,8 @@ export default function Register() {
 
             <div className="divider"><span>Hoặc tiếp tục với</span></div>
 
-            <button type="button" className="btn-google" onClick={handleGoogleRegister}>
-              <FcGoogle size={20} /> Đăng ký với Google
+            <button type="button" className="btn-google" onClick={handleGoogleRegister} disabled={!googleReady}>
+              <FcGoogle size={20} /> Đăng nhập với Google
             </button>
 
             {message && <div className={`message ${message.includes("thành công") ? "success" : "error"}`}>{message}</div>}

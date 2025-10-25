@@ -13,6 +13,7 @@ function ChargingStationCard({
   protection,
   locationType,
   chargerType,
+  price,
 }) {
   return (
     <div className="card">
@@ -36,6 +37,9 @@ function ChargingStationCard({
         </li>
         <li>
           <b>Vị trí:</b> {locationType}
+        </li>
+        <li>
+          <b>Giá:</b> {price.toLocaleString()} VNĐ
         </li>
       </ul>
       <div className="card-actions">
@@ -68,7 +72,7 @@ function ChargingStationHero() {
         <img src={"./src/assets/banner.jpg"} alt="Banner EV Charging" />
       </div>
     </section>
-  )
+  );
 }
 
 /* ----- Title Support ----- */
@@ -87,7 +91,7 @@ function TitleSupport() {
         <div className="decoration-circle"></div>
       </div>
     </section>
-  )
+  );
 }
 
 /* ----- Trang chính hiển thị danh sách ----- */
@@ -105,6 +109,7 @@ function ChargingStationsPage() {
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch",
       locationType: "Nhà riêng / Công cộng",
       chargerType: "AC",
+      price: 5000,
     },
     {
       image: "./src/assets/AC10.jpg",
@@ -115,6 +120,7 @@ function ChargingStationsPage() {
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống nước IP54",
       locationType: "Công cộng / Bãi xe",
       chargerType: "AC",
+      price: 10000,
     },
     {
       image: "./src/assets/DC60.jpg",
@@ -125,6 +131,7 @@ function ChargingStationsPage() {
       protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống sét",
       locationType: "Bãi xe / Trạm xăng",
       chargerType: "DC",
+      price: 15000,
     },
     {
       image: "./src/assets/DC120.jpg",
@@ -132,9 +139,11 @@ function ChargingStationsPage() {
       power: "120 kW",
       plugTypes: "CCS / CHAdeMO",
       installTypes: "Ngoài trời / Trong nhà",
-      protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
+      protection:
+        "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
       locationType: "Cao tốc / Bãi xe",
       chargerType: "DC",
+      price: 20000,
     },
     {
       image: "./src/assets/DC150.jpg",
@@ -145,6 +154,7 @@ function ChargingStationsPage() {
       protection: "Quá tải / Quá nhiệt / Ngắn mạch / IP54",
       locationType: "Cao tốc / Lộ trình dài",
       chargerType: "DC_SUPER",
+      price: 25000,
     },
     {
       image: "./src/assets/DC250.jpg",
@@ -155,12 +165,13 @@ function ChargingStationsPage() {
       protection: "Quá tải / Quá nhiệt / Ngắn mạch / IP54",
       locationType: "Cao tốc / Lộ trình dài",
       chargerType: "DC_SUPER",
+      price: 30000,
     },
-  ]
+  ];
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="charging-stations-page">
@@ -176,7 +187,7 @@ function ChargingStationsPage() {
         ))}
       </section>
     </div>
-  )
+  );
 }
 
 export default ChargingStationsPage;

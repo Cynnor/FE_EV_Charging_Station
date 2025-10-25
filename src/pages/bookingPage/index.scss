@@ -612,11 +612,12 @@ body {
     border: 1px solid rgba($warning, 0.3);
   }
 
-  &.dc-ultra {
-    background: rgba($danger, 0.15);
-    color: $danger;
-    border: 1px solid rgba($danger, 0.3);
-  }
+ &.dc-ultra {
+  background: rgba($danger, 0.12);
+  color: $danger;
+  border: 2px solid transparent;
+  border-color: rgba($danger, 0.3);
+}
 }
 
 .charger-specs {
@@ -1378,6 +1379,7 @@ body {
     box-shadow: $shadow-sm;
   }
 }
+
 // Step 3 custom date/time pickers
 .date-options {
   display: grid;
@@ -1441,6 +1443,177 @@ body {
     box-shadow: $shadow-md;
   }
 }
+
+.slot-selection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: $spacing-md;
+
+  > .back-button {
+    margin-bottom: $spacing-md;
+  }
+
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: $spacing-md;
+  }
+}
+
+.slots-grid {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: $spacing-sm;
+  align-content: start;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-light;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-color;
+    border-radius: 3px;
+
+    &:hover {
+      background: $text-muted;
+    }
+  }
+}
+
+.slot-card {
+  background: $bg-white;
+  border: 2px solid $border-color;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  cursor: pointer;
+  transition: all $transition-base;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  min-height: 120px;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  &:hover {
+    border-color: $primary;
+    box-shadow: $shadow-lg;
+    transform: translateY(-2px);
+  }
+
+  &.selected {
+    border-color: $primary;
+    background: $primary-pale;
+    box-shadow: $shadow-md;
+  }
+
+  &.booked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: $bg-light;
+    border-color: $danger;
+
+    &:hover {
+      border-color: $danger;
+      box-shadow: 0 0 0 3px rgba($danger, 0.1);
+      transform: none;
+    }
+
+    .slot-status {
+      background: rgba($danger, 0.15);
+      color: $danger;
+      border: 1px solid rgba($danger, 0.3);
+    }
+  }
+
+  &.available {
+    &:hover {
+      border-color: $primary;
+      box-shadow: $shadow-lg;
+      transform: translateY(-2px);
+    }
+
+    .slot-status {
+      background: rgba($success, 0.15);
+      color: $success;
+      border: 1px solid rgba($success, 0.3);
+    }
+  }
+
+  .slot-time {
+    font-size: 24px;
+    font-weight: 700;
+    color: $text-primary;
+    line-height: 1;
+  }
+
+  .slot-status {
+    font-size: 12px;
+    color: $text-secondary;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 4px 8px;
+    background: $bg-light;
+    border-radius: $radius-sm;
+    width: 100%;
+    border: 1px solid transparent;
+    transition: all $transition-base;
+  }
+}
+
+.next-button {
+  width: 100%;
+  padding: $spacing-md $spacing-lg;
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  color: white;
+  border: none;
+  border-radius: $radius-md;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all $transition-base;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  box-shadow: $shadow-md;
+  margin-top: $spacing-md;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    transition: transform $transition-base;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover:not(:disabled) svg {
+    transform: translateX(4px);
+  }
+}
+
 .status-badge {
   padding: 4px 10px;
   border-radius: 6px;
