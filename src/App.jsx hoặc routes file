@@ -1,4 +1,0 @@
-import BookingSuccessPage from './pages/bookingSuccessPage/BookingSuccessPage';
-
-// Thêm route mới:
-<Route path="/booking-success" element={<BookingSuccessPage />} />

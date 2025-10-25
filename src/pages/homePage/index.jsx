@@ -52,8 +52,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
@@ -62,6 +62,15 @@ const About = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  return (
+    <section className="homepage__about">
+      <div className="section-header">
+        <h2>Về chúng tôi</h2>
+        <p>Hệ thống trạm sạc xe điện hàng đầu Việt Nam</p>
+      </div>
+    </section>
+  );
 };
 
 // ===== HomePage =====
@@ -123,6 +132,30 @@ const HomePage = () => {
   // const [transaction, setTransaction] = useState(null);
   // const [txLoading, setTxLoading] = useState(true);
   const itemRefs = useRef({});
+
+  // ===== Xử lý VNPay return URL =====
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const vnpResponseCode = urlParams.get('vnp_ResponseCode');
+
+    console.log('Checking VNPay return:', {
+      vnpResponseCode,
+      search: window.location.search,
+      pathname: window.location.pathname,
+      href: window.location.href
+    });
+
+    if (vnpResponseCode) {
+      // Có VNPay return parameters, redirect đến paymentSuccessPage
+      const queryString = window.location.search;
+
+      // Tạo URL mới cho payment-success
+      const newUrl = window.location.origin + '/payment-success' + queryString;
+
+      console.log('Redirecting to:', newUrl);
+      window.location.href = newUrl;
+    }
+  }, []);
 
   // ===== Fetch Station Data from API =====
   useEffect(() => {
@@ -340,9 +373,8 @@ const HomePage = () => {
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${
-                      selectedId === station.id ? "is-selected" : ""
-                    }`}
+                    className={`station-item ${selectedId === station.id ? "is-selected" : ""
+                      }`}
                     onClick={() => setSelectedId(station.id)}
                   >
                     <div className="station-header">
@@ -537,8 +569,8 @@ const HomePage = () => {
         <About />
 
       </div>
+
     </div>
   );
-}; 
-
+};
 export default HomePage;
