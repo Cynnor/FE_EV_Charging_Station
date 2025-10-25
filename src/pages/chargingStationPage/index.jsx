@@ -48,6 +48,7 @@ function ChargingStationCard({
           to={`/booking?type=${chargerType === "DC_SUPER" ? "DC_ULTRA" : chargerType
             }`}
         >
+          <button className="btn-rent">Đặt chỗ</button>
         </Link>
       </div>
     </div>

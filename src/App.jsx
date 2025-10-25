@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/layout";
 import AdminLayout from "./components/adminLayout";
 import StaffLayout from "./components/staffLayout";
+import ProtectedRoute from "./config/ProtectedRoute";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
@@ -56,9 +57,9 @@ function App() {
       path: "/forgot-password",
       element: <ForgotPassword />,
     },
-    { 
-      path: "/chargingSession", 
-      element: <ChargingSession /> 
+    {
+      path: "/chargingSession",
+      element: <ChargingSession />
     },
     {
       path: "admin",
