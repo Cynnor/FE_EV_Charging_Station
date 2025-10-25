@@ -1,0 +1,259 @@
+.payment-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.payment-confirm-container {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9e8 100%);
+  border-radius: 25px;
+  padding: 40px 35px;
+  min-width: 450px;
+  max-width: 550px;
+  box-shadow: 0 20px 60px rgba(126, 211, 33, 0.4);
+  border: 3px solid #7ed321;
+  text-align: center;
+  animation: slideUp 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.payment-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 25px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4caf50, #7ed321);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 15px 40px rgba(76, 175, 80, 0.5);
+  }
+}
+
+.payment-title {
+  color: #333;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 30px 0;
+}
+
+.payment-details {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 30px;
+  border: 2px solid rgba(126, 211, 33, 0.3);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  
+  &.total {
+    margin-top: 10px;
+    padding-top: 20px;
+  }
+}
+
+.detail-label {
+  color: #555;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  
+  &.battery {
+    color: #2196f3;
+    font-size: 1.3rem;
+  }
+  
+  &.time {
+    color: #9c27b0;
+    font-size: 1.2rem;
+  }
+  
+  &.cost {
+    color: #7ed321;
+    font-size: 1.8rem;
+    font-weight: 700;
+    animation: numberPop 0.5s ease-out;
+  }
+}
+
+@keyframes numberPop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.detail-separator {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #7ed321, transparent);
+  margin: 15px 0;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.payment-btn {
+  padding: 14px 35px;
+  border-radius: 30px;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 160px;
+
+  &.confirm {
+    background: linear-gradient(45deg, #4caf50, #7ed321);
+    color: white;
+    box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
+    }
+
+    &:active {
+      transform: translateY(-1px);
+    }
+  }
+
+  &.cancel {
+    background: white;
+    color: #7ed321;
+    border: 2px solid #7ed321;
+
+    &:hover {
+      background: rgba(126, 211, 33, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(126, 211, 33, 0.2);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .payment-confirm-container {
+    min-width: 350px;
+    padding: 30px 25px;
+    margin: 0 20px;
+  }
+
+  .payment-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 36px;
+  }
+
+  .payment-title {
+    font-size: 1.4rem;
+  }
+
+  .detail-value {
+    &.cost {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-confirm-container {
+    min-width: 300px;
+    padding: 25px 20px;
+  }
+
+  .payment-details {
+    padding: 20px 15px;
+  }
+
+  .detail-label {
+    font-size: 0.9rem;
+  }
+
+  .detail-value {
+    font-size: 1rem;
+    
+    &.battery {
+      font-size: 1.1rem;
+    }
+    
+    &.time {
+      font-size: 1.05rem;
+    }
+    
+    &.cost {
+      font-size: 1.3rem;
+    }
+  }
+
+  .payment-actions {
+    flex-direction: column;
+    gap: 12px;
+
+    .payment-btn {
+      width: 100%;
+      min-width: auto;
+    }
+  }
+}

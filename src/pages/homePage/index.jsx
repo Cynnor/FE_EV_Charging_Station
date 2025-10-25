@@ -536,10 +536,9 @@ const HomePage = () => {
         {/* About Section */}
         <About />
 
-      </main>
-
+      </div>
     </div>
   );
-};
+}; 
 
 export default HomePage;
