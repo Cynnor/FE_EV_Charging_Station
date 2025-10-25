@@ -45,9 +45,8 @@ function ChargingStationCard({
       <div className="card-actions">
         {/* <button className="btn-detail">Chi tiết</button> */}
         <Link
-          to={`/booking?type=${
-            chargerType === "DC_SUPER" ? "DC_ULTRA" : chargerType
-          }`}
+          to={`/booking?type=${chargerType === "DC_SUPER" ? "DC_ULTRA" : chargerType
+            }`}
         >
           <button className="btn-rent">Đặt chỗ</button>
         </Link>
@@ -87,7 +86,7 @@ function TitleSupport() {
         {/* <p>Giải pháp sạc điện toàn diện cho mọi nhu cầu</p> */}
       </div>
 
-      <div className="title-decoration">
+      <div className="title-deczoration">
         <div className="decoration-circle"></div>
         <div className="decoration-circle"></div>
         <div className="decoration-circle"></div>

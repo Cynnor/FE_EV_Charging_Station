@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./index.scss";
+import api from "../../config/api";
 
 export default function PaymentPage() {
     useEffect(() => {
@@ -9,49 +10,70 @@ export default function PaymentPage() {
 
     const navigate = useNavigate();
     const { state } = useLocation();
-    const station = state?.station || null;
-    const charger = state?.charger || null;
-    const defaults = state?.formData || {};
 
-    const [energyKwh, setEnergyKwh] = useState(5);
+    // Dữ liệu từ chargingSession page
+    const chargingData = state?.chargingData || null;
+    const reservationId = localStorage.getItem("reservationId");
+
     const [paymentMethod, setPaymentMethod] = useState("e_wallet"); // e_wallet | banking | card | cod
     const [isPaying, setIsPaying] = useState(false);
     const [invoice, setInvoice] = useState(null);
 
-    // Lấy giá từ trụ sạc đã chọn
-    const pricePerKwh = useMemo(() => {
-        if (charger?.price) {
-            // Extract số từ chuỗi giá (ví dụ: "3.500 đ/kWh" -> 3500)
-            const priceMatch = charger.price.match(/(\d+(?:\.\d+)?)/);
-            return priceMatch ? parseFloat(priceMatch[1]) * 1000 : 3500; // Convert to đ/kWh
-        }
-        return 3500; // Default price
-    }, [charger]);
+    // Kiểm tra dữ liệu chargingSession
+    if (!chargingData) {
+        return (
+            <div className="payment-page">
+                <div className="error-container">
+                    <h1>Lỗi</h1>
+                    <p>Không tìm thấy dữ liệu phiên sạc. Vui lòng quay lại trang trước.</p>
+                    <button className="back-btn" onClick={() => navigate(-1)}>Quay lại</button>
+                </div>
+            </div>
+        );
+    }
 
-    const totalAmount = useMemo(() => {
-        return energyKwh * pricePerKwh;
-    }, [energyKwh, pricePerKwh]);
+    // Lấy giá từ chargingSession
+    const pricePerKwh = chargingData.chargingInfo?.energyPricePerKwh || 3858;
+    const totalAmount = chargingData.chargingInfo?.totalCost || 0;
 
-    const handleSandboxPay = () => {
+    const handleSandboxPay = async () => {
         setIsPaying(true);
-        setTimeout(() => {
-            // Giả lập thanh toán thành công
-            const code = "INV-" + Math.random().toString(36).slice(2, 8).toUpperCase();
-            const now = new Date();
-            setInvoice({
-                code,
-                createdAt: now.toLocaleString(),
-                stationName: station?.name || "Không xác định",
-                chargerName: charger?.name || "Không xác định",
-                energyKwh,
-                pricePerKwh,
-                paymentMethod,
-                totalAmount,
-                date: defaults?.date,
-                startTime: defaults?.startTime,
-            });
+
+        try {
+            if (reservationId) {
+                // Thanh toán cho chargingSession với reservationId
+                const response = await api.post('/vnpay/checkout-url', {
+                    amount: Math.round(totalAmount),
+                    orderInfo: `Thanh toan phi sạc - ${chargingData.vehicleInfo?.plateNumber || 'N/A'}`,
+                    reservationId: reservationId,
+                    locale: 'vn'
+                });
+
+                if (response.data?.success && response.data?.data?.paymentUrl) {
+                    // Redirect đến VNPay
+                    window.location.href = response.data.data.paymentUrl;
+                    return;
+                }
+            }
+
+            // Fallback: Giả lập thanh toán thành công và chuyển đến success page
+            setTimeout(() => {
+                navigate('/payment-success', {
+                    state: {
+                        reservationId: reservationId,
+                        amount: totalAmount,
+                        orderInfo: `Thanh toan phi sạc - ${chargingData.vehicleInfo?.plateNumber || 'N/A'}`,
+                        vehicleInfo: chargingData.vehicleInfo,
+                        chargingInfo: chargingData.chargingInfo,
+                        paymentMethod: paymentMethod
+                    }
+                });
+            }, 1200);
+        } catch (error) {
+            console.error('Payment error:', error);
             setIsPaying(false);
-        }, 1200);
+            alert('Có lỗi xảy ra khi xử lý thanh toán. Vui lòng thử lại!');
+        }
     };
 
     const [showInvoice, setShowInvoice] = useState(false);
@@ -63,34 +85,30 @@ export default function PaymentPage() {
                     <h1>Thanh toán</h1>
 
                     <div className="summary-card">
-                        <h3>Thông tin đặt chỗ</h3>
-                        <p><b>Trạm:</b> {station?.name || "—"}</p>
-                        <p><b>Trụ sạc:</b> {charger?.name || "—"}</p>
-                        <p><b>Công suất:</b> {charger?.power || "—"}</p>
-                        <p><b>Ngày sạc:</b> {defaults?.date || "—"}</p>
-                        <p><b>Giờ bắt đầu:</b> {defaults?.startTime || "—"}</p>
+                        <h3>Thông tin phiên sạc</h3>
+                        <p><b>Xe:</b> {chargingData.vehicleInfo?.plateNumber || "—"}</p>
+                        <p><b>Hãng xe:</b> {chargingData.vehicleInfo?.make} {chargingData.vehicleInfo?.model}</p>
+                        <p><b>Mức sạc hiện tại:</b> {chargingData.chargingInfo?.currentCharge || 0}%</p>
+                        <p><b>Thời gian sạc:</b> {chargingData.chargingInfo?.timeElapsed || 0} phút</p>
+                        <p><b>Năng lượng tiêu thụ:</b> {chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0} kWh</p>
+                        <p><b>Bắt đầu lúc:</b> {chargingData.chargingInfo?.startTime ? new Date(chargingData.chargingInfo.startTime).toLocaleString('vi-VN') : "—"}</p>
                     </div>
 
                     <div className="plan-card">
-                        <h3>Thanh toán theo kWh</h3>
-                        <div className="plan-inputs">
-                            <label>
-                                Số kWh dự kiến
-                                <input
-                                    type="number"
-                                    min={1}
-                                    step={0.5}
-                                    value={energyKwh}
-                                    onChange={(e) => setEnergyKwh(Number(e.target.value) || 0)}
-                                />
-                            </label>
-                            <p className="price-note">
-                                Đơn giá: {pricePerKwh.toLocaleString()} đ/kWh
-                                <br />
-                                <small style={{ color: "#666" }}>
-                                    (Giá từ trụ sạc {charger?.name || "đã chọn"})
-                                </small>
-                            </p>
+                        <h3>Chi tiết thanh toán</h3>
+                        <div className="charging-details">
+                            <div className="detail-row">
+                                <span>Phí đặt lịch:</span>
+                                <span>{chargingData.chargingInfo?.bookingCost?.toLocaleString('vi-VN') || 0} VNĐ</span>
+                            </div>
+                            <div className="detail-row">
+                                <span>Phí điện ({chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0} kWh):</span>
+                                <span>{chargingData.chargingInfo?.energyCost?.toLocaleString('vi-VN') || 0} VNĐ</span>
+                            </div>
+                            <div className="detail-row total">
+                                <span><strong>Tổng cộng:</strong></span>
+                                <span><strong>{totalAmount.toLocaleString('vi-VN')} VNĐ</strong></span>
+                            </div>
                         </div>
                     </div>
 
@@ -143,22 +161,18 @@ export default function PaymentPage() {
 
                 <div className="right">
                     <div className="total-card">
-                        <h3>Tạm tính</h3>
+                        <h3>Tổng thanh toán</h3>
                         <div className="row">
-                            <span>Hình thức</span>
-                            <span className="value">Theo kWh</span>
+                            <span>Phí đặt lịch</span>
+                            <span className="value">{chargingData.chargingInfo?.bookingCost?.toLocaleString('vi-VN') || 0} VNĐ</span>
                         </div>
                         <div className="row">
-                            <span>Số kWh</span>
-                            <span className="value">{energyKwh} kWh</span>
-                        </div>
-                        <div className="row">
-                            <span>Đơn giá</span>
-                            <span className="value">{pricePerKwh.toLocaleString()} đ/kWh</span>
+                            <span>Phí điện ({chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0} kWh)</span>
+                            <span className="value">{chargingData.chargingInfo?.energyCost?.toLocaleString('vi-VN') || 0} VNĐ</span>
                         </div>
                         <div className="row total-row">
-                            <span>Thành tiền</span>
-                            <span className="value">{totalAmount.toLocaleString()} đ</span>
+                            <span>Tổng cộng</span>
+                            <span className="value">{totalAmount.toLocaleString('vi-VN')} VNĐ</span>
                         </div>
                         <button
                             className="pay-btn"
@@ -175,17 +189,16 @@ export default function PaymentPage() {
                             <h3>Hóa đơn điện tử</h3>
                             <p><b>Mã hóa đơn:</b> {invoice.code}</p>
                             <p><b>Thời gian:</b> {invoice.createdAt}</p>
-                            <p><b>Trạm:</b> {invoice.stationName}</p>
-                            <p><b>Trụ sạc:</b> {invoice.chargerName}</p>
-                            <p><b>Hình thức:</b> Theo kWh ({invoice.energyKwh} kWh)</p>
-                            <p><b>Đơn giá:</b> {invoice.pricePerKwh.toLocaleString()} đ/kWh</p>
+                            <p><b>Xe:</b> {invoice.vehicleInfo?.plateNumber}</p>
+                            <p><b>Hãng xe:</b> {invoice.vehicleInfo?.make} {invoice.vehicleInfo?.model}</p>
+                            <p><b>Phí đặt lịch:</b> {invoice.chargingInfo?.bookingCost?.toLocaleString('vi-VN')} VNĐ</p>
+                            <p><b>Phí điện:</b> {invoice.chargingInfo?.energyCost?.toLocaleString('vi-VN')} VNĐ</p>
                             <p><b>Thanh toán qua:</b> {paymentMethod}</p>
-                            <p className="grand-total"><b>Tổng tiền:</b> {invoice.totalAmount.toLocaleString()} đ</p>
+                            <p className="grand-total"><b>Tổng tiền:</b> {invoice.totalAmount.toLocaleString('vi-VN')} VNĐ</p>
                             <div className="invoice-actions">
                                 <button className="print-btn" onClick={() => setShowInvoice(true)}>🖨️ In hóa đơn</button>
                                 <button className="close-btn" onClick={() => setInvoice(null)}>✖️ Đóng</button>
                             </div>
-
                         </div>
                     )}
                 </div>
@@ -202,38 +215,34 @@ export default function PaymentPage() {
 
                         <div className="invoice-info">
                             <div className="info-section">
-                                <h3>Thông tin trạm sạc</h3>
+                                <h3>Thông tin xe</h3>
                                 <div className="info-item">
-                                    <span className="info-label">Tên trạm:</span>
-                                    <span className="info-value">{invoice.stationName}</span>
+                                    <span className="info-label">Biển số:</span>
+                                    <span className="info-value">{invoice.vehicleInfo?.plateNumber}</span>
                                 </div>
                                 <div className="info-item">
-                                    <span className="info-label">Trụ sạc:</span>
-                                    <span className="info-value">{invoice.chargerName}</span>
+                                    <span className="info-label">Hãng xe:</span>
+                                    <span className="info-value">{invoice.vehicleInfo?.make} {invoice.vehicleInfo?.model}</span>
                                 </div>
                                 <div className="info-item">
-                                    <span className="info-label">Ngày sạc:</span>
-                                    <span className="info-value">{invoice.date}</span>
+                                    <span className="info-label">Mức sạc:</span>
+                                    <span className="info-value">{invoice.chargingInfo?.currentCharge}%</span>
                                 </div>
                                 <div className="info-item">
-                                    <span className="info-label">Giờ bắt đầu:</span>
-                                    <span className="info-value">{invoice.startTime}</span>
+                                    <span className="info-label">Thời gian sạc:</span>
+                                    <span className="info-value">{invoice.chargingInfo?.timeElapsed} phút</span>
                                 </div>
                             </div>
 
                             <div className="info-section">
                                 <h3>Chi tiết thanh toán</h3>
                                 <div className="info-item">
-                                    <span className="info-label">Hình thức:</span>
-                                    <span className="info-value">Theo kWh</span>
+                                    <span className="info-label">Phí đặt lịch:</span>
+                                    <span className="info-value">{invoice.chargingInfo?.bookingCost?.toLocaleString('vi-VN')} VNĐ</span>
                                 </div>
                                 <div className="info-item">
-                                    <span className="info-label">Số kWh:</span>
-                                    <span className="info-value">{invoice.energyKwh} kWh</span>
-                                </div>
-                                <div className="info-item">
-                                    <span className="info-label">Đơn giá:</span>
-                                    <span className="info-value">{invoice.pricePerKwh.toLocaleString()} đ/kWh</span>
+                                    <span className="info-label">Phí điện ({invoice.chargingInfo?.energyKwh?.toFixed(2)} kWh):</span>
+                                    <span className="info-value">{invoice.chargingInfo?.energyCost?.toLocaleString('vi-VN')} VNĐ</span>
                                 </div>
                                 <div className="info-item">
                                     <span className="info-label">Thanh toán qua:</span>

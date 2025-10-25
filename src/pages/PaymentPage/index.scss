@@ -5,6 +5,27 @@
     font-family: "Arial", sans-serif;
 }
 
+.error-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: 40px;
+    text-align: center;
+
+    h1 {
+        color: #e74c3c;
+        margin-bottom: 16px;
+    }
+
+    p {
+        color: #666;
+        margin-bottom: 24px;
+        font-size: 16px;
+    }
+}
+
 .payment-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -48,19 +69,47 @@ h3 {
     margin-top: 12px;
     display: grid;
     gap: 8px;
+}
 
+.charging-details {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+
+    &.total {
+        border-top: 2px solid #144d1a;
+        border-bottom: none;
+        font-weight: bold;
+        color: #144d1a;
+        margin-top: 8px;
+        padding-top: 12px;
+    }
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.payment-page {
     &.grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
+        display: grid;
     }
+}
 
-    input,
-    select {
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 14px;
-    }
+input,
+select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
 }
 
 .price-note {

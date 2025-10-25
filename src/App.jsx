@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/layout";
 import AdminLayout from "./components/adminLayout";
 import StaffLayout from "./components/staffLayout";
+import ProtectedRoute from "./config/ProtectedRoute";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
@@ -25,9 +26,10 @@ import StationStatus from "./pages/staffDashboard/stationStatus";
 import Reports from "./pages/staffDashboard/reports";
 import StaffProfile from "./pages/staffDashboard/profile";
 import Overview from "./pages/adminDashboard/overViewManagement";
-import ProtectedRoute from "./config/ProtectedRoute";
 import ChargingSession from "./pages/chargingSessionPage/chargingSessionPage";
 import BookingSuccessPage from "./pages/bookingSuccessPage/BookingSuccessPage";
+import PaymentSuccessPage from "./pages/paymentSuccessPage";
+
 
 
 function App() {
@@ -44,6 +46,7 @@ function App() {
         { path: "booking/:stationId", element: <BookingPage /> },
         { path: "booking", element: <BookingPage /> },
         { path: "payment", element: <PaymentPage /> },
+        { path: "payment-success", element: <PaymentSuccessPage /> },
         { path: "membership", element: <MembershipPage /> },
       ],
     },
@@ -59,12 +62,14 @@ function App() {
       path: "/forgot-password",
       element: <ForgotPassword />,
     },
-    { 
-      path: "/chargingSession", 
-      element: <ChargingSession /> 
+    {
+      path: "/chargingSession",
+      element: <ChargingSession />
     },
-    { path: "booking-success", 
-      element: <BookingSuccessPage /> },
+    {
+      path: "booking-success",
+      element: <BookingSuccessPage />
+    },
     {
       path: "admin",
       element: (
