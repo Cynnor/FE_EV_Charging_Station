@@ -25,7 +25,10 @@ import StationStatus from "./pages/staffDashboard/stationStatus";
 import Reports from "./pages/staffDashboard/reports";
 import StaffProfile from "./pages/staffDashboard/profile";
 import Overview from "./pages/adminDashboard/overViewManagement";
-import ChargingSession from "./pages/chargingSessionPage/index";
+import ProtectedRoute from "./config/ProtectedRoute";
+import ChargingSession from "./pages/chargingSessionPage/chargingSessionPage";
+import BookingSuccessPage from "./pages/bookingSuccessPage/BookingSuccessPage";
+
 
 function App() {
   const router = createBrowserRouter([
@@ -60,6 +63,8 @@ function App() {
       path: "/chargingSession", 
       element: <ChargingSession /> 
     },
+    { path: "booking-success", 
+      element: <BookingSuccessPage /> },
     {
       path: "admin",
       element: (

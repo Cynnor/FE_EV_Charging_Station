@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import "./ProfilePage.scss";
 import api from "../../config/api";
 import { useNavigate } from "react-router-dom";
+import CustomPopup from "../../components/CustomPopup/CustomPopup";
+import ConfirmPopup from "../../components/ConfirmPopup/ConfirmPopup";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -16,49 +18,76 @@ const [vehicles, setVehicles] = useState([]);
 const [selectedVehicle, setSelectedVehicle] = useState(null);
 const [isEditingVehicle, setIsEditingVehicle] = useState(false);
 const [vehicleErrors, setVehicleErrors] = useState({});
+const [defaultVehicleId, setDefaultVehicleId] = useState(null);
 
 
 
-  const [transactions, setTransactions] = useState([]); // new
-  const [txLoading, setTxLoading] = useState(true); // new
+  const [reservations, setReservations] = useState([]);
+  const [txLoading, setTxLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const itemsPerPage = 5;
 
   // Fetch user data on component mount
   useEffect(() => {
     fetchUserData();
-
-    fetchVehicleData(); 
-
+    fetchVehicleData();
+    // Load default vehicle from localStorage
+    const savedDefaultVehicle = localStorage.getItem("defaultVehicleId");
+    if (savedDefaultVehicle) {
+      setDefaultVehicleId(savedDefaultVehicle);
+    }
   }, []);
 
-  // Update transaction fetch
+  // Add helper function to normalize reservations
+  const normalizeReservations = (reservationList) => {
+    return (Array.isArray(reservationList) ? reservationList : []).map(r => {
+      const rid = r._id || r.id || "";
+      const vehicle = r.vehicle || {};
+      const vid = vehicle._id || vehicle.id || "";
+      return {
+        ...r,
+        _id: rid,
+        id: rid,
+        vehicle: {
+          ...vehicle,
+          _id: vid,
+          id: vid
+        },
+        items: r.items || []
+      };
+    });
+  };
+
+  // Update reservation fetch with pagination
   useEffect(() => {
     if (!vehicles.length) return;
     let mounted = true;
 
-    const fetchVehicleTransactions = async () => {
+    const fetchReservations = async () => {
       try {
         setTxLoading(true);
-        const res = await api.get(`/transactions`);
-        console.log("Raw transaction data:", res.data);
+        const res = await api.get(`/reservations`);
+        console.log("Raw reservation data:", res.data);
 
         if (mounted) {
-          // Ensure we always have an array of transactions
-          let txList = [];
-          if (res.data?.data) {
-            txList = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-          }
-          console.log("Processed transactions:", txList);
-          setTransactions(txList);
+          const reservationList = res.data?.data?.items || [];
+          console.log("Processed reservations:", reservationList);
+
+          const normalized = normalizeReservations(reservationList);
+
+          setReservations(normalized);
+          setTotalPages(Math.ceil(normalized.length / itemsPerPage));
         }
       } catch (err) {
-        console.error("Error fetching transactions:", err);
-        if (mounted) setTransactions([]);
+        console.error("Error fetching reservations:", err);
+        if (mounted) setReservations([]);
       } finally {
         if (mounted) setTxLoading(false);
       }
     };
 
-    fetchVehicleTransactions();
+    fetchReservations();
     return () => mounted = false;
   }, [vehicles]);
 
@@ -91,21 +120,41 @@ const [vehicleErrors, setVehicleErrors] = useState({});
     }
   };
   const fetchVehicleData = async () => {
+    try {
+      const res = await api.get("/vehicles");
+      console.log("Vehicle data:", res.data);
 
-  try {
-    const res = await api.get("/vehicles");
-    console.log("Vehicle data:", res.data);
-
-    // Extract vehicles array from response
-    const vehiclesList = res.data?.items || res.data?.data || [];
-    setVehicles(Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean));
-  } catch (error) {
-    console.error("Error fetching vehicle:", error);
-    if (error.response?.status !== 404) {
-      alert("Không thể tải thông tin phương tiện!");
+      const vehiclesList = res.data?.items || res.data?.data || [];
+      const vehiclesArray = Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean);
+      
+      // Normalize vehicle IDs
+      const normalizedVehicles = vehiclesArray.map(v => ({
+        ...v,
+        id: v._id || v.id,
+        _id: v._id || v.id
+      }));
+      
+      // Auto-select default vehicle if exists
+      const savedDefaultVehicle = localStorage.getItem("defaultVehicleId");
+      if (savedDefaultVehicle && normalizedVehicles.length > 0) {
+        setDefaultVehicleId(savedDefaultVehicle);
+      }
+      
+      // Sort vehicles - default vehicle first
+      const sortedVehicles = normalizedVehicles.sort((a, b) => {
+        if (a.id === savedDefaultVehicle) return -1;
+        if (b.id === savedDefaultVehicle) return 1;
+        return 0;
+      });
+      
+      setVehicles(sortedVehicles);
+    } catch (error) {
+      console.error("Error fetching vehicle:", error);
+      if (error.response?.status !== 404) {
+        alert("Không thể tải thông tin phương tiện!");
+      }
     }
-  }
-};
+  };
 
 
 
@@ -145,6 +194,49 @@ const [vehicleErrors, setVehicleErrors] = useState({});
     }
   };
 
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    message: '',
+    type: 'info'
+  });
+
+  const [confirmPopup, setConfirmPopup] = useState({
+    isOpen: false,
+    message: '',
+    onConfirm: null
+  });
+
+  const showPopup = (message, type = 'info') => {
+    setPopup({
+      isOpen: true,
+      message,
+      type
+    });
+  };
+
+  const closePopup = () => {
+    setPopup({
+      ...popup,
+      isOpen: false
+    });
+  };
+
+  const showConfirmPopup = (message, onConfirm) => {
+    setConfirmPopup({
+      isOpen: true,
+      message,
+      onConfirm
+    });
+  };
+
+  const closeConfirmPopup = () => {
+    setConfirmPopup({
+      isOpen: false,
+      message: '',
+      onConfirm: null
+    });
+  };
+
   const handleSave = async () => {
     if (!validateForm()) {
       return;
@@ -153,7 +245,6 @@ const [vehicleErrors, setVehicleErrors] = useState({});
     try {
       setIsLoading(true);
 
-      // Prepare the request body
       const updateData = {
         fullname: userInfo.fullname?.trim(),
         phone: userInfo.phone?.trim(),
@@ -166,8 +257,7 @@ const [vehicleErrors, setVehicleErrors] = useState({});
       const response = await api.put("/users/profile", updateData);
 
       if (response?.data) {
-        alert("Cập nhật thông tin thành công!");
-        // Update the original data to reflect changes
+        showPopup("Cập nhật thông tin thành công!", "success");
         setOriginalUserInfo({ ...userInfo });
         setIsEditing(false);
         setErrors({});
@@ -176,17 +266,18 @@ const [vehicleErrors, setVehicleErrors] = useState({});
       console.error("Error updating profile:", error);
 
       if (error.response?.status === 401) {
-        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        localStorage.removeItem("token");
-        window.location.href = "/login";
+        showPopup("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", "error");
+        setTimeout(() => {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }, 2000);
       } else if (error.response?.status === 400) {
-        const errorMessage =
-          error.response?.data?.message || "Dữ liệu không hợp lệ";
-        alert(`Lỗi cập nhật: ${errorMessage}`);
+        const errorMessage = error.response?.data?.message || "Dữ liệu không hợp lệ";
+        showPopup(`Lỗi cập nhật: ${errorMessage}`, "error");
       } else if (error.response?.status === 422) {
-        alert("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.");
+        showPopup("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.", "warning");
       } else {
-        alert("Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại sau!");
+        showPopup("Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại sau!", "error");
       }
     } finally {
       setIsLoading(false);
@@ -201,21 +292,21 @@ const [vehicleErrors, setVehicleErrors] = useState({});
 
   // Replace old mock-based stats with transaction-based stats
   // total bookings
-  const totalBookings = transactions.length;
+  const totalBookings = reservations.length;
   // most used port (count by slot.port)
-  const portCounts = transactions.reduce((acc, t) => {
-    const items = t.items || [];
+  const portCounts = reservations.reduce((acc, r) => {
+    const items = r.items || [];
     items.forEach((it) => {
-      const port = it.slot?.port || "unknown";
-      acc[port] = (acc[port] || 0) + 1;
+      const portId = it.slot?.port || "unknown";
+      acc[portId] = (acc[portId] || 0) + 1;
     });
     return acc;
   }, {});
   const favoritePort = Object.entries(portCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
 
   // average booking duration (minutes)
-  const durations = transactions.flatMap((t) =>
-    (t.items || []).map((it) => {
+  const durations = reservations.flatMap((r) =>
+    (r.items || []).map((it) => {
       if (it.startAt && it.endAt) {
         return (new Date(it.endAt) - new Date(it.startAt)) / (1000 * 60);
       }
@@ -224,15 +315,32 @@ const [vehicleErrors, setVehicleErrors] = useState({});
   );
   const avgDuration = durations.length ? (durations.reduce((s, d) => s + d, 0) / durations.length).toFixed(0) : "N/A";
 
-  if (isLoading) {
-    return (
-      <div className="profile-page dark-theme">
-        <div className="loading">Đang tải...</div>
-      </div>
-    );
-  }
+  // Helper function to format date
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
-//   const handleVehicleChange = (field, value) => {
+  // Helper function to get status text
+  const getStatusText = (status) => {
+    const statusMap = {
+      'pending': 'Chờ xử lý',
+      'confirmed': 'Đã xác nhận',
+      'completed': 'Hoàn thành',
+      'cancelled': 'Đã hủy',
+      'in-progress': 'Đang sạc'
+    };
+    return statusMap[status] || status;
+  };
+
+  //   const handleVehicleChange = (field, value) => {
 //   setSelectedVehicle(prev => ({
 //     ...prev,
 //     [field]: value
@@ -254,8 +362,9 @@ const validateVehicle = () => {
 const handleVehicleSave = async () => {
   if (!validateVehicle()) return;
   try {
-    const endpoint = selectedVehicle?.id ? `/vehicles/${selectedVehicle.id}` : "/vehicles";
-    const method = selectedVehicle?.id ? api.put : api.post;
+    const vehicleId = selectedVehicle?.id || selectedVehicle?._id;
+    const endpoint = vehicleId ? `/vehicles/${vehicleId}` : "/vehicles";
+    const method = vehicleId ? api.put : api.post;
     const payload = {
       ...selectedVehicle,
       year: Number(selectedVehicle.year),
@@ -265,42 +374,170 @@ const handleVehicleSave = async () => {
 
     const res = await method(endpoint, payload);
     const savedVehicle = res.data?.data || payload;
+    
+    const normalizedSaved = {
+      ...savedVehicle,
+      id: savedVehicle._id || savedVehicle.id,
+      _id: savedVehicle._id || savedVehicle.id
+    };
 
     setVehicles(prev => {
-      if (selectedVehicle?.id) {
-        return prev.map(v => v.id === selectedVehicle.id ? savedVehicle : v);
+      let updated;
+      if (vehicleId) {
+        updated = prev.map(v => (v.id === vehicleId || v._id === vehicleId) ? normalizedSaved : v);
+      } else {
+        updated = [...prev, normalizedSaved];
       }
-      return [...prev, savedVehicle];
+      
+      return updated.sort((a, b) => {
+        if (a.id === defaultVehicleId) return -1;
+        if (b.id === defaultVehicleId) return 1;
+        return 0;
+      });
     });
 
-    alert("Lưu thông tin xe thành công!");
+    showPopup("Lưu thông tin xe thành công!", "success");
     setIsEditingVehicle(false);
     setSelectedVehicle(null);
   } catch (error) {
     console.error("Error saving vehicle:", error);
-    alert("Không thể lưu thông tin xe, vui lòng thử lại!");
-  }
-};
-// const handleVehicleCancel = () => {
-//   setIsEditingVehicle(false);
-//   setSelectedVehicle(null);
-//   setVehicleErrors({});
-// };
-const handleDeleteVehicle = async (vehicleId) => {
-  if (window.confirm('Bạn có chắc chắn muốn xóa xe này?')) {
-    try {
-      await api.delete(`/vehicles/${vehicleId}`);
-      setVehicles(prev => prev.filter(v => v.id !== vehicleId));
-      alert('Xóa xe thành công!');
-    } catch (error) {
-      console.error('Error deleting vehicle:', error);
-      alert('Không thể xóa xe, vui lòng thử lại!');
-    }
+    showPopup("Không thể lưu thông tin xe, vui lòng thử lại!", "error");
   }
 };
 
+const handleSetDefaultVehicle = (vehicleId) => {
+  setDefaultVehicleId(vehicleId);
+  localStorage.setItem("defaultVehicleId", vehicleId);
+  localStorage.setItem("vehicleId", vehicleId);
+  
+  setVehicles(prev => {
+    const sorted = [...prev].sort((a, b) => {
+      if (a.id === vehicleId) return -1;
+      if (b.id === vehicleId) return 1;
+      return 0;
+    });
+    return sorted;
+  });
+  
+  showPopup("Đã đặt xe mặc định thành công!", "success");
+};
+
+const handleDeleteVehicle = async (vehicleId) => {
+  showConfirmPopup('Bạn có chắc chắn muốn xóa xe này?', async () => {
+    try {
+      await api.delete(`/vehicles/${vehicleId}`);
+      setVehicles(prev => prev.filter(v => v.id !== vehicleId));
+      
+      if (defaultVehicleId === vehicleId) {
+        setDefaultVehicleId(null);
+        localStorage.removeItem("defaultVehicleId");
+        localStorage.removeItem("vehicleId");
+      }
+      
+      closeConfirmPopup();
+      showPopup('Xóa xe thành công!', 'success');
+    } catch (error) {
+      console.error('Error deleting vehicle:', error);
+      closeConfirmPopup();
+      showPopup('Không thể xóa xe, vui lòng thử lại!', 'error');
+    }
+  });
+};
+
+  // Handle cancel reservation
+  const handleCancelReservation = async (reservationId) => {
+    if (!reservationId) {
+      showPopup('ID đặt chỗ không hợp lệ', 'error');
+      return;
+    }
+
+    showConfirmPopup('Bạn có chắc chắn muốn hủy đặt chỗ này?', async () => {
+      try {
+        console.log('Cancelling reservation:', reservationId);
+        await api.patch(`/reservations/${reservationId}/cancel`);
+        
+        const res = await api.get(`/reservations`);
+        const reservationList = res.data?.data?.items || [];
+        const normalized = normalizeReservations(reservationList);
+        
+        setReservations(normalized);
+        setTotalPages(Math.ceil(normalized.length / itemsPerPage));
+        
+        if (currentPage > Math.ceil(normalized.length / itemsPerPage)) {
+          setCurrentPage(1);
+        }
+        
+        closeConfirmPopup();
+        showPopup('Hủy đặt chỗ thành công!', 'success');
+      } catch (error) {
+        console.error('Error cancelling reservation:', error);
+        const errorMsg = error.response?.data?.message || 'Không thể hủy đặt chỗ. Vui lòng thử lại!';
+        closeConfirmPopup();
+        showPopup(errorMsg, 'error');
+      }
+    });
+  };
+
+  // Get paginated reservations
+  const getPaginatedReservations = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return reservations.slice(startIndex, endIndex);
+  };
+
+  // Pagination handlers
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePageClick = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  useEffect(() => {
+    // Kiểm tra flag scroll đến lịch sử
+    const shouldScroll = sessionStorage.getItem('scrollToHistory');
+    
+    if (shouldScroll === 'true') {
+      // Xóa flag
+      sessionStorage.removeItem('scrollToHistory');
+      
+      // Scroll đến phần lịch sử sau khi component render
+      setTimeout(() => {
+        const historySection = document.querySelector('.history-section');
+        if (historySection) {
+          const yOffset = -100; // offset để không bị che bởi header
+          const y = historySection.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, []);
+
   return (
     <div className="profile-page dark-theme">
+      <CustomPopup
+        isOpen={popup.isOpen}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+      
+      <ConfirmPopup
+        isOpen={confirmPopup.isOpen}
+        message={confirmPopup.message}
+        onConfirm={confirmPopup.onConfirm}
+        onCancel={closeConfirmPopup}
+      />
+      
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
       <section className="profile-section user-info">
         <div className="section-header">
@@ -447,39 +684,57 @@ const handleDeleteVehicle = async (vehicleId) => {
         ) : !isEditingVehicle ? (
           <div className="vehicles-grid">
             {vehicles.map(vehicle => (
-              <div key={vehicle.id} className="vehicle-card" onClick={() => {
-                setSelectedVehicle(vehicle);
-                localStorage.setItem("vehicleId", vehicle.id);
-              }}>
-  <h3>
-    <span className="plate-number">{vehicle.plateNumber}</span>
-    <span 
-      className="delete-icon" 
-      onClick={(e) => {
-        e.stopPropagation();
-        handleDeleteVehicle(vehicle.id);
-      }}
-    >
-      ✕
-    </span>
-  </h3>
-  <div className="vehicle-info">
-    <p><b>Hãng:</b> {vehicle.make || "Chưa cập nhật"}</p>
-    <p><b>Mẫu:</b> {vehicle.model || "Chưa cập nhật"}</p>
-    <p><b>Năm:</b> {vehicle.year || "Chưa cập nhật"}</p>
-    <p><b>Loại sạc:</b> {vehicle.connectorType + "-" + vehicle.batteryCapacityKwh || "Chưa cập nhật"} kWh</p>
-
-  </div>
-  <div className="vehicle-actions">
-    <button className="edit-btn" onClick={() => {
-      setSelectedVehicle(vehicle);
-  localStorage.setItem("vehicleId", vehicle.id);
-      setIsEditingVehicle(true);
-    }}>
-      Chỉnh sửa
-    </button>
-  </div>
-</div>
+              <div 
+                key={vehicle.id} 
+                className={`vehicle-card ${defaultVehicleId === vehicle.id ? 'default-vehicle' : ''}`}
+                onClick={() => {
+                  setSelectedVehicle(vehicle);
+                  localStorage.setItem("vehicleId", vehicle.id);
+                }}
+              >
+                <h3>
+                  <span className="plate-number">
+                    {vehicle.plateNumber}
+                    {defaultVehicleId === vehicle.id && (
+                      <span className="default-badge">Mặc định</span>
+                    )}
+                  </span>
+                  <span 
+                    className="delete-icon" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteVehicle(vehicle.id);
+                    }}
+                  >
+                    ✕
+                  </span>
+                </h3>
+                <div className="vehicle-info">
+                  <p><b>Hãng:</b> {vehicle.make || "Chưa cập nhật"}</p>
+                  <p><b>Mẫu:</b> {vehicle.model || "Chưa cập nhật"}</p>
+                  <p><b>Năm:</b> {vehicle.year || "Chưa cập nhật"}</p>
+                  <p><b>Loại sạc:</b> {vehicle.connectorType + "-" + vehicle.batteryCapacityKwh || "Chưa cập nhật"} kWh</p>
+                </div>
+                <div className="vehicle-actions">
+                  <button 
+                    className={`default-btn ${defaultVehicleId === vehicle.id ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSetDefaultVehicle(vehicle.id);
+                    }}
+                  >
+                    {defaultVehicleId === vehicle.id ? '✓ Xe mặc định' : 'Đặt mặc định'}
+                  </button>
+                  <button className="edit-btn" onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedVehicle(vehicle);
+                    localStorage.setItem("vehicleId", vehicle.id);
+                    setIsEditingVehicle(true);
+                  }}>
+                    Chỉnh sửa
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
@@ -625,56 +880,195 @@ const handleDeleteVehicle = async (vehicleId) => {
 
       
       <section className="profile-section history-section">
-        <h2>Lịch sử giao dịch</h2>
+        <h2>Lịch sử đặt chỗ</h2>
         <div className="history-table-wrapper">
           <table className="history-table">
             <thead>
               <tr>
                 <th>Mã đặt chỗ</th>
-                <th>Số tiền</th>
+                <th>Xe</th>
+                <th>Thời gian</th>
                 <th>Trạng thái</th>
                 <th>Thao tác</th>
               </tr>
             </thead>  
             <tbody>
               {txLoading ? (
-                <tr><td colSpan={4} style={{ color: "#666" }}>Đang tải...</td></tr>
-              ) : transactions.length > 0 ? (
-                transactions.map((tx) => (
-                  <tr key={tx.id}>
-                    <td>  {tx.id}</td>
-                    <td>{tx.amount?.toLocaleString()} VNĐ</td>
-                    <td>
-                      <span className={`status-badge ${tx.status}`}>
-                        {tx.status === 'pending' ? 'Chờ thanh toán' :
-                         tx.status === 'completed' ? 'Hoàn thành' :
-                         tx.status === 'cancelled' ? 'Đã hủy' : tx.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        {tx.status === 'pending' && (
-                          <button 
-                            className="pay-btn"
-                            onClick={() => navigate('/chargingSession')}
-                          >
-                            Bắt đầu sạc
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                <tr><td colSpan={5} style={{ color: "#666" }}>Đang tải...</td></tr>
+              ) : getPaginatedReservations().length > 0 ? (
+                getPaginatedReservations().map((reservation) => {
+                  // { changed code }
+                  const reservationId = reservation._id || reservation.id;
+                  const vehicleId = reservation.vehicle?._id || reservation.vehicle?.id;
+                  const firstItem = reservation.items?.[0];
+
+                  return (
+                    <tr key={reservationId}>
+                      <td>{String(reservationId).slice(-8)}</td>
+                      <td>
+                        {reservation.vehicle?.plateNumber || "N/A"}<br/>
+                        <small style={{ color: "#666" }}>
+                          {reservation.vehicle?.make} {reservation.vehicle?.model}
+                        </small>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: "0.85rem" }}>
+                          <div>Bắt đầu: {formatDateTime(firstItem?.startAt)}</div>
+                          <div>Kết thúc: {formatDateTime(firstItem?.endAt)}</div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${reservation.status}`}>
+                          {getStatusText(reservation.status)}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          {reservation.status === 'pending' && (
+                            <>
+                              <button 
+                                className="start-charge-btn"
+                                onClick={() => {
+                                  if (reservationId && vehicleId) {
+                                    const firstItem = reservation.items?.[0];
+                                    const portInfo = firstItem?.slot?.port;
+                                    
+                                    localStorage.setItem("reservationId", reservationId);
+                                    localStorage.setItem("vehicleId", vehicleId);
+                                    
+                                    navigate('/chargingSession', {
+                                      state: {
+                                        reservation: {
+                                          id: reservationId,
+                                          portId: portInfo?._id || portInfo,
+                                          powerKw: portInfo?.powerKw || 150,
+                                          status: reservation.status,
+                                          startAt: firstItem?.startAt,
+                                          endAt: firstItem?.endAt
+                                        },
+                                        vehicle: {
+                                          id: vehicleId,
+                                          plateNumber: reservation.vehicle?.plateNumber,
+                                          make: reservation.vehicle?.make,
+                                          model: reservation.vehicle?.model,
+                                          batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
+                                          connectorType: reservation.vehicle?.connectorType
+                                        }
+                                      }
+                                    });
+                                  } else {
+                                    showPopup('Không thể lấy thông tin đặt chỗ', 'error');
+                                  }
+                                }}
+                              >
+                                Bắt đầu sạc
+                              </button>
+                              <button 
+                                className="cancel-btn"
+                                onClick={() => handleCancelReservation(reservationId)}
+                              >
+                                Hủy
+                              </button>
+                            </>
+                          )}
+                          {reservation.status === 'confirmed' && (
+                            <>
+                              <button 
+                                className="pay-btn"
+                                onClick={() => {
+                                  if (reservationId && vehicleId) {
+                                    const firstItem = reservation.items?.[0];
+                                    const portInfo = firstItem?.slot?.port;
+                                    
+                                    localStorage.setItem("reservationId", reservationId);
+                                    localStorage.setItem("vehicleId", vehicleId);
+                                    
+                                    navigate('/chargingSession', {
+                                      state: {
+                                        reservation: {
+                                          id: reservationId,
+                                          portId: portInfo?._id || portInfo,
+                                          powerKw: portInfo?.powerKw || 150,
+                                          status: reservation.status,
+                                          startAt: firstItem?.startAt,
+                                          endAt: firstItem?.endAt
+                                        },
+                                        vehicle: {
+                                          id: vehicleId,
+                                          plateNumber: reservation.vehicle?.plateNumber,
+                                          make: reservation.vehicle?.make,
+                                          model: reservation.vehicle?.model,
+                                          batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
+                                          connectorType: reservation.vehicle?.connectorType
+                                        }
+                                      }
+                                    });
+                                  } else {
+                                    showPopup('Không thể lấy thông tin đặt chỗ', 'error');
+                                  }
+                                }}
+                              >
+                                Tiếp tục
+                              </button>
+                              <button 
+                                className="cancel-btn"
+                                onClick={() => handleCancelReservation(reservationId)}
+                              >
+                                Hủy
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', color: "#90caf9" }}>
-                    Chưa có giao dịch nào
+                  <td colSpan={5} style={{ textAlign: 'center', color: "#90caf9" }}>
+                    Chưa có đặt chỗ nào
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button 
+              className="pagination-btn"
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+            >
+              ← Trước
+            </button>
+            
+            <div className="pagination-numbers">
+              {[...Array(totalPages)].map((_, index) => {
+                const pageNumber = index + 1;
+                return (
+                  <button
+                    key={pageNumber}
+                    className={`pagination-number ${currentPage === pageNumber ? 'active' : ''}`}
+                    onClick={() => handlePageClick(pageNumber)}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button 
+              className="pagination-btn"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+            >
+              Sau →
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="profile-section analysis-section">
