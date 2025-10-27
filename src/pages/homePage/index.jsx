@@ -52,8 +52,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
@@ -136,13 +136,13 @@ const HomePage = () => {
   // ===== Xử lý VNPay return URL =====
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const vnpResponseCode = urlParams.get('vnp_ResponseCode');
+    const vnpResponseCode = urlParams.get("vnp_ResponseCode");
 
-    console.log('Checking VNPay return:', {
+    console.log("Checking VNPay return:", {
       vnpResponseCode,
       search: window.location.search,
       pathname: window.location.pathname,
-      href: window.location.href
+      href: window.location.href,
     });
 
     if (vnpResponseCode) {
@@ -150,9 +150,9 @@ const HomePage = () => {
       const queryString = window.location.search;
 
       // Tạo URL mới cho payment-success
-      const newUrl = window.location.origin + '/payment-success' + queryString;
+      const newUrl = window.location.origin + "/payment-success" + queryString;
 
-      console.log('Redirecting to:', newUrl);
+      console.log("Redirecting to:", newUrl);
       window.location.href = newUrl;
     }
   }, []);
@@ -373,8 +373,9 @@ const HomePage = () => {
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${selectedId === station.id ? "is-selected" : ""
-                      }`}
+                    className={`station-item ${
+                      selectedId === station.id ? "is-selected" : ""
+                    }`}
                     onClick={() => setSelectedId(station.id)}
                   >
                     <div className="station-header">
@@ -564,12 +565,7 @@ const HomePage = () => {
         <section className="homepage__cta">
           <h2>Bắt đầu hành trình xe điện </h2>
         </section>
-
-        {/* About Section */}
-        <About />
-
       </div>
-
     </div>
   );
 };
