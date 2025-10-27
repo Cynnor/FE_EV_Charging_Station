@@ -164,6 +164,9 @@ function mapPortToCharger(port, idx, baseLatLng) {
 /** =================== COMPONENT =================== */
 export default function BookingPage() {
   const [vehicleId, setVehicleId] = useState("");
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { stationId } = useParams();
@@ -430,13 +433,44 @@ export default function BookingPage() {
     api
       .post("/reservations", payload)
       .then((res) => {
-        // 👇 Lấy reservationId từ response
-        const reservationId = res.data.data?.id;
+        // 👇 Lấy dữ liệu reservation từ response
+        const reservationData = res.data.data || res.data;
+        const reservationId = reservationData?.id;
 
         if (reservationId) {
           console.log("✅ Reservation ID:", reservationId);
-          alert(`Đặt chỗ thành công! ID: ${reservationId}`);
-          navigate("/", { replace: true });
+          
+          // 👇 Lấy thông tin vehicle từ API hoặc state
+          let vehicleInfo = null;
+          
+          // Nếu có selectedVehicle từ state (đã được set khi chọn xe)
+          if (selectedVehicle) {
+            vehicleInfo = selectedVehicle;
+          } else {
+            // Fallback: Fetch từ API nếu cần
+            vehicleInfo = {
+              id: vehicleId,
+              plateNumber: "N/A",
+              make: "N/A",
+              model: "N/A"
+            };
+          }
+
+          // 👇 Chuyển đến trang BookingSuccess với đầy đủ thông tin
+          navigate("/booking-success", {
+            state: {
+              reservation: reservationData,
+              station: selectedStation,
+              charger: selectedCharger,
+              vehicle: vehicleInfo,
+              bookingTime: {
+                date: formData.date,
+                startTime: formData.startTime,
+                endTime: formData.endTime
+              }
+            },
+            replace: true
+          });
         } else {
           console.warn("⚠️ Không tìm thấy reservationId trong response");
           alert("Đặt chỗ thành công nhưng không nhận được ID.");
@@ -628,11 +662,41 @@ export default function BookingPage() {
     fetchSlots();
   }, [step, selectedCharger]);
 
+  // Lấy danh sách xe khi vào trang booking
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const res = await api.get("/vehicles");
+        const vehiclesList = res.data?.items || [];
+        setVehicles(vehiclesList);
+        
+        // Lấy xe mặc định từ localStorage
+        const defaultVehicleId = localStorage.getItem("defaultVehicleId");
+        
+        if (defaultVehicleId) {
+          const defaultVehicle = vehiclesList.find(v => v.id === defaultVehicleId);
+          if (defaultVehicle) {
+            setSelectedVehicle(defaultVehicle);
+            setVehicleId(defaultVehicleId);
+          } else if (vehiclesList.length > 0) {
+            setSelectedVehicle(vehiclesList[0]);
+            setVehicleId(vehiclesList[0].id);
+          }
+        } else if (vehiclesList.length > 0) {
+          setSelectedVehicle(vehiclesList[0]);
+          setVehicleId(vehiclesList[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+      }
+    };
+    
+    fetchVehicles();
+  }, []);
+
   return (
     <div className="booking-wrapper">
-      <div
-        className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}
-      >
+      <div className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}>
         <div className="left-panel">
           <div className="panel-header">
             <h1>Đặt chỗ sạc xe</h1>
@@ -1012,6 +1076,42 @@ export default function BookingPage() {
 
                 <div className="confirmation-grid">
                   <div className="summary-section">
+                    {/* Vehicle Selection Card */}
+                    <div className="summary-card vehicle-selection-card">
+                      <h3 style={{ textAlign: "center" }}>Xe của bạn</h3>
+                      {selectedVehicle ? (
+                        <>
+                          <div className="selected-vehicle-info">
+                            <div className="summary-item">
+                              <span className="summary-label">Biển số:</span>
+                              <span className="summary-value">{selectedVehicle.plateNumber}</span>
+                            </div>
+                            <div className="summary-item">
+                              <span className="summary-label">Xe:</span>
+                              <span className="summary-value">{selectedVehicle.make} {selectedVehicle.model}</span>
+                            </div>
+                            <div className="summary-item">
+                              <span className="summary-label">Loại sạc:</span>
+                              <span className="summary-value">{selectedVehicle.connectorType}</span>
+                            </div>
+                          </div>
+                          <button 
+                            className="change-vehicle-btn"
+                            onClick={() => setShowVehicleModal(true)}
+                          >
+                            Đổi xe khác
+                          </button>
+                        </>
+                      ) : (
+                        <button 
+                          className="select-vehicle-btn"
+                          onClick={() => setShowVehicleModal(true)}
+                        >
+                          Chọn xe
+                        </button>
+                      )}
+                    </div>
+
                     <div className="summary-card station-card">
                       <h3 style={{ textAlign: "center" }}>
                         Thông tin trạm sạc
@@ -1230,7 +1330,7 @@ export default function BookingPage() {
         </div>
 
         {/* RIGHT PANEL: MAP */}
-        {step !== 4 && (
+        {(step === 1 || (step === 2 && selectedStation) || (step === 3 && selectedCharger)) && (
           <div className="right-panel">
             <div className="map-container">
               {step === 1 && (
@@ -1242,7 +1342,6 @@ export default function BookingPage() {
                   selectedStation={selectedStation}
                 />
               )}
-
               {step === 2 && selectedStation && (
                 <ChargingMap
                   stations={chargers}
@@ -1250,10 +1349,18 @@ export default function BookingPage() {
                   zoom={17}
                   onSelect={(c) => {
                     if (c.status === "available") {
-                      setSelectedCharger(c);
-                      setStep(3);
+                      setSelectedCharger(c)
+                      setStep(3)
                     }
                   }}
+                  selectedStation={selectedCharger}
+                />
+              )}
+              {step === 3 && selectedCharger && (
+                <ChargingMap
+                  stations={[selectedCharger]}
+                  center={selectedStation?.coords || defaultCenter}
+                  zoom={17}
                   selectedStation={selectedCharger}
                 />
               )}
@@ -1261,6 +1368,47 @@ export default function BookingPage() {
           </div>
         )}
       </div>
+
+      {/* Vehicle Selection Modal */}
+      {showVehicleModal && (
+        <div className="datetime-modal-overlay" onClick={() => setShowVehicleModal(false)}>
+          <div className="vehicle-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Chọn xe của bạn</h3>
+              <button className="modal-close" onClick={() => setShowVehicleModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {vehicles.length === 0 ? (
+                <div className="no-vehicles">
+                  <p>Bạn chưa có xe nào. Vui lòng thêm xe trong trang Profile.</p>
+                  <button onClick={() => navigate('/profile')}>Đi đến Profile</button>
+                </div>
+              ) : (
+                <div className="vehicles-grid-modal">
+                  {vehicles.map((vehicle) => (
+                    <div
+                      key={vehicle.id}
+                      className={`vehicle-card-modal ${selectedVehicle?.id === vehicle.id ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedVehicle(vehicle);
+                        setVehicleId(vehicle.id);
+                        setShowVehicleModal(false);
+                      }}
+                    >
+                      <div className="vehicle-plate">{vehicle.plateNumber}</div>
+                      <div className="vehicle-model">{vehicle.make} {vehicle.model}</div>
+                      <div className="vehicle-type">{vehicle.connectorType}</div>
+                      {localStorage.getItem("defaultVehicleId") === vehicle.id && (
+                        <span className="default-badge-modal">Mặc định</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODALS */}
       {showDateModal && (

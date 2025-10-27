@@ -207,7 +207,7 @@
   
   th, td {
     padding: 12px;
-    text-align: left;
+    text-align: center;
     border-bottom: 1px solid #eee;
   }
 
@@ -289,7 +289,7 @@
     }
   }
 
-  .pay-btn {
+  .start-charge-btn {
     padding: 6px 12px;
     background: #28a745;
     color: white;
@@ -306,7 +306,7 @@
     display: flex;
     gap: 8px;
     
-    .detail-btn, .pay-btn {
+    .detail-btn, .start-charge-btn {
       padding: 4px 8px;
       border: none;
       border-radius: 4px;
@@ -323,43 +323,26 @@
       color: white;
     }
 
-    .pay-btn {
-      background: #4caf50;
-      color: white;
-    }
-
     .cancel-btn {
       background: #f44336;
       color: white;
     }
   }
 
-  .payment-link {
-    display: inline-block;
+  .start-charge-btn {
     padding: 6px 12px;
-    background: #2196f3;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    
-    &:hover {
-      background: #1976d2;
-      text-decoration: none;
-    }
-  }
-
-  .qr-btn {
-    padding: 6px 12px;
-    background: #2196f3;
+    background: #4caf50;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     
     &:hover {
-      background: #1976d2;
+      background: #45a049;
     }
   }
+
+  // ...existing code...
 }
 
 .analysis-cards {
@@ -482,6 +465,26 @@
     }
   }
 
+  &.default-vehicle {
+    border: 2px solid #4caf50;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+  }
+  
+  .plate-number {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .default-badge {
+      font-size: 0.7rem;
+      background: #4caf50;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: normal;
+    }
+  }
+
   .vehicle-actions {
     margin-top: 16px;
     display: flex;
@@ -511,6 +514,33 @@
       
       &:hover {
         background: #cc0000;
+      }
+    }
+
+    .default-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: #424242;
+      color: #ffffff;
+      border: 1px solid #cae0f1;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+      
+      &:hover {
+        background: #ffffff;
+        color: #1a1a1a;
+      }
+      
+      &.active {
+        background: #4caf50;
+        border-color: #4caf50;
+        color: white;
+        
+        &:hover {
+          background: #45a049;
+        }
       }
     }
   }
@@ -598,6 +628,156 @@
   }
 }
 
+.history-section {
+  .history-table-wrapper {
+    max-height: none;
+    overflow-y: visible;
+    overflow-x: visible;
+    border-radius: 8px;
+    
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #1e1e1e;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+    }
+  }
+
+  .history-table {
+    thead th {
+      padding: 10px 12px;
+      font-size: 0.85rem;
+    }
+
+    tbody td {
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      vertical-align: middle; // Căn giữa theo chiều dọc
+      
+      small {
+        font-size: 0.7rem;
+      }
+      
+      > div {
+        font-size: 0.75rem;
+        
+        > div {
+          margin: 2px 0;
+        }
+      }
+    }
+
+    .status-badge {
+      padding: 3px 8px;
+      font-size: 0.7rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      
+      button {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        text-align: center;
+        border-radius: 8px;
+        height: 32px;
+        min-width: 90px;
+        max-width: 90px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+    }
+
+    .start-charge-btn {
+      background: #4caf50;
+      color: white;
+      
+      &:hover {
+        background: #45a049;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    .cancel-btn {
+      background: #f44336;
+      color: white;
+      
+      &:hover {
+        background: #d32f2f;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    
+    .pagination-btn,
+    .pagination-number {
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover:not(:disabled) {
+        background: #7ed321;
+        color: white;
+        border-color: #7ed321;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      &.active {
+        background: #7ed321;
+        color: white;
+        border-color: #7ed321;
+      }
+    }
+
+    .pagination-numbers {
+      display: flex;
+      gap: 4px;
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .profile-page {
     padding: 100px 15px 30px;
@@ -674,6 +854,33 @@
   .vehicle-edit-form {
     .form-grid {
       grid-template-columns: 1fr;
+    }
+  }
+
+  .history-section {
+    .history-table {
+      font-size: 0.75rem;
+
+      .action-buttons {
+        gap: 6px;
+        
+        button {
+          padding: 5px 8px;
+          font-size: 0.7rem;
+          min-width: 80px;
+          max-width: 80px;
+          height: 28px;
+          border-radius: 6px;
+        }
+      }
+    }
+
+    .pagination {
+      .pagination-btn,
+      .pagination-number {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+      }
     }
   }
 }
