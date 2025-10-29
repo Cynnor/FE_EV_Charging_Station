@@ -1330,7 +1330,7 @@ export default function BookingPage() {
         </div>
 
         {/* RIGHT PANEL: MAP */}
-        {step !== 4 && (
+        {(step === 1 || (step === 2 && selectedStation) || (step === 3 && selectedCharger)) && (
           <div className="right-panel">
             <div className="map-container">
               {step === 1 && (
@@ -1342,7 +1342,6 @@ export default function BookingPage() {
                   selectedStation={selectedStation}
                 />
               )}
-
               {step === 2 && selectedStation && (
                 <ChargingMap
                   stations={chargers}
@@ -1350,10 +1349,18 @@ export default function BookingPage() {
                   zoom={17}
                   onSelect={(c) => {
                     if (c.status === "available") {
-                      setSelectedCharger(c);
-                      setStep(3);
+                      setSelectedCharger(c)
+                      setStep(3)
                     }
                   }}
+                  selectedStation={selectedCharger}
+                />
+              )}
+              {step === 3 && selectedCharger && (
+                <ChargingMap
+                  stations={[selectedCharger]}
+                  center={selectedStation?.coords || defaultCenter}
+                  zoom={17}
                   selectedStation={selectedCharger}
                 />
               )}
