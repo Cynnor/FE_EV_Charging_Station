@@ -268,13 +268,12 @@ const HomePage = () => {
           </div>
           <div className="homepage__hero-image">
             <div className="hero-visual">
-              <div className="center-logo"
+              <div className="center-logo">
                 <img
                   src="/public/assets/logo.jpg"
                   alt="Logo"
                   className="hero-logo"
                 />
-
               </div>
               <div className="charging-station">🚗</div>
               <div className="dashboard">⚡</div>
