@@ -22,8 +22,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
@@ -35,10 +35,7 @@ const About = () => {
 
   return (
     <section className="homepage__about">
-      <div className="section-header">
-        {/* <h2>Về chúng tôi</h2>
-        <p>Hệ thống trạm sạc xe điện hàng đầu Việt Nam</p> */}
-      </div>
+      <div className="section-header"></div>
     </section>
   );
 };
@@ -58,97 +55,74 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const itemRefs = useRef({});
 
-  // ===== Xử lý VNPay return URL =====
+  // ===== Handle VNPay Return =====
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const vnpResponseCode = urlParams.get('vnp_ResponseCode');
-
-    console.log('Checking VNPay return:', {
-      vnpResponseCode,
-      search: window.location.search,
-      pathname: window.location.pathname,
-      href: window.location.href
-    });
+    const vnpResponseCode = urlParams.get("vnp_ResponseCode");
 
     if (vnpResponseCode) {
-      // Có VNPay return parameters, redirect đến paymentSuccessPage
       const queryString = window.location.search;
-
-      // Tạo URL mới cho payment-success
-      const newUrl = window.origin + '/payment-success' + queryString;
-
-      console.log('Redirecting to:', newUrl);
+      const newUrl = window.origin + "/payment-success" + queryString;
       window.location.href = newUrl;
     }
   }, []);
 
   // ===== Fetch Station Data from API =====
   useEffect(() => {
-  let isMounted = true; // tránh lỗi khi unmount
+    let isMounted = true;
 
-  const fetchStations = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/stations");
-      // console.log("Station API result:", res.data);
+    const fetchStations = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/stations");
 
-      // Trường hợp API trả về mảng hoặc object
-      let stationsData = [];
-      if (Array.isArray(res.data)) {
-        stationsData = res.data;
-      } else if (Array.isArray(res.data.items)) {
-        stationsData = res.data.items;
-      } else if (res.data && typeof res.data === "object") {
-        stationsData = [res.data];
+        let stationsData = [];
+        if (Array.isArray(res.data)) {
+          stationsData = res.data;
+        } else if (Array.isArray(res.data.items)) {
+          stationsData = res.data.items;
+        } else if (res.data && typeof res.data === "object") {
+          stationsData = [res.data];
+        }
+
+        stationsData = stationsData.filter(
+          (s) => s.latitude && s.longitude
+        );
+
+        const formatted = stationsData.map((s, index) => ({
+          id: s.id || index + 1,
+          name: s.name || "Trạm sạc không tên",
+          coords: [s.latitude, s.longitude],
+          status: s.status === "active" ? "available" : "maintenance",
+          address: s.address || "Không rõ địa chỉ",
+          speed: s.ports?.[0]?.speed || "N/A",
+          price: s.ports?.[0]?.price
+            ? `${s.ports[0].price.toLocaleString()} đ/kWh`
+            : "N/A",
+          slots: {
+            ac: s.ports?.filter((p) => p.type === "AC").length || 0,
+            dc: s.ports?.filter((p) => p.type === "DC").length || 0,
+            ultra: s.ports?.filter((p) => p.type === "Ultra").length || 0,
+          },
+        }));
+
+        if (isMounted) {
+          setMapStations(formatted);
+        }
+      } catch (err) {
+        if (isMounted) setError("Không thể tải dữ liệu trạm sạc.");
+      } finally {
+        if (isMounted) setLoading(false);
       }
+    };
 
-      // Lọc trạm có tọa độ hợp lệ
-      stationsData = stationsData.filter(
-        (s) => s.latitude && s.longitude
-      );
-
-      // Format lại dữ liệu
-      const formatted = stationsData.map((s, index) => ({
-        id: s.id || index + 1,
-        name: s.name || "Trạm sạc không tên",
-        coords: [s.latitude, s.longitude],
-        status: s.status === "active" ? "available" : "maintenance",
-        address: s.address || "Không rõ địa chỉ",
-        speed: s.ports?.[0]?.speed || "N/A",
-        price: s.ports?.[0]?.price
-          ? `${s.ports[0].price.toLocaleString()} đ/kWh`
-          : "N/A",
-        slots: {
-          ac: s.ports?.filter((p) => p.type === "AC").length || 0,
-          dc: s.ports?.filter((p) => p.type === "DC").length || 0,
-          ultra: s.ports?.filter((p) => p.type === "Ultra").length || 0,
-        },
-      }));
-
-      if (isMounted) {
-        setMapStations(formatted);
-        console.log("✅ Cập nhật danh sách trạm:", formatted);
-      }
-    } catch (err) {
-      console.error("Error fetching stations:", err);
-      if (isMounted) setError("Không thể tải dữ liệu trạm sạc.");
-    } finally {
-      if (isMounted) setLoading(false);
-    }
-  };
-
-  // Gọi lần đầu
-  fetchStations();
-
-  // 🔁 Gọi lại API mỗi 30 giây để cập nhật danh sách trạm mới
-  const interval = setInterval(fetchStations, 300000);
-
-  return () => {
-    isMounted = false;
-    clearInterval(interval);
-  };
-}, []);
-
+    fetchStations();
+    const interval = setInterval(fetchStations, 300000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // ===== Get User Location =====
   const updateLocation = () => {
@@ -181,9 +155,10 @@ const HomePage = () => {
 
   const handleMarkerClick = (id) => setSelectedId(id);
 
+  // ✅ Sửa tại đây: Điều hướng sang /booking/:stationId
   const handleBooking = (stationId) => {
     const token = localStorage.getItem("token");
-    const redirectUrl = `/booking?station=${stationId}`;
+    const redirectUrl = `/booking/${stationId}`;
     if (!token) {
       navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
     } else {
@@ -191,7 +166,7 @@ const HomePage = () => {
     }
   };
 
-
+  // ✅ Sửa luôn nút “Tìm trạm sạc ngay” → sang trang /booking
   const handleFindStation = () => {
     const token = localStorage.getItem("token");
     const redirectUrl = "/booking";
@@ -202,34 +177,6 @@ const HomePage = () => {
     }
   };
 
-  // // fetch latest transaction
-  // useEffect(() => {
-  //   let mounted = true;
-  //   const fetchLatestTransaction = async () => {
-  //     try {
-  //       setTxLoading(true);
-  //       const res = await api.get("/transactions/latest");
-  //       const payload = res?.data?.data ?? res?.data ?? null;
-  //       if (mounted) {
-  //         setTransaction(payload ?? SAMPLE_TRANSACTION.data);
-  //       }
-  //     } catch (err) {
-  //       console.error("Error fetching transaction:", err);
-  //       if (mounted) setTransaction(SAMPLE_TRANSACTION.data);
-  //     } finally {
-  //       if (mounted) setTxLoading(false);
-  //     }
-  //   };
-
-  //   fetchLatestTransaction();
-
-  //   return () => {
-  //     mounted = false;
-  //   };
-  // }, []);
-
-
-  // ===== Render =====
   if (loading) {
     return (
       <div className="homepage__loading">
@@ -296,16 +243,13 @@ const HomePage = () => {
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${selectedId === station.id ? "is-selected" : ""
-                      }`}
+                    className={`station-item ${selectedId === station.id ? "is-selected" : ""}`}
                     onClick={() => setSelectedId(station.id)}
                   >
                     <div className="station-header">
                       <h4>{station.name}</h4>
                       {station.distance && (
-                        <span className="distance">
-                          {station.distance.toFixed(1)} km
-                        </span>
+                        <span className="distance">{station.distance.toFixed(1)} km</span>
                       )}
                       <div className={`status-indicator ${station.status}`}>
                         {station.status === "available" && "🟢"}
@@ -317,8 +261,7 @@ const HomePage = () => {
                       <div className="item">⚡ {station.speed}</div>
                       <div className="item">💰 {station.price}</div>
                       <div className="item">
-                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} | Ultra:{" "}
-                        {station.slots.ultra}
+                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} | Ultra: {station.slots.ultra}
                       </div>
                       <div className="item">📍 {station.address}</div>
                     </div>
@@ -351,23 +294,6 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Features Section */}
-        {/* <section className="homepage__features" ref={featuresRef}>
-          <div className="section-header">
-            <h2>Tính năng nổi bật</h2>
-            <p>Những tính năng giúp bạn sạc xe điện thuận tiện và tiết kiệm</p>
-          </div>
-          <div className="features-grid">
-            {features.map((feature, idx) => (
-              <div key={idx} className="fature-card">
-                <div className="feature-icon">{feature.icon}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </section> */}
-
         {/* How to use Section */}
         <section className="homepage__howto" ref={stepsRef}>
           <div className="section-header">
@@ -398,15 +324,14 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
         <section className="homepage__cta">
           <h2>Bắt đầu hành trình xe điện của bạn</h2>
         </section>
-              
-        {/* About Section */}
+
         <About />
       </div>
     </div>
   );
-}
+};
+
 export default HomePage;
