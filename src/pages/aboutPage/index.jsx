@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { FaBolt, FaMoneyBillWave, FaMobileAlt, FaProjectDiagram } from "react-icons/fa";
 import "./index.scss";
-import videobanner from "../../assets/videobanner.mp4";
 
 const AboutPage = () => {
   useEffect(() => {
@@ -13,7 +12,7 @@ const AboutPage = () => {
       {/* Hero Banner Video */}
       <section className="about-banner">
         <video autoPlay muted loop playsInline className="video-bg">
-          <source src={videobanner} type="video/mp4" />
+          <source src="/assets/videobanner.mp4" type="video/mp4" />
         </video>
         {/* <div className="overlay">
           <h1>Touch To Charge</h1>
@@ -26,7 +25,7 @@ const AboutPage = () => {
         <div className="intro-flex">
           <div className="intro-image">
             <img
-              src="https://i.pinimg.com/originals/74/55/ac/7455ac1f11bdb1a92ea69d1f80897996.jpg"
+              src="/assets/banner.jpg"
               alt="Giới thiệu Touch To Charge"
             />
           </div>

@@ -1,0 +1,125 @@
+.charging-station-carousel {
+  width: 100%;
+  margin-top: 20px;
+
+  .carousel-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: #fff;
+  }
+
+  .carousel-content {
+    position: relative;
+    width: 100%;
+    padding-bottom: 75%; // 4:3 aspect ratio
+    overflow: hidden;
+  }
+
+  .carousel-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s ease-in-out;
+  }
+
+  .carousel-slide {
+    position: relative;
+    min-width: 100%;
+    height: 100%;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .carousel-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(8, 8, 8, 0.8), transparent);
+    color: white;
+    padding: 20px;
+
+    h3 {
+      color: white;
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+  }
+
+  .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 2;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+
+    &:hover {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    &.prev-btn {
+      left: 10px;
+    }
+
+    &.next-btn {
+      right: 10px;
+    }
+  }
+
+  .carousel-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+
+    .indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: none;
+      background: #ddd;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 0;
+
+      &.active {
+        background: #4CAF50;
+        width: 24px;
+        border-radius: 5px;
+      }
+
+      &:hover {
+        background: #bbb;
+      }
+    }
+  }
+}

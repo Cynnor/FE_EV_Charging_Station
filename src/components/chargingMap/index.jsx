@@ -7,7 +7,7 @@ import "./index.scss";
 
 // Icon user
 const userIcon = new L.Icon({
-  iconUrl: "/src/assets/UserIcon.png",
+  iconUrl: "/assets/UserIcon.png",
   iconSize: [40, 40],
 });
 
@@ -16,7 +16,7 @@ const userIcon = new L.Icon({
 
 // Icon station
 const stationIcon = new L.Icon({
-  iconUrl: "/src/assets/MapIcon.png",
+  iconUrl: "/assets/MapIcon.png",
   iconSize: [40, 40],
 });
 
