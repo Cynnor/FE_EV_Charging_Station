@@ -2,8 +2,8 @@ import "./chargingSessionPage.scss";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import CustomPopup from "../../components/customPopup/CustomPopup";
-import PaymentConfirmPopup from "../../components/paymentConfirmPopup/PaymentConfirmPopup";
+import CustomPopup from "../../components/CustomPopup/CustomPopup";
+import PaymentConfirmPopup from "../../components/PaymentConfirmPopup/PaymentConfirmPopup";
 import ChargingStationCarousel from "../../components/chargingStationCarousel/ChargingStationCarousel";
 
 // Update charging constants and cost calculations
