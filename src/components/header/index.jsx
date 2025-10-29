@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../../config/api";
 import "./index.scss";
-import "../../assets/logo.jpg";
 
 const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -60,7 +59,7 @@ const Header = () => {
           <div className="header__logo">
             <Link to="/" className="header__logo-link">
               <img
-                src="https://i.postimg.cc/15px6VJv/logo-part-1.png"
+                src="/assets/logo.jpg"
                 alt="S. TOUCH Logo"
                 className="header__logo-img"
               />

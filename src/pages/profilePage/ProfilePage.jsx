@@ -20,6 +20,9 @@ const [isEditingVehicle, setIsEditingVehicle] = useState(false);
 const [vehicleErrors, setVehicleErrors] = useState({});
 const [defaultVehicleId, setDefaultVehicleId] = useState(null);
 
+// ===== Station mapping =====
+const [stationMap, setStationMap] = useState({});
+const [portTypeMap, setPortTypeMap] = useState({});
 
 
   const [reservations, setReservations] = useState([]);
@@ -68,19 +71,22 @@ const [defaultVehicleId, setDefaultVehicleId] = useState(null);
       try {
         setTxLoading(true);
         const res = await api.get(`/reservations`);
-        console.log("Raw reservation data:", res.data);
+        // console.log("Raw reservation data:", res.data);
 
         if (mounted) {
           const reservationList = res.data?.data?.items || [];
-          console.log("Processed reservations:", reservationList);
+          // console.log("Processed reservations:", reservationList);
 
           const normalized = normalizeReservations(reservationList);
 
           setReservations(normalized);
           setTotalPages(Math.ceil(normalized.length / itemsPerPage));
+          
+          // Fetch station info for all ports
+          await fetchStationInfo(normalized);
         }
       } catch (err) {
-        console.error("Error fetching reservations:", err);
+        // console.error("Error fetching reservations:", err);
         if (mounted) setReservations([]);
       } finally {
         if (mounted) setTxLoading(false);
@@ -91,11 +97,97 @@ const [defaultVehicleId, setDefaultVehicleId] = useState(null);
     return () => mounted = false;
   }, [vehicles]);
 
+  // Fetch station information from port IDs - OPTIMIZED VERSION
+  const fetchStationInfo = async (reservationList) => {
+    try {
+      const portIds = new Set();
+      reservationList.forEach(r => {
+        r.items?.forEach(item => {
+          const portId = item.slot?.port?._id || item.slot?.port;
+          if (portId) portIds.add(portId);
+        });
+      });
+
+      const stationData = {};
+      const portTypeData = {};
+      
+      // GỌI TẤT CẢ PORTS SONG SONG
+      const portPromises = Array.from(portIds).map(portId =>
+        api.get(`/stations/ports/${portId}`)
+          .then(res => ({ portId, data: res.data }))
+          .catch(error => {
+            // console.error(`Error fetching port ${portId}:`, error);
+            return { portId, data: null };
+          })
+      );
+
+      const portResults = await Promise.all(portPromises);
+      
+      // Extract station IDs
+      const stationIds = new Set();
+      portResults.forEach(({ portId, data }) => {
+        if (data) {
+          portTypeData[portId] = data.type || "Unknown";
+          if (data.station) {
+            stationIds.add(data.station);
+          }
+        } else {
+          portTypeData[portId] = "Unknown";
+        }
+      });
+
+      // GỌI TẤT CẢ STATIONS SONG SONG
+      const stationPromises = Array.from(stationIds).map(stationId =>
+        api.get(`/stations/${stationId}`)
+          .then(res => ({ stationId, data: res.data }))
+          .catch(error => {
+            // console.error(`Error fetching station ${stationId}:`, error);
+            return { stationId, data: null };
+          })
+      );
+
+      const stationResults = await Promise.all(stationPromises);
+      
+      // Map stations to their IDs
+      const stationMap = {};
+      stationResults.forEach(({ stationId, data }) => {
+        if (data) {
+          stationMap[stationId] = data;
+        }
+      });
+
+      // Map ports to stations
+      portResults.forEach(({ portId, data }) => {
+        if (data?.station && stationMap[data.station]) {
+          const stationInfo = stationMap[data.station];
+          stationData[portId] = {
+            stationName: stationInfo.name || "N/A",
+            stationId: data.station,
+            address: stationInfo.address || "N/A",
+            provider: stationInfo.provider || "N/A"
+          };
+        } else {
+          stationData[portId] = {
+            stationName: "N/A",
+            stationId: null,
+            address: "N/A",
+            provider: "N/A"
+          };
+        }
+      });
+      
+      setStationMap(stationData);
+      setPortTypeMap(portTypeData);
+    } catch (error) {
+      // console.error("Error fetching station info:", error);
+    }
+  };
+
   const fetchUserData = async () => {
     try {
       setIsLoading(true);
       const response = await api.get("/users/profile");
-      console.log("User data:", response.data.data);
+      // console.log("User data:", response.data.data);
 
       if (response.data.data) {
         const userData = {
@@ -110,7 +202,7 @@ const [defaultVehicleId, setDefaultVehicleId] = useState(null);
         setOriginalUserInfo(userData);
       }
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      // console.error("Error fetching user data:", error);
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         window.location.href = "/login";
@@ -122,7 +214,7 @@ const [defaultVehicleId, setDefaultVehicleId] = useState(null);
   const fetchVehicleData = async () => {
     try {
       const res = await api.get("/vehicles");
-      console.log("Vehicle data:", res.data);
+      // console.log("Vehicle data:", res.data);
 
       const vehiclesList = res.data?.items || res.data?.data || [];
       const vehiclesArray = Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean);
@@ -149,7 +241,7 @@ const [defaultVehicleId, setDefaultVehicleId] = useState(null);
       
       setVehicles(sortedVehicles);
     } catch (error) {
-      console.error("Error fetching vehicle:", error);
+      // console.error("Error fetching vehicle:", error);
       if (error.response?.status !== 404) {
         alert("Không thể tải thông tin phương tiện!");
       }
@@ -252,7 +344,7 @@ const [defaultVehicleId, setDefaultVehicleId] = useState(null);
         dob: userInfo.dob,
       };
 
-      console.log("Updating profile with data:", updateData);
+      // console.log("Updating profile with data:", updateData);
 
       const response = await api.put("/users/profile", updateData);
 
@@ -263,7 +355,7 @@ const [defaultVehicleId, setDefaultVehicleId] = useState(null);
         setErrors({});
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      // console.error("Error updating profile:", error);
 
       if (error.response?.status === 401) {
         showPopup("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", "error");
@@ -293,16 +385,34 @@ const [defaultVehicleId, setDefaultVehicleId] = useState(null);
   // Replace old mock-based stats with transaction-based stats
   // total bookings
   const totalBookings = reservations.length;
-  // most used port (count by slot.port)
+  
+  // most used port (count by slot.port) and get its type from portTypeMap
   const portCounts = reservations.reduce((acc, r) => {
     const items = r.items || [];
     items.forEach((it) => {
-      const portId = it.slot?.port || "unknown";
-      acc[portId] = (acc[portId] || 0) + 1;
+      const portId = it.slot?.port?._id || it.slot?.port;
+      if (portId) {
+        if (!acc[portId]) {
+          acc[portId] = { count: 0 };
+        }
+        acc[portId].count += 1;
+      }
     });
     return acc;
   }, {});
-  const favoritePort = Object.entries(portCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+  
+  const mostUsedPortId = Object.entries(portCounts).sort((a, b) => b[1].count - a[1].count)[0]?.[0];
+  const favoriteConnectorType = mostUsedPortId ? (portTypeMap[mostUsedPortId] || "N/A") : "N/A";
+  
+  // Format connector type name
+  const getConnectorTypeName = (type) => {
+    const typeMap = {
+      'AC': 'AC (Sạc chậm)',
+      'DC': 'DC (Sạc nhanh)',
+      'Ultral': '',
+    };
+    return typeMap[type] || type;
+  };
 
   // average booking duration (minutes)
   const durations = reservations.flatMap((r) =>
@@ -332,10 +442,8 @@ const [defaultVehicleId, setDefaultVehicleId] = useState(null);
   const getStatusText = (status) => {
     const statusMap = {
       'pending': 'Chờ xử lý',
-      'confirmed': 'Đã xác nhận',
-      'completed': 'Hoàn thành',
-      'cancelled': 'Đã hủy',
-      'in-progress': 'Đang sạc'
+      'confirmed': 'Thanh toán thành công',
+      'cancelled': 'Đã hủy',  
     };
     return statusMap[status] || status;
   };
@@ -400,7 +508,7 @@ const handleVehicleSave = async () => {
     setIsEditingVehicle(false);
     setSelectedVehicle(null);
   } catch (error) {
-    console.error("Error saving vehicle:", error);
+    // console.error("Error saving vehicle:", error);
     showPopup("Không thể lưu thông tin xe, vui lòng thử lại!", "error");
   }
 };
@@ -437,7 +545,7 @@ const handleDeleteVehicle = async (vehicleId) => {
       closeConfirmPopup();
       showPopup('Xóa xe thành công!', 'success');
     } catch (error) {
-      console.error('Error deleting vehicle:', error);
+      // console.error('Error deleting vehicle:', error);
       closeConfirmPopup();
       showPopup('Không thể xóa xe, vui lòng thử lại!', 'error');
     }
@@ -453,7 +561,7 @@ const handleDeleteVehicle = async (vehicleId) => {
 
     showConfirmPopup('Bạn có chắc chắn muốn hủy đặt chỗ này?', async () => {
       try {
-        console.log('Cancelling reservation:', reservationId);
+        // console.log('Cancelling reservation:', reservationId);
         await api.patch(`/reservations/${reservationId}/cancel`);
         
         const res = await api.get(`/reservations`);
@@ -470,7 +578,7 @@ const handleDeleteVehicle = async (vehicleId) => {
         closeConfirmPopup();
         showPopup('Hủy đặt chỗ thành công!', 'success');
       } catch (error) {
-        console.error('Error cancelling reservation:', error);
+        // console.error('Error cancelling reservation:', error);
         const errorMsg = error.response?.data?.message || 'Không thể hủy đặt chỗ. Vui lòng thử lại!';
         closeConfirmPopup();
         showPopup(errorMsg, 'error');
@@ -885,25 +993,29 @@ const handleDeleteVehicle = async (vehicleId) => {
           <table className="history-table">
             <thead>
               <tr>
-                {/* <th>Mã đặt chỗ</th> */}
+                <th>Tên trạm</th>
                 <th>Xe</th>
                 <th>Thời gian</th>
                 <th>Trạng thái</th>
-                <th>Thao tác</th>
+                <th className="action-column" style={{ textAlign: 'center' }}>Thao tác</th>
               </tr>
             </thead>  
             <tbody>
               {txLoading ? (
-                <tr><td colSpan={4} style={{ color: "#666" }}>Đang tải...</td></tr>
+                <tr><td colSpan={5} style={{ color: "#666" }}>Đang tải...</td></tr>
               ) : getPaginatedReservations().length > 0 ? (
                 getPaginatedReservations().map((reservation) => {
                   const reservationId = reservation._id || reservation.id;
                   const vehicleId = reservation.vehicle?._id || reservation.vehicle?.id;
                   const firstItem = reservation.items?.[0];
+                  const portId = firstItem?.slot?.port?._id || firstItem?.slot?.port;
+                  const stationInfo = stationMap[portId] || { stationName: "Đang tải..." };
 
                   return (
                     <tr key={reservationId}>
-                      {/* <td>{String(reservationId).slice(-8)}</td> */}
+                      <td>
+                        {stationInfo.stationName}
+                      </td>
                       <td>
                         {reservation.vehicle?.plateNumber || "N/A"}<br/>
                         <small style={{ color: "#666" }}>
@@ -921,8 +1033,8 @@ const handleDeleteVehicle = async (vehicleId) => {
                           {getStatusText(reservation.status)}
                         </span>
                       </td>
-                      <td>
-                        <div className="action-buttons">
+                      <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                        <div className="action-buttons" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
                           {reservation.status === 'pending' && (
                             <>
                               <button 
@@ -970,52 +1082,8 @@ const handleDeleteVehicle = async (vehicleId) => {
                               </button>
                             </>
                           )}
-                          {reservation.status === 'confirmed' && (
-                            <>
-                              <button 
-                                className="pay-btn"
-                                onClick={() => {
-                                  if (reservationId && vehicleId) {
-                                    const firstItem = reservation.items?.[0];
-                                    const portInfo = firstItem?.slot?.port;
-                                    
-                                    localStorage.setItem("reservationId", reservationId);
-                                    localStorage.setItem("vehicleId", vehicleId);
-                                    
-                                    navigate('/chargingSession', {
-                                      state: {
-                                        reservation: {
-                                          id: reservationId,
-                                          portId: portInfo?._id || portInfo,
-                                          powerKw: portInfo?.powerKw || 150,
-                                          status: reservation.status,
-                                          startAt: firstItem?.startAt,
-                                          endAt: firstItem?.endAt
-                                        },
-                                        vehicle: {
-                                          id: vehicleId,
-                                          plateNumber: reservation.vehicle?.plateNumber,
-                                          make: reservation.vehicle?.make,
-                                          model: reservation.vehicle?.model,
-                                          batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
-                                          connectorType: reservation.vehicle?.connectorType
-                                        }
-                                      }
-                                    });
-                                  } else {
-                                    showPopup('Không thể lấy thông tin đặt chỗ', 'error');
-                                  }
-                                }}
-                              >
-                                Tiếp tục
-                              </button>
-                              <button 
-                                className="cancel-btn"
-                                onClick={() => handleCancelReservation(reservationId)}
-                              >
-                                Hủy
-                              </button>
-                            </>
+                          {reservation.status === 'cancelled' && (
+                            <span style={{ color: '#666', fontSize: '0.9rem' }}>Đã hủy</span>
                           )}
                         </div>
                       </td>
@@ -1024,7 +1092,7 @@ const handleDeleteVehicle = async (vehicleId) => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', color: "#90caf9" }}>
+                  <td colSpan={5} style={{ textAlign: 'center', color: "#90caf9" }}>
                     Chưa có đặt chỗ nào
                   </td>
                 </tr>
@@ -1084,8 +1152,8 @@ const handleDeleteVehicle = async (vehicleId) => {
           <div className="analysis-card">
             <div className="icon-box location"><span>🔌</span></div>
             <div>
-              <div className="analysis-label">Cổng sử dụng nhiều nhất</div>
-              <div className="analysis-value">{favoritePort}</div>
+              <div className="analysis-label">Loại cổng sử dụng nhiều nhất</div>
+              <div className="analysis-value">{getConnectorTypeName(favoriteConnectorType)}</div>
             </div>
           </div>
 

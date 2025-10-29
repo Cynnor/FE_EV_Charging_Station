@@ -66,8 +66,8 @@ const About = () => {
   return (
     <section className="homepage__about">
       <div className="section-header">
-        <h2>Về chúng tôi</h2>
-        <p>Hệ thống trạm sạc xe điện hàng đầu Việt Nam</p>
+        {/* <h2>Về chúng tôi</h2>
+        <p>Hệ thống trạm sạc xe điện hàng đầu Việt Nam</p> */}
       </div>
     </section>
   );
@@ -150,7 +150,7 @@ const HomePage = () => {
       const queryString = window.location.search;
 
       // Tạo URL mới cho payment-success
-      const newUrl = window.location.origin + '/payment-success' + queryString;
+      const newUrl = window.origin + '/payment-success' + queryString;
 
       console.log('Redirecting to:', newUrl);
       window.location.href = newUrl;
@@ -268,6 +268,16 @@ const HomePage = () => {
     }
   };
 
+  const handleFindStation = () => {
+    const token = localStorage.getItem("token");
+    const redirectUrl = "/booking";
+    if (!token) {
+      navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
+    } else {
+      navigate(redirectUrl);
+    }
+  };
+
   // // fetch latest transaction
   // useEffect(() => {
   //   let mounted = true;
@@ -330,14 +340,7 @@ const HomePage = () => {
             <div className="homepage__hero-actions">
               <button
                 className="btn btn--primary"
-                onClick={() => {
-                  if (mapSectionRef.current) {
-                    const topPos =
-                      mapSectionRef.current.getBoundingClientRect().top +
-                      window.scrollY;
-                    window.scrollTo({ top: topPos, behavior: "smooth" });
-                  }
-                }}
+                onClick={handleFindStation}
               >
                 Tìm trạm sạc ngay
               </button>
@@ -347,7 +350,7 @@ const HomePage = () => {
             <div className="hero-visual">
               <div className="center-logo">
                 <img
-                  src="/src/assets/logo.jpg"
+                  src="/public/assets/logo.jpg"
                   alt="Logo"
                   className="hero-logo"
                 />
@@ -514,21 +517,21 @@ const HomePage = () => {
         </section> */}
 
         {/* Features Section */}
-        <section className="homepage__features" ref={featuresRef}>
+        {/* <section className="homepage__features" ref={featuresRef}>
           <div className="section-header">
             <h2>Tính năng nổi bật</h2>
             <p>Những tính năng giúp bạn sạc xe điện thuận tiện và tiết kiệm</p>
           </div>
           <div className="features-grid">
             {features.map((feature, idx) => (
-              <div key={idx} className="feature-card">
+              <div key={idx} className="fature-card">
                 <div className="feature-icon">{feature.icon}</div>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
 
         {/* How to use Section */}
         <section className="homepage__howto" ref={stepsRef}>

@@ -207,13 +207,16 @@
   
   th, td {
     padding: 12px;
-    text-align: center;
+    text-align: left;
     border-bottom: 1px solid #eee;
   }
 
   th {
     background: #f5f5f5;
     font-weight: 600;
+  }
+  .action-column {
+    text-align: center;
   }
 
   .pay-link {
@@ -235,9 +238,9 @@
     border-radius: 4px;
     font-size: 0.9em;
 
-    &.completed {
+    &.confirmed {
       background: #e8f5e9;
-      color: #2e7d32;
+      color: #21dd2a;
     }
 
     &.cancelled {
@@ -839,6 +842,7 @@
     font-size: 0.9rem;
 
     th, td {
+      text-align: left;
       padding: 10px 8px;
     }
   }
