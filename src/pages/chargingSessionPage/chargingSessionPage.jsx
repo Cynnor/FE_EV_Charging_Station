@@ -252,7 +252,6 @@ const ChargingSession = () => {
       if (prev.currentCharge >= 100) {
         setIsCharging(false);
         
-        // Chuẩn bị dữ liệu thanh toán
         const paymentData = {
           chargingData: {
             vehicleInfo: {
@@ -278,7 +277,6 @@ const ChargingSession = () => {
           }
         };
         
-        // Tự động chuyển sang trang payment khi sạc đầy
         setTimeout(() => {
           navigate('/payment', {
             state: paymentData
@@ -289,40 +287,34 @@ const ChargingSession = () => {
         return prev;
       }
       
-      // Tăng % pin dựa trên loại cổng
       const increment = 1;
       const newCharge = Math.min(prev.currentCharge + increment, 100);
       
-      // Tính thời gian thực tế đã sạc
-      // AC: 1% = 1 phút
-      // DC: 2% = 1 phút → 1% = 0.5 phút
-      // DC Ultra: 3% = 1 phút → 1% = 0.333 phút
       let timeIncrement = 1; // AC mặc định
       if (prev.portType === 'DC') {
-        timeIncrement = 0.5; // DC: 1% = 0.5 phút
+        timeIncrement = 0.5;
       } else if (prev.portType === 'Ultra') {
-        timeIncrement = 1 / 3; // DC Ultra: 1% = 0.333 phút
+        timeIncrement = 1 / 3;
       }
       
       const newTimeElapsed = prev.timeElapsed + timeIncrement;
       
-      // Tính phí đặt lịch dựa trên thời gian thực tế
+      // Tính phí đặt lịch: số khung 30 phút × đơn giá
       const thirtyMinIntervals = 1 + Math.floor(newTimeElapsed / 30);
       const bookingCost = thirtyMinIntervals * prev.bookingRatePerHalfHour;
       
       // Tính thời gian sạc (giờ)
       const durationHours = newTimeElapsed / 60;
       
-      // Tính năng lượng tiêu thụ: powerKw × số giờ
+      // Tính năng lượng tiêu thụ: công suất × thời gian
       const energyKwh = prev.chargeRate * durationHours;
       
-      // Tính chi phí điện: thời gian (giờ) × năng lượng tiêu thụ × đơn giá điện
-      const energyCost = durationHours * energyKwh * ENERGY_PRICE_PER_KWH;
+      // Tính chi phí điện: năng lượng × đơn giá điện (KHÔNG nhân với thời gian nữa)
+      const energyCost = energyKwh * ENERGY_PRICE_PER_KWH;
       
-      // Tổng chi phí = booking cost + energy cost
+      // Tổng chi phí = phí đặt lịch + phí điện
       const totalCost = bookingCost + energyCost;
       
-      // Tính thời gian còn lại dựa trên loại cổng
       const remainingCharge = 100 - newCharge;
       const newRemainingTime = remainingCharge * timeIncrement;
 
