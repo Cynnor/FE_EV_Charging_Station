@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import "./index.scss";
-import ChargingMap from "../../components/chargingMap";
 // Removed unused import
 import api from "../../config/api";
 
@@ -191,6 +190,7 @@ export default function BookingPage() {
 
   // Step 3: slots
   const [slots, setSlots] = useState([]);
+  const [lastReservedSlotId, setLastReservedSlotId] = useState(null);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -202,6 +202,16 @@ export default function BookingPage() {
   const [userLocation, setUserLocation] = useState(null);
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+
+  // Khôi phục lastReservedSlotId từ localStorage khi component mount
+  useEffect(() => {
+    const saved = localStorage.getItem("lastReservedSlotId");
+    console.log("🔄 Component mounted, checking localStorage:", saved);
+    if (saved) {
+      setLastReservedSlotId(saved);
+      console.log("✅ Restored lastReservedSlotId:", saved);
+    }
   }, []);
 
   // Lấy filter từ URL (?type=AC|DC|DC_ULTRA)
@@ -273,7 +283,7 @@ export default function BookingPage() {
     }
   }, []);
 
-  const defaultCenter = [10.850268581807446, 106.76508926692969];
+  
 
   // // Lọc client-side theo ô tìm kiếm và filterType
   // const filteredStations = useMemo(() => {
@@ -439,15 +449,38 @@ export default function BookingPage() {
 
         if (reservationId) {
           console.log("✅ Reservation ID:", reservationId);
-          
+
+          // ✅ Update slot UI: mark correct slot as 'booked' using API response
+          const reservedItems = reservationData.items || [];
+          if (reservedItems.length > 0) {
+            const reservedSlotId = reservedItems[0].slotId;
+            console.log("🎯 Reserved Slot ID:", reservedSlotId);
+            
+            // Lưu vào localStorage
+            setLastReservedSlotId(reservedSlotId);
+            localStorage.setItem("lastReservedSlotId", reservedSlotId);
+            console.log("💾 Saved to localStorage:", reservedSlotId);
+            
+            // Update UI ngay lập tức: đánh dấu slot thành "booked"
+            setSlots((prevSlots) => {
+              const updated = prevSlots.map((slot) => {
+                const matched = String(slot.id) === String(reservedSlotId);
+                if (matched) {
+                  console.log("🔄 Updating slot:", slot.id, "→ booked");
+                  return { ...slot, status: "booked" };
+                }
+                return slot;
+              });
+              console.log("📋 Updated slots:", updated);
+              return updated;
+            });
+          }
+
           // 👇 Lấy thông tin vehicle từ API hoặc state
           let vehicleInfo = null;
-          
-          // Nếu có selectedVehicle từ state (đã được set khi chọn xe)
           if (selectedVehicle) {
             vehicleInfo = selectedVehicle;
           } else {
-            // Fallback: Fetch từ API nếu cần
             vehicleInfo = {
               id: vehicleId,
               plateNumber: "N/A",
@@ -587,7 +620,7 @@ export default function BookingPage() {
         const hh = String(h).padStart(2, "0");
         const mm = String(m).padStart(2, "0");
         slots.push(`${hh}:${mm}`);
-      }
+      } 
     }
     return slots;
   }, [formData.date, today]);
@@ -1008,26 +1041,52 @@ export default function BookingPage() {
               {!slotsLoading && !slotsError && (
                 <div className="slots-grid">
                   {slots.length === 0 && <div>Không có slot khả dụng</div>}
-                  {slots.map((slot) => (
-                    <div
-                      key={slot.id}
-                      className={`slot-card ${slot.status} ${
-                        selectedSlot?.id === slot.id ? "selected" : ""
-                      }`}
-                      onClick={() => {
-                        if (slot.status === "booked") {
-                          alert(
-                            "❌ Slot này đã được đặt. Vui lòng chọn slot khác!"
-                          );
-                          return;
-                        }
-                        setSelectedSlot(slot);
-                      }}
-                    >
-                      <div className="slot-time">{slot.time}</div>
-                      <div className="slot-status">{slot.status}</div>
-                    </div>
-                  ))}
+                  {slots.map((slot, idx) => {
+                    // FE workaround: force status to 'booked' for last reserved slotId (from state or localStorage)
+                    let effectiveStatus = slot.status;
+                    const reservedSlotId = lastReservedSlotId || localStorage.getItem("lastReservedSlotId");
+                    
+                    // Debug: log để kiểm tra
+                    if (idx === 0 && reservedSlotId) {
+                      console.log("🔍 Debug slot status check:", {
+                        slotId: slot.id,
+                        slotIdType: typeof slot.id,
+                        reservedSlotId: reservedSlotId,
+                        reservedSlotIdType: typeof reservedSlotId,
+                        slotStatus: slot.status,
+                        matched: String(slot.id) === String(reservedSlotId)
+                      });
+                    }
+                    
+                    // So sánh bằng String để đảm bảo chính xác
+                    if (reservedSlotId && String(slot.id) === String(reservedSlotId)) {
+                      effectiveStatus = "booked";
+                      console.log("✅ Slot matched - setting to booked:", slot.id);
+                    }
+                    let statusLabel = "";
+                    if (effectiveStatus === "booked") statusLabel = "Đã đặt";
+                    else if (effectiveStatus === "available") statusLabel = "Sẵn sàng";
+                    else statusLabel = effectiveStatus;
+                    return (
+                      <div
+                        key={slot.id}
+                        className={`slot-card ${effectiveStatus} ${selectedSlot?.id === slot.id ? "selected" : ""}`}
+                        onClick={() => {
+                          if (effectiveStatus === "booked") {
+                            alert("❌ Slot này đã được đặt. Vui lòng chọn slot khác!");
+                            return;
+                          }
+                          setSelectedSlot(slot);
+                        }}
+                      >
+                        <div className="slot-header">
+                          <span className="slot-number">Slot {slot.slotNumber || idx + 1}</span>
+                        </div>
+                        <div className="slot-time">{slot.time}</div>
+                        <div className="slot-status">{statusLabel}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               {/* <button 
@@ -1329,44 +1388,7 @@ export default function BookingPage() {
           )}
         </div>
 
-        {/* RIGHT PANEL: MAP */}
-        {(step === 1 || (step === 2 && selectedStation) || (step === 3 && selectedCharger)) && (
-          <div className="right-panel">
-            <div className="map-container">
-              {step === 1 && (
-                <ChargingMap
-                  stations={filteredStations}
-                  center={selectedStation?.coords || defaultCenter}
-                  zoom={selectedStation ? 16 : 13}
-                  onSelect={(s) => setSelectedStation(s)}
-                  selectedStation={selectedStation}
-                />
-              )}
-              {step === 2 && selectedStation && (
-                <ChargingMap
-                  stations={chargers}
-                  center={selectedStation.coords}
-                  zoom={17}
-                  onSelect={(c) => {
-                    if (c.status === "available") {
-                      setSelectedCharger(c)
-                      setStep(3)
-                    }
-                  }}
-                  selectedStation={selectedCharger}
-                />
-              )}
-              {step === 3 && selectedCharger && (
-                <ChargingMap
-                  stations={[selectedCharger]}
-                  center={selectedStation?.coords || defaultCenter}
-                  zoom={17}
-                  selectedStation={selectedCharger}
-                />
-              )}
-            </div>
-          </div>
-        )}
+        
       </div>
 
       {/* Vehicle Selection Modal */}
