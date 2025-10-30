@@ -4,46 +4,6 @@ import ChargingMap from "../../components/chargingMap";
 import "./index.scss";
 import api from "../../config/api";
 
-// ===== Static Data =====
-const features = [
-  {
-    icon: "🗺️",
-    title: "Tìm kiếm trụ sạc gần bạn",
-    description:
-      "Dễ dàng tìm kiếm các trụ sạc xe điện gần nhất với vị trí hiện tại của bạn trên bản đồ",
-  },
-  {
-    icon: "⚡",
-    title: "Thông tin chi tiết trụ sạc",
-    description:
-      "Xem thông tin đầy đủ về loại sạc, công suất, giá cả và tình trạng hoạt động",
-  },
-  {
-    icon: "📱",
-    title: "Đặt chỗ trước",
-    description:
-      "Đặt trước chỗ sạc để đảm bảo có sẵn khi bạn đến, tiết kiệm thời gian chờ đợi",
-  },
-  {
-    icon: "💳",
-    title: "Thanh toán tiện lợi",
-    description:
-      "Thanh toán dễ dàng qua ví điện tử, thẻ ngân hàng hoặc QR code ngay trên ứng dụng",
-  },
-  {
-    icon: "📊",
-    title: "Theo dõi quá trình sạc",
-    description:
-      "Giám sát thời gian sạc, mức pin hiện tại và chi phí trong thời gian thực",
-  },
-  {
-    icon: "🔔",
-    title: "Thông báo thông minh",
-    description:
-      "Nhận thông báo khi sạc hoàn tất, cảnh báo khi trụ sạc gặp sự cố",
-  },
-];
-
 // ===== Helper Function =====
 const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -65,17 +25,14 @@ const About = () => {
 
   return (
     <section className="homepage__about">
-      <div className="section-header">
-        <h2>Về chúng tôi</h2>
-        <p>Hệ thống trạm sạc xe điện hàng đầu Việt Nam</p>
-      </div>
+      <div className="section-header"></div>
     </section>
   );
 };
 
 // ===== HomePage =====
 const HomePage = () => {
-  const featuresRef = useRef(null);
+  // const featuresRef = useRef(null);
   const stepsRef = useRef(null);
   const mapSectionRef = useRef(null);
   const navigate = useNavigate();
@@ -88,26 +45,13 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const itemRefs = useRef({});
 
-  // ===== Xử lý VNPay return URL =====
+  // ===== Handle VNPay Return =====
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const vnpResponseCode = urlParams.get("vnp_ResponseCode");
-
-    console.log("Checking VNPay return:", {
-      vnpResponseCode,
-      search: window.location.search,
-      pathname: window.location.pathname,
-      href: window.location.href,
-    });
-
     if (vnpResponseCode) {
-      // Có VNPay return parameters, redirect đến paymentSuccessPage
       const queryString = window.location.search;
-
-      // Tạo URL mới cho payment-success
-      const newUrl = window.location.origin + "/payment-success" + queryString;
-
-      console.log("Redirecting to:", newUrl);
+      const newUrl = window.origin + "/payment-success" + queryString;
       window.location.href = newUrl;
     }
   }, []);
@@ -120,9 +64,6 @@ const HomePage = () => {
       try {
         setLoading(true);
         const res = await api.get("/stations");
-        // console.log("Station API result:", res.data);
-
-        // Trường hợp API trả về mảng hoặc object
         let stationsData = [];
         if (Array.isArray(res.data)) {
           stationsData = res.data;
@@ -131,7 +72,6 @@ const HomePage = () => {
         } else if (res.data && typeof res.data === "object") {
           stationsData = [res.data];
         }
-
         // Lọc trạm có tọa độ hợp lệ
         stationsData = stationsData.filter((s) => s.latitude && s.longitude);
 
@@ -155,22 +95,15 @@ const HomePage = () => {
 
         if (isMounted) {
           setMapStations(formatted);
-          console.log("✅ Cập nhật danh sách trạm:", formatted);
         }
       } catch (err) {
-        console.error("Error fetching stations:", err);
         if (isMounted) setError("Không thể tải dữ liệu trạm sạc.");
       } finally {
         if (isMounted) setLoading(false);
       }
     };
-
-    // Gọi lần đầu
     fetchStations();
-
-    // 🔁 Gọi lại API mỗi 30 giây để cập nhật danh sách trạm mới
-    const interval = setInterval(fetchStations, 300000);
-
+    const interval = setInterval(fetchStations, 1000000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -213,9 +146,10 @@ const HomePage = () => {
 
   const handleMarkerClick = (id) => setSelectedId(id);
 
+  // ✅ Sửa tại đây: Điều hướng sang /booking/:stationId
   const handleBooking = (stationId) => {
     const token = localStorage.getItem("token");
-    const redirectUrl = `/booking?station=${stationId}`;
+    const redirectUrl = `/booking/${stationId}`;
     if (!token) {
       navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
     } else {
@@ -223,7 +157,17 @@ const HomePage = () => {
     }
   };
 
-  // ===== Render =====
+  // ✅ Sửa luôn nút “Tìm trạm sạc ngay” → sang trang /booking
+  const handleFindStation = () => {
+    const token = localStorage.getItem("token");
+    const redirectUrl = "/booking";
+    if (!token) {
+      navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
+    } else {
+      navigate(redirectUrl);
+    }
+  };
+
   if (loading) {
     return (
       <div className="homepage__loading">
@@ -253,17 +197,7 @@ const HomePage = () => {
               lợi.
             </p>
             <div className="homepage__hero-actions">
-              <button
-                className="btn btn--primary"
-                onClick={() => {
-                  if (mapSectionRef.current) {
-                    const topPos =
-                      mapSectionRef.current.getBoundingClientRect().top +
-                      window.scrollY;
-                    window.scrollTo({ top: topPos, behavior: "smooth" });
-                  }
-                }}
-              >
+              <button className="btn btn--primary" onClick={handleFindStation}>
                 Tìm trạm sạc ngay
               </button>
             </div>
@@ -271,11 +205,7 @@ const HomePage = () => {
           <div className="homepage__hero-image">
             <div className="hero-visual">
               <div className="center-logo">
-                <img
-                  src="/src/assets/logo.jpg"
-                  alt="Logo"
-                  className="hero-logo"
-                />
+                <img src="/assets/logo.jpg" alt="Logo" className="hero-logo" />
               </div>
               <div className="charging-station">🚗</div>
               <div className="dashboard">⚡</div>
@@ -356,23 +286,6 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Features Section */}
-        <section className="homepage__features" ref={featuresRef}>
-          <div className="section-header">
-            <h2>Tính năng nổi bật</h2>
-            <p>Những tính năng giúp bạn sạc xe điện thuận tiện và tiết kiệm</p>
-          </div>
-          <div className="features-grid">
-            {features.map((feature, idx) => (
-              <div key={idx} className="feature-card">
-                <div className="feature-icon">{feature.icon}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* How to use Section */}
         <section className="homepage__howto" ref={stepsRef}>
           <div className="section-header">
@@ -403,7 +316,6 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
         <section className="homepage__cta">
           <h2>Bắt đầu hành trình xe điện của bạn</h2>
         </section>
@@ -411,4 +323,5 @@ const HomePage = () => {
     </div>
   );
 };
+
 export default HomePage;

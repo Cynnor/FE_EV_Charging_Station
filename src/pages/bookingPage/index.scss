@@ -1,3 +1,5 @@
+@use "sass:color";
+
 // Color System
 $primary: #7ed321;
 $primary-dark: #6bb91c;
@@ -373,7 +375,7 @@ body {
 
   &.dc {
     background: rgba($warning, 0.15);
-    color: darken($warning, 15%);
+    color: color.adjust($warning, $lightness: -15%);
     border: 1px solid rgba($warning, 0.3);
   }
 
@@ -459,7 +461,7 @@ body {
 
       &.dc {
         background: rgba($warning, 0.1);
-        color: darken($warning, 10%);
+        color: color.adjust($warning, $lightness: -10%);
       }
     }
   }
@@ -570,13 +572,13 @@ body {
 
     &.slow {
       background: rgba($info, 0.12);
-      color: darken($info, 5%);
+      color: color.adjust($info, $lightness: -5%);
       border-color: rgba($info, 0.3);
     }
 
     &.fast {
       background: rgba($warning, 0.12);
-      color: darken($warning, 10%);
+      color: color.adjust($warning, $lightness: -10%);
       border-color: rgba($warning, 0.3);
     }
 
@@ -608,7 +610,7 @@ body {
 
   &.dc {
     background: rgba($warning, 0.15);
-    color: darken($warning, 15%);
+    color: color.adjust($warning, $lightness: -15%);
     border: 1px solid rgba($warning, 0.3);
   }
 

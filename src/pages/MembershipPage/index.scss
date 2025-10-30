@@ -1,9 +1,7 @@
 .membership-page {
     text-align: center;
     padding: 100px;
-    //background: linear-gradient(135deg, #81C784, #66BB6A);
-    /* Thêm nền gradient */
-    background: linear-gradient(135deg, #f0fad6 0%, #eafbcf 100%);
+    background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
     font-family: 'Arial', sans-serif;
 }
 
@@ -11,16 +9,15 @@
     font-size: 2.5rem;
     margin-top: 30px;
     margin-bottom: 30px;
-    color: #2c3e50;
+    color: #333333;
     text-transform: uppercase;
     letter-spacing: 2px;
-    /* Thêm kiểu chữ hiện đại */
 }
 
 .membership-page p {
     font-size: 1.2rem;
     margin-bottom: 30px;
-    color: #34495e;
+    color: #AAAAAA;
 }
 
 .packages {
@@ -34,7 +31,6 @@
 .package {
     background: #ffffff;
     border: 1px solid rgb(102, 187, 106);
-    /* Màu viền */
     border-radius: 15px;
     padding: 20px;
     width: 300px;
@@ -50,29 +46,25 @@
 .package:hover {
     transform: translateY(-10px);
     box-shadow: 0 12px 20px rgba(76, 175, 80, 0.3);
-    /* Màu đổ bóng khi hover */
 }
 
 .package h2 {
     font-size: 1.8rem;
     margin-bottom: 10px;
-    color: rgb(3, 3, 3);
-    /* Màu tiêu đề */
+    color: #333333;
 }
 
 .package .price {
     font-size: 1.5rem;
     font-weight: bold;
-    color: rgb(5, 5, 5);
-    /* Màu giá */
+    color: #333333;
     margin-bottom: 10px;
 }
 
 .package p {
     font-size: 1rem;
     margin-bottom: 10px;
-    color: rgb(8, 8, 8);
-    /* Màu chữ mô tả */
+    color: #AAAAAA;
 }
 
 .package .features {
@@ -86,18 +78,18 @@
     margin-bottom: 5px;
     display: flex;
     align-items: center;
-    color: #34495e;
+    color: #AAAAAA;
 }
 
 .package .features li::before {
     content: '✔';
-    color: #27ae60;
+    color: #198754;
     margin-right: 10px;
     font-size: 1.2rem;
 }
 
 .register-button {
-    background: linear-gradient(135deg, #63c016, #2980b9);
+    background: #198754;
     color: #ffffff;
     border: none;
     border-radius: 25px;
@@ -113,6 +105,7 @@
 }
 
 .register-button:hover {
-    background: linear-gradient(135deg, rgb(102, 187, 106), rgb(76, 175, 80));
+    background: #146c43;
+    color: #ffffff;
     transform: scale(1.05);
 }

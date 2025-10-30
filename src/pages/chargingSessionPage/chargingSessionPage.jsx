@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import api from "../../config/api";
 import CustomPopup from "../../components/CustomPopup/CustomPopup";
 import PaymentConfirmPopup from "../../components/PaymentConfirmPopup/PaymentConfirmPopup";
+import ChargingStationCarousel from "../../components/chargingStationCarousel/ChargingStationCarousel";
 
 // Update charging constants and cost calculations
 const PORT_PRICING = {
   AC: 10000,      // 10,000 VNĐ/30 phút
   DC: 15000,      // 15,000 VNĐ/30 phút
-  "DC Ultra": 20000 // 20,000 VNĐ/30 phút
+  Ultra: 20000 // 20,000 VNĐ/30 phút
 };
 const ENERGY_PRICE_PER_KWH = 3858; // VNĐ per kWh (từ API)
 
@@ -196,8 +197,20 @@ const ChargingSession = () => {
 
   useEffect(() => {
     if (chargingData && isCharging) {
-      // Update every 2 seconds to simulate 1 minute passing
-      const interval = setInterval(updateChargingStatus, 2000);
+      // Xác định interval dựa trên loại cổng
+      // AC: 2 giây = 1% (1% = 1 phút)
+      // DC: 1 giây = 1% (2% = 1 phút) 
+      // DC Ultra: 0.67 giây = 1% (3% = 1 phút)
+      let updateInterval = 2000; // Mặc định AC
+      
+      if (chargingData.portType === 'Ultra') {
+        updateInterval = 667; // DC Ultra: ~0.67 giây = 1%
+      } else if (chargingData.portType === 'DC') {
+        updateInterval = 1000; // DC: 1 giây = 1%
+      }
+      
+      // Update theo interval tương ứng với loại cổng
+      const interval = setInterval(updateChargingStatus, updateInterval);
       return () => clearInterval(interval);
     }
   }, [chargingData, isCharging]);
@@ -208,7 +221,17 @@ const ChargingSession = () => {
     const chargeNeeded = targetCharge - initialCharge;
     
     // Calculate estimated time based on battery capacity and port power
-    const estimatedMinutes = Math.ceil((chargeNeeded * vehicleData.batteryCapacity) / (portInfo.powerKw * 0.6)); // 0.6 efficiency factor
+    let estimatedMinutes = Math.ceil((chargeNeeded * vehicleData.batteryCapacity) / portInfo.powerKw); // 0.6 efficiency factor
+    
+    // Điều chỉnh thời gian dự kiến dựa trên loại cổng
+    // AC: 1% = 1 phút
+    // DC: 2% = 1 phút (nhanh gấp 2)
+    // DC Ultra: 3% = 1 phút (nhanh gấp 3)
+    if (portInfo.portType === 'DC') {
+      estimatedMinutes = Math.ceil(estimatedMinutes / 2);
+    } else if (portInfo.portType === 'Ultra') {
+      estimatedMinutes = Math.ceil(estimatedMinutes / 3);
+    }
     
     setChargingData({
       ...vehicleData,
@@ -219,7 +242,7 @@ const ChargingSession = () => {
       startTime: new Date(),
       initialCharge: initialCharge,
       timeElapsed: 0,
-      bookingRatePerHalfHour: portInfo.bookingRatePerHour, // Đổi tên cho rõ ràng
+      bookingRatePerHalfHour: portInfo.bookingRatePerHour,
       portType: portInfo.portType,
     });
   };
@@ -266,45 +289,48 @@ const ChargingSession = () => {
         return prev;
       }
       
-      // Increase 1% per update (1% = 1 minute in real time)
+      // Tăng % pin dựa trên loại cổng
       const increment = 1;
       const newCharge = Math.min(prev.currentCharge + increment, 100);
       
-      // Each update represents 1 minute passing
-      const newTimeElapsed = prev.timeElapsed + 1; // +1 minute
+      // Tính thời gian thực tế đã sạc
+      // AC: 1% = 1 phút
+      // DC: 2% = 1 phút → 1% = 0.5 phút
+      // DC Ultra: 3% = 1 phút → 1% = 0.333 phút
+      let timeIncrement = 1; // AC mặc định
+      if (prev.portType === 'DC') {
+        timeIncrement = 0.5; // DC: 1% = 0.5 phút
+      } else if (prev.portType === 'Ultra') {
+        timeIncrement = 1 / 3; // DC Ultra: 1% = 0.333 phút
+      }
       
-      // Tính phí đặt lịch:
-      // - Phút 0-29: 1 lần phí (chỉ tính phí ban đầu)
-      // - Phút 30-59: 2 lần phí (phí ban đầu + 1 lần cộng thêm)
-      // - Phút 60-89: 3 lần phí (phí ban đầu + 2 lần cộng thêm)
-      // Công thức: 1 + Math.floor(timeElapsed / 30)
+      const newTimeElapsed = prev.timeElapsed + timeIncrement;
+      
+      // Tính phí đặt lịch dựa trên thời gian thực tế
       const thirtyMinIntervals = 1 + Math.floor(newTimeElapsed / 30);
       const bookingCost = thirtyMinIntervals * prev.bookingRatePerHalfHour;
       
-      // Tính năng lượng tiêu thụ: powerKw × số giờ
+      // Tính thời gian sạc (giờ)
       const durationHours = newTimeElapsed / 60;
+      
+      // Tính năng lượng tiêu thụ: powerKw × số giờ
       const energyKwh = prev.chargeRate * durationHours;
       
-      // Tính chi phí điện: năng lượng × đơn giá điện
-      const energyCost = energyKwh * ENERGY_PRICE_PER_KWH;
+      // Tính chi phí điện: thời gian (giờ) × năng lượng tiêu thụ × đơn giá điện
+      const energyCost = durationHours * energyKwh * ENERGY_PRICE_PER_KWH;
       
       // Tổng chi phí = booking cost + energy cost
       const totalCost = bookingCost + energyCost;
       
-      // Calculate remaining time: each 1% = 1 minute
+      // Tính thời gian còn lại dựa trên loại cổng
       const remainingCharge = 100 - newCharge;
-      const newRemainingTime = remainingCharge;
-
-      // TẮT GỌI API - Dùng tính toán local để tránh xung đột
-      // if (newTimeElapsed % 5 === 0) {
-      //   calculatePricingFromAPI(prev, newTimeElapsed);
-      // }
+      const newRemainingTime = remainingCharge * timeIncrement;
 
       return {
         ...prev,
         currentCharge: newCharge,
         chargingCost: totalCost,
-        remainingTime: newRemainingTime,
+        remainingTime: Math.ceil(newRemainingTime),
         timeElapsed: newTimeElapsed,
         bookingCost: bookingCost,
         energyCost: energyCost,
@@ -596,7 +622,7 @@ const ChargingSession = () => {
                       </div>
                       <div className="detail-item">
                         <span className="label">Thời gian đã sạc:</span>
-                        <span className="value">{chargingData.timeElapsed} phút ({chargingData.durationHours?.toFixed(2)} giờ)</span>
+                        <span className="value">{chargingData.timeElapsed?.toFixed(2)} phút ({chargingData.durationHours?.toFixed(2)} giờ)</span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Năng lượng tiêu thụ:</span>
@@ -642,6 +668,7 @@ const ChargingSession = () => {
             </div>
 
             <div className="session-right">
+              <ChargingStationCarousel />
               {portInfo && (
                 <div className="vehicle-info-card">
                   <h2>Thông tin cổng sạc</h2>

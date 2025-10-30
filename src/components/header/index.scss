@@ -105,15 +105,15 @@ body {
 
 .header__nav a.hover,
 .header__nav Link.hover {
-  color: #7ed321;
-  background: rgba(126, 211, 33, 0.1);
+  color: #198754; 
+  background: rgba(198, 220, 180, 0.1);
   transform: translateY(-1px);
 }
 
 .header__nav a.active,
 .header__nav Link.active {
   color: #fff;
-  background: linear-gradient(135deg, #7ed321, #6bc91a);
+  background: #198754;
   box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
 }
 
@@ -129,11 +129,11 @@ body {
   display: flex;
   align-items: center;
   background: rgba(255, 255, 255, 0.9);
-  border: 2px solid #7ed321;
+  border: 2px solid #198754;
   border-radius: 30px;
   padding: 6px 12px;
   gap: 12px;
-  box-shadow: 0 4px 16px rgba(126, 211, 33, 0.15);
+  box-shadow: 0 4px 16px rgba(198, 220, 180, 0.15);
 }
 
 .header__login,
@@ -153,13 +153,13 @@ body {
 
 .header__login:hover,
 .header__register:hover {
-  background: #7ed321;
+  background: #198754;
   color: #fff;
   transform: translateY(-1px);
 }
 
 .header__auth-divider {
-  color: #7ed321;
+  color: #198754;
   font-weight: 300;
   font-size: 1.2rem;
 }
@@ -176,7 +176,7 @@ body {
 }
 
 .header__notification-btn {
-  background: linear-gradient(135deg, #7ed321, #6bc91a);
+  background: #198754;
   border: none;
   cursor: pointer;
   padding: 12px;
@@ -192,9 +192,9 @@ body {
 }
 
 .header__notification-btn:hover {
-  background: linear-gradient(135deg, #6bc91a, #5ab018);
+  background: #198754;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(126, 211, 33, 0.4);
+  box-shadow: 0 6px 20px rgba(198, 220, 180, 0.4);
 }
 
 .header__notification-btn:active {
@@ -251,7 +251,7 @@ body {
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #7ed321;
+  border: 2px solid #198754;
   transition: all 0.3s ease;
 }
 
@@ -273,7 +273,7 @@ body {
 }
 
 .header__logout-btn:hover {
-  background: #7ed321;
+  background: #198754;
   color: #fff;
 }
 .header__lang-toggle {
