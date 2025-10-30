@@ -259,8 +259,6 @@ const ChargingSession = () => {
     setChargingData((prev) => {
       if (prev.currentCharge >= 100) {
         setIsCharging(false);
-
-        // Chuẩn bị dữ liệu thanh toán
         const paymentData = {
           chargingData: {
             vehicleInfo: {
@@ -285,7 +283,6 @@ const ChargingSession = () => {
             },
           },
         };
-
         // Tự động chuyển sang trang payment khi sạc đầy
         setTimeout(() => {
           navigate("/payment", {
@@ -313,8 +310,7 @@ const ChargingSession = () => {
       }
 
       const newTimeElapsed = prev.timeElapsed + timeIncrement;
-
-      // Tính phí đặt lịch dựa trên thời gian thực tế
+      // Tính phí đặt lịch: số khung 30 phút × đơn giá
       const thirtyMinIntervals = 1 + Math.floor(newTimeElapsed / 30);
       const bookingCost = thirtyMinIntervals * prev.bookingRatePerHalfHour;
 

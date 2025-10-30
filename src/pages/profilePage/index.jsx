@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import CustomPopup from "../../components/CustomPopup/index";
 import ConfirmPopup from "../../components/confirmPopup/index.jsx";
 
+
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
