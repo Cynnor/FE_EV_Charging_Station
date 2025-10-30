@@ -1002,85 +1002,58 @@ export default function BookingPage() {
                 Quay lại
               </button>
               <h2>Chọn slot cho trụ sạc</h2>
-              {slotsLoading && <div>Đang tải slot…</div>}
+              <p className="selection-hint">
+                Chọn khung giờ phù hợp với lịch trình của bạn
+              </p>
+
+              {slotsLoading && (
+                <div className="loading-message">Đang tải slot…</div>
+              )}
               {slotsError && (
-                <div style={{ color: "tomato" }}>Lỗi: {slotsError}</div>
+                <div className="error-message">Lỗi: {slotsError}</div>
               )}
               {!slotsLoading && !slotsError && (
                 <div className="slots-grid">
-                  {slots.length === 0 && <div>Không có slot khả dụng</div>}
-                  {slots.map((slot, idx) => {
-                    // FE workaround: force status to 'booked' for last reserved slotId (from state or localStorage)
-                    let effectiveStatus = slot.status;
-                    const reservedSlotId =
-                      lastReservedSlotId ||
-                      localStorage.getItem("lastReservedSlotId");
-
-                    // Debug: log để kiểm tra
-                    if (idx === 0 && reservedSlotId) {
-                      console.log("🔍 Debug slot status check:", {
-                        slotId: slot.id,
-                        slotIdType: typeof slot.id,
-                        reservedSlotId: reservedSlotId,
-                        reservedSlotIdType: typeof reservedSlotId,
-                        slotStatus: slot.status,
-                        matched: String(slot.id) === String(reservedSlotId),
-                      });
-                    }
-
-                    // So sánh bằng String để đảm bảo chính xác
-                    if (
-                      reservedSlotId &&
-                      String(slot.id) === String(reservedSlotId)
-                    ) {
-                      effectiveStatus = "booked";
-                      console.log(
-                        "✅ Slot matched - setting to booked:",
-                        slot.id
-                      );
-                    }
-                    let statusLabel = "";
-                    if (effectiveStatus === "booked") statusLabel = "Đã đặt";
-                    else if (effectiveStatus === "available")
-                      statusLabel = "Sẵn sàng";
-                    else statusLabel = effectiveStatus;
-                    return (
-                      <div
-                        key={slot.id}
-                        className={`slot-card ${effectiveStatus} ${
-                          selectedSlot?.id === slot.id ? "selected" : ""
-                        }`}
-                        onClick={() => {
-                          if (effectiveStatus === "booked") {
-                            alert(
-                              "❌ Slot này đã được đặt. Vui lòng chọn slot khác!"
-                            );
-                            return;
-                          }
-                          setSelectedSlot(slot);
-                        }}
-                      >
-                        <div className="slot-header">
-                          <span className="slot-number">
-                            Slot {slot.slotNumber || idx + 1}
-                          </span>
-                        </div>
-                        <div className="slot-time">{slot.time}</div>
-                        <div className="slot-status">{statusLabel}</div>
+                  {slots.length === 0 && (
+                    <div className="no-slots-message">
+                      Không có slot khả dụng cho trụ này
+                    </div>
+                  )}
+                  {slots.map((slot, index) => (
+                    <div
+                      key={slot.id}
+                      className={`slot-card ${slot.status} ${
+                        selectedSlot?.id === slot.id ? "selected" : ""
+                      }`}
+                      onClick={() => {
+                        if (slot.status === "booked") {
+                          alert(
+                            "❌ Slot này đã được đặt. Vui lòng chọn slot khác!"
+                          );
+                          return;
+                        }
+                        setSelectedSlot(slot);
+                      }}
+                    >
+                      <div className="slot-header">
+                        <span className="slot-number">Slot {index + 1}</span>
+                        <span className={`slot-status-badge ${slot.status}`}>
+                          {slot.status === "available" && "✓ Có sẵn"}
+                          {slot.status === "booked" && "✕ Đã đặt"}
+                        </span>
                       </div>
-                    );
-                  })}
+
+                      <div className="slot-duration">
+                        <span className="duration-icon">⏳</span>
+                        <span className="duration-text">
+                          Thời lượng: 24 giờ
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-              {/* <button
-                className="refresh-button"
-                onClick={() => {
-                // Gọi lại API slots để cập nhật trạng thái mới nhất
-                fetchSlots(); // hoặc gọi lại useEffect
-              }}
-              >
-               🔄 Làm mới slot
-              </button> */}
+
               <button
                 className="next-button"
                 disabled={!selectedSlot}

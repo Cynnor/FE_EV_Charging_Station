@@ -413,6 +413,8 @@ body {
   }
 }
 
+
+
 // Charger Selection
 .charger-selection {
   flex: 1;
@@ -781,6 +783,24 @@ body {
     padding-bottom: $spacing-sm;
     border-bottom: 2px solid $primary;
     flex-shrink: 0;
+  }
+}
+
+.change-vehicle-btn,
+.select-vehicle-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(45deg, #7ed321, #6bc91a);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(126, 211, 33, 0.4);
   }
 }
 
@@ -1447,13 +1467,12 @@ body {
 }
 
 .slot-selection {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
-  padding: $spacing-md;
 
-  > .back-button {
+  .back-button {
     margin-bottom: $spacing-md;
   }
 
@@ -1463,293 +1482,203 @@ body {
     color: $text-primary;
     margin-bottom: $spacing-md;
   }
-}
 
-.slots-grid {
-  flex: 1;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: $spacing-sm;
-  align-content: start;
-
-  &::-webkit-scrollbar {
-    width: 6px;
+  .selection-hint {
+    text-align: center;
+    color: #AAAAAA;
+    font-size: 1rem;
+    margin-bottom: 24px;
   }
 
-  &::-webkit-scrollbar-track {
-    background: $bg-light;
+  .loading-message,
+  .error-message,
+  .no-slots-message {
+    text-align: center;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
   }
 
-  &::-webkit-scrollbar-thumb {
-    background: $border-color;
-    border-radius: 3px;
-
-    &:hover {
-      background: $text-muted;
-    }
-  }
-}
-
-.slot-card {
-  background: $bg-white;
-  border: 2px solid $border-color;
-  border-radius: $radius-md;
-  padding: $spacing-md;
-  cursor: pointer;
-  transition: all $transition-base;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  min-height: 120px;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-
-  &:hover {
-    border-color: $primary;
-    box-shadow: $shadow-lg;
-    transform: translateY(-2px);
+  .loading-message {
+    background: rgba(25, 135, 84, 0.1);
+    color: #333333;
   }
 
-  &.selected {
-    border-color: $primary;
-    background: $primary-pale;
-    box-shadow: $shadow-md;
+  .error-message {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
   }
 
-  &.booked {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: $bg-light;
-    border-color: $danger;
+  .no-slots-message {
+    background: rgba(170, 170, 170, 0.1);
+    color: #AAAAAA;
+  }
 
-    &:hover {
-      border-color: $danger;
-      box-shadow: 0 0 0 3px rgba($danger, 0.1);
-      transform: none;
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(100vh - 400px);
+    padding-right: 8px;
+    margin-bottom: 24px;
+
+    /* Custom scrollbar */
+    &::-webkit-scrollbar {
+      width: 8px;
     }
 
-    .slot-status {
-      background: rgba($danger, 0.15);
-      color: $danger;
-      border: 1px solid rgba($danger, 0.3);
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #198754;
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #146c43;
     }
   }
 
-  &.available {
-    &:hover {
-      border-color: $primary;
-      box-shadow: $shadow-lg;
-      transform: translateY(-2px);
-    }
-
-    .slot-status {
-      background: rgba($success, 0.15);
-      color: $success;
-      border: 1px solid rgba($success, 0.3);
-    }
-  }
-
-  .slot-time {
-    font-size: 24px;
-    font-weight: 700;
-    color: $text-primary;
-    line-height: 1;
-  }
-
-  .slot-status {
-    font-size: 12px;
-    color: $text-secondary;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    padding: 4px 8px;
-    background: $bg-light;
-    border-radius: $radius-sm;
-    width: 100%;
-    border: 1px solid transparent;
-    transition: all $transition-base;
-  }
-}
-
-.next-button {
-  width: 100%;
-  padding: $spacing-md $spacing-lg;
-  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: white;
-  border: none;
-  border-radius: $radius-md;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all $transition-base;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-sm;
-  box-shadow: $shadow-md;
-  margin-top: $spacing-md;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: $shadow-lg;
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  svg {
-    transition: transform $transition-base;
-    width: 18px;
-    height: 18px;
-  }
-
-  &:hover:not(:disabled) svg {
-    transform: translateX(4px);
-  }
-}
-
-.status-badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: inline-block;
-}
-
-.status-badge.available {
-  background-color: #e6f4ea; /* Xanh lá nhạt – tone "sẵn sàng" nhẹ nhàng */
-  color: #137333;            /* Xanh đậm vừa đủ để dễ đọc */
-  border: 1px solid #a5d6a7; /* Viền mờ để tăng độ tinh tế */
-}
-
-.status-badge.in_use {
-  background-color: #fff8e1; /* Vàng nhạt – cho trạng thái đang dùng */
-  color: #9a6e02;
-  border: 1px solid #ffcc80;
-}
-
-// Vehicle Selection
-.vehicle-selection-card {
-  .selected-vehicle-info {
-    margin-bottom: 20px;
-  }
-
-  .change-vehicle-btn,
-  .select-vehicle-btn {
-    width: 100%;
-    padding: 12px 20px;
-    background: linear-gradient(45deg, #7ed321, #6bc91a);
-    color: white;
-    border: none;
-    border-radius: 25px;
-    font-weight: 600;
+  .slot-card {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(126, 211, 33, 0.4);
+    &:hover:not(.booked) {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(25, 135, 84, 0.15);
+      border-color: #198754;
+    }
+
+    &.selected {
+      border-color: #198754;
+      background: rgba(25, 135, 84, 0.05);
+      box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
+    }
+
+    &.booked {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #f9fafb;
+
+      &:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+
+    .slot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+
+      .slot-number {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #333333;
+      }
+
+      .slot-status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+
+        &.available {
+          background: rgba(25, 135, 84, 0.1);
+          color: #198754;
+        }
+
+        &.booked {
+          background: rgba(220, 38, 38, 0.1);
+          color: #dc2626;
+        }
+      }
+    }
+
+    .slot-time-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex: 1;
+
+      .time-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .time-label {
+          font-size: 0.9rem;
+          color: #AAAAAA;
+        }
+
+        .time-value {
+          font-size: 1rem;
+          font-weight: 600;
+          color: #333333;
+        }
+      }
+    }
+
+    .slot-duration {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(25, 135, 84, 0.05);
+      border-radius: 8px;
+      margin-top: auto;
+
+      .duration-icon {
+        font-size: 1.2rem;
+      }
+
+      .duration-text {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #333333;
+      }
     }
   }
-}
 
-.vehicle-modal {
-  background: white;
-  border-radius: 20px;
-  padding: 30px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.vehicles-grid-modal {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.vehicle-card-modal {
-  background: rgba(126, 211, 33, 0.05);
-  border: 2px solid rgba(126, 211, 33, 0.3);
-  border-radius: 15px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(126, 211, 33, 0.3);
-    border-color: #7ed321;
-  }
-
-  &.selected {
-    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(126, 211, 33, 0.1));
-    border-color: #4caf50;
-    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-  }
-
-  .vehicle-plate {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 8px;
-  }
-
-  .vehicle-model {
-    color: #666;
-    margin-bottom: 5px;
-  }
-
-  .vehicle-type {
-    color: #7ed321;
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-
-  .default-badge-modal {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: #4caf50;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-}
-
-.no-vehicles {
-  text-align: center;
-  padding: 40px 20px;
-
-  p {
-    color: #666;
-    margin-bottom: 20px;
-  }
-
-  button {
-    padding: 10px 20px;
-    background: #7ed321;
-    color: white;
+  .next-button {
+    width: 100%;
+    padding: 16px;
+    background: #198754;
+    color: #ffffff;
     border: none;
-    border-radius: 20px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
     cursor: pointer;
-    font-weight: 600;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
 
-    &:hover {
-      background: #6bb81d;
+    &:hover:not(:disabled) {
+      background: #146c43;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(20, 108, 67, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 }

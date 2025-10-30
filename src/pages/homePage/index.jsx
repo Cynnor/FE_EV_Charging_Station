@@ -4,6 +4,7 @@ import ChargingMap from "../../components/chargingMap";
 import "./index.scss";
 import api from "../../config/api";
 
+
 // ===== Helper Function =====
 const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -49,6 +50,7 @@ const HomePage = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const vnpResponseCode = urlParams.get("vnp_ResponseCode");
+
     if (vnpResponseCode) {
       const queryString = window.location.search;
       const newUrl = window.origin + "/payment-success" + queryString;
@@ -58,12 +60,13 @@ const HomePage = () => {
 
   // ===== Fetch Station Data from API =====
   useEffect(() => {
-    let isMounted = true; // tránh lỗi khi unmount
+    let isMounted = true;
 
     const fetchStations = async () => {
       try {
         setLoading(true);
         const res = await api.get("/stations");
+
         let stationsData = [];
         if (Array.isArray(res.data)) {
           stationsData = res.data;
@@ -72,10 +75,11 @@ const HomePage = () => {
         } else if (res.data && typeof res.data === "object") {
           stationsData = [res.data];
         }
-        // Lọc trạm có tọa độ hợp lệ
-        stationsData = stationsData.filter((s) => s.latitude && s.longitude);
 
-        // Format lại dữ liệu
+        stationsData = stationsData.filter(
+          (s) => s.latitude && s.longitude
+        );
+
         const formatted = stationsData.map((s, index) => ({
           id: s.id || index + 1,
           name: s.name || "Trạm sạc không tên",
@@ -102,8 +106,9 @@ const HomePage = () => {
         if (isMounted) setLoading(false);
       }
     };
+
     fetchStations();
-    const interval = setInterval(fetchStations, 1000000);
+    const interval = setInterval(fetchStations, 300000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -122,12 +127,7 @@ const HomePage = () => {
           if (mapStations.length > 0) {
             const withDistance = mapStations.map((s) => ({
               ...s,
-              distance: getDistanceKm(
-                latitude,
-                longitude,
-                s.coords[0],
-                s.coords[1]
-              ),
+              distance: getDistanceKm(latitude, longitude, s.coords[0], s.coords[1]),
             }));
             setNearbyStations(
               withDistance.sort((a, b) => a.distance - b.distance).slice(0, 5)
@@ -193,11 +193,13 @@ const HomePage = () => {
             <h1>Tìm trạm sạc xe điện dễ dàng, sạc nhanh chóng</h1>
             <p>
               Ứng dụng tìm kiếm và sử dụng trụ sạc xe điện hàng đầu Việt Nam.
-              Hơn 500 trạm sạc trên toàn quốc, đặt chỗ trước, thanh toán tiện
-              lợi.
+              Hơn 500 trạm sạc trên toàn quốc, đặt chỗ trước, thanh toán tiện lợi.
             </p>
             <div className="homepage__hero-actions">
-              <button className="btn btn--primary" onClick={handleFindStation}>
+              <button
+                className="btn btn--primary"
+                onClick={handleFindStation}
+              >
                 Tìm trạm sạc ngay
               </button>
             </div>
@@ -205,7 +207,11 @@ const HomePage = () => {
           <div className="homepage__hero-image">
             <div className="hero-visual">
               <div className="center-logo">
-                <img src="/assets/logo.jpg" alt="Logo" className="hero-logo" />
+                <img
+                  src="/public/assets/logo.jpg"
+                  alt="Logo"
+                  className="hero-logo"
+                />
               </div>
               <div className="charging-station">🚗</div>
               <div className="dashboard">⚡</div>
@@ -228,17 +234,13 @@ const HomePage = () => {
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${
-                      selectedId === station.id ? "is-selected" : ""
-                    }`}
+                    className={`station-item ${selectedId === station.id ? "is-selected" : ""}`}
                     onClick={() => setSelectedId(station.id)}
                   >
                     <div className="station-header">
                       <h4>{station.name}</h4>
                       {station.distance && (
-                        <span className="distance">
-                          {station.distance.toFixed(1)} km
-                        </span>
+                        <span className="distance">{station.distance.toFixed(1)} km</span>
                       )}
                       <div className={`status-indicator ${station.status}`}>
                         {station.status === "available" && "🟢"}
@@ -250,8 +252,7 @@ const HomePage = () => {
                       <div className="item">⚡ {station.speed}</div>
                       <div className="item">💰 {station.price}</div>
                       <div className="item">
-                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} |
-                        Ultra: {station.slots.ultra}
+                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} | Ultra: {station.slots.ultra}
                       </div>
                       <div className="item">📍 {station.address}</div>
                     </div>
@@ -275,9 +276,7 @@ const HomePage = () => {
                 zoom={12}
                 onSelect={(station) => handleMarkerClick(station.id)}
                 selectedStation={
-                  selectedId
-                    ? mapStations.find((s) => s.id === selectedId)
-                    : null
+                  selectedId ? mapStations.find((s) => s.id === selectedId) : null
                 }
                 userLocation={userLocation}
                 onUpdateLocation={updateLocation}
@@ -319,6 +318,8 @@ const HomePage = () => {
         <section className="homepage__cta">
           <h2>Bắt đầu hành trình xe điện của bạn</h2>
         </section>
+
+        <About />
       </div>
     </div>
   );
