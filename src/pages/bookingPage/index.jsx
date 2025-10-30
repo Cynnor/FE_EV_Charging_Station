@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import "./index.scss";
+import ChargingMap from "../../components/chargingMap";
 // Removed unused import
 import api from "../../config/api";
 
@@ -187,10 +188,8 @@ export default function BookingPage() {
   const [selectedStation, setSelectedStation] = useState(null);
   const [selectedCharger, setSelectedCharger] = useState(null);
 
-
   // Step 3: slots
   const [slots, setSlots] = useState([]);
-  const [lastReservedSlotId, setLastReservedSlotId] = useState(null);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -202,16 +201,6 @@ export default function BookingPage() {
   const [userLocation, setUserLocation] = useState(null);
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
-
-  // Khôi phục lastReservedSlotId từ localStorage khi component mount
-  useEffect(() => {
-    const saved = localStorage.getItem("lastReservedSlotId");
-    console.log("🔄 Component mounted, checking localStorage:", saved);
-    if (saved) {
-      setLastReservedSlotId(saved);
-      console.log("✅ Restored lastReservedSlotId:", saved);
-    }
   }, []);
 
   // Lấy filter từ URL (?type=AC|DC|DC_ULTRA)
@@ -283,7 +272,7 @@ export default function BookingPage() {
     }
   }, []);
 
-  
+  const defaultCenter = [10.850268581807446, 106.76508926692969];
 
   // // Lọc client-side theo ô tìm kiếm và filterType
   // const filteredStations = useMemo(() => {
@@ -396,12 +385,10 @@ export default function BookingPage() {
     endTime: "",
   });
 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -450,42 +437,19 @@ export default function BookingPage() {
         if (reservationId) {
           console.log("✅ Reservation ID:", reservationId);
 
-          // ✅ Update slot UI: mark correct slot as 'booked' using API response
-          const reservedItems = reservationData.items || [];
-          if (reservedItems.length > 0) {
-            const reservedSlotId = reservedItems[0].slotId;
-            console.log("🎯 Reserved Slot ID:", reservedSlotId);
-            
-            // Lưu vào localStorage
-            setLastReservedSlotId(reservedSlotId);
-            localStorage.setItem("lastReservedSlotId", reservedSlotId);
-            console.log("💾 Saved to localStorage:", reservedSlotId);
-            
-            // Update UI ngay lập tức: đánh dấu slot thành "booked"
-            setSlots((prevSlots) => {
-              const updated = prevSlots.map((slot) => {
-                const matched = String(slot.id) === String(reservedSlotId);
-                if (matched) {
-                  console.log("🔄 Updating slot:", slot.id, "→ booked");
-                  return { ...slot, status: "booked" };
-                }
-                return slot;
-              });
-              console.log("📋 Updated slots:", updated);
-              return updated;
-            });
-          }
-
           // 👇 Lấy thông tin vehicle từ API hoặc state
           let vehicleInfo = null;
+
+          // Nếu có selectedVehicle từ state (đã được set khi chọn xe)
           if (selectedVehicle) {
             vehicleInfo = selectedVehicle;
           } else {
+            // Fallback: Fetch từ API nếu cần
             vehicleInfo = {
               id: vehicleId,
               plateNumber: "N/A",
               make: "N/A",
-              model: "N/A"
+              model: "N/A",
             };
           }
 
@@ -499,10 +463,10 @@ export default function BookingPage() {
               bookingTime: {
                 date: formData.date,
                 startTime: formData.startTime,
-                endTime: formData.endTime
-              }
+                endTime: formData.endTime,
+              },
             },
-            replace: true
+            replace: true,
           });
         } else {
           console.warn("⚠️ Không tìm thấy reservationId trong response");
@@ -620,7 +584,7 @@ export default function BookingPage() {
         const hh = String(h).padStart(2, "0");
         const mm = String(m).padStart(2, "0");
         slots.push(`${hh}:${mm}`);
-      } 
+      }
     }
     return slots;
   }, [formData.date, today]);
@@ -702,12 +666,14 @@ export default function BookingPage() {
         const res = await api.get("/vehicles");
         const vehiclesList = res.data?.items || [];
         setVehicles(vehiclesList);
-        
+
         // Lấy xe mặc định từ localStorage
         const defaultVehicleId = localStorage.getItem("defaultVehicleId");
-        
+
         if (defaultVehicleId) {
-          const defaultVehicle = vehiclesList.find(v => v.id === defaultVehicleId);
+          const defaultVehicle = vehiclesList.find(
+            (v) => v.id === defaultVehicleId
+          );
           if (defaultVehicle) {
             setSelectedVehicle(defaultVehicle);
             setVehicleId(defaultVehicleId);
@@ -723,13 +689,15 @@ export default function BookingPage() {
         console.error("Error fetching vehicles:", error);
       }
     };
-    
+
     fetchVehicles();
   }, []);
 
   return (
     <div className="booking-wrapper">
-      <div className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}>
+      <div
+        className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}
+      >
         <div className="left-panel">
           <div className="panel-header">
             <h1>Đặt chỗ sạc xe</h1>
@@ -1034,70 +1002,58 @@ export default function BookingPage() {
                 Quay lại
               </button>
               <h2>Chọn slot cho trụ sạc</h2>
-              {slotsLoading && <div>Đang tải slot…</div>}
+              <p className="selection-hint">
+                Chọn khung giờ phù hợp với lịch trình của bạn
+              </p>
+
+              {slotsLoading && (
+                <div className="loading-message">Đang tải slot…</div>
+              )}
               {slotsError && (
-                <div style={{ color: "tomato" }}>Lỗi: {slotsError}</div>
+                <div className="error-message">Lỗi: {slotsError}</div>
               )}
               {!slotsLoading && !slotsError && (
                 <div className="slots-grid">
-                  {slots.length === 0 && <div>Không có slot khả dụng</div>}
-                  {slots.map((slot, idx) => {
-                    // FE workaround: force status to 'booked' for last reserved slotId (from state or localStorage)
-                    let effectiveStatus = slot.status;
-                    const reservedSlotId = lastReservedSlotId || localStorage.getItem("lastReservedSlotId");
-                    
-                    // Debug: log để kiểm tra
-                    if (idx === 0 && reservedSlotId) {
-                      console.log("🔍 Debug slot status check:", {
-                        slotId: slot.id,
-                        slotIdType: typeof slot.id,
-                        reservedSlotId: reservedSlotId,
-                        reservedSlotIdType: typeof reservedSlotId,
-                        slotStatus: slot.status,
-                        matched: String(slot.id) === String(reservedSlotId)
-                      });
-                    }
-                    
-                    // So sánh bằng String để đảm bảo chính xác
-                    if (reservedSlotId && String(slot.id) === String(reservedSlotId)) {
-                      effectiveStatus = "booked";
-                      console.log("✅ Slot matched - setting to booked:", slot.id);
-                    }
-                    let statusLabel = "";
-                    if (effectiveStatus === "booked") statusLabel = "Đã đặt";
-                    else if (effectiveStatus === "available") statusLabel = "Sẵn sàng";
-                    else statusLabel = effectiveStatus;
-                    return (
-                      <div
-                        key={slot.id}
-                        className={`slot-card ${effectiveStatus} ${selectedSlot?.id === slot.id ? "selected" : ""}`}
-                        onClick={() => {
-                          if (effectiveStatus === "booked") {
-                            alert("❌ Slot này đã được đặt. Vui lòng chọn slot khác!");
-                            return;
-                          }
-                          setSelectedSlot(slot);
-                        }}
-                      >
-                        <div className="slot-header">
-                          <span className="slot-number">Slot {slot.slotNumber || idx + 1}</span>
-                        </div>
-                        <div className="slot-time">{slot.time}</div>
-                        <div className="slot-status">{statusLabel}</div>
+                  {slots.length === 0 && (
+                    <div className="no-slots-message">
+                      Không có slot khả dụng cho trụ này
+                    </div>
+                  )}
+                  {slots.map((slot, index) => (
+                    <div
+                      key={slot.id}
+                      className={`slot-card ${slot.status} ${
+                        selectedSlot?.id === slot.id ? "selected" : ""
+                      }`}
+                      onClick={() => {
+                        if (slot.status === "booked") {
+                          alert(
+                            "❌ Slot này đã được đặt. Vui lòng chọn slot khác!"
+                          );
+                          return;
+                        }
+                        setSelectedSlot(slot);
+                      }}
+                    >
+                      <div className="slot-header">
+                        <span className="slot-number">Slot {index + 1}</span>
+                        <span className={`slot-status-badge ${slot.status}`}>
+                          {slot.status === "available" && "✓ Có sẵn"}
+                          {slot.status === "booked" && "✕ Đã đặt"}
+                        </span>
                       </div>
-                    );
-                  })}
+
+                      <div className="slot-duration">
+                        <span className="duration-icon">⏳</span>
+                        <span className="duration-text">
+                          Thời lượng: 24 giờ
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-              {/* <button 
-                className="refresh-button" 
-                onClick={() => {
-                // Gọi lại API slots để cập nhật trạng thái mới nhất
-                fetchSlots(); // hoặc gọi lại useEffect
-              }}
-              >
-               🔄 Làm mới slot
-              </button> */}
+
               <button
                 className="next-button"
                 disabled={!selectedSlot}
@@ -1143,18 +1099,24 @@ export default function BookingPage() {
                           <div className="selected-vehicle-info">
                             <div className="summary-item">
                               <span className="summary-label">Biển số:</span>
-                              <span className="summary-value">{selectedVehicle.plateNumber}</span>
+                              <span className="summary-value">
+                                {selectedVehicle.plateNumber}
+                              </span>
                             </div>
                             <div className="summary-item">
                               <span className="summary-label">Xe:</span>
-                              <span className="summary-value">{selectedVehicle.make} {selectedVehicle.model}</span>
+                              <span className="summary-value">
+                                {selectedVehicle.make} {selectedVehicle.model}
+                              </span>
                             </div>
                             <div className="summary-item">
                               <span className="summary-label">Loại sạc:</span>
-                              <span className="summary-value">{selectedVehicle.connectorType}</span>
+                              <span className="summary-value">
+                                {selectedVehicle.connectorType}
+                              </span>
                             </div>
                           </div>
-                          <button 
+                          <button
                             className="change-vehicle-btn"
                             onClick={() => setShowVehicleModal(true)}
                           >
@@ -1162,7 +1124,7 @@ export default function BookingPage() {
                           </button>
                         </>
                       ) : (
-                        <button 
+                        <button
                           className="select-vehicle-btn"
                           onClick={() => setShowVehicleModal(true)}
                         >
@@ -1388,29 +1350,82 @@ export default function BookingPage() {
           )}
         </div>
 
-        
+        {/* RIGHT PANEL: MAP */}
+        {(step === 1 ||
+          (step === 2 && selectedStation) ||
+          (step === 3 && selectedCharger)) && (
+          <div className="right-panel">
+            <div className="map-container">
+              {step === 1 && (
+                <ChargingMap
+                  stations={filteredStations}
+                  center={selectedStation?.coords || defaultCenter}
+                  zoom={selectedStation ? 16 : 13}
+                  onSelect={(s) => setSelectedStation(s)}
+                  selectedStation={selectedStation}
+                />
+              )}
+              {step === 2 && selectedStation && (
+                <ChargingMap
+                  stations={chargers}
+                  center={selectedStation.coords}
+                  zoom={17}
+                  onSelect={(c) => {
+                    if (c.status === "available") {
+                      setSelectedCharger(c);
+                      setStep(3);
+                    }
+                  }}
+                  selectedStation={selectedCharger}
+                />
+              )}
+              {step === 3 && selectedCharger && (
+                <ChargingMap
+                  stations={[selectedCharger]}
+                  center={selectedStation?.coords || defaultCenter}
+                  zoom={17}
+                  selectedStation={selectedCharger}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Vehicle Selection Modal */}
       {showVehicleModal && (
-        <div className="datetime-modal-overlay" onClick={() => setShowVehicleModal(false)}>
+        <div
+          className="datetime-modal-overlay"
+          onClick={() => setShowVehicleModal(false)}
+        >
           <div className="vehicle-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Chọn xe của bạn</h3>
-              <button className="modal-close" onClick={() => setShowVehicleModal(false)}>×</button>
+              <button
+                className="modal-close"
+                onClick={() => setShowVehicleModal(false)}
+              >
+                ×
+              </button>
             </div>
             <div className="modal-body">
               {vehicles.length === 0 ? (
                 <div className="no-vehicles">
-                  <p>Bạn chưa có xe nào. Vui lòng thêm xe trong trang Profile.</p>
-                  <button onClick={() => navigate('/profile')}>Đi đến Profile</button>
+                  <p>
+                    Bạn chưa có xe nào. Vui lòng thêm xe trong trang Profile.
+                  </p>
+                  <button onClick={() => navigate("/profile")}>
+                    Đi đến Profile
+                  </button>
                 </div>
               ) : (
                 <div className="vehicles-grid-modal">
                   {vehicles.map((vehicle) => (
                     <div
                       key={vehicle.id}
-                      className={`vehicle-card-modal ${selectedVehicle?.id === vehicle.id ? 'selected' : ''}`}
+                      className={`vehicle-card-modal ${
+                        selectedVehicle?.id === vehicle.id ? "selected" : ""
+                      }`}
                       onClick={() => {
                         setSelectedVehicle(vehicle);
                         setVehicleId(vehicle.id);
@@ -1418,9 +1433,14 @@ export default function BookingPage() {
                       }}
                     >
                       <div className="vehicle-plate">{vehicle.plateNumber}</div>
-                      <div className="vehicle-model">{vehicle.make} {vehicle.model}</div>
-                      <div className="vehicle-type">{vehicle.connectorType}</div>
-                      {localStorage.getItem("defaultVehicleId") === vehicle.id && (
+                      <div className="vehicle-model">
+                        {vehicle.make} {vehicle.model}
+                      </div>
+                      <div className="vehicle-type">
+                        {vehicle.connectorType}
+                      </div>
+                      {localStorage.getItem("defaultVehicleId") ===
+                        vehicle.id && (
                         <span className="default-badge-modal">Mặc định</span>
                       )}
                     </div>

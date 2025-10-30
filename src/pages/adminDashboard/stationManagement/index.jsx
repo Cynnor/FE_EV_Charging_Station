@@ -64,11 +64,11 @@ const StationManagement = () => {
         stationsData = response.data;
       }
 
-      console.log("Processed stations data:", stationsData);
+      // console.log("Processed stations data:", stationsData);
       setStations(stationsData);
       setError(null); // Clear any previous errors
     } catch (err) {
-      console.error("Error fetching stations:", err);
+      // console.error("Error fetching stations:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -79,7 +79,7 @@ const StationManagement = () => {
   const handleAddStation = async (e) => {
     e.preventDefault();
     try {
-      console.log("Sending station data:", formData);
+      // console.log("Sending station data:", formData);
 
       // Tách newSlots ra khỏi ports trước khi gửi
       const portsWithoutNewSlots = formData.ports.map(
@@ -91,7 +91,7 @@ const StationManagement = () => {
       };
 
       const response = await api.post("/stations", stationDataToSend);
-      console.log("Add station response:", response);
+      // console.log("Add station response:", response);
 
       // Xử lý response data
       const newStation = response.data.data || response.data;
@@ -132,7 +132,7 @@ const StationManagement = () => {
       // Refresh danh sách để đảm bảo đồng bộ
       await fetchStations();
     } catch (err) {
-      console.error("Error adding station:", err);
+      // console.error("Error adding station:", err);
 
       if (err.response?.status === 400) {
         const errorMessage =
@@ -148,10 +148,10 @@ const StationManagement = () => {
 
   // PUT - Cập nhật trạm sạc VÀ tạo các slots mới (bao gồm cả slots của ports mới)
   const handleEditStation = async (e) => {
+    // console.log("Current formData:", formData);
     e.preventDefault();
     try {
-      console.log("=== Starting Edit Station ===");
-      console.log("Current formData:", formData);
+      // console.log("=== Starting Edit Station ===");
 
       // Tách newSlots ra khỏi ports trước khi gửi
       const portsWithoutNewSlots = formData.ports.map(
@@ -162,7 +162,7 @@ const StationManagement = () => {
         ports: portsWithoutNewSlots,
       };
 
-      console.log("Sending station update:", stationDataToSend);
+      // console.log("Sending station update:", stationDataToSend);
 
       // 1. Cập nhật thông tin trạm sạc (bao gồm thêm ports mới)
       const response = await api.put(
@@ -171,11 +171,11 @@ const StationManagement = () => {
       );
       const updatedStation = response.data.data || response.data;
 
-      console.log("Updated station response:", updatedStation);
+      // console.log("Updated station response:", updatedStation);
 
       // 2. Map ports mới từ response với formData để biết port nào cần tạo slots
       if (updatedStation.ports && Array.isArray(updatedStation.ports)) {
-        console.log("Processing slots for ports...");
+        // console.log("Processing slots for ports...");
 
         for (let i = 0; i < formData.ports.length; i++) {
           const formPort = formData.ports[i];
@@ -240,7 +240,7 @@ const StationManagement = () => {
         }
       }
 
-      console.log("=== Edit Station Complete ===");
+      // console.log("=== Edit Station Complete ===");
 
       // Cập nhật UI state
       setStations((prev) =>
@@ -324,7 +324,7 @@ const StationManagement = () => {
       setLoadingSlots(true);
       const response = await api.get(`/stations/ports/${portId}/slots`);
 
-      console.log(`Raw response for port ${portId}:`, response.data);
+      // console.log(`Raw response for port ${portId}:`, response.data);
 
       // Hỗ trợ nhiều cấu trúc response: items | data | data.items | array
       let raw = [];
@@ -343,10 +343,10 @@ const StationManagement = () => {
 
       const slotsData = normalizeSlots(raw);
 
-      console.log(
-        `Processed ${slotsData.length} slots for port ${portId}:`,
-        slotsData
-      );
+      // console.log(
+      //   `Processed ${slotsData.length} slots for port ${portId}:`,
+      //   slotsData
+      // );
 
       setPortSlots((prev) => ({
         ...prev,
