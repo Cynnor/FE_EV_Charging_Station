@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "./ProfilePage.scss";
 import api from "../../config/api";
 import { useNavigate } from "react-router-dom";
-import CustomPopup from "../../components/CustomPopup/CustomPopup";
+import CustomPopup from "../../components/customPopup/CustomPopup";
 import ConfirmPopup from "../../components/ConfirmPopup/ConfirmPopup";
 
 const ProfilePage = () => {
