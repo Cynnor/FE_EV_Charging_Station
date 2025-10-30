@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import "./ProfilePage.scss";
+import "./index.scss";
 import api from "../../config/api";
 import { useNavigate } from "react-router-dom";
-import CustomPopup from "../../components/customPopup/CustomPopup";
-import ConfirmPopup from "../../components/ConfirmPopup/ConfirmPopup";
+import CustomPopup from "../../components/CustomPopup/index";
+import ConfirmPopup from "../../components/confirmPopup/index.jsx";
+
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -14,16 +15,15 @@ const ProfilePage = () => {
   const [errors, setErrors] = useState({});
   // ===== Vehicle states =====
 
-const [vehicles, setVehicles] = useState([]);
-const [selectedVehicle, setSelectedVehicle] = useState(null);
-const [isEditingVehicle, setIsEditingVehicle] = useState(false);
-const [vehicleErrors, setVehicleErrors] = useState({});
-const [defaultVehicleId, setDefaultVehicleId] = useState(null);
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [isEditingVehicle, setIsEditingVehicle] = useState(false);
+  const [vehicleErrors, setVehicleErrors] = useState({});
+  const [defaultVehicleId, setDefaultVehicleId] = useState(null);
 
-// ===== Station mapping =====
-const [stationMap, setStationMap] = useState({});
-const [portTypeMap, setPortTypeMap] = useState({});
-
+  // ===== Station mapping =====
+  const [stationMap, setStationMap] = useState({});
+  const [portTypeMap, setPortTypeMap] = useState({});
 
   const [reservations, setReservations] = useState([]);
   const [txLoading, setTxLoading] = useState(true);
@@ -44,7 +44,7 @@ const [portTypeMap, setPortTypeMap] = useState({});
 
   // Add helper function to normalize reservations
   const normalizeReservations = (reservationList) => {
-    return (Array.isArray(reservationList) ? reservationList : []).map(r => {
+    return (Array.isArray(reservationList) ? reservationList : []).map((r) => {
       const rid = r._id || r.id || "";
       const vehicle = r.vehicle || {};
       const vid = vehicle._id || vehicle.id || "";
@@ -55,9 +55,9 @@ const [portTypeMap, setPortTypeMap] = useState({});
         vehicle: {
           ...vehicle,
           _id: vid,
-          id: vid
+          id: vid,
         },
-        items: r.items || []
+        items: r.items || [],
       };
     });
   };
@@ -81,7 +81,7 @@ const [portTypeMap, setPortTypeMap] = useState({});
 
           setReservations(normalized);
           setTotalPages(Math.ceil(normalized.length / itemsPerPage));
-          
+
           // Fetch station info for all ports
           await fetchStationInfo(normalized);
         }
@@ -94,15 +94,15 @@ const [portTypeMap, setPortTypeMap] = useState({});
     };
 
     fetchReservations();
-    return () => mounted = false;
+    return () => (mounted = false);
   }, [vehicles]);
 
   // Fetch station information from port IDs - OPTIMIZED VERSION
   const fetchStationInfo = async (reservationList) => {
     try {
       const portIds = new Set();
-      reservationList.forEach(r => {
-        r.items?.forEach(item => {
+      reservationList.forEach((r) => {
+        r.items?.forEach((item) => {
           const portId = item.slot?.port?._id || item.slot?.port;
           if (portId) portIds.add(portId);
         });
@@ -110,19 +110,20 @@ const [portTypeMap, setPortTypeMap] = useState({});
 
       const stationData = {};
       const portTypeData = {};
-      
+
       // GỌI TẤT CẢ PORTS SONG SONG
-      const portPromises = Array.from(portIds).map(portId =>
-        api.get(`/stations/ports/${portId}`)
-          .then(res => ({ portId, data: res.data }))
-          .catch(error => {
+      const portPromises = Array.from(portIds).map((portId) =>
+        api
+          .get(`/stations/ports/${portId}`)
+          .then((res) => ({ portId, data: res.data }))
+          .catch((error) => {
             // console.error(`Error fetching port ${portId}:`, error);
             return { portId, data: null };
           })
       );
 
       const portResults = await Promise.all(portPromises);
-      
+
       // Extract station IDs
       const stationIds = new Set();
       portResults.forEach(({ portId, data }) => {
@@ -137,17 +138,18 @@ const [portTypeMap, setPortTypeMap] = useState({});
       });
 
       // GỌI TẤT CẢ STATIONS SONG SONG
-      const stationPromises = Array.from(stationIds).map(stationId =>
-        api.get(`/stations/${stationId}`)
-          .then(res => ({ stationId, data: res.data }))
-          .catch(error => {
+      const stationPromises = Array.from(stationIds).map((stationId) =>
+        api
+          .get(`/stations/${stationId}`)
+          .then((res) => ({ stationId, data: res.data }))
+          .catch((error) => {
             // console.error(`Error fetching station ${stationId}:`, error);
             return { stationId, data: null };
           })
       );
 
       const stationResults = await Promise.all(stationPromises);
-      
+
       // Map stations to their IDs
       const stationMap = {};
       stationResults.forEach(({ stationId, data }) => {
@@ -164,18 +166,18 @@ const [portTypeMap, setPortTypeMap] = useState({});
             stationName: stationInfo.name || "N/A",
             stationId: data.station,
             address: stationInfo.address || "N/A",
-            provider: stationInfo.provider || "N/A"
+            provider: stationInfo.provider || "N/A",
           };
         } else {
           stationData[portId] = {
             stationName: "N/A",
             stationId: null,
             address: "N/A",
-            provider: "N/A"
+            provider: "N/A",
           };
         }
       });
-      
+
       setStationMap(stationData);
       setPortTypeMap(portTypeData);
     } catch (error) {
@@ -217,28 +219,30 @@ const [portTypeMap, setPortTypeMap] = useState({});
       // console.log("Vehicle data:", res.data);
 
       const vehiclesList = res.data?.items || res.data?.data || [];
-      const vehiclesArray = Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean);
-      
+      const vehiclesArray = Array.isArray(vehiclesList)
+        ? vehiclesList
+        : [vehiclesList].filter(Boolean);
+
       // Normalize vehicle IDs
-      const normalizedVehicles = vehiclesArray.map(v => ({
+      const normalizedVehicles = vehiclesArray.map((v) => ({
         ...v,
         id: v._id || v.id,
-        _id: v._id || v.id
+        _id: v._id || v.id,
       }));
-      
+
       // Auto-select default vehicle if exists
       const savedDefaultVehicle = localStorage.getItem("defaultVehicleId");
       if (savedDefaultVehicle && normalizedVehicles.length > 0) {
         setDefaultVehicleId(savedDefaultVehicle);
       }
-      
+
       // Sort vehicles - default vehicle first
       const sortedVehicles = normalizedVehicles.sort((a, b) => {
         if (a.id === savedDefaultVehicle) return -1;
         if (b.id === savedDefaultVehicle) return 1;
         return 0;
       });
-      
+
       setVehicles(sortedVehicles);
     } catch (error) {
       // console.error("Error fetching vehicle:", error);
@@ -247,8 +251,6 @@ const [portTypeMap, setPortTypeMap] = useState({});
       }
     }
   };
-
-
 
   const validateForm = () => {
     const newErrors = {};
@@ -288,28 +290,28 @@ const [portTypeMap, setPortTypeMap] = useState({});
 
   const [popup, setPopup] = useState({
     isOpen: false,
-    message: '',
-    type: 'info'
+    message: "",
+    type: "info",
   });
 
   const [confirmPopup, setConfirmPopup] = useState({
     isOpen: false,
-    message: '',
-    onConfirm: null
+    message: "",
+    onConfirm: null,
   });
 
-  const showPopup = (message, type = 'info') => {
+  const showPopup = (message, type = "info") => {
     setPopup({
       isOpen: true,
       message,
-      type
+      type,
     });
   };
 
   const closePopup = () => {
     setPopup({
       ...popup,
-      isOpen: false
+      isOpen: false,
     });
   };
 
@@ -317,15 +319,15 @@ const [portTypeMap, setPortTypeMap] = useState({});
     setConfirmPopup({
       isOpen: true,
       message,
-      onConfirm
+      onConfirm,
     });
   };
 
   const closeConfirmPopup = () => {
     setConfirmPopup({
       isOpen: false,
-      message: '',
-      onConfirm: null
+      message: "",
+      onConfirm: null,
     });
   };
 
@@ -358,18 +360,28 @@ const [portTypeMap, setPortTypeMap] = useState({});
       // console.error("Error updating profile:", error);
 
       if (error.response?.status === 401) {
-        showPopup("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", "error");
+        showPopup(
+          "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+          "error"
+        );
         setTimeout(() => {
           localStorage.removeItem("token");
           window.location.href = "/login";
         }, 2000);
       } else if (error.response?.status === 400) {
-        const errorMessage = error.response?.data?.message || "Dữ liệu không hợp lệ";
+        const errorMessage =
+          error.response?.data?.message || "Dữ liệu không hợp lệ";
         showPopup(`Lỗi cập nhật: ${errorMessage}`, "error");
       } else if (error.response?.status === 422) {
-        showPopup("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.", "warning");
+        showPopup(
+          "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.",
+          "warning"
+        );
       } else {
-        showPopup("Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại sau!", "error");
+        showPopup(
+          "Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại sau!",
+          "error"
+        );
       }
     } finally {
       setIsLoading(false);
@@ -385,7 +397,7 @@ const [portTypeMap, setPortTypeMap] = useState({});
   // Replace old mock-based stats with transaction-based stats
   // total bookings
   const totalBookings = reservations.length;
-  
+
   // most used port (count by slot.port) and get its type from portTypeMap
   const portCounts = reservations.reduce((acc, r) => {
     const items = r.items || [];
@@ -400,188 +412,203 @@ const [portTypeMap, setPortTypeMap] = useState({});
     });
     return acc;
   }, {});
-  
-  const mostUsedPortId = Object.entries(portCounts).sort((a, b) => b[1].count - a[1].count)[0]?.[0];
-  const favoriteConnectorType = mostUsedPortId ? (portTypeMap[mostUsedPortId] || "N/A") : "N/A";
-  
+
+  const mostUsedPortId = Object.entries(portCounts).sort(
+    (a, b) => b[1].count - a[1].count
+  )[0]?.[0];
+  const favoriteConnectorType = mostUsedPortId
+    ? portTypeMap[mostUsedPortId] || "N/A"
+    : "N/A";
+
   // Format connector type name
   const getConnectorTypeName = (type) => {
     const typeMap = {
-      'AC': 'AC (Sạc chậm)',
-      'DC': 'DC (Sạc nhanh)',
-      'Ultral': '',
+      AC: "AC (Sạc chậm)",
+      DC: "DC (Sạc nhanh)",
+      Ultral: "",
     };
     return typeMap[type] || type;
   };
 
   // average booking duration (minutes)
   const durations = reservations.flatMap((r) =>
-    (r.items || []).map((it) => {
-      if (it.startAt && it.endAt) {
-        return (new Date(it.endAt) - new Date(it.startAt)) / (1000 * 60);
-      }
-      return null;
-    }).filter(Boolean)
+    (r.items || [])
+      .map((it) => {
+        if (it.startAt && it.endAt) {
+          return (new Date(it.endAt) - new Date(it.startAt)) / (1000 * 60);
+        }
+        return null;
+      })
+      .filter(Boolean)
   );
-  const avgDuration = durations.length ? (durations.reduce((s, d) => s + d, 0) / durations.length).toFixed(0) : "N/A";
+  const avgDuration = durations.length
+    ? (durations.reduce((s, d) => s + d, 0) / durations.length).toFixed(0)
+    : "N/A";
 
   // Helper function to format date
   const formatDateTime = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   // Helper function to get status text
   const getStatusText = (status) => {
     const statusMap = {
-      'pending': 'Chờ xử lý',
-      'confirmed': 'Thanh toán thành công',
-      'cancelled': 'Đã hủy',  
+      pending: "Chờ xử lý",
+      confirmed: "Thanh toán thành công",
+      cancelled: "Đã hủy",
     };
     return statusMap[status] || status;
   };
 
   //   const handleVehicleChange = (field, value) => {
-//   setSelectedVehicle(prev => ({
-//     ...prev,
-//     [field]: value
-//   }));
-//   if (vehicleErrors[field]) {
-//     setVehicleErrors(prev => ({ ...prev, [field]: "" }));
-//   }
-// };
+  //   setSelectedVehicle(prev => ({
+  //     ...prev,
+  //     [field]: value
+  //   }));
+  //   if (vehicleErrors[field]) {
+  //     setVehicleErrors(prev => ({ ...prev, [field]: "" }));
+  //   }
+  // };
 
-const validateVehicle = () => {
-  const errs = {};
-  if (!selectedVehicle?.plateNumber?.trim()) errs.plateNumber = "Biển số xe không được để trống";
-  if (!selectedVehicle?.make?.trim()) errs.make = "Hãng xe không được để trống";
-  if (!selectedVehicle?.model?.trim()) errs.model = "Mẫu xe không được để trống";
-  setVehicleErrors(errs);
-  return Object.keys(errs).length === 0;
-};
+  const validateVehicle = () => {
+    const errs = {};
+    if (!selectedVehicle?.plateNumber?.trim())
+      errs.plateNumber = "Biển số xe không được để trống";
+    if (!selectedVehicle?.make?.trim())
+      errs.make = "Hãng xe không được để trống";
+    if (!selectedVehicle?.model?.trim())
+      errs.model = "Mẫu xe không được để trống";
+    setVehicleErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
-const handleVehicleSave = async () => {
-  if (!validateVehicle()) return;
-  try {
-    const vehicleId = selectedVehicle?.id || selectedVehicle?._id;
-    const endpoint = vehicleId ? `/vehicles/${vehicleId}` : "/vehicles";
-    const method = vehicleId ? api.put : api.post;
-    const payload = {
-      ...selectedVehicle,
-      year: Number(selectedVehicle.year),
-      batteryCapacityKwh: Number(selectedVehicle.batteryCapacityKwh),
-      status: selectedVehicle.status || "active",
-    };
+  const handleVehicleSave = async () => {
+    if (!validateVehicle()) return;
+    try {
+      const vehicleId = selectedVehicle?.id || selectedVehicle?._id;
+      const endpoint = vehicleId ? `/vehicles/${vehicleId}` : "/vehicles";
+      const method = vehicleId ? api.put : api.post;
+      const payload = {
+        ...selectedVehicle,
+        year: Number(selectedVehicle.year),
+        batteryCapacityKwh: Number(selectedVehicle.batteryCapacityKwh),
+        status: selectedVehicle.status || "active",
+      };
 
-    const res = await method(endpoint, payload);
-    const savedVehicle = res.data?.data || payload;
-    
-    const normalizedSaved = {
-      ...savedVehicle,
-      id: savedVehicle._id || savedVehicle.id,
-      _id: savedVehicle._id || savedVehicle.id
-    };
+      const res = await method(endpoint, payload);
+      const savedVehicle = res.data?.data || payload;
 
-    setVehicles(prev => {
-      let updated;
-      if (vehicleId) {
-        updated = prev.map(v => (v.id === vehicleId || v._id === vehicleId) ? normalizedSaved : v);
-      } else {
-        updated = [...prev, normalizedSaved];
-      }
-      
-      return updated.sort((a, b) => {
-        if (a.id === defaultVehicleId) return -1;
-        if (b.id === defaultVehicleId) return 1;
+      const normalizedSaved = {
+        ...savedVehicle,
+        id: savedVehicle._id || savedVehicle.id,
+        _id: savedVehicle._id || savedVehicle.id,
+      };
+
+      setVehicles((prev) => {
+        let updated;
+        if (vehicleId) {
+          updated = prev.map((v) =>
+            v.id === vehicleId || v._id === vehicleId ? normalizedSaved : v
+          );
+        } else {
+          updated = [...prev, normalizedSaved];
+        }
+
+        return updated.sort((a, b) => {
+          if (a.id === defaultVehicleId) return -1;
+          if (b.id === defaultVehicleId) return 1;
+          return 0;
+        });
+      });
+
+      showPopup("Lưu thông tin xe thành công!", "success");
+      setIsEditingVehicle(false);
+      setSelectedVehicle(null);
+    } catch (error) {
+      // console.error("Error saving vehicle:", error);
+      showPopup("Không thể lưu thông tin xe, vui lòng thử lại!", "error");
+    }
+  };
+
+  const handleSetDefaultVehicle = (vehicleId) => {
+    setDefaultVehicleId(vehicleId);
+    localStorage.setItem("defaultVehicleId", vehicleId);
+    localStorage.setItem("vehicleId", vehicleId);
+
+    setVehicles((prev) => {
+      const sorted = [...prev].sort((a, b) => {
+        if (a.id === vehicleId) return -1;
+        if (b.id === vehicleId) return 1;
         return 0;
       });
+      return sorted;
     });
 
-    showPopup("Lưu thông tin xe thành công!", "success");
-    setIsEditingVehicle(false);
-    setSelectedVehicle(null);
-  } catch (error) {
-    // console.error("Error saving vehicle:", error);
-    showPopup("Không thể lưu thông tin xe, vui lòng thử lại!", "error");
-  }
-};
+    showPopup("Đã đặt xe mặc định thành công!", "success");
+  };
 
-const handleSetDefaultVehicle = (vehicleId) => {
-  setDefaultVehicleId(vehicleId);
-  localStorage.setItem("defaultVehicleId", vehicleId);
-  localStorage.setItem("vehicleId", vehicleId);
-  
-  setVehicles(prev => {
-    const sorted = [...prev].sort((a, b) => {
-      if (a.id === vehicleId) return -1;
-      if (b.id === vehicleId) return 1;
-      return 0;
-    });
-    return sorted;
-  });
-  
-  showPopup("Đã đặt xe mặc định thành công!", "success");
-};
+  const handleDeleteVehicle = async (vehicleId) => {
+    showConfirmPopup("Bạn có chắc chắn muốn xóa xe này?", async () => {
+      try {
+        await api.delete(`/vehicles/${vehicleId}`);
+        setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
 
-const handleDeleteVehicle = async (vehicleId) => {
-  showConfirmPopup('Bạn có chắc chắn muốn xóa xe này?', async () => {
-    try {
-      await api.delete(`/vehicles/${vehicleId}`);
-      setVehicles(prev => prev.filter(v => v.id !== vehicleId));
-      
-      if (defaultVehicleId === vehicleId) {
-        setDefaultVehicleId(null);
-        localStorage.removeItem("defaultVehicleId");
-        localStorage.removeItem("vehicleId");
+        if (defaultVehicleId === vehicleId) {
+          setDefaultVehicleId(null);
+          localStorage.removeItem("defaultVehicleId");
+          localStorage.removeItem("vehicleId");
+        }
+
+        closeConfirmPopup();
+        showPopup("Xóa xe thành công!", "success");
+      } catch (error) {
+        // console.error('Error deleting vehicle:', error);
+        closeConfirmPopup();
+        showPopup("Không thể xóa xe, vui lòng thử lại!", "error");
       }
-      
-      closeConfirmPopup();
-      showPopup('Xóa xe thành công!', 'success');
-    } catch (error) {
-      // console.error('Error deleting vehicle:', error);
-      closeConfirmPopup();
-      showPopup('Không thể xóa xe, vui lòng thử lại!', 'error');
-    }
-  });
-};
+    });
+  };
 
   // Handle cancel reservation
   const handleCancelReservation = async (reservationId) => {
     if (!reservationId) {
-      showPopup('ID đặt chỗ không hợp lệ', 'error');
+      showPopup("ID đặt chỗ không hợp lệ", "error");
       return;
     }
 
-    showConfirmPopup('Bạn có chắc chắn muốn hủy đặt chỗ này?', async () => {
+    showConfirmPopup("Bạn có chắc chắn muốn hủy đặt chỗ này?", async () => {
       try {
         // console.log('Cancelling reservation:', reservationId);
         await api.patch(`/reservations/${reservationId}/cancel`);
-        
+
         const res = await api.get(`/reservations`);
         const reservationList = res.data?.data?.items || [];
         const normalized = normalizeReservations(reservationList);
-        
+
         setReservations(normalized);
         setTotalPages(Math.ceil(normalized.length / itemsPerPage));
-        
+
         if (currentPage > Math.ceil(normalized.length / itemsPerPage)) {
           setCurrentPage(1);
         }
-        
+
         closeConfirmPopup();
-        showPopup('Hủy đặt chỗ thành công!', 'success');
+        showPopup("Hủy đặt chỗ thành công!", "success");
       } catch (error) {
         // console.error('Error cancelling reservation:', error);
-        const errorMsg = error.response?.data?.message || 'Không thể hủy đặt chỗ. Vui lòng thử lại!';
+        const errorMsg =
+          error.response?.data?.message ||
+          "Không thể hủy đặt chỗ. Vui lòng thử lại!";
         closeConfirmPopup();
-        showPopup(errorMsg, 'error');
+        showPopup(errorMsg, "error");
       }
     });
   };
@@ -612,19 +639,22 @@ const handleDeleteVehicle = async (vehicleId) => {
 
   useEffect(() => {
     // Kiểm tra flag scroll đến lịch sử
-    const shouldScroll = sessionStorage.getItem('scrollToHistory');
-    
-    if (shouldScroll === 'true') {
+    const shouldScroll = sessionStorage.getItem("scrollToHistory");
+
+    if (shouldScroll === "true") {
       // Xóa flag
-      sessionStorage.removeItem('scrollToHistory');
-      
+      sessionStorage.removeItem("scrollToHistory");
+
       // Scroll đến phần lịch sử sau khi component render
       setTimeout(() => {
-        const historySection = document.querySelector('.history-section');
+        const historySection = document.querySelector(".history-section");
         if (historySection) {
           const yOffset = -100; // offset để không bị che bởi header
-          const y = historySection.getBoundingClientRect().top + window.pageYOffset + yOffset;
-          window.scrollTo({ top: y, behavior: 'smooth' });
+          const y =
+            historySection.getBoundingClientRect().top +
+            window.pageYOffset +
+            yOffset;
+          window.scrollTo({ top: y, behavior: "smooth" });
         }
       }, 100);
     }
@@ -638,14 +668,14 @@ const handleDeleteVehicle = async (vehicleId) => {
         type={popup.type}
         onClose={closePopup}
       />
-      
+
       <ConfirmPopup
         isOpen={confirmPopup.isOpen}
         message={confirmPopup.message}
         onConfirm={confirmPopup.onConfirm}
         onCancel={closeConfirmPopup}
       />
-      
+
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
       <section className="profile-section user-info">
         <div className="section-header">
@@ -778,23 +808,30 @@ const handleDeleteVehicle = async (vehicleId) => {
         <div className="section-header">
           <h2>Thông tin phương tiện</h2>
           {!isEditingVehicle && (
-            <button className="edit-btn" onClick={() => {
-              setSelectedVehicle({});
-              setIsEditingVehicle(true);
-            }}>
+            <button
+              className="edit-btn"
+              onClick={() => {
+                setSelectedVehicle({});
+                setIsEditingVehicle(true);
+              }}
+            >
               Thêm xe mới
             </button>
           )}
         </div>
 
         {vehicles.length === 0 && !isEditingVehicle ? (
-          <p style={{ color: "#90caf9" }}>Chưa có thông tin xe. Nhấn "Thêm xe mới" để bắt đầu.</p>
+          <p style={{ color: "#90caf9" }}>
+            Chưa có thông tin xe. Nhấn "Thêm xe mới" để bắt đầu.
+          </p>
         ) : !isEditingVehicle ? (
           <div className="vehicles-grid">
-            {vehicles.map(vehicle => (
-              <div 
-                key={vehicle.id} 
-                className={`vehicle-card ${defaultVehicleId === vehicle.id ? 'default-vehicle' : ''}`}
+            {vehicles.map((vehicle) => (
+              <div
+                key={vehicle.id}
+                className={`vehicle-card ${
+                  defaultVehicleId === vehicle.id ? "default-vehicle" : ""
+                }`}
                 onClick={() => {
                   setSelectedVehicle(vehicle);
                   localStorage.setItem("vehicleId", vehicle.id);
@@ -807,8 +844,8 @@ const handleDeleteVehicle = async (vehicleId) => {
                       <span className="default-badge">Mặc định</span>
                     )}
                   </span>
-                  <span 
-                    className="delete-icon" 
+                  <span
+                    className="delete-icon"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteVehicle(vehicle.id);
@@ -818,27 +855,45 @@ const handleDeleteVehicle = async (vehicleId) => {
                   </span>
                 </h3>
                 <div className="vehicle-info">
-                  <p><b>Hãng:</b> {vehicle.make || "Chưa cập nhật"}</p>
-                  <p><b>Mẫu:</b> {vehicle.model || "Chưa cập nhật"}</p>
-                  <p><b>Năm:</b> {vehicle.year || "Chưa cập nhật"}</p>
-                  <p><b>Loại sạc:</b> {vehicle.connectorType + "-" + vehicle.batteryCapacityKwh || "Chưa cập nhật"} kWh</p>
+                  <p>
+                    <b>Hãng:</b> {vehicle.make || "Chưa cập nhật"}
+                  </p>
+                  <p>
+                    <b>Mẫu:</b> {vehicle.model || "Chưa cập nhật"}
+                  </p>
+                  <p>
+                    <b>Năm:</b> {vehicle.year || "Chưa cập nhật"}
+                  </p>
+                  <p>
+                    <b>Loại sạc:</b>{" "}
+                    {vehicle.connectorType + "-" + vehicle.batteryCapacityKwh ||
+                      "Chưa cập nhật"}{" "}
+                    kWh
+                  </p>
                 </div>
                 <div className="vehicle-actions">
-                  <button 
-                    className={`default-btn ${defaultVehicleId === vehicle.id ? 'active' : ''}`}
+                  <button
+                    className={`default-btn ${
+                      defaultVehicleId === vehicle.id ? "active" : ""
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSetDefaultVehicle(vehicle.id);
                     }}
                   >
-                    {defaultVehicleId === vehicle.id ? '✓ Xe mặc định' : 'Đặt mặc định'}
+                    {defaultVehicleId === vehicle.id
+                      ? "✓ Xe mặc định"
+                      : "Đặt mặc định"}
                   </button>
-                  <button className="edit-btn" onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedVehicle(vehicle);
-                    localStorage.setItem("vehicleId", vehicle.id);
-                    setIsEditingVehicle(true);
-                  }}>
+                  <button
+                    className="edit-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedVehicle(vehicle);
+                      localStorage.setItem("vehicleId", vehicle.id);
+                      setIsEditingVehicle(true);
+                    }}
+                  >
                     Chỉnh sửa
                   </button>
                 </div>
@@ -847,146 +902,190 @@ const handleDeleteVehicle = async (vehicleId) => {
           </div>
         ) : (
           <div className="edit-form vehicle-edit-form">
-  <div className="form-grid">
-    <div className="form-group">
-      <label><b>Biển số xe:</b></label>
-      <input
-        type="text"
-        value={selectedVehicle?.plateNumber || ""}
-        onChange={(e) => setSelectedVehicle(prev => ({
-          ...prev,
-          plateNumber: e.target.value
-        }))}
-        className={vehicleErrors.plateNumber ? "error" : ""}
-        placeholder="VD: 51H-123.45"
-      />
-      {vehicleErrors.plateNumber && (
-        <span className="error-message">{vehicleErrors.plateNumber}</span>
-      )}
-    </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>
+                  <b>Biển số xe:</b>
+                </label>
+                <input
+                  type="text"
+                  value={selectedVehicle?.plateNumber || ""}
+                  onChange={(e) =>
+                    setSelectedVehicle((prev) => ({
+                      ...prev,
+                      plateNumber: e.target.value,
+                    }))
+                  }
+                  className={vehicleErrors.plateNumber ? "error" : ""}
+                  placeholder="VD: 51H-123.45"
+                />
+                {vehicleErrors.plateNumber && (
+                  <span className="error-message">
+                    {vehicleErrors.plateNumber}
+                  </span>
+                )}
+              </div>
 
-    <div className="form-group">
-      <label><b>Hãng xe:</b></label>
-      <input
-        type="text"
-        value={selectedVehicle?.make || ""}
-        onChange={(e) => setSelectedVehicle(prev => ({
-          ...prev,
-          make: e.target.value
-        }))}
-        placeholder="VD: VinFast"
-      />
-    </div>
+              <div className="form-group">
+                <label>
+                  <b>Hãng xe:</b>
+                </label>
+                <input
+                  type="text"
+                  value={selectedVehicle?.make || ""}
+                  onChange={(e) =>
+                    setSelectedVehicle((prev) => ({
+                      ...prev,
+                      make: e.target.value,
+                    }))
+                  }
+                  placeholder="VD: VinFast"
+                />
+              </div>
 
-    <div className="form-group">
-      <label><b>Mẫu xe:</b></label>
-      <input
-        type="text"
-        value={selectedVehicle?.model || ""}
-        onChange={(e) => setSelectedVehicle(prev => ({
-          ...prev,
-          model: e.target.value
-        }))}
-        placeholder="VD: VF8"
-      />
-    </div>
+              <div className="form-group">
+                <label>
+                  <b>Mẫu xe:</b>
+                </label>
+                <input
+                  type="text"
+                  value={selectedVehicle?.model || ""}
+                  onChange={(e) =>
+                    setSelectedVehicle((prev) => ({
+                      ...prev,
+                      model: e.target.value,
+                    }))
+                  }
+                  placeholder="VD: VF8"
+                />
+              </div>
 
-    <div className="form-group">
-      <label><b>Năm sản xuất:</b></label>
-      <input
-        type="number"
-        value={selectedVehicle?.year || ""}
-        onChange={(e) => setSelectedVehicle(prev => ({
-          ...prev,
-          year: e.target.value
-        }))}
-        placeholder="VD: 2023"
-      />
-    </div>
+              <div className="form-group">
+                <label>
+                  <b>Năm sản xuất:</b>
+                </label>
+                <input
+                  type="number"
+                  value={selectedVehicle?.year || ""}
+                  onChange={(e) =>
+                    setSelectedVehicle((prev) => ({
+                      ...prev,
+                      year: e.target.value,
+                    }))
+                  }
+                  placeholder="VD: 2023"
+                />
+              </div>
 
-    <div className="form-group">
-      <label><b>Màu xe:</b></label>
-      <input
-        type="text"
-        value={selectedVehicle?.color || ""}
-        onChange={(e) => setSelectedVehicle(prev => ({
-          ...prev,
-          color: e.target.value
-        }))}
-        placeholder="VD: White"
-      />
-    </div>
+              <div className="form-group">
+                <label>
+                  <b>Màu xe:</b>
+                </label>
+                <input
+                  type="text"
+                  value={selectedVehicle?.color || ""}
+                  onChange={(e) =>
+                    setSelectedVehicle((prev) => ({
+                      ...prev,
+                      color: e.target.value,
+                    }))
+                  }
+                  placeholder="VD: White"
+                />
+              </div>
 
-    <div className="form-group">
-      <label><b>Số khung (VIN):</b></label>
-      <input
-        type="text"
-        value={selectedVehicle?.vin || ""}
-        onChange={(e) => setSelectedVehicle(prev => ({
-          ...prev,
-          vin: e.target.value
-        }))}
-        placeholder="VD: WVWAA71K08W201030"
-      />
-    </div>
+              <div className="form-group">
+                <label>
+                  <b>Số khung (VIN):</b>
+                </label>
+                <input
+                  type="text"
+                  value={selectedVehicle?.vin || ""}
+                  onChange={(e) =>
+                    setSelectedVehicle((prev) => ({
+                      ...prev,
+                      vin: e.target.value,
+                    }))
+                  }
+                  placeholder="VD: WVWAA71K08W201030"
+                />
+              </div>
 
-    <div className="form-group">
-      <label><b>Loại xe:</b></label>
-      <select
-        value={selectedVehicle?.type || ""}
-        onChange={(e) => setSelectedVehicle(prev => ({
-          ...prev,
-          type: e.target.value
-        }))}
-      >
-        <option value="">Chọn loại xe</option>
-        <option value="car">Ô tô</option>
-        <option value="motorbike">Xe máy</option>
-      </select>
-    </div>
+              <div className="form-group">
+                <label>
+                  <b>Loại xe:</b>
+                </label>
+                <select
+                  value={selectedVehicle?.type || ""}
+                  onChange={(e) =>
+                    setSelectedVehicle((prev) => ({
+                      ...prev,
+                      type: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Chọn loại xe</option>
+                  <option value="car">Ô tô</option>
+                  <option value="motorbike">Xe máy</option>
+                </select>
+              </div>
 
-    <div className="form-group">
-      <label><b>Dung lượng pin (kWh):</b></label>
-      <input
-        type="number"
-        value={selectedVehicle?.batteryCapacityKwh || ""}
-        onChange={(e) => setSelectedVehicle(prev => ({
-          ...prev,
-          batteryCapacityKwh: e.target.value
-        }))}
-        placeholder="VD: 82"
-      />
-    </div>
+              <div className="form-group">
+                <label>
+                  <b>Dung lượng pin (kWh):</b>
+                </label>
+                <input
+                  type="number"
+                  value={selectedVehicle?.batteryCapacityKwh || ""}
+                  onChange={(e) =>
+                    setSelectedVehicle((prev) => ({
+                      ...prev,
+                      batteryCapacityKwh: e.target.value,
+                    }))
+                  }
+                  placeholder="VD: 82"
+                />
+              </div>
 
-    <div className="form-group">
-      <label><b>Loại cổng sạc:</b></label>
-      <select
-        value={selectedVehicle?.connectorType || ""}
-        onChange={(e) => setSelectedVehicle(prev => ({
-          ...prev,
-          connectorType: e.target.value
-        }))}
-      >
-        <option value="">Chọn loại cổng sạc</option>
-        <option value="AC">AC</option>
-        <option value="DC">DC</option>
-      </select>
-    </div>
-  </div>
+              <div className="form-group">
+                <label>
+                  <b>Loại cổng sạc:</b>
+                </label>
+                <select
+                  value={selectedVehicle?.connectorType || ""}
+                  onChange={(e) =>
+                    setSelectedVehicle((prev) => ({
+                      ...prev,
+                      connectorType: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Chọn loại cổng sạc</option>
+                  <option value="AC">AC</option>
+                  <option value="DC">DC</option>
+                </select>
+              </div>
+            </div>
 
-  <div className="edit-actions">
-    <button className="save-btn" onClick={handleVehicleSave}>Lưu</button>
-    <button className="cancel-btn" onClick={() => {
-      setIsEditingVehicle(false);
-      setSelectedVehicle(null);
-      setVehicleErrors({});
-    }}>Hủy</button>
-  </div>
-</div>
+            <div className="edit-actions">
+              <button className="save-btn" onClick={handleVehicleSave}>
+                Lưu
+              </button>
+              <button
+                className="cancel-btn"
+                onClick={() => {
+                  setIsEditingVehicle(false);
+                  setSelectedVehicle(null);
+                  setVehicleErrors({});
+                }}
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
         )}
       </section>
 
-      
       <section className="profile-section history-section">
         <h2>Lịch sử đặt chỗ</h2>
         <div className="history-table-wrapper">
@@ -997,35 +1096,49 @@ const handleDeleteVehicle = async (vehicleId) => {
                 <th>Xe</th>
                 <th>Thời gian</th>
                 <th>Trạng thái</th>
-                <th className="action-column" style={{ textAlign: 'center' }}>Thao tác</th>
+                <th className="action-column" style={{ textAlign: "center" }}>
+                  Thao tác
+                </th>
               </tr>
-            </thead>  
+            </thead>
             <tbody>
               {txLoading ? (
-                <tr><td colSpan={5} style={{ color: "#666" }}>Đang tải...</td></tr>
+                <tr>
+                  <td colSpan={5} style={{ color: "#666" }}>
+                    Đang tải...
+                  </td>
+                </tr>
               ) : getPaginatedReservations().length > 0 ? (
                 getPaginatedReservations().map((reservation) => {
                   const reservationId = reservation._id || reservation.id;
-                  const vehicleId = reservation.vehicle?._id || reservation.vehicle?.id;
+                  const vehicleId =
+                    reservation.vehicle?._id || reservation.vehicle?.id;
                   const firstItem = reservation.items?.[0];
-                  const portId = firstItem?.slot?.port?._id || firstItem?.slot?.port;
-                  const stationInfo = stationMap[portId] || { stationName: "Đang tải..." };
+                  const portId =
+                    firstItem?.slot?.port?._id || firstItem?.slot?.port;
+                  const stationInfo = stationMap[portId] || {
+                    stationName: "Đang tải...",
+                  };
 
                   return (
                     <tr key={reservationId}>
+                      <td>{stationInfo.stationName}</td>
                       <td>
-                        {stationInfo.stationName}
-                      </td>
-                      <td>
-                        {reservation.vehicle?.plateNumber || "N/A"}<br/>
+                        {reservation.vehicle?.plateNumber || "N/A"}
+                        <br />
                         <small style={{ color: "#666" }}>
-                          {reservation.vehicle?.make} {reservation.vehicle?.model}
+                          {reservation.vehicle?.make}{" "}
+                          {reservation.vehicle?.model}
                         </small>
                       </td>
                       <td>
                         <div style={{ fontSize: "0.85rem" }}>
-                          <div>Bắt đầu: {formatDateTime(firstItem?.startAt)}</div>
-                          <div>Kết thúc: {formatDateTime(firstItem?.endAt)}</div>
+                          <div>
+                            Bắt đầu: {formatDateTime(firstItem?.startAt)}
+                          </div>
+                          <div>
+                            Kết thúc: {formatDateTime(firstItem?.endAt)}
+                          </div>
                         </div>
                       </td>
                       <td>
@@ -1033,21 +1146,37 @@ const handleDeleteVehicle = async (vehicleId) => {
                           {getStatusText(reservation.status)}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                        <div className="action-buttons" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-                          {reservation.status === 'pending' && (
+                      <td
+                        style={{ textAlign: "center", verticalAlign: "middle" }}
+                      >
+                        <div
+                          className="action-buttons"
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                          }}
+                        >
+                          {reservation.status === "pending" && (
                             <>
-                              <button 
+                              <button
                                 className="start-charge-btn"
                                 onClick={() => {
                                   if (reservationId && vehicleId) {
                                     const firstItem = reservation.items?.[0];
                                     const portInfo = firstItem?.slot?.port;
-                                    
-                                    localStorage.setItem("reservationId", reservationId);
-                                    localStorage.setItem("vehicleId", vehicleId);
-                                    
-                                    navigate('/chargingSession', {
+
+                                    localStorage.setItem(
+                                      "reservationId",
+                                      reservationId
+                                    );
+                                    localStorage.setItem(
+                                      "vehicleId",
+                                      vehicleId
+                                    );
+
+                                    navigate("/chargingSession", {
                                       state: {
                                         reservation: {
                                           id: reservationId,
@@ -1055,35 +1184,46 @@ const handleDeleteVehicle = async (vehicleId) => {
                                           powerKw: portInfo?.powerKw || 150,
                                           status: reservation.status,
                                           startAt: firstItem?.startAt,
-                                          endAt: firstItem?.endAt
+                                          endAt: firstItem?.endAt,
                                         },
                                         vehicle: {
                                           id: vehicleId,
-                                          plateNumber: reservation.vehicle?.plateNumber,
+                                          plateNumber:
+                                            reservation.vehicle?.plateNumber,
                                           make: reservation.vehicle?.make,
                                           model: reservation.vehicle?.model,
-                                          batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
-                                          connectorType: reservation.vehicle?.connectorType
-                                        }
-                                      }
+                                          batteryCapacityKwh:
+                                            reservation.vehicle
+                                              ?.batteryCapacityKwh,
+                                          connectorType:
+                                            reservation.vehicle?.connectorType,
+                                        },
+                                      },
                                     });
                                   } else {
-                                    showPopup('Không thể lấy thông tin đặt chỗ', 'error');
+                                    showPopup(
+                                      "Không thể lấy thông tin đặt chỗ",
+                                      "error"
+                                    );
                                   }
                                 }}
                               >
                                 Bắt đầu sạc
                               </button>
-                              <button 
+                              <button
                                 className="cancel-btn"
-                                onClick={() => handleCancelReservation(reservationId)}
+                                onClick={() =>
+                                  handleCancelReservation(reservationId)
+                                }
                               >
                                 Hủy
                               </button>
                             </>
                           )}
-                          {reservation.status === 'cancelled' && (
-                            <span style={{ color: '#666', fontSize: '0.9rem' }}>Đã hủy</span>
+                          {reservation.status === "cancelled" && (
+                            <span style={{ color: "#666", fontSize: "0.9rem" }}>
+                              Đã hủy
+                            </span>
                           )}
                         </div>
                       </td>
@@ -1092,7 +1232,10 @@ const handleDeleteVehicle = async (vehicleId) => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', color: "#90caf9" }}>
+                  <td
+                    colSpan={5}
+                    style={{ textAlign: "center", color: "#90caf9" }}
+                  >
                     Chưa có đặt chỗ nào
                   </td>
                 </tr>
@@ -1104,21 +1247,23 @@ const handleDeleteVehicle = async (vehicleId) => {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="pagination">
-            <button 
+            <button
               className="pagination-btn"
               onClick={handlePreviousPage}
               disabled={currentPage === 1}
             >
               ← Trước
             </button>
-            
+
             <div className="pagination-numbers">
               {[...Array(totalPages)].map((_, index) => {
                 const pageNumber = index + 1;
                 return (
                   <button
                     key={pageNumber}
-                    className={`pagination-number ${currentPage === pageNumber ? 'active' : ''}`}
+                    className={`pagination-number ${
+                      currentPage === pageNumber ? "active" : ""
+                    }`}
                     onClick={() => handlePageClick(pageNumber)}
                   >
                     {pageNumber}
@@ -1127,7 +1272,7 @@ const handleDeleteVehicle = async (vehicleId) => {
               })}
             </div>
 
-            <button 
+            <button
               className="pagination-btn"
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
@@ -1142,7 +1287,9 @@ const handleDeleteVehicle = async (vehicleId) => {
         <h2>Phân tích giao dịch</h2>
         <div className="analysis-cards">
           <div className="analysis-card">
-            <div className="icon-box cost"><span>📊</span></div>
+            <div className="icon-box cost">
+              <span>📊</span>
+            </div>
             <div>
               <div className="analysis-label">Tổng booking</div>
               <div className="analysis-value">{totalBookings}</div>
@@ -1150,17 +1297,25 @@ const handleDeleteVehicle = async (vehicleId) => {
           </div>
 
           <div className="analysis-card">
-            <div className="icon-box location"><span>🔌</span></div>
+            <div className="icon-box location">
+              <span>🔌</span>
+            </div>
             <div>
               <div className="analysis-label">Loại cổng sử dụng nhiều nhất</div>
-              <div className="analysis-value">{getConnectorTypeName(favoriteConnectorType)}</div>
+              <div className="analysis-value">
+                {getConnectorTypeName(favoriteConnectorType)}
+              </div>
             </div>
           </div>
 
           <div className="analysis-card">
-            <div className="icon-box time"><span>⏱️</span></div>
+            <div className="icon-box time">
+              <span>⏱️</span>
+            </div>
             <div>
-              <div className="analysis-label">Thời gian TB mỗi booking (phút)</div>
+              <div className="analysis-label">
+                Thời gian TB mỗi booking (phút)
+              </div>
               <div className="analysis-value">{avgDuration}</div>
             </div>
           </div>

@@ -4,7 +4,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,13 +14,14 @@
 }
 
 .payment-confirm-container {
-  background: linear-gradient(135deg, #ffffff 0%, #f0f9e8 100%);
-  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
   padding: 40px 35px;
   min-width: 450px;
   max-width: 550px;
-  box-shadow: 0 20px 60px rgba(126, 211, 33, 0.4);
-  border: 3px solid #7ed321;
+  box-shadow: 0 20px 60px rgba(25, 135, 84, 0.15);
+  border: 1px solid rgba(25, 135, 84, 0.1);
   text-align: center;
   animation: slideUp 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
@@ -49,40 +51,40 @@
   height: 80px;
   margin: 0 auto 25px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4caf50, #7ed321);
-  color: white;
+  background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 42px;
-  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3);
   animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 15px 40px rgba(76, 175, 80, 0.5);
+    box-shadow: 0 15px 40px rgba(25, 135, 84, 0.5);
   }
 }
 
 .payment-title {
-  color: #333;
+  color: #333333;
   font-size: 1.6rem;
   font-weight: 700;
   margin: 0 0 30px 0;
 }
 
 .payment-details {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(224, 247, 224, 0.3);
   border-radius: 15px;
   padding: 25px;
   margin-bottom: 30px;
-  border: 2px solid rgba(126, 211, 33, 0.3);
+  border: 2px solid rgba(25, 135, 84, 0.15);
 }
 
 .detail-row {
@@ -98,7 +100,7 @@
 }
 
 .detail-label {
-  color: #555;
+  color: #AAAAAA;
   font-size: 1rem;
   font-weight: 500;
 }
@@ -106,19 +108,20 @@
 .detail-value {
   font-size: 1.1rem;
   font-weight: 600;
+  color: #333333;
   
   &.battery {
-    color: #2196f3;
+    color: #198754;
     font-size: 1.3rem;
   }
   
   &.time {
-    color: #9c27b0;
+    color: #198754;
     font-size: 1.2rem;
   }
   
   &.cost {
-    color: #7ed321;
+    color: #198754;
     font-size: 1.8rem;
     font-weight: 700;
     animation: numberPop 0.5s ease-out;
@@ -141,7 +144,7 @@
 
 .detail-separator {
   height: 2px;
-  background: linear-gradient(90deg, transparent, #7ed321, transparent);
+  background: linear-gradient(90deg, transparent, rgba(25, 135, 84, 0.3), transparent);
   margin: 15px 0;
 }
 
@@ -153,7 +156,7 @@
 
 .payment-btn {
   padding: 14px 35px;
-  border-radius: 30px;
+  border-radius: 12px;
   border: none;
   font-size: 1.05rem;
   font-weight: 600;
@@ -162,13 +165,14 @@
   min-width: 160px;
 
   &.confirm {
-    background: linear-gradient(45deg, #4caf50, #7ed321);
-    color: white;
-    box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+    background: #198754;
+    color: #ffffff;
+    box-shadow: 0 5px 20px rgba(25, 135, 84, 0.3);
 
     &:hover {
+      background: #146c43;
       transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
+      box-shadow: 0 8px 25px rgba(20, 108, 67, 0.5);
     }
 
     &:active {
@@ -177,14 +181,15 @@
   }
 
   &.cancel {
-    background: white;
-    color: #7ed321;
-    border: 2px solid #7ed321;
+    background: transparent;
+    color: #198754;
+    border: 2px solid #198754;
 
     &:hover {
-      background: rgba(126, 211, 33, 0.1);
+      background: #198754;
+      color: #ffffff;
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(126, 211, 33, 0.2);
+      box-shadow: 0 5px 15px rgba(25, 135, 84, 0.2);
     }
 
     &:active {

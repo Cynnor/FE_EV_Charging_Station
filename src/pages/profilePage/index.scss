@@ -1,0 +1,606 @@
+.profile-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
+  padding: 120px 20px 40px;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh;
+    font-size: 1.2rem;
+    color: #000;
+  }
+}
+
+.profile-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #333333;
+  text-align: center;
+  margin-bottom: 40px;
+  letter-spacing: -0.5px;
+}
+
+.profile-section {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 8px 32px rgba(25, 135, 84, 0.1);
+  border: 1px solid rgba(25, 135, 84, 0.1);
+
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333333;
+    margin: 0;
+  }
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(25, 135, 84, 0.1);
+
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333333;
+    margin: 0;
+  }
+}
+
+.edit-btn,
+.save-btn,
+.cancel-btn,
+.change-password-btn,
+.default-btn,
+.start-charge-btn,
+.pagination-btn {
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+}
+
+.edit-btn,
+.save-btn,
+.start-charge-btn,
+.change-password-btn {
+  background: #198754;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.25);
+
+  &:hover {
+    background: #146c43;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(20, 108, 67, 0.35);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.cancel-btn {
+  background: transparent;
+  color: #198754;
+  border: 2px solid #198754;
+
+  &:hover {
+    background: #198754;
+    color: #ffffff;
+    transform: translateY(-2px);
+  }
+}
+
+.default-btn {
+  background: transparent;
+  color: #AAAAAA;
+  border: 2px solid #AAAAAA;
+
+  &.active {
+    background: #198754;
+    color: #ffffff;
+    border-color: #198754;
+  }
+
+  &:hover:not(.active) {
+    background: #198754;
+    color: #ffffff;
+    border-color: #198754;
+  }
+}
+
+.edit-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.user-details {
+  p {
+    font-size: 1rem;
+    color: #AAAAAA;
+    margin-bottom: 16px;
+    line-height: 1.6;
+
+    b {
+      color: #333333;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+  }
+}
+
+.change-password-btn {
+  margin-top: 24px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.edit-form {
+  display: grid;
+  gap: 20px;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #333333;
+
+      b {
+        color: #333333;
+      }
+    }
+
+    input,
+    select {
+      padding: 12px 16px;
+      border: 2px solid rgba(25, 135, 84, 0.2);
+      border-radius: 12px;
+      font-size: 1rem;
+      color: #333333;
+      background: rgba(255, 255, 255, 0.8);
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #198754;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1);
+        background: #ffffff;
+      }
+
+      &.error {
+        border-color: #dc2626;
+      }
+
+      &.disabled-input {
+        background: rgba(170, 170, 170, 0.1);
+        color: #AAAAAA;
+        cursor: not-allowed;
+      }
+
+      &::placeholder {
+        color: #AAAAAA;
+      }
+    }
+  }
+
+  .error-message {
+    font-size: 0.85rem;
+    color: #dc2626;
+    margin-top: 4px;
+  }
+}
+
+.vehicle-section {
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+}
+
+.vehicles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.vehicle-card {
+  background: rgba(224, 247, 224, 0.3);
+  border: 2px solid rgba(25, 135, 84, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+
+  &:hover {
+    border-color: #198754;
+    box-shadow: 0 8px 24px rgba(25, 135, 84, 0.15);
+    transform: translateY(-4px);
+  }
+
+  &.default-vehicle {
+    border-color: #198754;
+    background: rgba(25, 135, 84, 0.05);
+  }
+
+  h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #198754;
+
+    .plate-number {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #333333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .default-badge {
+      font-size: 0.75rem;
+      background: #198754;
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .delete-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(220, 38, 38, 0.1);
+      color: #dc2626;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #dc2626;
+        color: #ffffff;
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  .vehicle-info {
+    margin-bottom: 16px;
+
+    p {
+      font-size: 0.95rem;
+      color: #AAAAAA;
+      margin-bottom: 8px;
+
+      b {
+        color: #333333;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .vehicle-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(25, 135, 84, 0.1);
+
+    button {
+      flex: 1;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.history-section {
+  .history-table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+
+    thead {
+      background: rgba(25, 135, 84, 0.05);
+
+      tr th {
+        padding: 16px;
+        text-align: left;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #333333;
+        border-bottom: 2px solid #198754;
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid rgba(25, 135, 84, 0.1);
+        transition: background 0.2s ease;
+
+        &:hover {
+          background: rgba(224, 247, 224, 0.3);
+        }
+
+        td {
+          padding: 16px;
+          color: #AAAAAA;
+          font-size: 0.95rem;
+
+          small {
+            color: #AAAAAA;
+            font-size: 0.85rem;
+          }
+        }
+      }
+    }
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    &.pending {
+      background: rgba(251, 191, 36, 0.15);
+      color: #d97706;
+    }
+
+    &.confirmed {
+      background: rgba(25, 135, 84, 0.15);
+      color: #198754;
+    }
+
+    &.cancelled {
+      background: rgba(220, 38, 38, 0.15);
+      color: #dc2626;
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+
+    button {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+
+  .pagination-btn {
+    padding: 10px 20px;
+    background: #198754;
+    color: #ffffff;
+
+    &:disabled {
+      background: #AAAAAA;
+      cursor: not-allowed;
+      opacity: 0.5;
+
+      &:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+  }
+
+  .pagination-numbers {
+    display: flex;
+    gap: 8px;
+  }
+
+  .pagination-number {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: transparent;
+    color: #333333;
+    border: 2px solid rgba(25, 135, 84, 0.2);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(25, 135, 84, 0.1);
+      border-color: #198754;
+    }
+
+    &.active {
+      background: #198754;
+      color: #ffffff;
+      border-color: #198754;
+    }
+  }
+}
+
+.analysis-section {
+  .analysis-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .analysis-card {
+    background: rgba(224, 247, 224, 0.3);
+    border: 2px solid rgba(25, 135, 84, 0.15);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: #198754;
+      box-shadow: 0 8px 24px rgba(25, 135, 84, 0.15);
+      transform: translateY(-4px);
+    }
+
+    .icon-box {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      background: rgba(25, 135, 84, 0.1);
+
+      &.cost {
+        background: rgba(25, 135, 84, 0.1);
+      }
+
+      &.location {
+        background: rgba(59, 130, 246, 0.1);
+      }
+
+      &.time {
+        background: rgba(251, 191, 36, 0.1);
+      }
+    }
+
+    .analysis-label {
+      font-size: 0.9rem;
+      color: #AAAAAA;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .analysis-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #333333;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 100px 15px 30px;
+  }
+
+  .profile-title {
+    font-size: 2rem;
+  }
+
+  .profile-section {
+    padding: 24px 20px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .vehicles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .history-table {
+    font-size: 0.85rem;
+
+    thead tr th,
+    tbody tr td {
+      padding: 12px 8px;
+    }
+  }
+
+  .analysis-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+  }
+
+  .edit-actions {
+    width: 100%;
+    
+    button {
+      flex: 1;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-title {
+    font-size: 1.75rem;
+  }
+
+  .profile-section {
+    padding: 20px 16px;
+  }
+
+  .section-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .vehicle-card h3 .plate-number {
+    font-size: 1.1rem;
+  }
+
+  .analysis-card {
+    padding: 16px;
+    gap: 12px;
+
+    .icon-box {
+      width: 50px;
+      height: 50px;
+      font-size: 1.5rem;
+    }
+
+    .analysis-value {
+      font-size: 1.3rem;
+    }
+  }
+}

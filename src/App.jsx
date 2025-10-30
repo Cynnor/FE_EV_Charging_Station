@@ -1,36 +1,32 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Layout from "./components/layout";
-import AdminLayout from "./components/adminLayout";
-import StaffLayout from "./components/staffLayout";
-import ProtectedRoute from "./config/ProtectedRoute";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
-import SupportPage from "./pages/supportPage/index";
-import StationManagement from "./pages/adminDashboard/stationManagement";
-import UserManagement from "./pages/adminDashboard/userManagement";
-import Analytics from "./pages/adminDashboard/analyticsManagement";
-import RevenueManagement from "./pages/adminDashboard/revenueManagement";
-import SettingManagement from "./pages/adminDashboard/settingManagement/index";
-import ForgotPassword from "./pages/forgotpasswordPage/forgotpassword";
+import ProfilePage from "./pages/profilePage";
+import BookingPage from "./pages/bookingPage";
+import PaymentPage from "./pages/PaymentPage/index";
+import PaymentSuccessPage from "./pages/paymentSuccessPage/index";
+import MembershipPage from "./pages/MembershipPage/index";
 import Login from "./pages/loginPage";
 import Register from "./pages/registerPage";
-import BookingPage from "./pages/bookingPage";
-import ProfilePage from "./pages/profilePage/ProfilePage";
-import PaymentPage from "./pages/PaymentPage";
-import MembershipPage from "./pages/MembershipPage";
-import StaffOverview from "./pages/staffDashboard/Overview";
-import ChargingSessions from "./pages/staffDashboard/chargingSessions";
-import StaffPayment from "./pages/staffDashboard/payment";
-import StationStatus from "./pages/staffDashboard/stationStatus";
-import Reports from "./pages/staffDashboard/reports";
-import StaffProfile from "./pages/staffDashboard/profile";
-import Overview from "./pages/adminDashboard/overViewManagement";
-import ChargingSession from "./pages/chargingSessionPage/chargingSessionPage";
-import BookingSuccessPage from "./pages/bookingSuccessPage/BookingSuccessPage";
-import PaymentSuccessPage from "./pages/paymentSuccessPage";
-
-
+import ForgotPassword from "./pages/forgotPasswordPage";
+import ChargingSession from "./pages/chargingSessionPage";
+import BookingSuccessPage from "./pages/bookingSuccessPage";
+import ProtectedRoute from "./config/ProtectedRoute";
+import AdminLayout from "./components/adminLayout/index";
+import Overview from "./pages/adminDashboard/overViewManagement/index";
+import StationManagement from "./pages/adminDashboard/stationManagement/index";
+import UserManagement from "./pages/adminDashboard/userManagement/index";
+import RevenueManagement from "./pages/adminDashboard/revenueManagement/index";
+import Analytics from "./pages/adminDashboard/analyticsManagement/index";
+import SettingManagement from "./pages/adminDashboard/settingManagement/index";
+import StaffLayout from "./components/staffLayout/index";
+import ChargingSessions from "./pages/staffDashboard/chargingSessions/index";
+import StationStatus from "./pages/staffDashboard/stationStatus/index";
+import Reports from "./pages/staffDashboard/reports/index";
+import Payment from "./pages/staffDashboard/payment";
+import Profile from "./pages/staffDashboard/profile/index";
+import Layout from "./components/layout/index";
 
 function App() {
   const router = createBrowserRouter([
@@ -41,7 +37,7 @@ function App() {
         { path: "", element: <HomePage /> },
         { path: "charging-stations", element: <ChargingStationsPage /> },
         { path: "about", element: <AboutPage /> },
-        { path: "support", element: <SupportPage /> },
+        // { path: "support", element: <SupportPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "booking/:stationId", element: <BookingPage /> },
         { path: "booking", element: <BookingPage /> },
@@ -64,11 +60,11 @@ function App() {
     },
     {
       path: "/chargingSession",
-      element: <ChargingSession />
+      element: <ChargingSession />,
     },
     {
       path: "booking-success",
-      element: <BookingSuccessPage />
+      element: <BookingSuccessPage />,
     },
     {
       path: "admin",
@@ -94,12 +90,12 @@ function App() {
         </ProtectedRoute>
       ),
       children: [
-        { path: "", element: <StaffOverview /> },
-        { path: "charging-sessions", element: <ChargingSessions /> },
-        { path: "payment", element: <StaffPayment /> },
+        // { path: "", element: <Overview /> },
+        { path: "charging-ChargingSessions", element: <ChargingSessions /> },
+        { path: "payment", element: <Payment /> },
         { path: "station-status", element: <StationStatus /> },
         { path: "reports", element: <Reports /> },
-        { path: "profile", element: <StaffProfile /> },
+        { path: "profile", element: <Profile /> },
       ],
     },
   ]);

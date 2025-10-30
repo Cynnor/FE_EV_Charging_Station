@@ -1,6 +1,5 @@
 import Header from "../header";
 import Footer from "../footer";
-import HotlineFloating from "../hotlineFloating";
 import { Outlet } from "react-router-dom";
 
 function Layout() {
@@ -11,7 +10,6 @@ function Layout() {
         <Outlet />
       </div>
       <Footer />
-      <HotlineFloating />
     </div>
   );
 }

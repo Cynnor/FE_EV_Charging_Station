@@ -1,13 +1,13 @@
 @use "sass:color";
 
-// Color System
-$primary: #7ed321;
-$primary-dark: #6bb91c;
+// Color System - Updated to match new palette
+$primary: #198754;
+$primary-dark: #146c43;
 $primary-light: #9de04a;
-$primary-pale: #f0f9e6;
+$primary-pale: rgba(224, 247, 224, 0.3);
 
-$text-primary: #1a1a1a;
-$text-secondary: #666666;
+$text-primary: #333333;
+$text-secondary: #AAAAAA;
 $text-muted: #999999;
 
 $bg-white: #ffffff;
@@ -69,7 +69,7 @@ body {
   min-height: 100vh;
   padding: $spacing-lg;
   padding-top: 100px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -104,7 +104,7 @@ body {
 .panel-header {
   padding: $spacing-md $spacing-lg;
   background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: white;
+  color: #ffffff;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -115,6 +115,7 @@ body {
     font-weight: 700;
     margin-bottom: $spacing-md;
     letter-spacing: -0.5px;
+    color: #ffffff;
   }
 }
 
@@ -352,7 +353,7 @@ body {
 
 .station-name {
   font-size: 16px;
-  font-weight: 6;
+  font-weight: 600;
   color: $text-primary;
   line-height: 1;
   flex: 10;  
@@ -643,7 +644,7 @@ body {
 
   .spec-label {
     font-size: 11px;
-    color: $text-muted;
+    color: $text-secondary;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     font-weight: 600;
@@ -719,7 +720,7 @@ body {
     height: 60px;
     margin: 0 auto $spacing-md;
     background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-    color: white;
+    color: #ffffff;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -790,8 +791,8 @@ body {
 .select-vehicle-btn {
   width: 100%;
   padding: 12px 20px;
-  background: linear-gradient(45deg, #7ed321, #6bc91a);
-  color: white;
+  background: $primary;
+  color: #ffffff;
   border: none;
   border-radius: 25px;
   font-weight: 600;
@@ -799,8 +800,9 @@ body {
   transition: all 0.3s ease;
 
   &:hover {
+    background: $primary-dark;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(126, 211, 33, 0.4);
+    box-shadow: 0 5px 15px rgba(25, 135, 84, 0.4);
   }
 }
 
@@ -936,7 +938,7 @@ body {
       .datetime-arrow {
         transform: translateX(6px) scale(1.1);
         background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-        color: white;
+        color: #ffffff;
         box-shadow: 0 4px 12px rgba(126, 211, 33, 0.4);
       }
 
@@ -1061,7 +1063,7 @@ body {
   width: 100%;
   padding: $spacing-md $spacing-lg;
   background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: white;
+  color: #ffffff;
   border: none;
   border-radius: $radius-md;
   font-size: 15px;
@@ -1162,7 +1164,7 @@ body {
 .modal-header {
   padding: $spacing-lg;
   background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: white;
+  color: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1171,12 +1173,13 @@ body {
     font-size: 18px;
     font-weight: 700;
     margin: 0;
+    color: #ffffff;
   }
 
   .modal-close {
     background: rgba(255, 255, 255, 0.2);
     border: none;
-    color: white;
+    color: #ffffff;
     font-size: 28px;
     width: 36px;
     height: 36px;
@@ -1386,7 +1389,7 @@ body {
 
   &:hover {
     background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-    color: white;
+    color: #ffffff;
     border-color: $primary;
     transform: translateX(-4px);
     box-shadow: $shadow-md;
@@ -1485,7 +1488,7 @@ body {
 
   .selection-hint {
     text-align: center;
-    color: #AAAAAA;
+    color: $text-secondary;
     font-size: 1rem;
     margin-bottom: 24px;
   }
@@ -1501,7 +1504,7 @@ body {
 
   .loading-message {
     background: rgba(25, 135, 84, 0.1);
-    color: #333333;
+    color: $text-primary;
   }
 
   .error-message {
@@ -1535,12 +1538,12 @@ body {
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #198754;
+      background: $primary;
       border-radius: 10px;
     }
 
     &::-webkit-scrollbar-thumb:hover {
-      background: #146c43;
+      background: $primary-dark;
     }
   }
 
@@ -1559,11 +1562,11 @@ body {
     &:hover:not(.booked) {
       transform: translateY(-4px);
       box-shadow: 0 8px 20px rgba(25, 135, 84, 0.15);
-      border-color: #198754;
+      border-color: $primary;
     }
 
     &.selected {
-      border-color: #198754;
+      border-color: $primary;
       background: rgba(25, 135, 84, 0.05);
       box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
     }
@@ -1590,7 +1593,7 @@ body {
       .slot-number {
         font-weight: 700;
         font-size: 1.1rem;
-        color: #333333;
+        color: $text-primary;
       }
 
       .slot-status-badge {
@@ -1601,7 +1604,7 @@ body {
 
         &.available {
           background: rgba(25, 135, 84, 0.1);
-          color: #198754;
+          color: $primary;
         }
 
         &.booked {
@@ -1625,13 +1628,13 @@ body {
 
         .time-label {
           font-size: 0.9rem;
-          color: #AAAAAA;
+          color: $text-secondary;
         }
 
         .time-value {
           font-size: 1rem;
           font-weight: 600;
-          color: #333333;
+          color: $text-primary;
         }
       }
     }
@@ -1652,7 +1655,7 @@ body {
       .duration-text {
         font-size: 0.9rem;
         font-weight: 500;
-        color: #333333;
+        color: $text-primary;
       }
     }
   }
@@ -1660,7 +1663,7 @@ body {
   .next-button {
     width: 100%;
     padding: 16px;
-    background: #198754;
+    background: $primary;
     color: #ffffff;
     border: none;
     border-radius: 12px;
@@ -1671,7 +1674,7 @@ body {
     flex-shrink: 0;
 
     &:hover:not(:disabled) {
-      background: #146c43;
+      background: $primary-dark;
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(20, 108, 67, 0.3);
     }
