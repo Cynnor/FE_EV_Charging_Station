@@ -1,37 +1,42 @@
-import './PaymentConfirmPopup.scss';
+import "./index.scss";
 
-const PaymentConfirmPopup = ({ 
-  isOpen, 
-  currentCharge, 
-  timeElapsed, 
-  totalCost, 
-  onConfirm, 
-  onCancel 
+const PaymentConfirmPopup = ({
+  isOpen,
+  currentCharge,
+  timeElapsed,
+  totalCost,
+  onConfirm,
+  onCancel,
 }) => {
   if (!isOpen) return null;
 
   return (
     <div className="payment-confirm-overlay" onClick={onCancel}>
-      <div className="payment-confirm-container" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="payment-confirm-container"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="payment-icon">💳</div>
         <h3 className="payment-title">Xác nhận thanh toán</h3>
-        
+
         <div className="payment-details">
           <div className="detail-row">
             <span className="detail-label">Pin hiện tại:</span>
             <span className="detail-value battery">{currentCharge}%</span>
           </div>
-          
+
           <div className="detail-row">
             <span className="detail-label">Thời gian đã sạc:</span>
             <span className="detail-value time">{timeElapsed} phút</span>
           </div>
-          
+
           <div className="detail-separator"></div>
-          
+
           <div className="detail-row total">
             <span className="detail-label">Tổng chi phí:</span>
-            <span className="detail-value cost">{totalCost.toLocaleString('vi-VN')} VNĐ</span>
+            <span className="detail-value cost">
+              {totalCost.toLocaleString("vi-VN")} VNĐ
+            </span>
           </div>
         </div>
 

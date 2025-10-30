@@ -3,23 +3,25 @@
   width: 100%;
   margin: 0;
   padding: 0;
-  background: linear-gradient(135deg, #f8fdf9 0%, #e8f5e9 100%);
+  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 
   .charging-session {
-    background-color: #7ce480;
+    background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
     height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 
     .header-container {
-      background: white;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
       padding: 0.3rem 1rem;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.1);
+      box-shadow: 0 2px 8px rgba(25, 135, 84, 0.1);
+      border: 1px solid rgba(25, 135, 84, 0.1);
       margin: 0.3rem 1rem 0.5rem;
       display: grid;
       grid-template-columns: auto 1fr auto;
@@ -29,7 +31,7 @@
 
       h1 {
         margin: 0;
-        color: #1b5e20;
+        color: #333333;
         font-size: 1.1rem;
         text-align: center;
         font-weight: 600;
@@ -37,9 +39,9 @@
 
       .back-btn {
         padding: 0.4rem 0.9rem;
-        background: white;
-        color: #2e7d32;
-        border: 2px solid #4caf50;
+        background: rgba(255, 255, 255, 0.95);
+        color: #198754;
+        border: 2px solid #198754;
         border-radius: 6px;
         font-size: 0.85rem;
         font-weight: 500;
@@ -48,10 +50,10 @@
         white-space: nowrap;
 
         &:hover {
-          background: #4caf50;
-          color: white;
+          background: #198754;
+          color: #ffffff;
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+          box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
         }
       }
 
@@ -62,9 +64,9 @@
 
         .payment-btn {
           padding: 0.4rem 0.9rem;
-          background: white;
-          color: #2e7d32;
-          border: 2px solid #4caf50;
+          background: #198754;
+          color: #ffffff;
+          border: 2px solid #198754;
           border-radius: 6px;
           font-size: 0.85rem;
           font-weight: 500;
@@ -74,16 +76,16 @@
 
           &:disabled {
             background: #e0e0e0;
-            color: #9e9e9e;
+            color: #AAAAAA;
             cursor: not-allowed;
             border-color: #e0e0e0;
           }
 
           &:hover:not(:disabled) {
-            background: #4caf50;
-            color: white;
+            background: #146c43;
+            color: #ffffff;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 4px 12px rgba(20, 108, 67, 0.3);
           }
         }
       }
@@ -116,18 +118,19 @@
         overflow: hidden;
 
         .info-card {
-          background: white;
-          border: 2px solid #e8f5e9;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border: 2px solid rgba(25, 135, 84, 0.15);
           border-radius: 10px;
           padding: 0.8rem;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 2px 8px rgba(25, 135, 84, 0.1);
           flex: 1;
           overflow: hidden;
           display: flex;
           flex-direction: column;
 
           h2 {
-            color: #2e7d32;
+            color: #333333;
             margin: 0 0 0.6rem 0;
             font-size: 1.1rem;
             flex-shrink: 0;
@@ -143,19 +146,19 @@
 
           .info-item {
             .label {
-              color: #616161;
+              color: #AAAAAA;
               font-size: 0.8rem;
               margin-bottom: 0.2rem;
               display: block;
             }
 
             .value {
-              color: #212121;
+              color: #333333;
               font-size: 0.95rem;
               font-weight: 500;
 
               &.status-charging {
-                color: #4caf50;
+                color: #198754;
               }
             }
           }
@@ -166,19 +169,19 @@
 
           .battery-indicator {
             height: 50px;
-            background: #f5f5f5;
+            background: rgba(224, 247, 224, 0.3);
             border-radius: 25px;
             margin: 0.6rem 0;
             overflow: hidden;
-            border: 3px solid #4caf50;
+            border: 3px solid #198754;
 
             .battery-level {
               height: 100%;
-              background: linear-gradient(90deg, #66bb6a, #4caf50);
+              background: linear-gradient(90deg, #198754, #146c43);
               display: flex;
               align-items: center;
               justify-content: center;
-              color: white;
+              color: #ffffff;
               font-weight: bold;
               transition: width 0.3s ease;
 
@@ -201,14 +204,14 @@
 
             .detail-item {
               .label {
-                color: #616161;
+                color: #AAAAAA;
                 font-size: 0.8rem;
                 margin-bottom: 0.2rem;
                 display: block;
               }
 
               .value {
-                color: #2e7d32;
+                color: #198754;
                 font-size: 0.95rem;
                 font-weight: 500;
                 transition: all 0.3s ease;
@@ -223,11 +226,12 @@
         overflow: hidden;
 
         .vehicle-info-card {
-          background: white;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
           border-radius: 10px;
           padding: 0.8rem;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          border: 2px solid #e8f5e9;
+          box-shadow: 0 4px 12px rgba(25, 135, 84, 0.1);
+          border: 2px solid rgba(25, 135, 84, 0.15);
           height: 100%;
           overflow-y: auto;
           display: flex;
@@ -238,48 +242,48 @@
           }
 
           &::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: rgba(224, 247, 224, 0.3);
             border-radius: 2px;
           }
 
           &::-webkit-scrollbar-thumb {
-            background: #4caf50;
+            background: #198754;
             border-radius: 2px;
 
             &:hover {
-              background: #43a047;
+              background: #146c43;
             }
           }
 
           h2 {
-            color: #1b5e20;
+            color: #333333;
             font-size: 1.1rem;
             margin-bottom: 0.6rem;
             padding-bottom: 0.5rem;
-            border-bottom: 3px solid #4caf50;
+            border-bottom: 3px solid #198754;
             font-weight: 600;
             flex-shrink: 0;
           }
 
           .vehicle-details {
             p {
-              color: #212121;
+              color: #333333;
               font-size: 0.85rem;
               margin: 0.4rem 0;
               padding: 0.5rem 0.8rem;
-              background: #f1f8e9;
+              background: rgba(224, 247, 224, 0.3);
               border-radius: 6px;
-              border-left: 4px solid #4caf50;
+              border-left: 4px solid #198754;
               transition: all 0.3s ease;
 
               &:hover {
-                background: #e8f5e9;
+                background: rgba(224, 247, 224, 0.5);
                 transform: translateX(3px);
-                box-shadow: 0 2px 6px rgba(76, 175, 80, 0.15);
+                box-shadow: 0 2px 6px rgba(25, 135, 84, 0.15);
               }
 
               strong {
-                color: #1b5e20;
+                color: #333333;
                 display: inline-block;
                 min-width: 100px;
                 font-weight: 600;
@@ -291,21 +295,22 @@
 
       h1 {
         text-align: center;
-        color: #4caf50;
+        color: #333333;
         margin-bottom: 30px;
         font-size: 2rem;
       }
 
       .info-card {
-        background: white;
-        border: 1px solid #e8f5e9;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(25, 135, 84, 0.15);
         border-radius: 12px;
         padding: 24px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(25, 135, 84, 0.1);
         flex-shrink: 0;
 
         h2 {
-          color: #2e7d32;
+          color: #333333;
           margin: 0 0 20px 0;
           font-size: 1.5rem;
         }
@@ -318,19 +323,19 @@
 
         .info-item {
           .label {
-            color: #616161;
+            color: #AAAAAA;
             font-size: 0.9rem;
             margin-bottom: 4px;
             display: block;
           }
 
           .value {
-            color: #212121;
+            color: #333333;
             font-size: 1.1rem;
             font-weight: 500;
 
             &.status-charging {
-              color: #4caf50;
+              color: #198754;
             }
           }
         }
@@ -339,19 +344,19 @@
       .charging-status {
         .battery-indicator {
           height: 40px;
-          background: #f5f5f5;
+          background: rgba(224, 247, 224, 0.3);
           border-radius: 20px;
           margin: 20px 0;
           overflow: hidden;
-          border: 2px solid #4caf50;
+          border: 2px solid #198754;
 
           .battery-level {
             height: 100%;
-            background: linear-gradient(90deg, #66bb6a, #4caf50);
+            background: linear-gradient(90deg, #198754, #146c43);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: #ffffff;
             font-weight: bold;
             transition: width 0.3s ease;
 
@@ -373,14 +378,14 @@
 
           .detail-item {
             .label {
-              color: #616161;
+              color: #AAAAAA;
               font-size: 0.9rem;
               margin-bottom: 4px;
               display: block;
             }
 
             .value {
-              color: #2e7d32;
+              color: #198754;
               font-size: 1.1rem;
               font-weight: 500;
               transition: all 0.3s ease;
@@ -392,17 +397,17 @@
 
     .payment-btn {
       padding: 8px 24px;
-      background: #4caf50;
-      color: white;
+      background: #198754;
+      color: #ffffff;
       border: none;
       border-radius: 8px;
       font-size: 1rem;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+      box-shadow: 0 2px 8px rgba(25, 135, 84, 0.2);
 
       &:hover {
-        background: #388e3c;
+        background: #146c43;
       }
 
       &:active {
@@ -410,40 +415,40 @@
       }
 
       &.charging-active {
-        background: #81c784;
+        background: rgba(25, 135, 84, 0.6);
         cursor: not-allowed;
         opacity: 0.8;
 
         &:hover {
-          background: #81c784;
+          background: rgba(25, 135, 84, 0.6);
         }
       }
 
       &:disabled {
         background: #e0e0e0;
-        color: #9e9e9e;
+        color: #AAAAAA;
         cursor: not-allowed;
       }
     }
 
     .start-charging-btn {
       padding: 12px 32px;
-      background: #4caf50;
-      color: white;
+      background: #198754;
+      color: #ffffff;
       border: none;
       border-radius: 8px;
       font-size: 1.1rem;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+      box-shadow: 0 2px 8px rgba(25, 135, 84, 0.2);
 
       &:hover:not(:disabled) {
-        background: #388e3c;
+        background: #146c43;
       }
 
       &:disabled {
         background: #e0e0e0;
-        color: #9e9e9e;
+        color: #AAAAAA;
         cursor: not-allowed;
       }
     }
@@ -451,10 +456,10 @@
     .reservation-info {
       p {
         margin: 10px 0;
-        color: #212121;
+        color: #333333;
 
         b {
-          color: #2e7d32;
+          color: #333333;
         }
       }
     }
@@ -462,13 +467,13 @@
     .station-info {
       margin-bottom: 20px;
       padding: 15px;
-      background: #f1f8e9;
+      background: rgba(224, 247, 224, 0.3);
       border-radius: 8px;
     }
 
     // Status styling
     .status-charging {
-      color: #4caf50 !important;
+      color: #198754 !important;
       font-weight: 600;
       animation: pulse 2s infinite;
     }
@@ -479,14 +484,14 @@
     }
 
     .status-waiting {
-      color: #616161 !important;
+      color: #AAAAAA !important;
       font-weight: 600;
     }
 
     // Payment button states
     .payment-btn {
-      background: #4caf50;
-      color: white;
+      background: #198754;
+      color: #ffffff;
       border: none;
       padding: 12px 24px;
       border-radius: 8px;
@@ -494,20 +499,20 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+      box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
       white-space: nowrap;
 
       &:hover:not(:disabled) {
-        background: #388e3c;
+        background: #146c43;
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+        box-shadow: 0 6px 16px rgba(20, 108, 67, 0.3);
       }
 
       &.start-btn {
-        background: #4caf50;
+        background: #198754;
 
         &:hover:not(:disabled) {
-          background: #388e3c;
+          background: #146c43;
         }
       }
 
@@ -522,28 +527,28 @@
       }
 
       &.resume-btn {
-        background: #4caf50;
-        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+        background: #198754;
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
 
         &:hover {
-          background: #388e3c;
-          box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+          background: #146c43;
+          box-shadow: 0 6px 16px rgba(20, 108, 67, 0.3);
         }
       }
 
       &.pay-now-btn {
-        background: #4caf50;
+        background: #198754;
 
         &:hover {
-          background: #388e3c;
+          background: #146c43;
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+          box-shadow: 0 6px 20px rgba(20, 108, 67, 0.3);
         }
       }
 
       &:disabled {
         background: #e0e0e0;
-        color: #9e9e9e;
+        color: #AAAAAA;
         cursor: not-allowed;
       }
     }
@@ -565,43 +570,43 @@
 
         &:disabled {
           background: #e0e0e0;
-          color: #9e9e9e;
+          color: #AAAAAA;
           cursor: not-allowed;
         }
       }
 
       .start-btn {
-        background: #4caf50;
-        color: white;
+        background: #198754;
+        color: #ffffff;
 
         &:hover:not(:disabled) {
-          background: #388e3c;
+          background: #146c43;
           transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+          box-shadow: 0 5px 15px rgba(20, 108, 67, 0.3);
         }
       }
 
       .stop-btn {
-        background: white;
-        color: #2e7d32;
-        border: 2px solid #4caf50;
+        background: rgba(255, 255, 255, 0.95);
+        color: #198754;
+        border: 2px solid #198754;
 
         &:hover:not(:disabled) {
-          background: #4caf50;
-          color: white;
+          background: #198754;
+          color: #ffffff;
           transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+          box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3);
         }
       }
 
       .cancel-btn {
-        background: white;
+        background: rgba(255, 255, 255, 0.95);
         color: #d32f2f;
         border: 2px solid #f44336;
 
         &:hover:not(:disabled) {
           background: #f44336;
-          color: white;
+          color: #ffffff;
           transform: translateY(-2px);
           box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
         }
@@ -609,20 +614,21 @@
     }
 
     .payment-section {
-      background: white;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
       border-radius: 20px;
       padding: 30px;
       margin: 30px auto;
       max-width: 500px;
-      box-shadow: 0 8px 32px rgba(76, 175, 80, 0.15);
-      border: 2px solid #4caf50;
+      box-shadow: 0 8px 32px rgba(25, 135, 84, 0.15);
+      border: 2px solid #198754;
 
       .total-cost {
         text-align: center;
         margin-bottom: 25px;
 
         h3 {
-          color: #212121;
+          color: #333333;
           font-size: 1.2rem;
           margin-bottom: 10px;
         }
@@ -630,7 +636,7 @@
         .cost-amount {
           font-size: 2.5rem;
           font-weight: 700;
-          color: #2e7d32;
+          color: #198754;
           margin: 0;
         }
       }
@@ -638,8 +644,8 @@
       .payment-btn {
         width: 100%;
         padding: 15px;
-        background: #4caf50;
-        color: white;
+        background: #198754;
+        color: #ffffff;
         border: none;
         border-radius: 30px;
         font-size: 1.1rem;
@@ -648,16 +654,185 @@
         transition: all 0.3s ease;
 
         &:hover:not(:disabled) {
-          background: #388e3c;
+          background: #146c43;
           transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+          box-shadow: 0 5px 15px rgba(20, 108, 67, 0.3);
         }
 
         &:disabled {
           background: #e0e0e0;
-          color: #9e9e9e;
+          color: #AAAAAA;
           cursor: not-allowed;
         }
+      }
+    }
+
+    // Payment Confirmation Modal
+    .payment-confirmation-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .payment-modal-content {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(25, 135, 84, 0.15);
+      border: 1px solid rgba(25, 135, 84, 0.1);
+      animation: slideUp 0.3s ease;
+      text-align: center;
+    }
+
+    .payment-modal-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 36px;
+      background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+      color: #ffffff;
+      box-shadow: 0 8px 24px rgba(25, 135, 84, 0.25);
+    }
+
+    .payment-modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #333333;
+      margin-bottom: 12px;
+    }
+
+    .payment-modal-message {
+      font-size: 1rem;
+      color: #AAAAAA;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .payment-modal-details {
+      background: rgba(224, 247, 224, 0.3);
+      border: 2px solid rgba(25, 135, 84, 0.15);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      text-align: left;
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(25, 135, 84, 0.1);
+
+        &:last-child {
+          border-bottom: none;
+          font-weight: 700;
+          font-size: 1.1rem;
+          color: #333333;
+        }
+
+        .label {
+          color: #AAAAAA;
+          font-size: 0.9rem;
+        }
+
+        .value {
+          color: #333333;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .payment-modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .modal-btn-confirm,
+    .modal-btn-cancel {
+      flex: 1;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .modal-btn-confirm {
+      background: #198754;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(25, 135, 84, 0.25);
+
+      &:hover {
+        background: #146c43;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(20, 108, 67, 0.35);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        background: #e0e0e0;
+        color: #AAAAAA;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+    }
+
+    .modal-btn-cancel {
+      background: transparent;
+      color: #198754;
+      border: 2px solid #198754;
+
+      &:hover {
+        background: #198754;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.15);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
@@ -751,7 +926,6 @@
   }
 
   @keyframes pulse {
-
     0%,
     100% {
       opacity: 1;

@@ -2,7 +2,7 @@ import { useState } from "react"
 import { KeyRound, Mail, Shield, ArrowLeft } from "lucide-react"
 import { Link } from "react-router-dom"
 import api from "../../config/api";
-import "./forgot.scss"
+import "./index.scss"
 
 export default function ForgotPassword() {
   const [step, setStep] = useState(1)

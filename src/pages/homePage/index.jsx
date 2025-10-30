@@ -193,7 +193,7 @@ const HomePage = () => {
             <h1>Tìm trạm sạc xe điện dễ dàng, sạc nhanh chóng</h1>
             <p>
               Ứng dụng tìm kiếm và sử dụng trụ sạc xe điện hàng đầu Việt Nam.
-              Hơn 500 trạm sạc trên toàn quốc, đặt chỗ trước, thanh toán tiện lợi.
+              Hơn 100+ trạm sạc trên toàn quốc, đặt chỗ trước, thanh toán tiện lợi.
             </p>
             <div className="homepage__hero-actions">
               <button
@@ -208,7 +208,7 @@ const HomePage = () => {
             <div className="hero-visual">
               <div className="center-logo">
                 <img
-                  src="/public/assets/logo.jpg"
+                  src="/assets/logo.jpg"
                   alt="Logo"
                   className="hero-logo"
                 />

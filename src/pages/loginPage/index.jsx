@@ -4,7 +4,7 @@ import { Eye, EyeOff, Zap } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 // import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import api from "../../config/api";
-import "./login.scss";
+import "./index.scss";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -64,7 +64,7 @@ export default function Login() {
         // Giả sử response trả về user info và token
         const user = data.data.user;
         localStorage.setItem("user", JSON.stringify(user));
-         
+
         if (redirectPath && redirectPath !== "/") {
           navigate(decodeURIComponent(redirectPath), { replace: true });
           return;

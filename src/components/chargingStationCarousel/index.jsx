@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import './ChargingStationCarousel.scss';
+import { useState, useEffect } from "react";
+import "./index.scss";
 
 const ChargingStationCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -8,35 +8,33 @@ const ChargingStationCarousel = () => {
   const advertisements = [
     {
       id: 1,
-      image: './assets/AC4.jpg',
-      title: 'Trụ sạc AC - Tiết kiệm',
-      description: 'Sạc chậm an toàn cho xe.'
+      image: "./assets/AC4.jpg",
+      title: "Trụ sạc AC - Tiết kiệm",
+      description: "Sạc chậm an toàn cho xe.",
     },
     {
       id: 2,
-      image: './assets/DC60.jpg',
-      title: 'Trụ sạc DC - Nhanh chóng',
-      description: 'Sạc nhanh trong 30-60 phút'
+      image: "./assets/DC60.jpg",
+      title: "Trụ sạc DC - Nhanh chóng",
+      description: "Sạc nhanh trong 30-60 phút",
     },
     {
       id: 3,
-      image: './assets/DC250.jpg',
-      title: 'Trụ sạc DC Ultra - Siêu tốc',
-      description: 'Công nghệ sạc nhanh mới.'
+      image: "./assets/DC250.jpg",
+      title: "Trụ sạc DC Ultra - Siêu tốc",
+      description: "Công nghệ sạc nhanh mới.",
     },
     {
       id: 4,
-      image: './assets/banner.jpg',
-      title: 'Mạng lưới sạc toàn quốc',
-      description: 'Hơn 1000+ điểm sạc.'
-    }
+      image: "./assets/banner.jpg",
+      title: "Mạng lưới sạc toàn quốc",
+      description: "Hơn 1000+ điểm sạc.",
+    },
   ];
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => 
-        (prevIndex + 1) % advertisements.length
-      );
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % advertisements.length);
     }, 5000); // Change image every 5 seconds
 
     return () => clearInterval(interval);
@@ -47,15 +45,13 @@ const ChargingStationCarousel = () => {
   };
 
   const goToPrevious = () => {
-    setCurrentIndex((prevIndex) => 
+    setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? advertisements.length - 1 : prevIndex - 1
     );
   };
 
   const goToNext = () => {
-    setCurrentIndex((prevIndex) => 
-      (prevIndex + 1) % advertisements.length
-    );
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % advertisements.length);
   };
 
   return (
@@ -64,9 +60,9 @@ const ChargingStationCarousel = () => {
         <button className="carousel-btn prev-btn" onClick={goToPrevious}>
           ‹
         </button>
-        
+
         <div className="carousel-content">
-          <div 
+          <div
             className="carousel-track"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
@@ -91,7 +87,7 @@ const ChargingStationCarousel = () => {
         {advertisements.map((_, index) => (
           <button
             key={index}
-            className={`indicator ${index === currentIndex ? 'active' : ''}`}
+            className={`indicator ${index === currentIndex ? "active" : ""}`}
             onClick={() => goToSlide(index)}
           />
         ))}

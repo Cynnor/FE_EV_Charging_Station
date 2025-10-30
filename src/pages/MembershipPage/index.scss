@@ -29,12 +29,13 @@
 }
 
 .package {
-    background: #ffffff;
-    border: 1px solid rgb(102, 187, 106);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(25, 135, 84, 0.2);
     border-radius: 15px;
     padding: 20px;
     width: 300px;
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 15px rgba(25, 135, 84, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -45,7 +46,8 @@
 
 .package:hover {
     transform: translateY(-10px);
-    box-shadow: 0 12px 20px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 12px 20px rgba(25, 135, 84, 0.25);
+    border-color: #198754;
 }
 
 .package h2 {
@@ -96,16 +98,18 @@
     padding: 10px 20px;
     font-size: 1rem;
     cursor: pointer;
-    transition: background 0.3s ease, transform 0.3s ease;
+    transition: all 0.3s ease;
     margin-top: auto;
     width: 100%;
     max-width: auto;
     text-align: center;
     font-weight: bold;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.25);
 }
 
 .register-button:hover {
     background: #146c43;
     color: #ffffff;
-    transform: scale(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(20, 108, 67, 0.35);
 }

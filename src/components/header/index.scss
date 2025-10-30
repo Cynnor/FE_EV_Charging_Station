@@ -1,7 +1,7 @@
 body {
   margin: 0;
   padding: 0;
-  background: linear-gradient(135deg, #f0fad6 0%, #eafbcf 100%);
+  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
   box-sizing: border-box;
 }
 
@@ -28,8 +28,8 @@ body {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-radius: 50px;
-  box-shadow: 0 8px 32px rgba(126, 211, 33, 0.15);
-  border: 1px solid rgba(126, 211, 33, 0.2);
+  box-shadow: 0 8px 32px rgba(25, 135, 84, 0.15);
+  border: 1px solid rgba(25, 135, 84, 0.2);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -39,7 +39,7 @@ body {
 }
 
 .header__container:hover {
-  box-shadow: 0 12px 40px rgba(126, 211, 33, 0.2);
+  box-shadow: 0 12px 40px rgba(25, 135, 84, 0.2);
   transform: translateY(-2px);
 }
 
@@ -56,27 +56,30 @@ body {
   border-radius: 50%;
   background: #fff;
   object-fit: contain;
-  box-shadow: 0 4px 16px rgba(126, 211, 33, 0.3);
+  box-shadow: 0 4px 16px rgba(25, 135, 84, 0.3);
   transition: transform 0.3s ease;
 }
+
 .header__logo-img:hover {
   transform: scale(1.05);
 }
+
 .header__logo-text {
   display: flex;
   flex-direction: column;
 }
+
 .header__logo-title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #000;
+  color: #333333;
   letter-spacing: 0.5px;
   line-height: 1.2;
 }
 
 .header__logo-sub {
   font-size: 0.85rem;
-  color: #333;
+  color: #AAAAAA;
   line-height: 1.2;
   font-weight: 500;
   margin-top: -2px;
@@ -92,7 +95,7 @@ body {
 
 .header__nav a,
 .header__nav Link {
-  color: #000;
+  color: #333333;
   font-weight: 600;
   text-decoration: none;
   font-size: 1.05rem;
@@ -103,18 +106,18 @@ body {
   background: transparent;
 }
 
-.header__nav a.hover,
-.header__nav Link.hover {
-  color: #198754; 
-  background: rgba(198, 220, 180, 0.1);
+.header__nav a:hover,
+.header__nav Link:hover {
+  color: #198754;
+  background: rgba(224, 247, 224, 0.3);
   transform: translateY(-1px);
 }
 
 .header__nav a.active,
 .header__nav Link.active {
-  color: #fff;
+  color: #ffffff;
   background: #198754;
-  box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
 }
 
 .header__actions {
@@ -133,13 +136,13 @@ body {
   border-radius: 30px;
   padding: 6px 12px;
   gap: 12px;
-  box-shadow: 0 4px 16px rgba(198, 220, 180, 0.15);
+  box-shadow: 0 4px 16px rgba(25, 135, 84, 0.15);
 }
 
 .header__login,
 .header__register {
   background: transparent;
-  color: #000;
+  color: #333333;
   border: none;
   padding: 8px 16px;
   font-weight: 600;
@@ -154,7 +157,7 @@ body {
 .header__login:hover,
 .header__register:hover {
   background: #198754;
-  color: #fff;
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
@@ -169,10 +172,10 @@ body {
   align-items: center;
   gap: 12px;
   background: rgba(255, 255, 255, 0.9);
-  border: 2px solid #7ed321;
+  border: 2px solid #198754;
   border-radius: 30px;
   padding: 6px 12px;
-  box-shadow: 0 4px 16px rgba(126, 211, 33, 0.15);
+  box-shadow: 0 4px 16px rgba(25, 135, 84, 0.15);
 }
 
 .header__notification-btn {
@@ -186,15 +189,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(126, 211, 33, 0.3);
+  box-shadow: 0 4px 16px rgba(25, 135, 84, 0.3);
   width: 48px;
   height: 48px;
 }
 
 .header__notification-btn:hover {
-  background: #198754;
+  background: #146c43;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(198, 220, 180, 0.4);
+  box-shadow: 0 6px 20px rgba(20, 108, 67, 0.4);
 }
 
 .header__notification-btn:active {
@@ -204,7 +207,7 @@ body {
 .header__notification-icon {
   width: 26px;
   height: 26px;
-  color: #fff;
+  color: #ffffff;
   transition: all 0.3s ease;
 }
 
@@ -217,7 +220,7 @@ body {
   top: -2px;
   right: -2px;
   background: linear-gradient(135deg, #ff4757, #ff3838);
-  color: white;
+  color: #ffffff;
   border-radius: 50%;
   width: 22px;
   height: 22px;
@@ -257,12 +260,12 @@ body {
 
 .header__avatar:hover {
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
 }
 
 .header__logout-btn {
   background: transparent;
-  color: #000;
+  color: #333333;
   border: none;
   padding: 8px 16px;
   font-weight: 600;
@@ -274,11 +277,12 @@ body {
 
 .header__logout-btn:hover {
   background: #198754;
-  color: #fff;
+  color: #ffffff;
 }
+
 .header__lang-toggle {
   background: #fff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(25, 135, 84, 0.2);
   border-radius: 16px;
   padding: 4px 8px;
   cursor: pointer;
@@ -289,7 +293,7 @@ body {
 }
 
 .header__lang-toggle:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(25, 135, 84, 0.15);
 }
 
 .lang-flag {
