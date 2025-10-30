@@ -1,4 +1,7 @@
 {
   "installCommand": "npm config delete script-shell || true && npm install",
-  "buildCommand": "npm run build"
+  "buildCommand": "npm run build",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
 }

@@ -70,7 +70,7 @@ function ChargingStationHero() {
         </a>
       </div>
       <div className="hero-image">
-        <img src={"./src/assets/banner.jpg"} alt="Banner EV Charging" />
+        <img src={"./assets/banner.jpg"} alt="Banner EV Charging" />
       </div>
     </section>
   );
@@ -102,7 +102,7 @@ function ChargingStationsPage() {
   }, []);
   const stations = [
     {
-      image: "./src/assets/AC4.jpg",
+      image: "./assets/AC4.jpg",
       title: "Trụ sạc xe máy xoay chiều AC 7 kW",
       power: "7 kW / cổng",
       plugTypes: "2 chấu /3 chấu",
@@ -113,7 +113,7 @@ function ChargingStationsPage() {
       price: 5000,
     },
     {
-      image: "./src/assets/AC10.jpg",
+      image: "./assets/AC10.jpg",
       title: "Trụ sạc xe máy xoay chiều AC 22 kW",
       power: "22 kW",
       plugTypes: "2 chấu / 3 chấu",
@@ -124,7 +124,7 @@ function ChargingStationsPage() {
       price: 10000,
     },
     {
-      image: "./src/assets/DC60.jpg",
+      image: "./assets/DC60.jpg",
       title: "Trụ sạc nhanh DC 60 kW",
       power: "60 kW",
       plugTypes: "CCS / CHAdeMO",
@@ -135,7 +135,7 @@ function ChargingStationsPage() {
       price: 15000,
     },
     {
-      image: "./src/assets/DC120.jpg",
+      image: "./assets/DC120.jpg",
       title: "Trụ sạc nhanh DC 120 kW",
       power: "120 kW",
       plugTypes: "CCS / CHAdeMO",
@@ -147,7 +147,7 @@ function ChargingStationsPage() {
       price: 20000,
     },
     {
-      image: "./src/assets/DC150.jpg",
+      image: "./assets/DC150.jpg",
       title: "Trụ sạc siêu nhanh DC 150 kW",
       power: "150 kW / cổng",
       plugTypes: "CCS2 DC",
@@ -158,7 +158,7 @@ function ChargingStationsPage() {
       price: 25000,
     },
     {
-      image: "./src/assets/DC250.jpg",
+      image: "./assets/DC250.jpg",
       title: "Trụ sạc siêu nhanh DC 250 kW",
       power: "250 kW / cổng",
       plugTypes: "CCS2 DC",

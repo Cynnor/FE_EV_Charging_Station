@@ -52,8 +52,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
@@ -133,26 +133,14 @@ const HomePage = () => {
   // const [txLoading, setTxLoading] = useState(true);
   const itemRefs = useRef({});
 
-  // ===== Xử lý VNPay return URL =====
+  // ===== Handle VNPay Return =====
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const vnpResponseCode = urlParams.get('vnp_ResponseCode');
-
-    console.log('Checking VNPay return:', {
-      vnpResponseCode,
-      search: window.location.search,
-      pathname: window.location.pathname,
-      href: window.location.href
-    });
+    const vnpResponseCode = urlParams.get("vnp_ResponseCode");
 
     if (vnpResponseCode) {
-      // Có VNPay return parameters, redirect đến paymentSuccessPage
       const queryString = window.location.search;
-
-      // Tạo URL mới cho payment-success
-      const newUrl = window.location.origin + '/payment-success' + queryString;
-
-      console.log('Redirecting to:', newUrl);
+      const newUrl = window.origin + "/payment-success" + queryString;
       window.location.href = newUrl;
     }
   }, []);
@@ -160,7 +148,6 @@ const HomePage = () => {
   // ===== Fetch Station Data from API =====
   useEffect(() => {
     let isMounted = true; // tránh lỗi khi unmount
-
     const fetchStations = async () => {
       try {
         setLoading(true);
@@ -176,7 +163,6 @@ const HomePage = () => {
         } else if (res.data && typeof res.data === "object") {
           stationsData = [res.data];
         }
-
         // Lọc trạm có tọa độ hợp lệ
         stationsData = stationsData.filter((s) => s.latitude && s.longitude);
 
@@ -209,7 +195,6 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
         if (isMounted) setLoading(false);
       }
     };
-
     // Gọi lần đầu
     fetchStations();
 
@@ -258,6 +243,7 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
 
   const handleMarkerClick = (id) => setSelectedId(id);
 
+  // ✅ Sửa tại đây: Điều hướng sang /booking/:stationId
   const handleBooking = (stationId) => {
     const token = localStorage.getItem("token");
     const redirectUrl = `/booking/${stationId}`;
@@ -267,7 +253,6 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
       navigate(redirectUrl);
     }
   };
-
   // // fetch latest transaction
   // useEffect(() => {
   //   let mounted = true;
@@ -294,6 +279,7 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
   //   };
   // }, []);
 // ===== Render =====
+
   if (loading) {
     return (
       <div className="homepage__loading">
@@ -329,14 +315,7 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
             <div className="homepage__hero-actions">
               <button
                 className="btn btn--primary"
-                onClick={() => {
-                  if (mapSectionRef.current) {
-                    const topPos =
-                      mapSectionRef.current.getBoundingClientRect().top +
-                      window.scrollY;
-                    window.scrollTo({ top: topPos, behavior: "smooth" });
-                  }
-                }}
+                onClick={handleFindStation}
               >
                 Tìm trạm sạc ngay
               </button>
@@ -372,16 +351,13 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${selectedId === station.id ? "is-selected" : ""
-                      }`}
+                    className={`station-item ${selectedId === station.id ? "is-selected" : ""}`}
                     onClick={() => setSelectedId(station.id)}
                   >
 <div className="station-header">
                       <h4>{station.name}</h4>
                       {station.distance && (
-                        <span className="distance">
-                          {station.distance.toFixed(1)} km
-                        </span>
+                        <span className="distance">{station.distance.toFixed(1)} km</span>
                       )}
                       <div className={`status-indicator ${station.status}`}>
                         {station.status === "available" && "🟢"}
@@ -428,7 +404,6 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
             </div>
           </div>
         </section>
-
         {/* ===== Recent transaction (new) =====
         <section className="homepage__transaction" aria-live="polite">
           <div className="section-header">
@@ -527,7 +502,6 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
             ))}
           </div>
         </section> */}
-
         {/* How to use Section */}
         <section className="homepage__howto" ref={stepsRef}>
           <div className="section-header">
@@ -558,12 +532,11 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
           </div>
         </section>
 
-        {/* CTA Section */}
         <section className="homepage__cta">
           <h2>Bắt đầu hành trình xe điện </h2>
         </section>
-
         {/* About Section */}
+
         <About />
 
       </div>
@@ -572,3 +545,4 @@ ac: s.ports?.filter((p) => p.type === "AC").length || 0,
   );
 };
 export default HomePage;
+

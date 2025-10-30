@@ -64,6 +64,11 @@ export default function Login() {
         // Giả sử response trả về user info và token
         const user = data.data.user;
         localStorage.setItem("user", JSON.stringify(user));
+         
+        if (redirectPath && redirectPath !== "/") {
+          navigate(decodeURIComponent(redirectPath), { replace: true });
+          return;
+        }
 
         // Điều hướng theo role
         const role = user.role || user.userRole || user.accountRole;
