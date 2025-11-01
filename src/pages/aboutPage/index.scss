@@ -1,7 +1,13 @@
 .about-page {
   font-family: "Arial", sans-serif;
+<<<<<<< HEAD
   background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
   color: #333333;
+=======
+  color: #333;
+  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
+  min-height: 100vh;
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 
   /* Hero Banner Video */
   .about-banner {
@@ -35,11 +41,13 @@
         font-size: 48px;
         margin-bottom: 15px;
         font-weight: 700;
+        color: #333333;
       }
 
       p {
         font-size: 20px;
         font-style: italic;
+        color: #AAAAAA;
       }
     }
   }
@@ -103,7 +111,11 @@
         font-style: italic;
         font-weight: 600;
         color: #333333;
+<<<<<<< HEAD
         background: #E0F7E0;
+=======
+        background: rgba(255, 255, 255, 0.6);
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
         padding: 10px 15px;
         border-left: 5px solid #198754;
         border-radius: 8px;
@@ -173,7 +185,11 @@
       gap: 25px;
 
       .team-card {
+<<<<<<< HEAD
         background: rgba(255, 255, 255, 0.6);
+=======
+        background: #198754;
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
         padding: 30px 20px;
         border-radius: 16px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -183,23 +199,36 @@
         &:hover {
           transform: translateY(-5px);
           box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+          background: #146c43;
         }
 
         .icon {
           font-size: 40px;
+<<<<<<< HEAD
           color: #198754;
+=======
+          color: #ffffff;
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
           margin-bottom: 15px;
         }
 
         h3 {
+<<<<<<< HEAD
           color: #333333;
+=======
+          color: #ffffff;
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
           font-size: 18px;
           margin-bottom: 10px;
         }
 
         p {
           font-size: 14px;
+<<<<<<< HEAD
           color: #AAAAAA;
+=======
+          color: #ffffff;
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
           line-height: 1.6;
         }
       }

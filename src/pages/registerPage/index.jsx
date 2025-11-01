@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Eye, EyeOff, UserPlus, Zap } from "lucide-react"
 import { FcGoogle } from "react-icons/fc"
 import api from "../../config/api";
-import "./register.scss"
+import "./index.scss"
 
 function decodeJwt(token) {
   try {

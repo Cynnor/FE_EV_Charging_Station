@@ -1,15 +1,16 @@
-import "./chargingSessionPage.scss";
+import "./index.scss";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import CustomPopup from "../../components/CustomPopup/CustomPopup";
-import PaymentConfirmPopup from "../../components/PaymentConfirmPopup/PaymentConfirmPopup";
+import CustomPopup from "../../components/customPopup";
+import PaymentConfirmPopup from "../../components/paymentConfirmPopup";
+import ChargingStationCarousel from "../../components/chargingStationCarousel";
 
 // Update charging constants and cost calculations
 const PORT_PRICING = {
-  AC: 10000,      // 10,000 VNĐ/30 phút
-  DC: 15000,      // 15,000 VNĐ/30 phút
-  "DC Ultra": 20000 // 20,000 VNĐ/30 phút
+  AC: 10000, // 10,000 VNĐ/30 phút
+  DC: 15000, // 15,000 VNĐ/30 phút
+  Ultra: 20000, // 20,000 VNĐ/30 phút
 };
 const ENERGY_PRICE_PER_KWH = 3858; // VNĐ per kWh (từ API)
 
@@ -27,29 +28,29 @@ const ChargingSession = () => {
   // Add popup state
   const [popup, setPopup] = useState({
     isOpen: false,
-    message: '',
-    type: 'info'
+    message: "",
+    type: "info",
   });
 
   const [paymentPopup, setPaymentPopup] = useState({
     isOpen: false,
     currentCharge: 0,
     timeElapsed: 0,
-    totalCost: 0
+    totalCost: 0,
   });
 
-  const showPopup = (message, type = 'info') => {
+  const showPopup = (message, type = "info") => {
     setPopup({
       isOpen: true,
       message,
-      type
+      type,
     });
   };
 
   const closePopup = () => {
     setPopup({
       ...popup,
-      isOpen: false
+      isOpen: false,
     });
   };
 
@@ -58,14 +59,14 @@ const ChargingSession = () => {
       isOpen: true,
       currentCharge: chargingData.currentCharge,
       timeElapsed: chargingData.timeElapsed,
-      totalCost: chargingData.chargingCost
+      totalCost: chargingData.chargingCost,
     });
   };
 
   const closePaymentPopup = () => {
     setPaymentPopup({
       ...paymentPopup,
-      isOpen: false
+      isOpen: false,
     });
   };
 
@@ -75,8 +76,11 @@ const ChargingSession = () => {
     const vehicle = location.state?.vehicle;
 
     if (!reservation || !vehicle) {
-      showPopup('Không tìm thấy thông tin đặt chỗ hoặc xe. Vui lòng quay lại trang lịch sử.', 'error');
-      navigate('/profile');
+      showPopup(
+        "Không tìm thấy thông tin đặt chỗ hoặc xe. Vui lòng quay lại trang lịch sử.",
+        "error"
+      );
+      navigate("/profile");
       return;
     }
 
@@ -98,11 +102,11 @@ const ChargingSession = () => {
         }
 
         if (!portId) {
-          console.error('Reservation structure:', reservation);
-          throw new Error('Không tìm thấy portId trong reservation');
+          console.error("Reservation structure:", reservation);
+          throw new Error("Không tìm thấy portId trong reservation");
         }
 
-        console.log('Fetching port info for portId:', portId);
+        console.log("Fetching port info for portId:", portId);
 
         // Try different endpoints to find the correct one
         let portData = null;
@@ -111,7 +115,7 @@ const ChargingSession = () => {
           const response = await api.get(`/stations/ports/${portId}`);
           portData = response.data?.data || response.data;
         } catch (err) {
-          console.log('Failed with /stations/ports, trying /ports...');
+          console.log("Failed with /stations/ports, trying /ports...");
           // Fallback to /ports/{id}
           const response = await api.get(`/ports/${portId}`);
           portData = response.data?.data || response.data;
@@ -125,48 +129,51 @@ const ChargingSession = () => {
         let bookingRatePerHour = PORT_PRICING[portType] || PORT_PRICING.AC;
 
         // Debug logging
-        console.log('Port Data:', portData);
-        console.log('Port Type:', portType);
-        console.log('Power kW:', powerKw);
-        console.log('Booking Rate Per Hour:', bookingRatePerHour);
+        console.log("Port Data:", portData);
+        console.log("Port Type:", portType);
+        console.log("Power kW:", powerKw);
+        console.log("Booking Rate Per Hour:", bookingRatePerHour);
 
         setPortInfo({
           portId: portId,
           powerKw: powerKw,
           bookingRatePerHour: bookingRatePerHour,
           portType: portType,
-          speed: portData.speed
+          speed: portData.speed,
         });
       } catch (error) {
-        console.error('Error fetching port info:', error);
-        console.error('Error details:', error.response?.data);
-        console.error('Error status:', error.response?.status);
+        console.error("Error fetching port info:", error);
+        console.error("Error details:", error.response?.data);
+        console.error("Error status:", error.response?.status);
 
         // Check if we have port info from reservation itself
         const reservation = location.state?.reservation;
         if (reservation?.port || reservation?.portData) {
-          console.log('Using port data from reservation');
+          console.log("Using port data from reservation");
           const portData = reservation.port || reservation.portData;
           const powerKw = Number(portData.powerKw || 7);
-          const portType = portData.type || 'AC';
+          const portType = portData.type || "AC";
           const bookingRatePerHour = PORT_PRICING[portType] || PORT_PRICING.AC;
 
           setPortInfo({
-            portId: portData.id || 'unknown',
+            portId: portData.id || "unknown",
             powerKw: powerKw,
             bookingRatePerHour: bookingRatePerHour,
             portType: portType,
-            speed: portData.speed || 'slow'
+            speed: portData.speed || "slow",
           });
         } else {
-          showPopup('Lỗi khi lấy thông tin cổng sạc. Sử dụng giá trị mặc định.', 'error');
+          showPopup(
+            "Lỗi khi lấy thông tin cổng sạc. Sử dụng giá trị mặc định.",
+            "error"
+          );
 
           // Ultimate fallback: use default AC values
           setPortInfo({
-            portId: 'unknown',
+            portId: "unknown",
             powerKw: 7,
             bookingRatePerHour: PORT_PRICING.AC,
-            portType: 'AC'
+            portType: "AC",
           });
         }
       } finally {
@@ -184,7 +191,7 @@ const ChargingSession = () => {
       model: vehicle.model,
       plateNumber: vehicle.plateNumber,
       batteryCapacity: vehicle.batteryCapacityKwh,
-      connectorType: vehicle.connectorType
+      connectorType: vehicle.connectorType,
     });
   }, [location.state, navigate]);
 
@@ -196,8 +203,20 @@ const ChargingSession = () => {
 
   useEffect(() => {
     if (chargingData && isCharging) {
-      // Update every 2 seconds to simulate 1 minute passing
-      const interval = setInterval(updateChargingStatus, 2000);
+      // Xác định interval dựa trên loại cổng
+      // AC: 2 giây = 1% (1% = 1 phút)
+      // DC: 1 giây = 1% (2% = 1 phút)
+      // DC Ultra: 0.67 giây = 1% (3% = 1 phút)
+      let updateInterval = 2000; // Mặc định AC
+
+      if (chargingData.portType === "Ultra") {
+        updateInterval = 667; // DC Ultra: ~0.67 giây = 1%
+      } else if (chargingData.portType === "DC") {
+        updateInterval = 1000; // DC: 1 giây = 1%
+      }
+
+      // Update theo interval tương ứng với loại cổng
+      const interval = setInterval(updateChargingStatus, updateInterval);
       return () => clearInterval(interval);
     }
   }, [chargingData, isCharging]);
@@ -208,7 +227,19 @@ const ChargingSession = () => {
     const chargeNeeded = targetCharge - initialCharge;
 
     // Calculate estimated time based on battery capacity and port power
-    const estimatedMinutes = Math.ceil((chargeNeeded * vehicleData.batteryCapacity) / (portInfo.powerKw * 0.6)); // 0.6 efficiency factor
+    let estimatedMinutes = Math.ceil(
+      (chargeNeeded * vehicleData.batteryCapacity) / portInfo.powerKw
+    ); // 0.6 efficiency factor
+
+    // Điều chỉnh thời gian dự kiến dựa trên loại cổng
+    // AC: 1% = 1 phút
+    // DC: 2% = 1 phút (nhanh gấp 2)
+    // DC Ultra: 3% = 1 phút (nhanh gấp 3)
+    if (portInfo.portType === "DC") {
+      estimatedMinutes = Math.ceil(estimatedMinutes / 2);
+    } else if (portInfo.portType === "Ultra") {
+      estimatedMinutes = Math.ceil(estimatedMinutes / 3);
+    }
 
     setChargingData({
       ...vehicleData,
@@ -219,17 +250,15 @@ const ChargingSession = () => {
       startTime: new Date(),
       initialCharge: initialCharge,
       timeElapsed: 0,
-      bookingRatePerHalfHour: portInfo.bookingRatePerHour, // Đổi tên cho rõ ràng
+      bookingRatePerHalfHour: portInfo.bookingRatePerHour,
       portType: portInfo.portType,
     });
   };
 
   const updateChargingStatus = () => {
-    setChargingData(prev => {
+    setChargingData((prev) => {
       if (prev.currentCharge >= 100) {
         setIsCharging(false);
-
-        // Chuẩn bị dữ liệu thanh toán
         const paymentData = {
           chargingData: {
             vehicleInfo: {
@@ -251,70 +280,61 @@ const ChargingSession = () => {
               bookingRatePerHalfHour: prev.bookingRatePerHalfHour,
               energyPricePerKwh: ENERGY_PRICE_PER_KWH,
               thirtyMinIntervals: prev.thirtyMinIntervals,
-            }
-          }
+            },
+          },
         };
-
-        // Debug: Hiển thị dữ liệu sẽ gửi đi
-        // console.log('=== DỮ LIỆU CHUYỂN SANG PAYMENT (SẠC ĐẦY) ===');
-        // console.log('Vehicle Info:', paymentData.chargingData.vehicleInfo);
-        // console.log('Charging Info:', paymentData.chargingData.chargingInfo);
-        // console.log('Tổng chi phí:', paymentData.chargingData.chargingInfo.totalCost.toLocaleString('vi-VN'), 'VNĐ');
-        // console.log('Phí đặt lịch:', paymentData.chargingData.chargingInfo.bookingCost.toLocaleString('vi-VN'), 'VNĐ');
-        // console.log('Phí điện:', paymentData.chargingData.chargingInfo.energyCost.toLocaleString('vi-VN'), 'VNĐ');
-        // console.log('==========================================');
-
         // Tự động chuyển sang trang payment khi sạc đầy
         setTimeout(() => {
-          navigate('/payment', {
-            state: paymentData
+          navigate("/payment", {
+            state: paymentData,
           });
         }, 2000);
 
-        showPopup('Sạc đầy! Đang chuyển đến trang thanh toán...', 'success');
+        showPopup("Sạc đầy! Đang chuyển đến trang thanh toán...", "success");
         return prev;
       }
 
-      // Increase 1% per update (1% = 1 minute in real time)
+      // Tăng % pin dựa trên loại cổng
       const increment = 1;
       const newCharge = Math.min(prev.currentCharge + increment, 100);
 
-      // Each update represents 1 minute passing
-      const newTimeElapsed = prev.timeElapsed + 1; // +1 minute
+      // Tính thời gian thực tế đã sạc
+      // AC: 1% = 1 phút
+      // DC: 2% = 1 phút → 1% = 0.5 phút
+      // DC Ultra: 3% = 1 phút → 1% = 0.333 phút
+      let timeIncrement = 1; // AC mặc định
+      if (prev.portType === "DC") {
+        timeIncrement = 0.5; // DC: 1% = 0.5 phút
+      } else if (prev.portType === "Ultra") {
+        timeIncrement = 1 / 3; // DC Ultra: 1% = 0.333 phút
+      }
 
-      // Tính phí đặt lịch:
-      // - Phút 0-29: 1 lần phí (chỉ tính phí ban đầu)
-      // - Phút 30-59: 2 lần phí (phí ban đầu + 1 lần cộng thêm)
-      // - Phút 60-89: 3 lần phí (phí ban đầu + 2 lần cộng thêm)
-      // Công thức: 1 + Math.floor(timeElapsed / 30)
+      const newTimeElapsed = prev.timeElapsed + timeIncrement;
+      // Tính phí đặt lịch: số khung 30 phút × đơn giá
       const thirtyMinIntervals = 1 + Math.floor(newTimeElapsed / 30);
       const bookingCost = thirtyMinIntervals * prev.bookingRatePerHalfHour;
 
-      // Tính năng lượng tiêu thụ: powerKw × số giờ
+      // Tính thời gian sạc (giờ)
       const durationHours = newTimeElapsed / 60;
+
+      // Tính năng lượng tiêu thụ: powerKw × số giờ
       const energyKwh = prev.chargeRate * durationHours;
 
-      // Tính chi phí điện: năng lượng × đơn giá điện
-      const energyCost = energyKwh * ENERGY_PRICE_PER_KWH;
+      // Tính chi phí điện: thời gian (giờ) × năng lượng tiêu thụ × đơn giá điện
+      const energyCost = durationHours * energyKwh * ENERGY_PRICE_PER_KWH;
 
       // Tổng chi phí = booking cost + energy cost
       const totalCost = bookingCost + energyCost;
 
-      // Calculate remaining time: each 1% = 1 minute
+      // Tính thời gian còn lại dựa trên loại cổng
       const remainingCharge = 100 - newCharge;
-      const newRemainingTime = remainingCharge;
-
-      // Gọi API để cập nhật giá từ backend (không chặn UI)
-      // Chỉ gọi mỗi 5 phút một lần để tránh spam API
-      if (newTimeElapsed % 5 === 0) {
-        calculatePricingFromAPI(prev, newTimeElapsed);
-      }
+      const newRemainingTime = remainingCharge * timeIncrement;
 
       return {
         ...prev,
         currentCharge: newCharge,
         chargingCost: totalCost,
-        remainingTime: newRemainingTime,
+        remainingTime: Math.ceil(newRemainingTime),
         timeElapsed: newTimeElapsed,
         bookingCost: bookingCost,
         energyCost: energyCost,
@@ -325,55 +345,52 @@ const ChargingSession = () => {
     });
   };
 
+  // TẠM THỜI TẮT - Hàm gọi API gây xung đột với tính toán local
   // Hàm gọi API để tính giá chính xác - không block UI
-  const calculatePricingFromAPI = async (currentData, timeElapsed) => {
-    try {
-      // Tính thời gian bắt đầu và kết thúc
-      const startAt = new Date(currentData.startTime).toISOString();
-      const endAt = new Date(currentData.startTime.getTime() + timeElapsed * 60000).toISOString();
-
-      // Gọi API pricing/estimate
-      const response = await api.post('/pricing/estimate', {
-        portId: portInfo.portId,
-        startAt: startAt,
-        endAt: endAt,
-        assumePowerKw: currentData.chargeRate
-      });
-
-      if (response.data?.success && response.data?.data) {
-        const pricingData = response.data.data;
-
-        // Chỉ cập nhật nếu giá trị thay đổi đáng kể (tránh re-render liên tục)
-        setChargingData(prev => {
-          const shouldUpdate =
-            Math.abs((pricingData.bookingCost || 0) - (prev.bookingCost || 0)) > 100 ||
-            Math.abs((pricingData.energyCost || 0) - (prev.energyCost || 0)) > 100;
-
-          if (!shouldUpdate) return prev;
-
-          return {
-            ...prev,
-            bookingCost: pricingData.bookingCost || prev.bookingCost,
-            energyCost: pricingData.energyCost || prev.energyCost,
-            energyKwh: pricingData.energyKwh || prev.energyKwh,
-            chargingCost: pricingData.total || prev.chargingCost,
-          };
-        });
-      }
-    } catch (error) {
-      // Nếu API lỗi, tiếp tục dùng tính toán local
-      console.error('Error calculating pricing from API:', error);
-    }
-  };
+  // const calculatePricingFromAPI = async (currentData, timeElapsed) => {
+  //   try {
+  //     const startAt = new Date(currentData.startTime).toISOString();
+  //     const endAt = new Date(currentData.startTime.getTime() + timeElapsed * 60000).toISOString();
+  //
+  //     const response = await api.post('/pricing/estimate', {
+  //       portId: portInfo.portId,
+  //       startAt: startAt,
+  //       endAt: endAt,
+  //       assumePowerKw: currentData.chargeRate
+  //     });
+  //
+  //     if (response.data?.success && response.data?.data) {
+  //       const pricingData = response.data.data;
+  //
+  //       setChargingData(prev => {
+  //         const shouldUpdate =
+  //           Math.abs((pricingData.bookingCost || 0) - (prev.bookingCost || 0)) > 100 ||
+  //           Math.abs((pricingData.energyCost || 0) - (prev.energyCost || 0)) > 100;
+  //
+  //         if (!shouldUpdate) return prev;
+  //
+  //         return {
+  //           ...prev,
+  //           bookingCost: pricingData.bookingCost || prev.bookingCost,
+  //           energyCost: pricingData.energyCost || prev.energyCost,
+  //           energyKwh: pricingData.energyKwh || prev.energyKwh,
+  //           chargingCost: pricingData.total || prev.chargingCost,
+  //         };
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error calculating pricing from API:', error);
+  //   }
+  // };
 
   const handlePayment = () => {
     if (!chargingData) {
-      showPopup('Vui lòng đợi khởi tạo thông tin sạc', 'error');
+      showPopup("Vui lòng đợi khởi tạo thông tin sạc", "error");
       return;
     }
 
     if (isCharging) {
-      showPopup('Phiên sạc đang hoạt động', 'error');
+      showPopup("Phiên sạc đang hoạt động", "error");
       return;
     }
 
@@ -381,7 +398,7 @@ const ChargingSession = () => {
     // Bắt đầu với phí đặt lịch ban đầu (1 lần)
     const initialBookingCost = chargingData.bookingRatePerHalfHour;
 
-    setChargingData(prev => ({
+    setChargingData((prev) => ({
       ...prev,
       startTime: new Date(),
       timeElapsed: 0,
@@ -395,7 +412,7 @@ const ChargingSession = () => {
 
     // Start charging immediately
     setIsCharging(true);
-    showPopup('Bắt đầu quá trình sạc!', 'success');
+    showPopup("Bắt đầu quá trình sạc!", "success");
   };
 
   // const handlePause = () => {
@@ -421,7 +438,7 @@ const ChargingSession = () => {
   const handleConfirmPayment = () => {
     closePaymentPopup();
 
-    showPopup('Chuyển đến trang thanh toán...', 'success');
+    showPopup("Chuyển đến trang thanh toán...", "success");
 
     // Chuẩn bị dữ liệu thanh toán
     const paymentData = {
@@ -445,8 +462,8 @@ const ChargingSession = () => {
           bookingRatePerHalfHour: chargingData.bookingRatePerHalfHour,
           energyPricePerKwh: ENERGY_PRICE_PER_KWH,
           thirtyMinIntervals: chargingData.thirtyMinIntervals,
-        }
-      }
+        },
+      },
     };
 
     // Debug: Hiển thị dữ liệu sẽ gửi đi
@@ -463,8 +480,8 @@ const ChargingSession = () => {
 
     // Navigate to payment page with charging data
     setTimeout(() => {
-      navigate('/payment', {
-        state: paymentData
+      navigate("/payment", {
+        state: paymentData,
       });
     }, 1500);
   };
@@ -473,7 +490,7 @@ const ChargingSession = () => {
     // Đóng popup và tiếp tục sạc
     closePaymentPopup();
     setIsCharging(true);
-    showPopup('Tiếp tục sạc...', 'info');
+    showPopup("Tiếp tục sạc...", "info");
   };
 
   const EmptyVehicleInfo = () => (
@@ -568,26 +585,36 @@ const ChargingSession = () => {
 
           <div className="session-content">
             <div className="session-left">
-              {!chargingData ? <EmptyVehicleInfo /> : (
+              {!chargingData ? (
+                <EmptyVehicleInfo />
+              ) : (
                 <>
                   <div className="info-card vehicle-info">
                     <h2>Thông tin xe</h2>
                     <div className="info-grid">
                       <div className="info-item">
                         <span className="label">Biển số:</span>
-                        <span className="value">{chargingData.plateNumber}</span>
+                        <span className="value">
+                          {chargingData.plateNumber}
+                        </span>
                       </div>
                       <div className="info-item">
                         <span className="label">Xe:</span>
-                        <span className="value">{chargingData.make} {chargingData.model}</span>
+                        <span className="value">
+                          {chargingData.make} {chargingData.model}
+                        </span>
                       </div>
                       <div className="info-item">
                         <span className="label">Dung lượng pin:</span>
-                        <span className="value">{chargingData.batteryCapacity} kWh</span>
+                        <span className="value">
+                          {chargingData.batteryCapacity} kWh
+                        </span>
                       </div>
                       <div className="info-item">
                         <span className="label">Loại cổng sạc:</span>
-                        <span className="value">{chargingData.connectorType}</span>
+                        <span className="value">
+                          {chargingData.connectorType}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -596,7 +623,9 @@ const ChargingSession = () => {
                     <h2>Trạng thái sạc</h2>
                     <div className="battery-indicator">
                       <div
-                        className={`battery-level ${isCharging ? 'charging' : ''}`}
+                        className={`battery-level ${
+                          isCharging ? "charging" : ""
+                        }`}
                         style={{ width: `${chargingData.currentCharge}%` }}
                       >
                         <span>{chargingData.currentCharge}%</span>
@@ -605,47 +634,75 @@ const ChargingSession = () => {
                     <div className="charging-details">
                       <div className="detail-item">
                         <span className="label">Công suất sạc:</span>
-                        <span className="value">{chargingData.chargeRate} kW</span>
+                        <span className="value">
+                          {chargingData.chargeRate} kW
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Thời gian đã sạc:</span>
-                        <span className="value">{chargingData.timeElapsed} phút ({chargingData.durationHours?.toFixed(2)} giờ)</span>
+                        <span className="value">
+                          {chargingData.timeElapsed?.toFixed(2)} phút (
+                          {chargingData.durationHours?.toFixed(2)} giờ)
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Năng lượng tiêu thụ:</span>
-                        <span className="value">{chargingData.energyKwh?.toFixed(2)} kWh</span>
+                        <span className="value">
+                          {chargingData.energyKwh?.toFixed(2)} kWh
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Phí đặt lịch:</span>
-                        <span className="value">{chargingData.bookingCost?.toLocaleString('vi-VN')} VNĐ</span>
+                        <span className="value">
+                          {chargingData.bookingCost?.toLocaleString("vi-VN")}{" "}
+                          VNĐ
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Phí điện:</span>
-                        <span className="value">{chargingData.energyCost?.toLocaleString('vi-VN')} VNĐ</span>
+                        <span className="value">
+                          {chargingData.energyCost?.toLocaleString("vi-VN")} VNĐ
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Tổng chi phí:</span>
-                        <span className="value highlight">{chargingData.chargingCost.toLocaleString('vi-VN')} VNĐ</span>
+                        <span className="value highlight">
+                          {chargingData.chargingCost.toLocaleString("vi-VN")}{" "}
+                          VNĐ
+                        </span>
                       </div>
                       {/* Debug Info - Có thể xóa khi production */}
                       {chargingData.thirtyMinIntervals && (
-                        <div className="detail-item" style={{ fontSize: '0.9em', color: '#666' }}>
+                        <div
+                          className="detail-item"
+                          style={{ fontSize: "0.9em", color: "#666" }}
+                        >
                           <span className="label">Debug - Số lần 30p:</span>
-                          <span className="value">{chargingData.thirtyMinIntervals}</span>
+                          <span className="value">
+                            {chargingData.thirtyMinIntervals}
+                          </span>
                         </div>
                       )}
                       <div className="detail-item">
                         <span className="label">Thời gian còn lại:</span>
-                        <span className="value">{chargingData.remainingTime} phút</span>
+                        <span className="value">
+                          {chargingData.remainingTime} phút
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Bắt đầu lúc:</span>
-                        <span className="value">{chargingData.startTime.toLocaleString('vi-VN')}</span>
+                        <span className="value">
+                          {chargingData.startTime.toLocaleString("vi-VN")}
+                        </span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Trạng thái:</span>
-                        <span className={`value status-${isCharging ? 'charging' : 'waiting'}`}>
-                          {isCharging ? 'Đang sạc' : 'Chờ bắt đầu'}
+                        <span
+                          className={`value status-${
+                            isCharging ? "charging" : "waiting"
+                          }`}
+                        >
+                          {isCharging ? "Đang sạc" : "Chờ bắt đầu"}
                         </span>
                       </div>
                     </div>
@@ -655,14 +712,26 @@ const ChargingSession = () => {
             </div>
 
             <div className="session-right">
+              <ChargingStationCarousel />
               {portInfo && (
                 <div className="vehicle-info-card">
                   <h2>Thông tin cổng sạc</h2>
                   <div className="vehicle-details">
-                    <p><strong>Loại cổng:</strong> {portInfo.portType}</p>
-                    <p><strong>Công suất:</strong> {portInfo.powerKw} kW</p>
-                    <p><strong>Phí đặt lịch:</strong> {portInfo.bookingRatePerHour.toLocaleString('vi-VN')} VNĐ/30 phút</p>
-                    <p><strong>Đơn giá điện:</strong> {ENERGY_PRICE_PER_KWH.toLocaleString('vi-VN')} VNĐ/kWh</p>
+                    <p>
+                      <strong>Loại cổng:</strong> {portInfo.portType}
+                    </p>
+                    <p>
+                      <strong>Công suất:</strong> {portInfo.powerKw} kW
+                    </p>
+                    <p>
+                      <strong>Phí đặt lịch:</strong>{" "}
+                      {portInfo.bookingRatePerHour.toLocaleString("vi-VN")}{" "}
+                      VNĐ/30 phút
+                    </p>
+                    <p>
+                      <strong>Đơn giá điện:</strong>{" "}
+                      {ENERGY_PRICE_PER_KWH.toLocaleString("vi-VN")} VNĐ/kWh
+                    </p>
                   </div>
                 </div>
               )}

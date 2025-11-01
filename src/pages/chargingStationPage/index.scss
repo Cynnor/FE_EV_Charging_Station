@@ -1,7 +1,13 @@
 /* ===== RESET & FONT ===== */
-body {
+// Add button color tokens to match design
+$btn-primary-bg: #198754;
+$btn-primary-hover: #146c43;
+$btn-outline-color: #198754;
+$btn-text-on-primary: #ffffff;
+
+.charging-stations-page {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #f0fad6 0%, #eafbcf 100%);
+  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -27,18 +33,16 @@ body {
     max-width: 50%;
 
     h2 {
-      font-size: 2.5rem;
-      font-weight: 800;
+      color: #333333;
+      background: none;
+      -webkit-background-clip: initial;
+      -webkit-text-fill-color: initial;
+      background-clip: initial;
       margin-bottom: 1.5rem;
-      background: linear-gradient(135deg, #16a34a, #22c55e);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      line-height: 1.2;
     }
 
     .highlight {
-      color: #16a34a;
+      color: #AAAAAA;
       font-weight: 700;
       margin-bottom: 0.75rem;
       font-size: 1.1rem;
@@ -46,7 +50,7 @@ body {
 
     p {
       margin-bottom: 1.5rem;
-      color: #4b5563;
+      color: #AAAAAA;
       font-size: 1rem;
       line-height: 1.6;
     }
@@ -54,19 +58,19 @@ body {
     .btn {
       display: inline-block;
       padding: 1rem 2rem;
-      background: linear-gradient(135deg, #16a34a, #22c55e);
-      color: #fff;
+      background: $btn-primary-bg;          // solid primary
+      color: $btn-text-on-primary;
       border-radius: 50px;
       text-decoration: none;
       font-weight: 600;
       font-size: 1rem;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+      box-shadow: 0 4px 15px rgba(25, 135, 84, 0.30);
 
       &:hover {
+        background: $btn-primary-hover;     // darker on hover
+        box-shadow: 0 8px 25px rgba(20, 108, 67, 0.40);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(22, 163, 74, 0.4);
-        background: linear-gradient(135deg, #15803d, #16a34a);
       }
     }
   }
@@ -157,7 +161,7 @@ body {
 .card h3 {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #333333;
   margin-bottom: 1rem;
   line-height: 1.3;
 }
@@ -166,7 +170,7 @@ body {
   list-style: none;
   padding: 0;
   margin: 0 0 2rem 0;
-  color: #4b5563;
+  color: #AAAAAA;
   font-size: 0.95rem;
   line-height: 1.6;
 }
@@ -185,7 +189,7 @@ body {
   }
 
   b {
-    color: #1f2937;
+    color: #333333;
     font-weight: 600;
   }
 }
@@ -204,9 +208,9 @@ body {
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
-  border: 1px solid #7ed321;
-  background: #fff;
-  color: #7ed321;
+  border: none;
+  background: $btn-primary-bg;
+  color: $btn-text-on-primary;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
@@ -214,8 +218,8 @@ body {
   text-align: center;
 
   &:hover {
-    background: #f0f9ff;
-    border-color: #6bb81d;
+    background: $btn-primary-hover;
+    color: $btn-text-on-primary;
   }
 }
 
@@ -227,8 +231,8 @@ body {
   font-weight: 600;
   width: 100%;
   border: none;
-  background: #7ed321;
-  color: #fff;
+  background: $btn-primary-bg;
+  color: $btn-text-on-primary;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
@@ -236,12 +240,12 @@ body {
   text-align: center;
 
   &:hover {
-    background: #6bb81d;
+    background: $btn-primary-hover;
   }
 }
 
 .title-support {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: #198754;
   padding: 3rem 0;
   text-align: center;
   margin: 3rem 0;

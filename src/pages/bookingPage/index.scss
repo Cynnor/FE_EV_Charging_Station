@@ -1,11 +1,13 @@
-// Color System
-$primary: #7ed321;
-$primary-dark: #6bb91c;
-$primary-light: #9de04a;
-$primary-pale: #f0f9e6;
+@use "sass:color";
 
-$text-primary: #1a1a1a;
-$text-secondary: #666666;
+// Color System - Updated to match new palette
+$primary: #198754;
+$primary-dark: #146c43;
+$primary-light: #9de04a;
+$primary-pale: rgba(224, 247, 224, 0.3);
+
+$text-primary: #333333;
+$text-secondary: #AAAAAA;
 $text-muted: #999999;
 
 $bg-white: #ffffff;
@@ -67,7 +69,7 @@ body {
   min-height: 100vh;
   padding: $spacing-lg;
   padding-top: 100px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -102,7 +104,7 @@ body {
 .panel-header {
   padding: $spacing-md $spacing-lg;
   background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: white;
+  color: #ffffff;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -113,6 +115,7 @@ body {
     font-weight: 700;
     margin-bottom: $spacing-md;
     letter-spacing: -0.5px;
+    color: #ffffff;
   }
 }
 
@@ -350,7 +353,7 @@ body {
 
 .station-name {
   font-size: 16px;
-  font-weight: 6;
+  font-weight: 600;
   color: $text-primary;
   line-height: 1;
   flex: 10;  
@@ -373,7 +376,7 @@ body {
 
   &.dc {
     background: rgba($warning, 0.15);
-    color: darken($warning, 15%);
+    color: color.adjust($warning, $lightness: -15%);
     border: 1px solid rgba($warning, 0.3);
   }
 
@@ -410,6 +413,8 @@ body {
     font-weight: 600;
   }
 }
+
+
 
 // Charger Selection
 .charger-selection {
@@ -459,7 +464,7 @@ body {
 
       &.dc {
         background: rgba($warning, 0.1);
-        color: darken($warning, 10%);
+        color: color.adjust($warning, $lightness: -10%);
       }
     }
   }
@@ -570,13 +575,13 @@ body {
 
     &.slow {
       background: rgba($info, 0.12);
-      color: darken($info, 5%);
+      color: color.adjust($info, $lightness: -5%);
       border-color: rgba($info, 0.3);
     }
 
     &.fast {
       background: rgba($warning, 0.12);
-      color: darken($warning, 10%);
+      color: color.adjust($warning, $lightness: -10%);
       border-color: rgba($warning, 0.3);
     }
 
@@ -608,7 +613,7 @@ body {
 
   &.dc {
     background: rgba($warning, 0.15);
-    color: darken($warning, 15%);
+    color: color.adjust($warning, $lightness: -15%);
     border: 1px solid rgba($warning, 0.3);
   }
 
@@ -639,7 +644,7 @@ body {
 
   .spec-label {
     font-size: 11px;
-    color: $text-muted;
+    color: $text-secondary;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     font-weight: 600;
@@ -715,7 +720,7 @@ body {
     height: 60px;
     margin: 0 auto $spacing-md;
     background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-    color: white;
+    color: #ffffff;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -756,9 +761,9 @@ body {
   background: $bg-white;
   border: 2px solid $border-color;
   border-radius: $radius-md;
-  padding: $spacing-md;
+  padding: $spacing-sm $spacing-md; // Giảm từ $spacing-md xuống $spacing-sm và $spacing-md
   box-shadow: $shadow-sm;
-  flex: 1; // Make cards grow equally to fill available space
+  flex: 1;
   display: flex;
   flex-direction: column;
   transition: all $transition-base;
@@ -774,11 +779,30 @@ body {
     font-size: 16px;
     font-weight: 700;
     color: $text-primary;
-    margin-bottom: $spacing-md;
+    margin-bottom: $spacing-sm; // Giảm từ $spacing-md xuống $spacing-sm
     text-align: center;
-    padding-bottom: $spacing-sm;
+    padding-bottom: $spacing-xs; // Giảm từ $spacing-sm xuống $spacing-xs
     border-bottom: 2px solid $primary;
     flex-shrink: 0;
+  }
+}
+
+.change-vehicle-btn,
+.select-vehicle-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: $primary;
+  color: #ffffff;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: $primary-dark;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(25, 135, 84, 0.4);
   }
 }
 
@@ -786,7 +810,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: $spacing-xs 0;
+  padding: 6px 0; // Giảm từ $spacing-xs (8px) xuống 6px
   border-bottom: 1px solid $bg-gray;
   gap: $spacing-sm;
 
@@ -824,7 +848,7 @@ body {
     background: $primary-pale;
     padding: $spacing-xs $spacing-sm;
     border-radius: $radius-sm;
-    margin: $spacing-xs 0;
+    margin: 4px 0; // Giảm từ $spacing-xs (8px) xuống 4px
     border-bottom: none;
   }
 }
@@ -833,7 +857,14 @@ body {
 .form-section {
   position: sticky;
   top: 0;
-  height: fit-content; // Let form determine its own height
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.vehicle-selection-card {
+  margin-bottom: 0 !important;
 }
 
 .booking-form {
@@ -842,15 +873,14 @@ body {
   border-radius: $radius-md;
   padding: $spacing-lg;
   box-shadow: $shadow-sm;
-  height: 100%; // Make form take full height to match summary cards
-  display: flex; // Use flexbox for better layout control
+  display: flex;
   flex-direction: column;
 
   .form-header {
     margin-bottom: $spacing-lg;
     padding-bottom: $spacing-md;
     border-bottom: 2px solid $bg-gray;
-    flex-shrink: 0; // Prevent header from shrinking
+    flex-shrink: 0;
 
     h3 {
       font-size: 16px;
@@ -914,7 +944,7 @@ body {
       .datetime-arrow {
         transform: translateX(6px) scale(1.1);
         background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-        color: white;
+        color: #ffffff;
         box-shadow: 0 4px 12px rgba(126, 211, 33, 0.4);
       }
 
@@ -1039,7 +1069,7 @@ body {
   width: 100%;
   padding: $spacing-md $spacing-lg;
   background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: white;
+  color: #ffffff;
   border: none;
   border-radius: $radius-md;
   font-size: 15px;
@@ -1140,7 +1170,7 @@ body {
 .modal-header {
   padding: $spacing-lg;
   background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: white;
+  color: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1149,12 +1179,13 @@ body {
     font-size: 18px;
     font-weight: 700;
     margin: 0;
+    color: #ffffff;
   }
 
   .modal-close {
     background: rgba(255, 255, 255, 0.2);
     border: none;
-    color: white;
+    color: #ffffff;
     font-size: 28px;
     width: 36px;
     height: 36px;
@@ -1209,6 +1240,281 @@ body {
       &:hover {
         background: rgba($primary, 0.2);
       }
+    }
+  }
+}
+
+// Vehicle Modal Styles
+.vehicle-modal-wrapper {
+  max-width: 600px;
+  width: 95%;
+}
+
+.no-vehicles-state {
+  text-align: center;
+  padding: $spacing-xxl $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-md;
+
+  svg {
+    color: $text-muted;
+    opacity: 0.5;
+  }
+
+  .no-vehicles-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  .no-vehicles-subtitle {
+    font-size: 14px;
+    color: $text-secondary;
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0;
+  }
+
+  .go-to-profile-btn {
+    margin-top: $spacing-md;
+    padding: $spacing-md $spacing-xl;
+    background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: $radius-md;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    transition: all $transition-base;
+    box-shadow: $shadow-md;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-lg;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    svg {
+      color: #ffffff;
+      opacity: 1;
+    }
+  }
+}
+
+.vehicles-grid-modal {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: $spacing-xs;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-light;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-color;
+    border-radius: 3px;
+
+    &:hover {
+      background: $text-muted;
+    }
+  }
+}
+
+.vehicle-item-modal {
+  background: linear-gradient(135deg, $bg-white 0%, $bg-light 100%);
+  border: 2px solid $border-color;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  cursor: pointer;
+  transition: all $transition-base;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: $spacing-lg;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: $primary;
+    transform: scaleY(0);
+    transition: transform $transition-base;
+  }
+
+  &:hover {
+    border-color: $primary;
+    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
+    transform: translateX(4px);
+    box-shadow: $shadow-md;
+
+    &::before {
+      transform: scaleY(1);
+    }
+
+    .vehicle-icon-wrapper {
+      transform: scale(1.05);
+      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+
+      svg {
+        color: #ffffff;
+      }
+    }
+
+    .vehicle-select-indicator {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
+  }
+
+  &.selected {
+    border-color: $primary;
+    background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.15) 100%);
+    box-shadow: $shadow-md;
+
+    &::before {
+      transform: scaleY(1);
+    }
+
+    .vehicle-icon-wrapper {
+      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+      box-shadow: $shadow-md;
+
+      svg {
+        color: #ffffff;
+      }
+    }
+
+    .vehicle-select-indicator {
+      opacity: 1;
+      background: $primary;
+      border-color: $primary;
+
+      svg {
+        color: #ffffff;
+      }
+    }
+
+    .vehicle-plate-number {
+      color: $primary-dark;
+    }
+  }
+}
+
+.vehicle-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.2) 100%);
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+  position: relative;
+  border: 2px solid rgba($primary, 0.3);
+  box-shadow: $shadow-sm;
+
+  svg {
+    color: $primary;
+    transition: all $transition-base;
+  }
+
+  .default-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, $warning 0%, color.adjust($warning, $lightness: -10%) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba($warning, 0.4);
+    border: 2px solid $bg-white;
+
+    svg {
+      color: #ffffff;
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+.vehicle-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+
+  .vehicle-plate-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: $text-primary;
+    letter-spacing: 0.5px;
+    transition: color $transition-base;
+  }
+
+  .vehicle-make-model {
+    font-size: 15px;
+    font-weight: 600;
+    color: $text-secondary;
+    line-height: 1.4;
+  }
+
+  .vehicle-type-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $primary-dark;
+    font-weight: 700;
+    padding: 4px 8px;
+    background: rgba($primary, 0.1);
+    border-radius: $radius-sm;
+    width: fit-content;
+    border: 1px solid rgba($primary, 0.2);
+
+    svg {
+      color: $primary;
+      flex-shrink: 0;
+      display: none; // Hide the info icon, we use emoji instead
+    }
+  }
+
+  .vehicle-connector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $text-muted;
+    font-weight: 600;
+    margin-top: 2px;
+
+    svg {
+      color: $primary;
+      flex-shrink: 0;
     }
   }
 }
@@ -1364,7 +1670,7 @@ body {
 
   &:hover {
     background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-    color: white;
+    color: #ffffff;
     border-color: $primary;
     transform: translateX(-4px);
     box-shadow: $shadow-md;
@@ -1445,13 +1751,12 @@ body {
 }
 
 .slot-selection {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
-  padding: $spacing-md;
 
-  > .back-button {
+  .back-button {
     margin-bottom: $spacing-md;
   }
 
@@ -1461,293 +1766,203 @@ body {
     color: $text-primary;
     margin-bottom: $spacing-md;
   }
-}
 
-.slots-grid {
-  flex: 1;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: $spacing-sm;
-  align-content: start;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: $bg-light;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: $border-color;
-    border-radius: 3px;
-
-    &:hover {
-      background: $text-muted;
-    }
-  }
-}
-
-.slot-card {
-  background: $bg-white;
-  border: 2px solid $border-color;
-  border-radius: $radius-md;
-  padding: $spacing-md;
-  cursor: pointer;
-  transition: all $transition-base;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  min-height: 120px;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-
-  &:hover {
-    border-color: $primary;
-    box-shadow: $shadow-lg;
-    transform: translateY(-2px);
-  }
-
-  &.selected {
-    border-color: $primary;
-    background: $primary-pale;
-    box-shadow: $shadow-md;
-  }
-
-  &.booked {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: $bg-light;
-    border-color: $danger;
-
-    &:hover {
-      border-color: $danger;
-      box-shadow: 0 0 0 3px rgba($danger, 0.1);
-      transform: none;
-    }
-
-    .slot-status {
-      background: rgba($danger, 0.15);
-      color: $danger;
-      border: 1px solid rgba($danger, 0.3);
-    }
-  }
-
-  &.available {
-    &:hover {
-      border-color: $primary;
-      box-shadow: $shadow-lg;
-      transform: translateY(-2px);
-    }
-
-    .slot-status {
-      background: rgba($success, 0.15);
-      color: $success;
-      border: 1px solid rgba($success, 0.3);
-    }
-  }
-
-  .slot-time {
-    font-size: 24px;
-    font-weight: 700;
-    color: $text-primary;
-    line-height: 1;
-  }
-
-  .slot-status {
-    font-size: 12px;
+  .selection-hint {
+    text-align: center;
     color: $text-secondary;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    padding: 4px 8px;
-    background: $bg-light;
-    border-radius: $radius-sm;
-    width: 100%;
-    border: 1px solid transparent;
-    transition: all $transition-base;
-  }
-}
-
-.next-button {
-  width: 100%;
-  padding: $spacing-md $spacing-lg;
-  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: white;
-  border: none;
-  border-radius: $radius-md;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all $transition-base;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-sm;
-  box-shadow: $shadow-md;
-  margin-top: $spacing-md;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: $shadow-lg;
+    font-size: 1rem;
+    margin-bottom: 24px;
   }
 
-  &:active:not(:disabled) {
-    transform: translateY(0);
+  .loading-message,
+  .error-message,
+  .no-slots-message {
+    text-align: center;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
   }
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .loading-message {
+    background: rgba(25, 135, 84, 0.1);
+    color: $text-primary;
   }
 
-  svg {
-    transition: transform $transition-base;
-    width: 18px;
-    height: 18px;
+  .error-message {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
   }
 
-  &:hover:not(:disabled) svg {
-    transform: translateX(4px);
-  }
-}
-
-.status-badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: inline-block;
-}
-
-.status-badge.available {
-  background-color: #e6f4ea; /* Xanh lá nhạt – tone "sẵn sàng" nhẹ nhàng */
-  color: #137333;            /* Xanh đậm vừa đủ để dễ đọc */
-  border: 1px solid #a5d6a7; /* Viền mờ để tăng độ tinh tế */
-}
-
-.status-badge.in_use {
-  background-color: #fff8e1; /* Vàng nhạt – cho trạng thái đang dùng */
-  color: #9a6e02;
-  border: 1px solid #ffcc80;
-}
-
-// Vehicle Selection
-.vehicle-selection-card {
-  .selected-vehicle-info {
-    margin-bottom: 20px;
+  .no-slots-message {
+    background: rgba(170, 170, 170, 0.1);
+    color: #AAAAAA;
   }
 
-  .change-vehicle-btn,
-  .select-vehicle-btn {
-    width: 100%;
-    padding: 12px 20px;
-    background: linear-gradient(45deg, #7ed321, #6bc91a);
-    color: white;
-    border: none;
-    border-radius: 25px;
-    font-weight: 600;
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(100vh - 400px);
+    padding-right: 8px;
+    margin-bottom: 24px;
+
+    /* Custom scrollbar */
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $primary;
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: $primary-dark;
+    }
+  }
+
+  .slot-card {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(126, 211, 33, 0.4);
+    &:hover:not(.booked) {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(25, 135, 84, 0.15);
+      border-color: $primary;
+    }
+
+    &.selected {
+      border-color: $primary;
+      background: rgba(25, 135, 84, 0.05);
+      box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
+    }
+
+    &.booked {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #f9fafb;
+
+      &:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+
+    .slot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+
+      .slot-number {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: $text-primary;
+      }
+
+      .slot-status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+
+        &.available {
+          background: rgba(25, 135, 84, 0.1);
+          color: $primary;
+        }
+
+        &.booked {
+          background: rgba(220, 38, 38, 0.1);
+          color: #dc2626;
+        }
+      }
+    }
+
+    .slot-time-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex: 1;
+
+      .time-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .time-label {
+          font-size: 0.9rem;
+          color: $text-secondary;
+        }
+
+        .time-value {
+          font-size: 1rem;
+          font-weight: 600;
+          color: $text-primary;
+        }
+      }
+    }
+
+    .slot-duration {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(25, 135, 84, 0.05);
+      border-radius: 8px;
+      margin-top: auto;
+
+      .duration-icon {
+        font-size: 1.2rem;
+      }
+
+      .duration-text {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: $text-primary;
+      }
     }
   }
-}
 
-.vehicle-modal {
-  background: white;
-  border-radius: 20px;
-  padding: 30px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.vehicles-grid-modal {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.vehicle-card-modal {
-  background: rgba(126, 211, 33, 0.05);
-  border: 2px solid rgba(126, 211, 33, 0.3);
-  border-radius: 15px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(126, 211, 33, 0.3);
-    border-color: #7ed321;
-  }
-
-  &.selected {
-    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(126, 211, 33, 0.1));
-    border-color: #4caf50;
-    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-  }
-
-  .vehicle-plate {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 8px;
-  }
-
-  .vehicle-model {
-    color: #666;
-    margin-bottom: 5px;
-  }
-
-  .vehicle-type {
-    color: #7ed321;
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-
-  .default-badge-modal {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: #4caf50;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-}
-
-.no-vehicles {
-  text-align: center;
-  padding: 40px 20px;
-
-  p {
-    color: #666;
-    margin-bottom: 20px;
-  }
-
-  button {
-    padding: 10px 20px;
-    background: #7ed321;
-    color: white;
+  .next-button {
+    width: 100%;
+    padding: 16px;
+    background: $primary;
+    color: #ffffff;
     border: none;
-    border-radius: 20px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
     cursor: pointer;
-    font-weight: 600;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
 
-    &:hover {
-      background: #6bb81d;
+    &:hover:not(:disabled) {
+      background: $primary-dark;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(20, 108, 67, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 }
