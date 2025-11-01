@@ -761,9 +761,9 @@ body {
   background: $bg-white;
   border: 2px solid $border-color;
   border-radius: $radius-md;
-  padding: $spacing-md;
+  padding: $spacing-sm $spacing-md; // Giảm từ $spacing-md xuống $spacing-sm và $spacing-md
   box-shadow: $shadow-sm;
-  flex: 1; // Make cards grow equally to fill available space
+  flex: 1;
   display: flex;
   flex-direction: column;
   transition: all $transition-base;
@@ -779,9 +779,9 @@ body {
     font-size: 16px;
     font-weight: 700;
     color: $text-primary;
-    margin-bottom: $spacing-md;
+    margin-bottom: $spacing-sm; // Giảm từ $spacing-md xuống $spacing-sm
     text-align: center;
-    padding-bottom: $spacing-sm;
+    padding-bottom: $spacing-xs; // Giảm từ $spacing-sm xuống $spacing-xs
     border-bottom: 2px solid $primary;
     flex-shrink: 0;
   }
@@ -810,7 +810,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: $spacing-xs 0;
+  padding: 6px 0; // Giảm từ $spacing-xs (8px) xuống 6px
   border-bottom: 1px solid $bg-gray;
   gap: $spacing-sm;
 
@@ -848,7 +848,7 @@ body {
     background: $primary-pale;
     padding: $spacing-xs $spacing-sm;
     border-radius: $radius-sm;
-    margin: $spacing-xs 0;
+    margin: 4px 0; // Giảm từ $spacing-xs (8px) xuống 4px
     border-bottom: none;
   }
 }
@@ -857,7 +857,14 @@ body {
 .form-section {
   position: sticky;
   top: 0;
-  height: fit-content; // Let form determine its own height
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.vehicle-selection-card {
+  margin-bottom: 0 !important;
 }
 
 .booking-form {
@@ -866,15 +873,14 @@ body {
   border-radius: $radius-md;
   padding: $spacing-lg;
   box-shadow: $shadow-sm;
-  height: 100%; // Make form take full height to match summary cards
-  display: flex; // Use flexbox for better layout control
+  display: flex;
   flex-direction: column;
 
   .form-header {
     margin-bottom: $spacing-lg;
     padding-bottom: $spacing-md;
     border-bottom: 2px solid $bg-gray;
-    flex-shrink: 0; // Prevent header from shrinking
+    flex-shrink: 0;
 
     h3 {
       font-size: 16px;
@@ -1234,6 +1240,281 @@ body {
       &:hover {
         background: rgba($primary, 0.2);
       }
+    }
+  }
+}
+
+// Vehicle Modal Styles
+.vehicle-modal-wrapper {
+  max-width: 600px;
+  width: 95%;
+}
+
+.no-vehicles-state {
+  text-align: center;
+  padding: $spacing-xxl $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-md;
+
+  svg {
+    color: $text-muted;
+    opacity: 0.5;
+  }
+
+  .no-vehicles-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  .no-vehicles-subtitle {
+    font-size: 14px;
+    color: $text-secondary;
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0;
+  }
+
+  .go-to-profile-btn {
+    margin-top: $spacing-md;
+    padding: $spacing-md $spacing-xl;
+    background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: $radius-md;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    transition: all $transition-base;
+    box-shadow: $shadow-md;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-lg;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    svg {
+      color: #ffffff;
+      opacity: 1;
+    }
+  }
+}
+
+.vehicles-grid-modal {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: $spacing-xs;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-light;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-color;
+    border-radius: 3px;
+
+    &:hover {
+      background: $text-muted;
+    }
+  }
+}
+
+.vehicle-item-modal {
+  background: linear-gradient(135deg, $bg-white 0%, $bg-light 100%);
+  border: 2px solid $border-color;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  cursor: pointer;
+  transition: all $transition-base;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: $spacing-lg;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: $primary;
+    transform: scaleY(0);
+    transition: transform $transition-base;
+  }
+
+  &:hover {
+    border-color: $primary;
+    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
+    transform: translateX(4px);
+    box-shadow: $shadow-md;
+
+    &::before {
+      transform: scaleY(1);
+    }
+
+    .vehicle-icon-wrapper {
+      transform: scale(1.05);
+      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+
+      svg {
+        color: #ffffff;
+      }
+    }
+
+    .vehicle-select-indicator {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
+  }
+
+  &.selected {
+    border-color: $primary;
+    background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.15) 100%);
+    box-shadow: $shadow-md;
+
+    &::before {
+      transform: scaleY(1);
+    }
+
+    .vehicle-icon-wrapper {
+      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+      box-shadow: $shadow-md;
+
+      svg {
+        color: #ffffff;
+      }
+    }
+
+    .vehicle-select-indicator {
+      opacity: 1;
+      background: $primary;
+      border-color: $primary;
+
+      svg {
+        color: #ffffff;
+      }
+    }
+
+    .vehicle-plate-number {
+      color: $primary-dark;
+    }
+  }
+}
+
+.vehicle-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.2) 100%);
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+  position: relative;
+  border: 2px solid rgba($primary, 0.3);
+  box-shadow: $shadow-sm;
+
+  svg {
+    color: $primary;
+    transition: all $transition-base;
+  }
+
+  .default-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, $warning 0%, color.adjust($warning, $lightness: -10%) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba($warning, 0.4);
+    border: 2px solid $bg-white;
+
+    svg {
+      color: #ffffff;
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+.vehicle-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+
+  .vehicle-plate-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: $text-primary;
+    letter-spacing: 0.5px;
+    transition: color $transition-base;
+  }
+
+  .vehicle-make-model {
+    font-size: 15px;
+    font-weight: 600;
+    color: $text-secondary;
+    line-height: 1.4;
+  }
+
+  .vehicle-type-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $primary-dark;
+    font-weight: 700;
+    padding: 4px 8px;
+    background: rgba($primary, 0.1);
+    border-radius: $radius-sm;
+    width: fit-content;
+    border: 1px solid rgba($primary, 0.2);
+
+    svg {
+      color: $primary;
+      flex-shrink: 0;
+      display: none; // Hide the info icon, we use emoji instead
+    }
+  }
+
+  .vehicle-connector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $text-muted;
+    font-weight: 600;
+    margin-top: 2px;
+
+    svg {
+      color: $primary;
+      flex-shrink: 0;
     }
   }
 }
