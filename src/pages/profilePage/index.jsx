@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "./index.scss";
 import api from "../../config/api";
 import { useNavigate } from "react-router-dom";
-import CustomPopup from "../../components/CustomPopup/index";
+import CustomPopup from "../../components/customPopup";
 import ConfirmPopup from "../../components/confirmPopup/index.jsx";
 
 
