@@ -112,7 +112,7 @@ export default function PaymentPage() {
                         </div>
                     </div>
 
-                    <div className="payment-methods">
+                    {/* <div className="payment-methods">
                         <h3>Phương thức thanh toán</h3>
                         <div className="methods">
                             <label>
@@ -156,7 +156,7 @@ export default function PaymentPage() {
                                 Thanh toán tại trạm
                             </label>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 <div className="right">

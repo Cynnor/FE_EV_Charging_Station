@@ -9,6 +9,8 @@ import AboutPage from "./pages/aboutPage/index";
 import SupportPage from "./pages/supportPage/index";
 import StationManagement from "./pages/adminDashboard/stationManagement";
 import UserManagement from "./pages/adminDashboard/userManagement";
+import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement";
+import TransactionManagement from "./pages/adminDashboard/transactionManagement";
 import Analytics from "./pages/adminDashboard/analyticsManagement";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement";
 import SettingManagement from "./pages/adminDashboard/settingManagement/index";
@@ -81,6 +83,8 @@ function App() {
         { path: "", element: <Overview /> },
         { path: "station-management", element: <StationManagement /> },
         { path: "user-management", element: <UserManagement /> },
+        { path: "subscription-management", element: <SubscriptionManagement /> },
+        { path: "transaction-management", element: <TransactionManagement /> },
         { path: "revenue-management", element: <RevenueManagement /> },
         { path: "analytics-management", element: <Analytics /> },
         { path: "settings-management", element: <SettingManagement /> },
