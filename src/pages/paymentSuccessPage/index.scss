@@ -1,6 +1,6 @@
 .payment-success-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -49,6 +49,12 @@
         &.error-container {
             &::before {
                 background: linear-gradient(90deg, #e74c3c, #c0392b, #e74c3c);
+            }
+        }
+
+        &.cancelled-container {
+            &::before {
+                background: linear-gradient(90deg, #f39c12, #e67e22, #f39c12);
             }
         }
     }
@@ -395,6 +401,43 @@
     .error-icon {
         margin-bottom: 30px;
         animation: shake 0.5s ease-in-out;
+    }
+
+    // Cancelled States
+    .cancelled-container {
+        .cancelled-icon {
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .cancelled-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #f39c12;
+            margin-bottom: 16px;
+        }
+
+        .cancelled-message {
+            font-size: 1.2rem;
+            color: #718096;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+    }
+}
+
+// Cancelled Animation
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
     }
 }
 

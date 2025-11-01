@@ -1,4 +1,636 @@
+// Spotify-style Membership Page
 .membership-page {
+<<<<<<< HEAD
+    min-height: 100vh;
+    background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
+    color: #333333;
+    font-family: 'Circular', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    position: relative;
+    overflow-x: hidden;
+
+    // Hero Section - Spotify style
+    .hero-section {
+        background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
+        padding: 80px 20px 60px;
+        text-align: center;
+        position: relative;
+
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 900;
+            margin: 0 0 20px;
+            margin-top: 50px;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            color: #333333;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: #AAAAAA;
+            margin: 0;
+            font-weight: 400;
+        }
+    }
+
+    // Current Subscription Banner
+    .current-subscription-banner {
+        background: rgba(25, 135, 84, 0.1);
+        border-bottom: 1px solid rgba(25, 135, 84, 0.2);
+        padding: 20px;
+        margin: 0;
+
+        .banner-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+
+            .banner-icon {
+                color: #198754;
+                font-size: 24px;
+            }
+
+            .banner-info {
+                flex: 1;
+                min-width: 200px;
+
+                h3 {
+                    margin: 0 0 4px;
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #333333;
+                }
+
+                p {
+                    margin: 0;
+                    font-size: 14px;
+                    color: #AAAAAA;
+                }
+            }
+
+            .banner-cancel-btn {
+                padding: 10px 20px;
+                background: transparent;
+                border: 1px solid rgba(25, 135, 84, 0.3);
+                color: #198754;
+                border-radius: 500px;
+                font-weight: 700;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    border-color: #198754;
+                    transform: scale(1.05);
+                }
+            }
+        }
+    }
+
+    // Plans Section - Spotify style
+    .plans-section {
+        padding: 60px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .plans-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-top: 40px;
+        align-items: stretch;
+    }
+
+    .plan-card {
+        background: rgba(245, 242, 242, 0.8);
+        border: 1px solid rgba(25, 135, 84, 0.2);
+        border-radius: 16px;
+        padding: 32px 24px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #198754, #146c43);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(25, 135, 84, 0.4);
+            transform: translateY(-4px);
+
+            &::before {
+                opacity: 1;
+            }
+        }
+
+        &.featured {
+            background: linear-gradient(180deg, rgba(255,
+                        255,
+                        255,
+                        0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+            border-color: rgba(25, 135, 84, 0.3);
+            border-width: 1px;
+            box-shadow: 0 4px 16px rgba(25, 135, 84, 0.1);
+
+            &::before {
+                opacity: 1;
+                height: 4px;
+            }
+
+            &:hover {
+                border-color: rgba(25, 135, 84, 0.5);
+                box-shadow: 0 8px 24px rgba(25, 135, 84, 0.2);
+            }
+
+            .popular-badge {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: #198754;
+                color: #ffffff;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+        }
+
+        &.current {
+            border-color: #198754;
+            background: rgba(25, 135, 84, 0.15);
+        }
+    }
+
+    .plan-header {
+        margin-bottom: 24px;
+
+        .plan-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: rgba(25, 135, 84, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 16px;
+            color: #198754;
+        }
+
+        .plan-name {
+            font-size: 24px;
+            font-weight: 900;
+            margin: 0 0 12px;
+            letter-spacing: -0.02em;
+            color: #333333;
+        }
+
+        .current-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(25, 135, 84, 0.2);
+            color: #198754;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+    }
+
+    // Duration Selector - Spotify style
+    .duration-selector {
+        margin-bottom: 24px;
+
+        .duration-tabs {
+            display: flex;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px;
+            border-radius: 10px;
+            min-height: 48px;
+
+            .no-duration-message {
+                padding: 10px;
+                text-align: center;
+                color: #AAAAAA;
+                font-size: 14px;
+                width: 100%;
+            }
+        }
+
+        .duration-tab {
+            flex: 1;
+            padding: 12px 8px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: #AAAAAA;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            min-height: 48px;
+            justify-content: center;
+
+            &:hover {
+                color: #333333;
+                background: rgba(25, 135, 84, 0.1);
+                transform: scale(1.02);
+            }
+
+            &.active {
+                background: #198754;
+                color: #ffffff;
+                font-weight: 700;
+                box-shadow: 0 2px 8px rgba(25, 135, 84, 0.3);
+
+                .savings-badge {
+                    background: rgba(255, 255, 255, 0.25);
+                    color: #ffffff;
+                }
+            }
+
+            .duration-text {
+                font-size: 14px;
+            }
+
+            .savings-badge {
+                font-size: 10px;
+                padding: 2px 6px;
+                border-radius: 4px;
+                background: rgba(25, 135, 84, 0.2);
+                color: #198754;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
+        }
+    }
+
+    // Price Section
+    .price-section {
+        margin-bottom: 24px;
+
+        .price-wrapper {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .price-amount {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            color: #333333;
+        }
+
+        .original-price {
+            font-size: 20px;
+            color: #AAAAAA;
+            text-decoration: line-through;
+        }
+
+        .price-period {
+            font-size: 14px;
+            color: #AAAAAA;
+            margin: 0;
+        }
+    }
+
+    .plan-description {
+        font-size: 14px;
+        color: #AAAAAA;
+        margin: 0 0 24px;
+        line-height: 1.6;
+    }
+
+    .divider {
+        height: 1px;
+        background: rgba(25, 135, 84, 0.2);
+        margin: 24px 0;
+    }
+
+    // Features List
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 32px;
+        min-height: 200px;
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            font-size: 15px;
+            line-height: 1.6;
+            transition: all 0.2s ease;
+
+            &:hover {
+                transform: translateX(4px);
+            }
+
+            .check-icon {
+                color: #198754;
+                font-size: 16px;
+                flex-shrink: 0;
+                margin-top: 3px;
+            }
+
+            span {
+                color: #333333;
+                font-weight: 400;
+            }
+        }
+
+        // Empty state - không hiển thị gì nếu không có features
+        &:empty::after {
+            content: 'Không có tính năng';
+            display: block;
+            color: #AAAAAA;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px 0;
+        }
+    }
+
+    // Plan Footer
+    .plan-footer {
+        margin-top: auto;
+        padding-top: 24px;
+    }
+
+    .subscribe-btn,
+    .current-btn,
+    .unavailable-btn {
+        width: 100%;
+        min-height: 52px;
+        padding: 16px 32px;
+        border: none;
+        border-radius: 500px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    .subscribe-btn {
+        background: #198754;
+        color: #ffffff;
+
+        &:hover {
+            background: #146c43;
+            transform: scale(1.05);
+        }
+
+        &.premium {
+            background: #198754;
+            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);
+
+            &:hover {
+                background: #146c43;
+                box-shadow: 0 6px 20px rgba(25, 135, 84, 0.5);
+            }
+        }
+    }
+
+    .current-btn {
+        background: rgba(25, 135, 84, 0.2);
+        color: #198754;
+        border: 1px solid #198754;
+        cursor: not-allowed;
+        gap: 8px;
+    }
+
+    .unavailable-btn {
+        background: rgba(255, 255, 255, 0.5);
+        color: #AAAAAA;
+        border: 1px solid rgba(170, 170, 170, 0.3);
+        cursor: not-allowed;
+    }
+
+    // Loading & Error States
+    .loading-container,
+    .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        gap: 20px;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top: 4px solid #198754;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-container {
+        color: #333333;
+
+        .error-icon {
+            font-size: 3rem;
+            color: #198754;
+        }
+    }
+
+    .retry-button {
+        background: #198754;
+        color: #ffffff;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 500px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: #146c43;
+            transform: scale(1.05);
+        }
+    }
+
+    // Payment Modal
+    .payment-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+    }
+
+    .payment-modal {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(25, 135, 84, 0.2);
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+
+            h3 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 700;
+                color: #333333;
+            }
+
+            .close-button {
+                background: none;
+                border: none;
+                color: #AAAAAA;
+                font-size: 24px;
+                cursor: pointer;
+                padding: 0;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    background: rgba(25, 135, 84, 0.1);
+                    color: #198754;
+                }
+            }
+
+            .modal-content {
+                p {
+                    margin: 12px 0;
+                    color: #AAAAAA;
+                    font-size: 16px;
+
+                    strong {
+                        color: #198754;
+                    }
+                }
+            }
+        }
+
+        // Responsive
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 60px 20px 40px;
+            }
+
+            .plans-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .plan-card {
+                padding: 24px 20px;
+
+                &.featured {
+                    transform: scale(1);
+                }
+            }
+
+            .duration-tabs {
+                flex-direction: column;
+                gap: 4px;
+
+                .duration-tab {
+                    width: 100%;
+                }
+            }
+
+            .price-amount {
+                font-size: 36px;
+            }
+        }
+    }
+}
+
+// My Subscriptions Section
+.my-subscriptions-section {
+    padding: 60px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 30px;
+        color: #333333;
+        text-align: center;
+    }
+=======
     text-align: center;
     padding: 100px;
     background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
@@ -19,15 +651,44 @@
     margin-bottom: 30px;
     color: #AAAAAA;
 }
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 
-.packages {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    align-items: stretch;
-}
+    .subscriptions-list {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 
+<<<<<<< HEAD
+        .subscription-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(25, 135, 84, 0.2);
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            }
+
+            &.current_active {
+                border-color: rgba(25, 135, 84, 0.5);
+                border-width: 2px;
+                background: rgba(224, 247, 224, 0.3);
+            }
+
+            &.pending {
+                border-color: rgba(255, 193, 7, 0.5);
+                background: rgba(255, 248, 220, 0.3);
+            }
+
+            .subscription-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 16px;
+=======
 .package {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
@@ -68,14 +729,112 @@
     margin-bottom: 10px;
     color: #AAAAAA;
 }
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 
-.package .features {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0;
-    text-align: left;
-}
+                .subscription-info {
+                    flex: 1;
 
+<<<<<<< HEAD
+                    h3 {
+                        font-size: 1.25rem;
+                        font-weight: 600;
+                        margin: 0 0 8px;
+                        color: #333333;
+                    }
+
+                    .subscription-details {
+                        font-size: 0.9rem;
+                        color: #AAAAAA;
+                        margin: 0;
+                    }
+                }
+
+                .status-badge {
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+
+                    &.current_active {
+                        background: #198754;
+                        color: #ffffff;
+                    }
+
+                    &.active {
+                        background: #0d6efd;
+                        color: #ffffff;
+                    }
+
+                    &.pending {
+                        background: #ffc107;
+                        color: #000000;
+                    }
+
+                    &.expired {
+                        background: #6c757d;
+                        color: #ffffff;
+                    }
+
+                    &.cancelled {
+                        background: #dc3545;
+                        color: #ffffff;
+                    }
+                }
+            }
+
+            .subscription-dates {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                margin-bottom: 16px;
+                padding: 16px;
+                background: rgba(0, 0, 0, 0.02);
+                border-radius: 8px;
+
+                .date-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+
+                    .date-label {
+                        font-size: 0.9rem;
+                        color: #AAAAAA;
+                        font-weight: 500;
+                    }
+
+                    .date-value {
+                        font-size: 0.9rem;
+                        color: #333333;
+                        font-weight: 600;
+                    }
+                }
+            }
+
+            .subscription-pending-note {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px;
+                background: rgba(255, 193, 7, 0.1);
+                border-radius: 8px;
+                border-left: 3px solid #ffc107;
+
+                .pending-icon {
+                    color: #ffc107;
+                    font-size: 1rem;
+                }
+
+                span {
+                    font-size: 0.85rem;
+                    color: #856404;
+                    line-height: 1.4;
+                }
+            }
+        }
+    }
+=======
 .package .features li {
     margin-bottom: 5px;
     display: flex;
@@ -112,4 +871,5 @@
     color: #ffffff;
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(20, 108, 67, 0.35);
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 }

@@ -2,11 +2,23 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
+<<<<<<< HEAD
+import SupportPage from "./pages/supportPage/index";
+import StationManagement from "./pages/adminDashboard/stationManagement";
+import UserManagement from "./pages/adminDashboard/userManagement";
+import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement";
+import TransactionManagement from "./pages/adminDashboard/transactionManagement";
+import Analytics from "./pages/adminDashboard/analyticsManagement";
+import RevenueManagement from "./pages/adminDashboard/revenueManagement";
+import SettingManagement from "./pages/adminDashboard/settingManagement/index";
+import ForgotPassword from "./pages/forgotpasswordPage/forgotpassword";
+=======
 import ProfilePage from "./pages/profilePage";
 import BookingPage from "./pages/bookingPage";
 import PaymentPage from "./pages/PaymentPage/index";
 import PaymentSuccessPage from "./pages/paymentSuccessPage/index";
 import MembershipPage from "./pages/MembershipPage/index";
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 import Login from "./pages/loginPage";
 import Register from "./pages/registerPage";
 import ForgotPassword from "./pages/forgotPasswordPage";
@@ -77,6 +89,8 @@ function App() {
         { path: "", element: <Overview /> },
         { path: "station-management", element: <StationManagement /> },
         { path: "user-management", element: <UserManagement /> },
+        { path: "subscription-management", element: <SubscriptionManagement /> },
+        { path: "transaction-management", element: <TransactionManagement /> },
         { path: "revenue-management", element: <RevenueManagement /> },
         { path: "analytics-management", element: <Analytics /> },
         { path: "settings-management", element: <SettingManagement /> },
