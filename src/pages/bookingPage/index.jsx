@@ -925,24 +925,26 @@ export default function BookingPage() {
           {step === 2 && selectedStation && (
             <div className="charger-selection">
               <div className="selected-station-info">
-                <button
-                  className="back-button"
-                  onClick={() => {
-                    setStep(1);
-                    setSelectedCharger(null);
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M12 4L6 10l6 6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  Quay lại
-                </button>
+                <div className="back-button-wrapper">
+                  <button
+                    className="back-button"
+                    onClick={() => {
+                      setStep(1);
+                      setSelectedCharger(null);
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M12 4L6 10l6 6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Quay lại
+                  </button>
+                </div>
                 <h2>{selectedStation.name}</h2>
               </div>
 
@@ -1026,18 +1028,20 @@ export default function BookingPage() {
           {/* STEP 3: Slot selection */}
           {step === 3 && selectedCharger && (
             <div className="slot-selection">
-              <button className="back-button" onClick={() => setStep(2)}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M12 4L6 10l6 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Quay lại
-              </button>
+              <div className="back-button-wrapper">
+                <button className="back-button" onClick={() => setStep(2)}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M12 4L6 10l6 6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Quay lại
+                </button>
+              </div>
               <h2>Chọn slot cho trụ sạc</h2>
               <p className="selection-hint">
                 Chọn khung giờ phù hợp với lịch trình của bạn
@@ -1104,7 +1108,7 @@ export default function BookingPage() {
           {/* STEP 4: Confirmation */}
           {step === 4 && selectedStation && selectedCharger && selectedSlot && (
             <div className="booking-confirmation">
-              <button className="back-button" onClick={() => setStep(2)}>
+              <button className="back-button" onClick={() => setStep(3)}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path
                     d="M12 4L6 10l6 6"
