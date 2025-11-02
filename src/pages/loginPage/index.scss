@@ -243,7 +243,7 @@
 
 .form-input {
   width: 100%;
-  padding: 16px 20px;
+  padding: 16px;
   background: rgba(248, 255, 248, 0.5);
   border: 2px solid rgba(25, 135, 84, 0.2);
   border-radius: 12px;
@@ -282,7 +282,7 @@
 
 .password-wrapper .form-input {
   width: 100%;
-  padding: 16px 50px 16px 20px;
+  padding: 16px 50px 16px 16px;
   box-sizing: border-box;
 }
 
@@ -588,7 +588,7 @@
   }
 
   .form-input {
-    padding: 14px 16px;
+    padding: 16px;
     font-size: 16px;
   }
 <<<<<<< HEAD:src/pages/loginPage/login.scss
@@ -598,7 +598,7 @@
 =======
   
   .password-wrapper .form-input {
-    padding: 14px 50px 14px 16px;
+    padding: 16px 50px 16px 16px;
   }
   
   .btn-login, .btn-google {

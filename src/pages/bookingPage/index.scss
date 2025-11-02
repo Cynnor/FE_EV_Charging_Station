@@ -37,6 +37,9 @@ $spacing-lg: 24px;
 $spacing-xl: 32px;
 $spacing-xxl: 48px;
 
+// Add a shared control height
+$control-height: 48px;
+
 // Border Radius
 $radius-sm: 6px;
 $radius-md: 10px;
@@ -79,6 +82,7 @@ body {
 .booking-container {
   width: 100%;
   margin: 0 auto;
+  margin-top: 15px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: $spacing-lg;
@@ -87,6 +91,8 @@ body {
   &.confirmation-mode {
     grid-template-columns: 1fr;
     max-width: 1200px;
+    height: auto; // Remove fixed height for Step 4
+    min-height: auto; // Allow natural content height
   }
 }
 
@@ -209,13 +215,16 @@ body {
   .search-icon {
     position: absolute;
     left: $spacing-md;
+    top: 50%;                   // center vertically
+    transform: translateY(-50%);// center vertically
     color: $text-muted;
     pointer-events: none;
   }
 
   .search-input {
     width: 100%;
-    padding: $spacing-sm $spacing-md $spacing-sm 44px;
+    height: $control-height;                               // unify height
+    padding: $spacing-sm $spacing-md $spacing-sm 44px;     // keep left for icon
     border: 2px solid $border-color;
     border-radius: $radius-md;
     font-size: 15px;
@@ -257,7 +266,9 @@ body {
 }
 
 .filter-select {
-  padding: $spacing-sm $spacing-md;
+  padding: $spacing-sm $spacing-md; // ensure same vertical padding
+  height: $control-height;          // unify height
+  box-sizing: border-box;
   border: 2px solid $border-color;
   border-radius: $radius-md;
   font-size: 15px;
@@ -682,24 +693,11 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow-y: visible; // Changed from auto to visible
   padding: $spacing-md;
 
   &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: $bg-light;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: $border-color;
-    border-radius: 3px;
-
-    &:hover {
-      background: $text-muted;
-    }
+    display: none; // Hide scrollbar since we use page scroll
   }
 
   > .back-button {
@@ -709,11 +707,12 @@ body {
 
 .confirmation-content {
   flex: 1;
+  width: 100%;
 }
 
 .confirmation-header {
   text-align: center;
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-xl; // Increased spacing
 
   .success-icon {
     width: 60px;
@@ -747,26 +746,27 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: $spacing-lg;
-  align-items: stretch; // Changed from stretch to start for better control
+  align-items: start;
+  margin-bottom: $spacing-xl; // Add bottom margin for spacing
 }
 
 .summary-section {
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
-  height: 100%; // Make section take full height
 }
 
 .summary-card {
   background: $bg-white;
   border: 2px solid $border-color;
   border-radius: $radius-md;
-  padding: $spacing-sm $spacing-md; // Giảm từ $spacing-md xuống $spacing-sm và $spacing-md
+  padding: $spacing-md;
   box-shadow: $shadow-sm;
-  flex: 1;
   display: flex;
   flex-direction: column;
   transition: all $transition-base;
+  min-height: auto; // Remove fixed min-height
 
   &:hover {
     border-color: $primary;
@@ -779,11 +779,62 @@ body {
     font-size: 16px;
     font-weight: 700;
     color: $text-primary;
-    margin-bottom: $spacing-sm; // Giảm từ $spacing-md xuống $spacing-sm
+    margin-bottom: $spacing-md;
     text-align: center;
-    padding-bottom: $spacing-xs; // Giảm từ $spacing-sm xuống $spacing-xs
+    padding-bottom: $spacing-md;
     border-bottom: 2px solid $primary;
     flex-shrink: 0;
+  }
+
+  // Make content area flex to fill space
+  > :not(h3) {
+    flex: 1;
+  }
+}
+
+// Ensure station and charger cards have same structure
+.summary-card.station-card,
+.summary-card.charger-card {
+  min-height: auto; // Remove fixed height
+  
+  .summary-item {
+    padding: $spacing-sm 0;
+    
+    &:first-of-type {
+      padding-top: 0;
+    }
+  }
+}
+
+// Vehicle selection card matching height
+.vehicle-selection-card {
+  margin-bottom: 0 !important;
+  min-height: auto; // Remove fixed height
+  display: flex;
+  flex-direction: column;
+
+  h3 {
+    margin-bottom: $spacing-md;
+  }
+
+  .selected-vehicle-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; // Changed from space-between
+    
+    .summary-item {
+      padding: $spacing-sm 0;
+      
+      &:first-of-type {
+        padding-top: 0;
+      }
+    }
+  }
+
+  .change-vehicle-btn,
+  .select-vehicle-btn {
+    margin-top: $spacing-md; // Fixed margin instead of auto
   }
 }
 
@@ -794,10 +845,11 @@ body {
   background: $primary;
   color: #ffffff;
   border: none;
-  border-radius: 25px;
+  border-radius: $radius-md;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-top: $spacing-md;
 
   &:hover {
     background: $primary-dark;
@@ -810,7 +862,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 6px 0; // Giảm từ $spacing-xs (8px) xuống 6px
+  padding: $spacing-sm 0;
   border-bottom: 1px solid $bg-gray;
   gap: $spacing-sm;
 
@@ -823,6 +875,7 @@ body {
     color: $text-secondary;
     font-weight: 600;
     flex-shrink: 0;
+    min-width: 80px;
   }
 
   .summary-value {
@@ -846,25 +899,21 @@ body {
 
   &.highlight-item {
     background: $primary-pale;
-    padding: $spacing-xs $spacing-sm;
+    padding: $spacing-sm;
     border-radius: $radius-sm;
-    margin: 4px 0; // Giảm từ $spacing-xs (8px) xuống 4px
+    margin: $spacing-xs 0;
     border-bottom: none;
   }
 }
 
-// Form Section
+// Form Section - ensure proper spacing
 .form-section {
-  position: sticky;
-  top: 0;
-  height: fit-content;
+  position: relative; // Changed from sticky
+  top: auto; // Reset top position
+  height: auto; // Changed from fit-content
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
-}
-
-.vehicle-selection-card {
-  margin-bottom: 0 !important;
 }
 
 .booking-form {
@@ -1524,6 +1573,10 @@ body {
   .booking-container {
     grid-template-columns: 1fr;
     gap: $spacing-md;
+    
+    &.confirmation-mode {
+      height: auto;
+    }
   }
 
   .right-panel {
@@ -1686,6 +1739,13 @@ body {
   }
 }
 
+// Add new wrapper styling
+.back-button-wrapper {
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+}
+
 // Step 3 custom date/time pickers
 .date-options {
   display: grid;
@@ -1755,16 +1815,14 @@ body {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-
-  .back-button {
-    margin-bottom: $spacing-md;
-  }
+  padding: $spacing-md;
 
   h2 {
     font-size: 18px;
     font-weight: 700;
     color: $text-primary;
     margin-bottom: $spacing-md;
+    margin-top: 0;
   }
 
   .selection-hint {

@@ -1,41 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import api from "../../config/api";
 import "./index.scss";
 
 const BookingSuccessPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { reservation, station, charger, vehicle, bookingTime } =
-    location.state || {};
-  const [userInfo, setUserInfo] = useState(null);
+  const { reservation, station, charger, bookingTime } = location.state || {};
 
   useEffect(() => {
     window.scrollTo(0, 0);
-
-    // Nếu không có dữ liệu, redirect về trang chủ
     if (!reservation) {
       navigate("/", { replace: true });
     }
-
-    // Fetch user info
-    const fetchUserData = async () => {
-      try {
-        const response = await api.get("/users/profile");
-        if (response.data.data) {
-          setUserInfo({
-            fullname: response.data.data.fullName || "Chưa cập nhật",
-            email: response.data.data.email || "Chưa cập nhật",
-            phone: response.data.data.phone || "Chưa cập nhật",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    fetchUserData();
   }, [reservation, navigate]);
 
   if (!reservation) return null;
@@ -63,7 +40,6 @@ const BookingSuccessPage = () => {
   };
 
   const handleStartCharging = () => {
-    // Lưu flag để scroll đến phần lịch sử
     sessionStorage.setItem("scrollToHistory", "true");
     navigate("/profile", { replace: true });
   };
@@ -83,27 +59,12 @@ const BookingSuccessPage = () => {
           </p>
         </div>
 
-        <div className="booking-content">
-          {/* Cột trái */}
-          <div className="booking-details">
-            {/* Ô 1: Thông tin xe - Trái trên */}
-            <div className="detail-section">
-              <h3>Thông tin xe</h3>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="label">Biển số:</span>
-                  <span className="value">{vehicle?.plateNumber}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Xe:</span>
-                  <span className="value">
-                    {vehicle?.make} {vehicle?.model}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Ô 2: Thông tin trạm sạc - Trái dưới */}
+        <div
+          className="booking-content booking-content--vertical"
+          style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+        >
+          {/* Cột trái: Thông tin trạm sạc */}
+          <div className="booking-details" style={{ width: "100%" }}>
             <div className="detail-section">
               <h3>Thông tin trạm sạc</h3>
               <div className="detail-grid">
@@ -123,47 +84,25 @@ const BookingSuccessPage = () => {
             </div>
           </div>
 
-          {/* Cột phải */}
-          <div className="booking-details">
-            {/* Ô 3: Thời gian sạc - Phải trên */}
+          {/* Cột phải: Thời gian sạc */}
+          <div className="booking-details" style={{ width: "100%" }}>
             <div className="detail-section">
               <h3>Thời gian sạc</h3>
               <div className="detail-grid">
                 <div className="detail-item">
                   <span className="label">Bắt đầu:</span>
                   <span className="value">
-                    {formatDateTime(bookingTime?.date, bookingTime?.startTime)}
+                    {bookingTime?.date && bookingTime?.startTime
+                      ? formatDateTime(bookingTime.date, bookingTime.startTime)
+                      : "—"}
                   </span>
                 </div>
                 <div className="detail-item">
                   <span className="label">Kết thúc:</span>
                   <span className="value">
-                    {formatDateTime(bookingTime?.date, bookingTime?.endTime)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Ô 4: Thông tin người dùng - Phải dưới */}
-            <div className="detail-section">
-              <h3>Thông tin người dùng</h3>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="label">Tên:</span>
-                  <span className="value">
-                    {userInfo?.fullname || "Đang tải..."}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Email:</span>
-                  <span className="value">
-                    {userInfo?.email || "Đang tải..."}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">SĐT:</span>
-                  <span className="value">
-                    {userInfo?.phone || "Đang tải..."}
+                    {bookingTime?.date && bookingTime?.endTime
+                      ? formatDateTime(bookingTime.date, bookingTime.endTime)
+                      : "—"}
                   </span>
                 </div>
               </div>
