@@ -43,6 +43,9 @@ export default function PaymentPage() {
   const handleSandboxPay = async () => {
     setIsPaying(true);
 
+<<<<<<< HEAD
+                    {/* <div className="payment-methods">
+=======
     try {
       if (reservationId) {
         // Thanh toán cho chargingSession với reservationId
@@ -159,6 +162,7 @@ export default function PaymentPage() {
           </div>
 
           {/* <div className="payment-methods">
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
                         <h3>Phương thức thanh toán</h3>
                         <div className="methods">
                             <label>
@@ -203,7 +207,11 @@ export default function PaymentPage() {
                             </label>
                         </div>
                     </div> */}
+<<<<<<< HEAD
+                </div>
+=======
         </div>
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 
         <div className="right">
           <div className="total-card">

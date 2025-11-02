@@ -46,6 +46,31 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const itemRefs = useRef({});
 
+<<<<<<< HEAD
+  // // ===== Xử lý VNPay return URL =====
+  // useEffect(() => {
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const vnpResponseCode = urlParams.get('vnp_ResponseCode');
+
+  //   console.log('Checking VNPay return:', {
+  //     vnpResponseCode,
+  //     search: window.location.search,
+  //     pathname: window.location.pathname,
+  //     href: window.location.href
+  //   });
+
+  //   if (vnpResponseCode) {
+  //     // Có VNPay return parameters, redirect đến paymentSuccessPage
+  //     const queryString = window.location.search;
+
+  //     // Tạo URL mới cho payment-success
+  //     const newUrl = window.location.origin + '/payment-success' + queryString;
+
+  //     console.log('Redirecting to:', newUrl);
+  //     window.location.href = newUrl;
+  //   }
+  // }, []);
+=======
   // ===== Handle VNPay Return =====
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -57,6 +82,7 @@ const HomePage = () => {
       window.location.href = newUrl;
     }
   }, []);
+>>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 
   // ===== Fetch Station Data from API =====
   useEffect(() => {

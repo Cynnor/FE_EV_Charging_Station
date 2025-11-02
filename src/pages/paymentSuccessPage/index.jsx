@@ -38,32 +38,105 @@ export default function PaymentSuccessPage() {
 
             // Kiểm tra xem có phải VNPay return không
             if (vnpParams.vnp_ResponseCode) {
-                const reservationId = vnpParams.vnp_TxnRef || localStorage.getItem("reservationId");
+                // Kiểm tra xem có phải subscription payment không
+                const orderInfo = decodeURIComponent(vnpParams.vnp_OrderInfo || '');
+                const isSubscriptionPayment = orderInfo.toLowerCase().includes('gói') ||
+                    orderInfo.toLowerCase().includes('goi') ||
+                    orderInfo.toLowerCase().includes('subscription') ||
+                    orderInfo.toLowerCase().includes('thanh toan goi');
 
-                if (reservationId) {
-                    // Gọi API để kiểm tra trạng thái thanh toán
-                    const response = await api.post('/vnpay/check-payment-status', {
-                        reservationId: reservationId,
-                        ...vnpParams
-                    });
+                // Lấy subscriptionId từ localStorage (đã lưu khi tạo payment)
+                const pendingSubscriptionId = localStorage.getItem('pendingSubscriptionId');
 
-                    if (response.data?.success) {
-                        const paymentData = response.data.data;
-                        setPaymentStatus(paymentData.paymentStatus);
+                if (isSubscriptionPayment && pendingSubscriptionId) {
+                    // Xử lý subscription payment
+                    try {
+                        const response = await api.post('/subscriptions/check-payment-status', {
+                            subscriptionId: pendingSubscriptionId,
+                            vnp_Amount: vnpParams.vnp_Amount,
+                            vnp_BankCode: vnpParams.vnp_BankCode,
+                            vnp_BankTranNo: vnpParams.vnp_BankTranNo,
+                            vnp_CardType: vnpParams.vnp_CardType,
+                            vnp_OrderInfo: vnpParams.vnp_OrderInfo,
+                            vnp_PayDate: vnpParams.vnp_PayDate,
+                            vnp_ResponseCode: vnpParams.vnp_ResponseCode,
+                            vnp_TmnCode: vnpParams.vnp_TmnCode,
+                            vnp_TransactionNo: vnpParams.vnp_TransactionNo,
+                            vnp_TransactionStatus: vnpParams.vnp_TransactionStatus,
+                            vnp_TxnRef: vnpParams.vnp_TxnRef,
+                            vnp_SecureHash: vnpParams.vnp_SecureHash
+                        });
 
-                        if (paymentData.paymentStatus === 'success') {
-                            setPaymentInfo({
-                                reservationId: reservationId,
-                                amount: parseInt(vnpParams.vnp_Amount) / 100, // VNPay trả về amount * 100
-                                orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || ''),
-                                transactionNo: vnpParams.vnp_TransactionNo,
-                                bankCode: vnpParams.vnp_BankCode,
-                                cardType: vnpParams.vnp_CardType,
-                                payDate: vnpParams.vnp_PayDate,
-                                vehicleInfo: state?.vehicleInfo,
-                                chargingInfo: state?.chargingInfo,
-                                paymentMethod: state?.paymentMethod || 'vnpay'
-                            });
+                        if (response.data?.success) {
+                            const paymentData = response.data.data || response.data;
+                            const status = paymentData.paymentStatus || response.data.paymentStatus ||
+                                (vnpParams.vnp_ResponseCode === '00' ? 'success' : 'failed');
+
+                            setPaymentStatus(status);
+
+                            if (status === 'success' || vnpParams.vnp_ResponseCode === '00') {
+                                // Xóa pendingSubscriptionId sau khi xử lý thành công
+                                localStorage.removeItem('pendingSubscriptionId');
+
+                                const subscriptionInfo = paymentData.subscription || paymentData.subscriptionData || paymentData;
+
+                                setPaymentInfo({
+                                    subscriptionId: pendingSubscriptionId,
+                                    amount: parseInt(vnpParams.vnp_Amount) / 100,
+                                    orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || ''),
+                                    transactionNo: vnpParams.vnp_TransactionNo,
+                                    bankCode: vnpParams.vnp_BankCode,
+                                    cardType: vnpParams.vnp_CardType,
+                                    payDate: vnpParams.vnp_PayDate,
+                                    paymentMethod: 'vnpay',
+                                    isSubscription: true,
+                                    subscriptionInfo: subscriptionInfo
+                                });
+                            } else if (status === 'failed') {
+                                setPaymentStatus('error');
+                            } else if (status === 'cancelled') {
+                                setPaymentStatus('cancelled');
+                            }
+                        }
+                    } catch (subError) {
+                        console.error('Error checking subscription payment:', subError);
+                        setPaymentStatus('error');
+                    }
+                } else {
+                    // Xử lý booking payment (reservation)
+                    const reservationId = vnpParams.vnp_TxnRef || localStorage.getItem("reservationId");
+
+                    if (reservationId) {
+                        // Gọi API để kiểm tra trạng thái thanh toán
+                        const response = await api.post('/vnpay/check-payment-status', {
+                            reservationId: reservationId,
+                            ...vnpParams
+                        });
+
+                        if (response.data?.success) {
+                            const paymentData = response.data.data;
+                            const status = paymentData.paymentStatus || response.data.paymentStatus;
+                            setPaymentStatus(status);
+
+                            // Xử lý các trạng thái: success, failed, cancelled
+                            if (status === 'success') {
+                                setPaymentInfo({
+                                    reservationId: reservationId,
+                                    amount: parseInt(vnpParams.vnp_Amount) / 100, // VNPay trả về amount * 100
+                                    orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || ''),
+                                    transactionNo: vnpParams.vnp_TransactionNo,
+                                    bankCode: vnpParams.vnp_BankCode,
+                                    cardType: vnpParams.vnp_CardType,
+                                    payDate: vnpParams.vnp_PayDate,
+                                    vehicleInfo: state?.vehicleInfo,
+                                    chargingInfo: state?.chargingInfo,
+                                    paymentMethod: state?.paymentMethod || 'vnpay'
+                                });
+                            } else if (status === 'failed') {
+                                setPaymentStatus('error');
+                            } else if (status === 'cancelled') {
+                                setPaymentStatus('cancelled');
+                            }
                         }
                     }
                 }
@@ -93,6 +166,10 @@ export default function PaymentSuccessPage() {
 
     const handleGoToHome = () => {
         navigate("/");
+    };
+
+    const handleGoToMembership = () => {
+        navigate("/membership");
     };
 
     const formatPayDate = (payDate) => {
@@ -126,6 +203,7 @@ export default function PaymentSuccessPage() {
         );
     }
 
+    // Xử lý 3 trạng thái: error (failed), cancelled, và success
     if (paymentStatus === 'error') {
         return (
             <div className="payment-success-page">
@@ -139,6 +217,42 @@ export default function PaymentSuccessPage() {
                     <h1 className="error-title">Thanh toán thất bại</h1>
                     <p className="error-message">
                         Có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại.
+                    </p>
+                    <div className="action-buttons">
+                        <button className="retry-btn" onClick={() => navigate(-1)}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M1 4v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Thử lại
+                        </button>
+                        <button className="home-btn" onClick={handleGoToHome}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Về trang chủ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Trạng thái cancelled (hủy thanh toán)
+    if (paymentStatus === 'cancelled') {
+        return (
+            <div className="payment-success-page">
+                <div className="success-container cancelled-container">
+                    <div className="cancelled-icon">
+                        <svg width="100" height="100" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="#f39c12" strokeWidth="2" fill="#fff3cd" />
+                            <path d="M12 8v4M12 16h.01" stroke="#f39c12" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                    </div>
+                    <h1 className="cancelled-title">Đã hủy thanh toán</h1>
+                    <p className="cancelled-message">
+                        Bạn đã hủy quá trình thanh toán. Nếu bạn muốn tiếp tục, vui lòng thử lại.
                     </p>
                     <div className="action-buttons">
                         <button className="retry-btn" onClick={() => navigate(-1)}>
@@ -183,9 +297,13 @@ export default function PaymentSuccessPage() {
 
                 {/* Success Content */}
                 <div className="success-content">
-                    <h1 className="success-title">Thanh toán thành công!</h1>
+                    <h1 className="success-title">
+                        {paymentInfo?.isSubscription ? 'Đăng ký gói thành công!' : 'Thanh toán thành công!'}
+                    </h1>
                     <p className="success-message">
-                        Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi.
+                        {paymentInfo?.isSubscription
+                            ? 'Gói đăng ký của bạn đã được kích hoạt tự động. Bạn có thể bắt đầu sử dụng ngay!'
+                            : 'Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi.'}
                     </p>
 
                     {paymentInfo && (
@@ -197,32 +315,83 @@ export default function PaymentSuccessPage() {
                                         <line x1="8" y1="21" x2="16" y2="21" stroke="currentColor" strokeWidth="2" />
                                         <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" strokeWidth="2" />
                                     </svg>
-                                    Chi tiết giao dịch
+                                    {paymentInfo.isSubscription ? 'Chi tiết đăng ký gói' : 'Chi tiết giao dịch'}
                                 </h3>
                             </div>
 
                             <div className="details-grid">
-                                <div className="detail-item">
-                                    <span className="label">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                            <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                        Mã lịch
-                                    </span>
-                                    <span className="value">#{paymentInfo.reservationId}</span>
-                                </div>
+                                {paymentInfo.isSubscription ? (
+                                    <>
+                                        <div className="detail-item">
+                                            <span className="label">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                Mã subscription
+                                            </span>
+                                            <span className="value">#{paymentInfo.subscriptionId?.slice(-8) || 'N/A'}</span>
+                                        </div>
+                                        {paymentInfo.subscriptionInfo?.plan?.name && (
+                                            <div className="detail-item">
+                                                <span className="label">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    Tên gói
+                                                </span>
+                                                <span className="value">{paymentInfo.subscriptionInfo.plan.name}</span>
+                                            </div>
+                                        )}
+                                        {paymentInfo.subscriptionInfo?.plan?.type && (
+                                            <div className="detail-item">
+                                                <span className="label">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    Loại gói
+                                                </span>
+                                                <span className="value">{paymentInfo.subscriptionInfo.plan.type.toUpperCase()}</span>
+                                            </div>
+                                        )}
+                                        {paymentInfo.amount && (
+                                            <div className="detail-item highlight">
+                                                <span className="label">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                        <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor" strokeWidth="2" />
+                                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    Số tiền
+                                                </span>
+                                                <span className="value amount">{paymentInfo.amount.toLocaleString('vi-VN')} VNĐ</span>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="detail-item">
+                                            <span className="label">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                Mã lịch
+                                            </span>
+                                            <span className="value">#{paymentInfo.reservationId}</span>
+                                        </div>
 
-                                {paymentInfo.amount && (
-                                    <div className="detail-item highlight">
-                                        <span className="label">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor" strokeWidth="2" />
-                                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                            Số tiền
-                                        </span>
-                                        <span className="value amount">{paymentInfo.amount.toLocaleString('vi-VN')} VNĐ</span>
-                                    </div>
+                                        {paymentInfo.amount && (
+                                            <div className="detail-item highlight">
+                                                <span className="label">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                        <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor" strokeWidth="2" />
+                                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    Số tiền
+                                                </span>
+                                                <span className="value amount">{paymentInfo.amount.toLocaleString('vi-VN')} VNĐ</span>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
 
                                 {paymentInfo.transactionNo && (
@@ -261,7 +430,7 @@ export default function PaymentSuccessPage() {
                                     <span className="value">{formatPayDate(paymentInfo.payDate)}</span>
                                 </div>
 
-                                {paymentInfo.vehicleInfo && (
+                                {!paymentInfo.isSubscription && paymentInfo.vehicleInfo && (
                                     <div className="detail-item">
                                         <span className="label">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -274,7 +443,7 @@ export default function PaymentSuccessPage() {
                                     </div>
                                 )}
 
-                                {paymentInfo.chargingInfo && (
+                                {!paymentInfo.isSubscription && paymentInfo.chargingInfo && (
                                     <>
                                         <div className="detail-item">
                                             <span className="label">
@@ -304,20 +473,41 @@ export default function PaymentSuccessPage() {
 
                     {/* Action Buttons */}
                     <div className="action-buttons">
-                        <button className="primary-btn" onClick={handleGoToProfile}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            Xem lịch đặt
-                        </button>
-                        <button className="secondary-btn" onClick={handleGoToHome}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            Về trang chủ
-                        </button>
+                        {paymentInfo?.isSubscription ? (
+                            <>
+                                <button className="primary-btn" onClick={handleGoToMembership}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    Xem gói đăng ký
+                                </button>
+                                <button className="secondary-btn" onClick={handleGoToHome}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    Về trang chủ
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button className="primary-btn" onClick={handleGoToProfile}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    Xem lịch đặt
+                                </button>
+                                <button className="secondary-btn" onClick={handleGoToHome}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    Về trang chủ
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     {/* Tips Section */}
