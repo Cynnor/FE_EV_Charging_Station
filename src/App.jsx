@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
+import SupportPage from "./pages/supportPage/index";
 import ProfilePage from "./pages/profilePage";
 import BookingPage from "./pages/bookingPage";
 import PaymentPage from "./pages/PaymentPage/index";
@@ -37,7 +38,7 @@ function App() {
         { path: "", element: <HomePage /> },
         { path: "charging-stations", element: <ChargingStationsPage /> },
         { path: "about", element: <AboutPage /> },
-        // { path: "support", element: <SupportPage /> },
+        { path: "support", element: <SupportPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "booking/:stationId", element: <BookingPage /> },
         { path: "booking", element: <BookingPage /> },
