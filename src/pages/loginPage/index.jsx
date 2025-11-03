@@ -6,6 +6,21 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../../config/api";
 import "./index.scss";
 
+function decodeJwt(token) {
+  try {
+    const payload = token.split(".")[1];
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function derivePasswordFromSub(sub) {
+  // Deterministic password for Google-created accounts (same logic as register)
+  return `GOOGLE_${String(sub || "").slice(0, 24)}`;
+}
+
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -125,9 +140,92 @@ export default function Login() {
             // const backendToken = apiRes.data?.data?.token;
             // localStorage.setItem("token", backendToken || idToken);
 
-            // Tạm thời lưu idToken vào localStorage và điều hướng
+            // Lưu token, gọi endpoint profile để lấy thông tin user và lưu vào localStorage
+            // Try to exchange idToken for a backend token by using deterministic password
+            const payload = decodeJwt(idToken) || {};
+            const googleEmail = payload.email;
+            const googleSub = payload.sub;
+            const derivedPassword = derivePasswordFromSub(googleSub);
+
+            let backendToken = null;
+
+            if (googleEmail) {
+              // Try create user (ignore errors if already exists)
+              try {
+                await api.post("/users/create", {
+                  username: googleEmail,
+                  password: derivedPassword,
+                  email: googleEmail,
+                  fullName: payload.name || payload.given_name || "Google User",
+                  dob: "",
+                  address: "",
+                  numberphone: "",
+                });
+              } catch (e) {
+                // ignore (user may already exist)
+              }
+
+              // Try login with derived password to obtain backend token
+              try {
+                const loginRes = await api.post("/users/login", {
+                  username: googleEmail,
+                  password: derivedPassword,
+                });
+                backendToken = loginRes?.data?.data?.token;
+              } catch (e) {
+                // login failed - will fallback to storing idToken
+              }
+            }
+
+            if (backendToken) {
+              // store backend token and fetch profile & vehicles
+              localStorage.setItem("token", backendToken);
+              try {
+                const profileRes = await api.get("/users/profile");
+                const profileUser = profileRes?.data?.data || profileRes?.data || null;
+                if (profileUser) localStorage.setItem("user", JSON.stringify(profileUser));
+              } catch (profileErr) {
+                console.warn("Failed to fetch profile after Google backend login:", profileErr);
+              }
+
+              try {
+                const vehiclesRes = await api.get("/vehicles");
+                const vehiclesList = vehiclesRes.data?.items || vehiclesRes.data?.data || [];
+                const vehiclesArray = Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean);
+                const normalizedVehicles = vehiclesArray.map((v) => ({ ...v, id: v._id || v.id, _id: v._id || v.id }));
+                localStorage.setItem("vehicles", JSON.stringify(normalizedVehicles));
+              } catch (vehErr) {
+                console.warn("Failed to fetch vehicles after Google backend login:", vehErr);
+              }
+
+              setMessage("Đăng nhập với Google thành công!");
+              setIsSuccess(true);
+              navigate(decodeURIComponent(redirectPath));
+              return;
+            }
+
+            // Fallback: save raw Google idToken (if backend exchange not possible)
             localStorage.setItem("token", idToken);
-            setMessage("Đăng nhập với Google thành công!");
+            try {
+              const profileRes = await api.get("/users/profile");
+              const profileUser = profileRes?.data?.data || profileRes?.data || null;
+              if (profileUser) {
+                localStorage.setItem("user", JSON.stringify(profileUser));
+              }
+            } catch (profileErr) {
+              console.warn("Failed to fetch profile after Google idToken fallback:", profileErr);
+            }
+            try {
+              const vehiclesRes = await api.get("/vehicles");
+              const vehiclesList = vehiclesRes.data?.items || vehiclesRes.data?.data || [];
+              const vehiclesArray = Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean);
+              const normalizedVehicles = vehiclesArray.map((v) => ({ ...v, id: v._id || v.id, _id: v._id || v.id }));
+              localStorage.setItem("vehicles", JSON.stringify(normalizedVehicles));
+            } catch (vehErr) {
+              console.warn("Failed to fetch vehicles after Google idToken fallback:", vehErr);
+            }
+
+            setMessage("Đăng nhập với Google (tạm thời)");
             setIsSuccess(true);
             navigate(decodeURIComponent(redirectPath));
           } catch (err) {
