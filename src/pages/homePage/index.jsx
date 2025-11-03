@@ -13,8 +13,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
@@ -46,7 +46,7 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const itemRefs = useRef({});
 
-<<<<<<< HEAD
+
   // // ===== Xử lý VNPay return URL =====
   // useEffect(() => {
   //   const urlParams = new URLSearchParams(window.location.search);
@@ -70,7 +70,7 @@ const HomePage = () => {
   //     window.location.href = newUrl;
   //   }
   // }, []);
-=======
+
   // ===== Handle VNPay Return =====
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -82,7 +82,7 @@ const HomePage = () => {
       window.location.href = newUrl;
     }
   }, []);
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
+
 
   // ===== Fetch Station Data from API =====
   useEffect(() => {

@@ -1,506 +1,688 @@
 .staff-overview-content {
-    .overview-header {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 24px;
+    padding: 24px;
+    min-height: 100vh;
+    background: #f8fafc;
 
-        .time-filter {
-            padding: 8px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            background: white;
-            font-size: 14px;
-            cursor: pointer;
-
-            &:focus {
-                outline: none;
-                border-color: #7ed321;
-            }
-        }
-    }
-
-    .stats-section {
+    // Search Section
+    .search-section {
         margin-bottom: 32px;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 24px;
-    }
-
-    .stat-card {
         background: white;
         padding: 24px;
         border-radius: 16px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         border: 1px solid #f1f5f9;
+
+        .search-bar {
+            position: relative;
+            margin-bottom: 16px;
+
+            .search-input {
+                width: 100%;
+                padding: 12px 16px 12px 48px;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                font-size: 15px;
+                transition: all 0.3s;
+
+                &:focus {
+                    outline: none;
+                    border-color: #7ed321;
+                    box-shadow: 0 0 0 3px rgba(126, 211, 33, 0.1);
+                }
+
+                &::placeholder {
+                    color: #94a3b8;
+                }
+            }
+
+            .search-icon {
+                position: absolute;
+                left: 16px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 18px;
+                color: #94a3b8;
+            }
+        }
+
+        .search-info {
+            font-size: 14px;
+            color: #64748b;
+        }
+    }
+
+    // Loading & Error States
+    .loading-container,
+    .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        background: white;
+        border-radius: 16px;
+        padding: 48px;
+
+        p {
+            font-size: 16px;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #7ed321;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+
+            &:hover {
+                background: #6bc016;
+            }
+        }
+    }
+
+    .error-container {
+        p {
+            color: #dc2626;
+        }
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 64px 24px;
+        background: white;
+        border-radius: 16px;
+        color: #64748b;
+        font-size: 16px;
+    }
+
+    // Stations List
+    .stations-list {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .station-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #f1f5f9;
+        padding: 24px;
+        cursor: pointer;
         transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
 
         &:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #7ed321;
         }
 
-        &::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #e2e8f0, #e2e8f0);
-        }
-
-        &.blue::before {
-            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-        }
-
-        &.green::before {
-            background: linear-gradient(90deg, #10b981, #059669);
-        }
-
-        &.orange::before {
-            background: linear-gradient(90deg, #f59e0b, #d97706);
-        }
-
-        &.purple::before {
-            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
-        }
-
-        .stat-header {
+        .station-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
+            align-items: flex-start;
+            margin-bottom: 20px;
 
-            .stat-icon {
-                width: 48px;
-                height: 48px;
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 20px;
-                background: #f8fafc;
-            }
-
-            .stat-change {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                font-size: 12px;
-                font-weight: 600;
-                padding: 4px 8px;
-                border-radius: 6px;
-
-                &.increase {
-                    color: #059669;
-                    background: #d1fae5;
-                }
-
-                &.decrease {
-                    color: #dc2626;
-                    background: #fee2e2;
-                }
-            }
-        }
-
-        .stat-content {
-            .stat-value {
-                margin: 0 0 4px 0;
-                font-size: 32px;
-                font-weight: 800;
-                color: #1e293b;
-            }
-
-            .stat-title {
-                margin: 0;
-                color: #64748b;
-                font-size: 14px;
-                font-weight: 500;
-            }
-        }
-    }
-
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 32px;
-        margin-bottom: 32px;
-    }
-
-    .sessions-section {
-        .sessions-card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #f1f5f9;
-            overflow: hidden;
-
-            .card-header {
-                padding: 24px;
-                border-bottom: 1px solid #f1f5f9;
-
-                .header-content {
-                    h3 {
-                        margin: 0 0 4px 0;
-                        font-size: 18px;
-                        font-weight: 700;
-                        color: #1e293b;
-                    }
-
-                    p {
-                        margin: 0;
-                        color: #64748b;
-                        font-size: 14px;
-                    }
-                }
-            }
-
-            .sessions-content {
-                padding: 24px;
-
-                .sessions-list {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 20px;
-
-                    .session-item {
-                        background: #f8fafc;
-                        border-radius: 12px;
-                        padding: 20px;
-                        border: 1px solid #e2e8f0;
-
-                        .session-header {
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            margin-bottom: 16px;
-
-                            .station-info {
-                                display: flex;
-                                flex-direction: column;
-                                gap: 4px;
-
-                                .station-id {
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    color: #1e293b;
-                                }
-
-                                .license-plate {
-                                    font-size: 16px;
-                                    font-weight: 700;
-                                    color: #7ed321;
-                                }
-                            }
-
-                            .session-status {
-                                display: flex;
-                                align-items: center;
-                                gap: 8px;
-                                font-size: 14px;
-                                font-weight: 500;
-
-                                &.charging {
-                                    color: #059669;
-                                }
-
-                                .status-dot {
-                                    width: 8px;
-                                    height: 8px;
-                                    border-radius: 50%;
-                                    background: #059669;
-                                    animation: pulse 2s infinite;
-                                }
-                            }
-                        }
-
-                        .session-details {
-                            display: grid;
-                            grid-template-columns: 1fr 1fr;
-                            gap: 12px;
-                            margin-bottom: 16px;
-
-                            .detail-item {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-
-                                .label {
-                                    font-size: 13px;
-                                    color: #64748b;
-                                }
-
-                                .value {
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    color: #1e293b;
-
-                                    &.cost {
-                                        color: #7ed321;
-                                        font-weight: 700;
-                                    }
-                                }
-                            }
-                        }
-
-                        .session-actions {
-                            display: flex;
-                            gap: 12px;
-
-                            .btn-secondary {
-                                flex: 1;
-                                padding: 8px 16px;
-                                background: #f1f5f9;
-                                border: 1px solid #e2e8f0;
-                                border-radius: 8px;
-                                color: #64748b;
-                                font-size: 14px;
-                                font-weight: 500;
-                                cursor: pointer;
-                                transition: all 0.2s;
-
-                                &:hover {
-                                    background: #e2e8f0;
-                                    color: #475569;
-                                }
-                            }
-
-                            .btn-primary {
-                                flex: 1;
-                                padding: 8px 16px;
-                                background: linear-gradient(135deg, #7ed321, #a3e635);
-                                border: none;
-                                border-radius: 8px;
-                                color: white;
-                                font-size: 14px;
-                                font-weight: 600;
-                                cursor: pointer;
-                                transition: all 0.2s;
-
-                                &:hover {
-                                    transform: translateY(-1px);
-                                    box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    .activity-section {
-        .activity-card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #f1f5f9;
-            height: fit-content;
-
-            .card-header {
-                padding: 24px;
-                border-bottom: 1px solid #f1f5f9;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
+            .station-info {
+                flex: 1;
 
                 h3 {
-                    margin: 0;
-                    font-size: 18px;
+                    margin: 0 0 8px 0;
+                    font-size: 20px;
                     font-weight: 700;
                     color: #1e293b;
                 }
 
-                .btn-link {
-                    background: none;
-                    border: none;
-                    color: #7ed321;
+                .station-address {
+                    margin: 0;
+                    color: #64748b;
                     font-size: 14px;
-                    cursor: pointer;
-                    font-weight: 500;
-
-                    &:hover {
-                        text-decoration: underline;
-                    }
                 }
             }
 
-            .activity-list {
-                padding: 8px;
+            .station-status {
+                .status-badge {
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 600;
 
-                .activity-item {
+                    &.active {
+                        background: #d1fae5;
+                        color: #059669;
+                    }
+                }
+            }
+        }
+
+        .station-ports {
+            .ports-header {
+                margin-bottom: 16px;
+
+                .ports-title {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #1e293b;
+                }
+            }
+
+            .ports-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 12px;
+
+                .port-item {
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 12px;
                     display: flex;
-                    align-items: flex-start;
-                    gap: 16px;
-                    padding: 16px;
-                    border-radius: 12px;
-                    transition: all 0.2s;
+                    justify-content: space-between;
+                    align-items: center;
 
-                    &:hover {
-                        background: #f8fafc;
-                    }
+                    .port-info {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
 
-                    .activity-indicator {
-                        width: 8px;
-                        height: 8px;
-                        border-radius: 50%;
-                        margin-top: 8px;
-                        flex-shrink: 0;
-                    }
-
-                    &.success .activity-indicator {
-                        background: #10b981;
-                    }
-
-                    &.warning .activity-indicator {
-                        background: #f59e0b;
-                    }
-
-                    &.info .activity-indicator {
-                        background: #3b82f6;
-                    }
-
-                    .activity-content {
-                        flex: 1;
-
-                        h4 {
-                            margin: 0 0 4px 0;
+                        .port-type {
                             font-size: 14px;
                             font-weight: 600;
                             color: #1e293b;
                         }
 
-                        p {
-                            margin: 0 0 8px 0;
-                            font-size: 13px;
+                        .port-power {
+                            font-size: 12px;
                             color: #64748b;
                         }
+                    }
 
-                        .activity-time {
-                            font-size: 12px;
-                            color: #94a3b8;
+                    .port-status {
+                        padding: 4px 8px;
+                        border-radius: 6px;
+                        font-size: 11px;
+                        font-weight: 600;
+
+                        &.available {
+                            background: #d1fae5;
+                            color: #059669;
+                        }
+
+                        &.in_use,
+                        &.occupied {
+                            background: #dbeafe;
+                            color: #2563eb;
+                        }
+
+                        &.maintenance {
+                            background: #fef3c7;
+                            color: #d97706;
+                        }
+
+                        &.unknown {
+                            background: #f1f5f9;
+                            color: #64748b;
                         }
                     }
                 }
             }
+
+            .no-ports {
+                text-align: center;
+                padding: 24px;
+                color: #94a3b8;
+                font-size: 14px;
+            }
         }
     }
 
-    .quick-actions {
-        h3 {
-            margin: 0 0 20px 0;
-            font-size: 20px;
-            font-weight: 700;
-            color: #1e293b;
-        }
+    // Modal Styles
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 24px;
+        overflow-y: auto;
+    }
 
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-        }
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        max-width: 900px;
+        width: 100%;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
 
-        .action-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
+        .modal-header {
             padding: 24px;
+            border-bottom: 1px solid #f1f5f9;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
 
-            &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-                border-color: #7ed321;
+            h2 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 700;
+                color: #1e293b;
             }
 
-            &.primary {
-                background: linear-gradient(135deg, #7ed321, #a3e635);
-                border-color: transparent;
-                color: white;
-
-                .action-icon {
-                    background: rgba(255, 255, 255, 0.2);
-                    color: white;
-                }
-
-                .action-content h4 {
-                    color: white;
-                }
-
-                .action-content p {
-                    color: rgba(255, 255, 255, 0.9);
-                }
-            }
-
-            .action-icon {
-                width: 48px;
-                height: 48px;
-                background: #f8fafc;
-                border-radius: 12px;
+            .close-btn {
+                width: 32px;
+                height: 32px;
+                border: none;
+                background: #f1f5f9;
+                border-radius: 8px;
+                font-size: 18px;
+                cursor: pointer;
+                color: #64748b;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 20px;
-                flex-shrink: 0;
+                transition: all 0.2s;
+
+                &:hover {
+                    background: #e2e8f0;
+                    color: #1e293b;
+                }
+            }
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+    }
+
+    // Station Detail Modal
+    .station-detail-modal {
+        .station-info-section {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #f1f5f9;
+
+            .station-address {
+                font-size: 16px;
+                color: #64748b;
+                margin: 0 0 12px 0;
             }
 
-            .action-content {
-                h4 {
-                    margin: 0 0 4px 0;
-                    font-size: 16px;
-                    font-weight: 600;
+            .status-badge {
+                display: inline-block;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+
+                &.active {
+                    background: #d1fae5;
+                    color: #059669;
+                }
+            }
+        }
+
+        .ports-section {
+            .section-header {
+                display: flex;
+                margin-top: 300px;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 24px;
+
+                h3 {
+                    margin: 0;
+                    font-size: 20px;
+                    font-weight: 700;
                     color: #1e293b;
                 }
 
-                p {
-                    margin: 0;
+                .btn-add {
+                    padding: 10px 20px;
                     font-size: 14px;
-                    color: #64748b;
+                }
+            }
+
+            .ports-detail-list {
+                display: flex;
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .port-detail-card {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 20px;
+
+                .port-detail-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+
+                    .port-detail-info {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+
+                        h4 {
+                            margin: 0;
+                            font-size: 18px;
+                            font-weight: 700;
+                            color: #1e293b;
+                        }
+
+                        .port-status-badge {
+                            display: inline-block;
+                            padding: 4px 10px;
+                            border-radius: 12px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            width: fit-content;
+
+                            &.available {
+                                background: #d1fae5;
+                                color: #059669;
+                            }
+
+                            &.in_use,
+                            &.occupied {
+                                background: #dbeafe;
+                                color: #2563eb;
+                            }
+
+                            &.maintenance {
+                                background: #fef3c7;
+                                color: #d97706;
+                            }
+
+                            &.unknown {
+                                background: #f1f5f9;
+                                color: #64748b;
+                            }
+                        }
+                    }
+
+                    .port-actions {
+                        display: flex;
+                        gap: 8px;
+                    }
+                }
+
+                .slots-section {
+                    .slots-header {
+                        display: flex;
+                        align-items: center;
+                        gap: 16px;
+                        margin-bottom: 16px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        color: #1e293b;
+                    }
+
+                    .loading-slots {
+                        text-align: center;
+                        padding: 24px;
+                        color: #64748b;
+                    }
+
+                    .slots-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                        gap: 12px;
+                    }
+
+                    .slot-item {
+                        background: white;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        padding: 12px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+
+                        .slot-info {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 4px;
+
+                            span:first-child {
+                                font-size: 14px;
+                                font-weight: 600;
+                                color: #1e293b;
+                            }
+
+                            .slot-status {
+                                font-size: 12px;
+                                font-weight: 500;
+
+                                &.available {
+                                    color: #059669;
+                                }
+
+                                &.booked {
+                                    color: #f59e0b;
+                                }
+
+                                &.in_use {
+                                    color: #2563eb;
+                                }
+
+                                &.unknown {
+                                    color: #64748b;
+                                }
+                            }
+                        }
+
+                        .slot-actions {
+                            display: flex;
+                            gap: 8px;
+
+                            .btn-icon {
+                                background: none;
+                                border: none;
+                                cursor: pointer;
+                                font-size: 16px;
+                                padding: 4px;
+                                transition: transform 0.2s;
+
+                                &:hover {
+                                    transform: scale(1.1);
+                                }
+                            }
+                        }
+                    }
+
+                    .no-slots {
+                        text-align: center;
+                        padding: 24px;
+                        color: #94a3b8;
+                        font-size: 14px;
+                        background: white;
+                        border-radius: 8px;
+                        border: 1px dashed #e2e8f0;
+                    }
+                }
+            }
+
+            .no-ports {
+                text-align: center;
+                padding: 48px 24px;
+                color: #64748b;
+
+                p {
+                    margin: 0 0 16px 0;
+                    font-size: 16px;
                 }
             }
         }
     }
-}
 
-@keyframes pulse {
+    // Port & Slot Modals
+    .port-modal,
+    .slot-modal {
+        max-width: 500px;
 
-    0%,
-    100% {
-        opacity: 1;
+        .form-group {
+            margin-bottom: 20px;
+
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                color: #1e293b;
+            }
+
+            input,
+            select {
+                width: 100%;
+                padding: 10px 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 14px;
+                transition: all 0.2s;
+
+                &:focus {
+                    outline: none;
+                    border-color: #7ed321;
+                    box-shadow: 0 0 0 3px rgba(126, 211, 33, 0.1);
+                }
+            }
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f1f5f9;
+        }
     }
 
-    50% {
-        opacity: 0.5;
-    }
-}
+    // Button Styles
+    .btn-primary {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #7ed321, #a3e635);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
 
-@media (max-width: 1200px) {
-    .staff-overview-content .dashboard-grid {
-        grid-template-columns: 1fr;
+        &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
+        }
+    }
+
+    .btn-secondary {
+        padding: 10px 20px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+    }
+
+    .btn-danger {
+        padding: 10px 20px;
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        color: #dc2626;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            background: #fecaca;
+        }
+    }
+
+    .btn-link {
+        background: none;
+        border: none;
+        color: #7ed321;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 12px;
     }
 }
 
 @media (max-width: 768px) {
     .staff-overview-content {
-        .stats-grid {
-            grid-template-columns: 1fr;
+        padding: 16px;
+
+        .station-card {
+            .station-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .station-ports .ports-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .actions-grid {
-            grid-template-columns: 1fr;
-        }
+        .modal-content {
+            max-height: 95vh;
 
-        .session-details {
-            grid-template-columns: 1fr !important;
+            &.station-detail-modal {
+                .port-detail-card {
+                    .port-detail-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 12px;
+
+                        .port-actions {
+                            width: 100%;
+                            justify-content: flex-end;
+                        }
+                    }
+
+                    .slots-section .slots-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            }
         }
     }
 }

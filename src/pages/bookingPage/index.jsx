@@ -460,25 +460,6 @@ export default function BookingPage() {
         const reservationId = reservationData?.id;
 
         if (reservationId) {
-<<<<<<< HEAD
-          console.log("✅ Reservation ID:", reservationId);
-
-          // 👇 Lấy thông tin vehicle từ API hoặc state
-          let vehicleInfo = null;
-
-          // Nếu có selectedVehicle từ state (đã được set khi chọn xe)
-          if (selectedVehicle) {
-            vehicleInfo = selectedVehicle;
-          } else {
-            // Fallback: Fetch từ API nếu cần
-            vehicleInfo = {
-              id: vehicleId,
-              plateNumber: "N/A",
-              make: "N/A",
-              model: "N/A"
-            };
-          }
-=======
           console.log("✅ Reservation thành công - ID:", reservationId);
 
           // 👇 Gọi hàm cập nhật slot status qua API
@@ -490,7 +471,6 @@ export default function BookingPage() {
             make: "N/A",
             model: "N/A",
           };
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 
           navigate("/booking-success", {
             state: {
@@ -887,8 +867,8 @@ export default function BookingPage() {
                               className="availability-fill"
                               style={{
                                 width: `${station.total
-                                    ? (station.available / station.total) * 100
-                                    : 0
+                                  ? (station.available / station.total) * 100
+                                  : 0
                                   }%`,
                               }}
                             ></div>
@@ -1144,45 +1124,6 @@ export default function BookingPage() {
 
                 <div className="confirmation-grid">
                   <div className="summary-section">
-<<<<<<< HEAD
-                    {/* Vehicle Selection Card */}
-                    <div className="summary-card vehicle-selection-card">
-                      <h3 style={{ textAlign: "center" }}>Xe của bạn</h3>
-                      {selectedVehicle ? (
-                        <>
-                          <div className="selected-vehicle-info">
-                            <div className="summary-item">
-                              <span className="summary-label">Biển số:</span>
-                              <span className="summary-value">{selectedVehicle.plateNumber}</span>
-                            </div>
-                            <div className="summary-item">
-                              <span className="summary-label">Xe:</span>
-                              <span className="summary-value">{selectedVehicle.make} {selectedVehicle.model}</span>
-                            </div>
-                            <div className="summary-item">
-                              <span className="summary-label">Loại sạc:</span>
-                              <span className="summary-value">{selectedVehicle.connectorType}</span>
-                            </div>
-                          </div>
-                          <button
-                            className="change-vehicle-btn"
-                            onClick={() => setShowVehicleModal(true)}
-                          >
-                            Đổi xe khác
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className="select-vehicle-btn"
-                          onClick={() => setShowVehicleModal(true)}
-                        >
-                          Chọn xe
-                        </button>
-                      )}
-                    </div>
-
-=======
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
                     <div className="summary-card station-card">
                       <h3 style={{ textAlign: "center" }}>
                         Thông tin trạm sạc
@@ -1438,42 +1379,42 @@ export default function BookingPage() {
         {(step === 1 ||
           (step === 2 && selectedStation) ||
           (step === 3 && selectedCharger)) && (
-          <div className="right-panel">
-            <div className="map-container">
-              {step === 1 && (
-                <ChargingMap
-                  stations={filteredStations}
-                  center={selectedStation?.coords || defaultCenter}
-                  zoom={selectedStation ? 16 : 13}
-                  onSelect={(s) => setSelectedStation(s)}
-                  selectedStation={selectedStation}
-                />
-              )}
-              {step === 2 && selectedStation && (
-                <ChargingMap
-                  stations={chargers}
-                  center={selectedStation.coords}
-                  zoom={17}
-                  onSelect={(c) => {
-                    if (c.status === "available") {
-                      setSelectedCharger(c);
-                      setStep(3);
-                    }
-                  }}
-                  selectedStation={selectedCharger}
-                />
-              )}
-              {step === 3 && selectedCharger && (
-                <ChargingMap
-                  stations={[selectedCharger]}
-                  center={selectedStation?.coords || defaultCenter}
-                  zoom={17}
-                  selectedStation={selectedCharger}
-                />
-              )}
+            <div className="right-panel">
+              <div className="map-container">
+                {step === 1 && (
+                  <ChargingMap
+                    stations={filteredStations}
+                    center={selectedStation?.coords || defaultCenter}
+                    zoom={selectedStation ? 16 : 13}
+                    onSelect={(s) => setSelectedStation(s)}
+                    selectedStation={selectedStation}
+                  />
+                )}
+                {step === 2 && selectedStation && (
+                  <ChargingMap
+                    stations={chargers}
+                    center={selectedStation.coords}
+                    zoom={17}
+                    onSelect={(c) => {
+                      if (c.status === "available") {
+                        setSelectedCharger(c);
+                        setStep(3);
+                      }
+                    }}
+                    selectedStation={selectedCharger}
+                  />
+                )}
+                {step === 3 && selectedCharger && (
+                  <ChargingMap
+                    stations={[selectedCharger]}
+                    center={selectedStation?.coords || defaultCenter}
+                    zoom={17}
+                    selectedStation={selectedCharger}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
 
       {/* Vehicle Selection Modal */}
@@ -1539,9 +1480,8 @@ export default function BookingPage() {
                     return (
                       <div
                         key={vehicle.id}
-                        className={`vehicle-item-modal ${
-                          selectedVehicle?.id === vehicle.id ? "selected" : ""
-                        }`}
+                        className={`vehicle-item-modal ${selectedVehicle?.id === vehicle.id ? "selected" : ""
+                          }`}
                         onClick={() => {
                           setSelectedVehicle(vehicle);
                           setVehicleId(vehicle.id);
@@ -1591,20 +1531,20 @@ export default function BookingPage() {
                           )}
                           {localStorage.getItem("defaultVehicleId") ===
                             vehicle.id && (
-                            <span className="default-badge">
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 20 20"
-                                fill="none"
-                              >
-                                <path
-                                  d="M10 2l2.4 5.2 5.6.6-4.2 3.8 1.2 5.4-5-3-5 3 1.2-5.4L2 8.8l5.6-.6L10 2z"
-                                  fill="currentColor"
-                                />
-                              </svg>
-                            </span>
-                          )}
+                              <span className="default-badge">
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 20 20"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M10 2l2.4 5.2 5.6.6-4.2 3.8 1.2 5.4-5-3-5 3 1.2-5.4L2 8.8l5.6-.6L10 2z"
+                                    fill="currentColor"
+                                  />
+                                </svg>
+                              </span>
+                            )}
                         </div>
 
                         <div className="vehicle-details">
@@ -1629,8 +1569,8 @@ export default function BookingPage() {
                             {isCar
                               ? "🚗 Ô tô"
                               : isMotorbike
-                              ? "🏍️ Xe máy"
-                              : vehicle.type || "Xe"}
+                                ? "🏍️ Xe máy"
+                                : vehicle.type || "Xe"}
                           </div>
                           <div className="vehicle-connector">
                             <svg
