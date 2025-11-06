@@ -602,6 +602,45 @@ body {
       border-color: rgba($danger, 0.3);
     }
   }
+
+  /* Status badge for charger cards (Step 2) */
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+
+  .status-badge.available {
+    background: rgba($success, 0.12);
+    color: $success;
+    border-color: rgba($success, 0.18);
+  }
+
+  /* Make in_use display as red (busy) per request */
+  .status-badge.in_use {
+    background: rgba($danger, 0.10);
+    color: $danger;
+    border-color: rgba($danger, 0.16);
+  }
+
+  .status-badge.booked,
+  .status-badge.occupied {
+    background: rgba($danger, 0.10);
+    color: $danger;
+    border-color: rgba($danger, 0.16);
+  }
+
+  .status-badge.maintenance {
+    background: rgba($text-muted, 0.06);
+    color: $text-muted;
+    border-color: rgba($text-muted, 0.10);
+  }
 }
 
 .type-row {

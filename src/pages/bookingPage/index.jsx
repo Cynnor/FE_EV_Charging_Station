@@ -9,23 +9,26 @@ import api from "../../config/api";
 // Danh sách quận cố định theo yêu cầu (đã loại bỏ trùng lặp)
 const FIXED_DISTRICTS = [
   "Quận 1",
-  "Quận 2",
   "Quận 3",
   "Quận 4",
   "Quận 5",
   "Quận 6",
   "Quận 7",
   "Quận 8",
-  "Quận 9",
   "Quận 10",
   "Quận 11",
   "Quận 12",
-  "Quận Bình Tân",
-  "Quận Bình Thạnh",
-  "Quận Gò Vấp",
-  "Quận Phú Nhuận",
-  "Quận Tân Bình",
-  "Quận Tân Phú",
+  "Q. Bình Thạnh",
+  "Q. Gò Vấp",
+  "Q. Phú Nhuận",
+  "Q. Tân Bình",
+  "P. Tân Phú",
+  "Thủ Đức",
+  "H. Bình Chánh",
+  "H. Cần Giờ",
+  "H. Củ Chi",
+  "H. Hóc Môn",
+  "H. Nhà Bè",
 ];
 
 // Chuyển danh sách cổng sạc (ports) → kiểu trạm hiển thị
@@ -80,6 +83,11 @@ function extractDistrictFromAddress(address) {
   return null;
 }
 
+// Escape string for use in RegExp
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // ✅ Thêm hàm tính khoảng cách ở đây
 const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -106,6 +114,8 @@ function mapApiStation(s) {
     id: s.id,
     name: s.name,
     address: s.address,
+    // Chuẩn hoá quận/huyện/TP để phục vụ filter chính xác
+    district: extractDistrictFromAddress(s.address) || null,
     coords: [s.latitude, s.longitude], // API trả longitude/latitude → đổi về [lat, lng]
     type: chooseStationType(s.ports || []), // "AC" | "DC" | "DC ULTRA"
     speed: maxPower ? `${maxPower} kW` : "-",
@@ -327,13 +337,20 @@ export default function BookingPage() {
         filterType === "all" ? true : station.type === filterType;
 
       // 3. Lọc theo quận
-      // So khớp theo văn bản địa chỉ chứa tên quận được chọn (không phân biệt hoa/thường)
-      const matchesDistrict =
-        districtFilter === "all"
-          ? true
-          : (station.address || "")
-              .toLowerCase()
-              .includes(districtFilter.toLowerCase());
+      // Nếu station đã có trường `district` (được extract), so sánh chính xác.
+      // Nếu không, fallback sang kiểm tra bằng regex với word-boundary để tránh
+      // trường hợp 'Quận 1' khớp nhầm 'Quận 10'.
+      let matchesDistrict = true;
+      if (districtFilter !== "all") {
+        const stationDistrict = station.district || extractDistrictFromAddress(station.address) || null;
+        if (stationDistrict) {
+          matchesDistrict = stationDistrict.toLowerCase() === districtFilter.toLowerCase();
+        } else {
+          const escaped = escapeRegex(districtFilter);
+          const re = new RegExp(`\\b${escaped}\\b`, "i");
+          matchesDistrict = re.test(station.address || "");
+        }
+      }
 
       return matchesSearch && matchesType && matchesDistrict;
     });
