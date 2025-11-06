@@ -88,8 +88,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 /** Map 1 item API -> 1 station cho UI map/list.
@@ -131,7 +131,7 @@ function mapPortToCharger(port, idx, baseLatLng) {
   const delta = 0.00012;
   const coords = [
     (baseLatLng?.[0] || 0) +
-    (idx % 3 === 0 ? delta : idx % 3 === 1 ? -delta : 0),
+      (idx % 3 === 0 ? delta : idx % 3 === 1 ? -delta : 0),
     (baseLatLng?.[1] || 0) + (idx % 2 === 0 ? delta : -delta),
   ];
 
@@ -332,8 +332,8 @@ export default function BookingPage() {
         districtFilter === "all"
           ? true
           : (station.address || "")
-            .toLowerCase()
-            .includes(districtFilter.toLowerCase());
+              .toLowerCase()
+              .includes(districtFilter.toLowerCase());
 
       return matchesSearch && matchesType && matchesDistrict;
     });
@@ -385,36 +385,10 @@ export default function BookingPage() {
     endTime: "",
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // 👇 Hàm cập nhật slot status thông qua API
-  const handleUpdateSlot = async (slotId, newStatus = "booked") => {
-    try {
-      console.log(`🔄 Cập nhật slot ${slotId} thành status: ${newStatus}`);
-
-      const response = await api.put(`/stations/slots/${slotId}`, {
-        status: newStatus,
-      });
-
-      console.log("✅ Đã cập nhật slot status qua API:", response.data);
-
-      // Optimistic update: Cập nhật state local ngay lập tức
-      setSlots((prevSlots) =>
-        prevSlots.map((slot) =>
-          slot.id === slotId ? { ...slot, status: newStatus } : slot
-        )
-      );
-
-      return true;
-    } catch (error) {
-      console.error("❌ Lỗi khi cập nhật slot status:", error);
-      // Không throw error để không block flow chính
-      return false;
-    }
-  };
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({ ...prev, [name]: value }));
+  // };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -842,8 +816,9 @@ export default function BookingPage() {
                         key={station.id}
                         className={`station-card ${station.type
                           .toLowerCase()
-                          .replace(" ", "-")} ${selectedStation?.id === station.id ? "selected" : ""
-                          }`}
+                          .replace(" ", "-")} ${
+                          selectedStation?.id === station.id ? "selected" : ""
+                        }`}
                         onClick={() => {
                           setSelectedStation(station);
                           setSelectedCharger(null);
@@ -864,10 +839,11 @@ export default function BookingPage() {
                             <div
                               className="availability-fill"
                               style={{
-                                width: `${station.total
+                                width: `${
+                                  station.total
                                     ? (station.available / station.total) * 100
                                     : 0
-                                  }%`,
+                                }%`,
                               }}
                             ></div>
                           </div>
@@ -952,8 +928,9 @@ export default function BookingPage() {
                 {chargers.map((charger) => (
                   <div
                     key={charger.id}
-                    className={`charger-card ${charger.status} ${selectedCharger?.id === charger.id ? "selected" : ""
-                      }`}
+                    className={`charger-card ${charger.status} ${
+                      selectedCharger?.id === charger.id ? "selected" : ""
+                    }`}
                     onClick={() => {
                       if (charger.status === "available") {
                         console.log("✅ Charger được chọn:", charger);
@@ -1058,8 +1035,9 @@ export default function BookingPage() {
                   {slots.map((slot, index) => (
                     <div
                       key={slot.id}
-                      className={`slot-card ${slot.status} ${selectedSlot?.id === slot.id ? "selected" : ""
-                        }`}
+                      className={`slot-card ${slot.status} ${
+                        selectedSlot?.id === slot.id ? "selected" : ""
+                      }`}
                       onClick={() => {
                         if (slot.status === "booked") {
                           alert(
@@ -1112,7 +1090,7 @@ export default function BookingPage() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                Quay lại
+                Quay lại2
               </button>
 
               <div className="confirmation-content">
@@ -1677,8 +1655,9 @@ export default function BookingPage() {
                 {dateOptions.map((d) => (
                   <button
                     key={d.iso}
-                    className={`date-card ${formData.date === d.iso ? "selected" : ""
-                      }`}
+                    className={`date-card ${
+                      formData.date === d.iso ? "selected" : ""
+                    }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, date: d.iso }));
                       setShowDateModal(false);
@@ -1716,8 +1695,9 @@ export default function BookingPage() {
                 {timeSlots.map((t) => (
                   <button
                     key={t}
-                    className={`time-slot ${formData.startTime === t ? "selected" : ""
-                      }`}
+                    className={`time-slot ${
+                      formData.startTime === t ? "selected" : ""
+                    }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, startTime: t }));
                       setShowTimeModal(false);
@@ -1755,8 +1735,9 @@ export default function BookingPage() {
                 {endTimeSlots.map((t) => (
                   <button
                     key={t}
-                    className={`time-slot ${formData.endTime === t ? "selected" : ""
-                      }`}
+                    className={`time-slot ${
+                      formData.endTime === t ? "selected" : ""
+                    }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, endTime: t }));
                       setShowEndTimeModal(false);
@@ -1773,5 +1754,3 @@ export default function BookingPage() {
     </div>
   );
 }
-
-
