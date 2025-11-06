@@ -173,6 +173,24 @@ export default function Register() {
               const backendToken = loginRes?.data?.data?.token;
               if (backendToken) {
                 localStorage.setItem("token", backendToken);
+                // Lấy profile từ backend để lưu thông tin user
+                try {
+                  const profileRes = await api.get("/users/profile");
+                  const profileUser = profileRes?.data?.data || profileRes?.data || null;
+                  if (profileUser) localStorage.setItem("user", JSON.stringify(profileUser));
+                  // Prefetch vehicles for profile
+                  try {
+                    const vehiclesRes = await api.get("/vehicles");
+                    const vehiclesList = vehiclesRes.data?.items || vehiclesRes.data?.data || [];
+                    const vehiclesArray = Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean);
+                    const normalizedVehicles = vehiclesArray.map((v) => ({ ...v, id: v._id || v.id, _id: v._id || v.id }));
+                    localStorage.setItem("vehicles", JSON.stringify(normalizedVehicles));
+                  } catch (vehErr) {
+                    console.warn("Failed to fetch vehicles after Google backend login:", vehErr);
+                  }
+                } catch (profileErr) {
+                  console.warn("Failed to fetch profile after Google backend login:", profileErr);
+                }
                 setMessage("✅ Đăng ký/Đăng nhập với Google thành công!");
                 setTimeout(() => (window.location.href = "/"), 800);
                 return;
@@ -181,6 +199,23 @@ export default function Register() {
 
             // Fallback: lưu idToken (nếu backend chưa sẵn sàng)
             localStorage.setItem("token", idToken);
+            try {
+              const profileRes = await api.get("/users/profile");
+              const profileUser = profileRes?.data?.data || profileRes?.data || null;
+              if (profileUser) localStorage.setItem("user", JSON.stringify(profileUser));
+              // Prefetch vehicles for profile
+              try {
+                const vehiclesRes = await api.get("/vehicles");
+                const vehiclesList = vehiclesRes.data?.items || vehiclesRes.data?.data || [];
+                const vehiclesArray = Array.isArray(vehiclesList) ? vehiclesList : [vehiclesList].filter(Boolean);
+                const normalizedVehicles = vehiclesArray.map((v) => ({ ...v, id: v._id || v.id, _id: v._id || v.id }));
+                localStorage.setItem("vehicles", JSON.stringify(normalizedVehicles));
+              } catch (vehErr) {
+                console.warn("Failed to fetch vehicles after Google idToken fallback:", vehErr);
+              }
+            } catch (profileErr) {
+              console.warn("Failed to fetch profile after Google idToken fallback:", profileErr);
+            }
             setMessage("✅ Đăng ký với Google (token tạm thời)");
             setTimeout(() => (window.location.href = "/"), 800);
           } catch (err) {

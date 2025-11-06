@@ -378,9 +378,35 @@
 .btn-send-otp svg,
 .btn-send-otp i,
 .btn-send-otp .icon {
+  /* keep icon color in sync with button text */
   color: currentColor;
-  fill: currentColor;
-  stroke: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+  /* Make sure SVG children inherit stroke and are not filled by default */
+}
+
+/* Apply to inner SVG shapes (paths, lines, polylines, rects, etc.) */
+.btn-send-otp svg * {
+  stroke: currentColor !important;
+  fill: none !important;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Hover: use white stroke (do not fill) so the icon remains crisp */
+.btn-send-otp:hover:not(:disabled) svg,
+.btn-send-otp:hover:not(:disabled) svg *,
+.btn-send-otp:hover:not(:disabled) i,
+.btn-send-otp:hover:not(:disabled) .icon {
+  color: #ffffff !important;
+}
+
+/* Disabled: keep icon visible (white) to match disabled text color */
+.btn-send-otp:disabled svg,
+.btn-send-otp:disabled svg *,
+.btn-send-otp:disabled i,
+.btn-send-otp:disabled .icon {
+  color: #ffffff !important;
+  opacity: 0.9;
 }
 
 .btn-send-otp:focus-visible {

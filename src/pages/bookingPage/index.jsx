@@ -435,9 +435,6 @@ export default function BookingPage() {
 
         if (reservationId) {
           console.log("Reservation created successfully - ID:", reservationId);
-
-          await handleUpdateSlot(selectedSlot.id, "booked");
-
           const vehicleInfo = selectedVehicle || {
             id: vehicleId,
             plateNumber: "N/A",
@@ -1104,46 +1101,6 @@ export default function BookingPage() {
 
                 <div className="confirmation-grid">
                   <div className="summary-section">
-                    <div className="summary-card vehicle-selection-card">
-                      <h3 style={{ textAlign: "center" }}>Xe của bạn</h3>
-                      {selectedVehicle ? (
-                        <>
-                          <div className="selected-vehicle-info">
-                            <div className="summary-item">
-                              <span className="summary-label">Biển số:</span>
-                              <span className="summary-value">
-                                {selectedVehicle.plateNumber}
-                              </span>
-                            </div>
-                            <div className="summary-item">
-                              <span className="summary-label">Xe:</span>
-                              <span className="summary-value">
-                                {selectedVehicle.make} {selectedVehicle.model}
-                              </span>
-                            </div>
-                            <div className="summary-item">
-                              <span className="summary-label">Loại sạc:</span>
-                              <span className="summary-value">
-                                {selectedVehicle.connectorType}
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            className="change-vehicle-btn"
-                            onClick={() => setShowVehicleModal(true)}
-                          >
-                            Đổi xe khác
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className="select-vehicle-btn"
-                          onClick={() => setShowVehicleModal(true)}
-                        >
-                          Chọn xe
-                        </button>
-                      )}
-                    </div>
                     <div className="summary-card station-card">
                       <h3 style={{ textAlign: "center" }}>
                         Thông tin trạm sạc
