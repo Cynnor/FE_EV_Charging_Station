@@ -156,7 +156,7 @@ export default function ForgotPassword() {
                       type="email"
                       placeholder="Nhập email của bạn"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}x
+                      onChange={(e) => setEmail(e.target.value)}
                       onKeyPress={handleKeyPress}
                       className="form-input"
                       
@@ -165,7 +165,7 @@ export default function ForgotPassword() {
                 </div>
 
                 <button
-                  className={`btn-primary ${isLoading ? "loading" : ""}`}
+                  className={`btn-send-otp ${isLoading ? "loading" : ""}`}
                   onClick={handleSendEmail}
                   disabled={isLoading}
                 >
