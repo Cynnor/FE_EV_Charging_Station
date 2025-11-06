@@ -4,6 +4,7 @@ import api from "../../config/api";
 import { useNavigate } from "react-router-dom";
 import CustomPopup from "../../components/customPopup";
 import ConfirmPopup from "../../components/confirmPopup/index.jsx";
+import ChangePasswordPopup from "../../components/changePasswordPopup/index.jsx";
 
 
 const ProfilePage = () => {
@@ -300,6 +301,8 @@ const ProfilePage = () => {
     onConfirm: null,
   });
 
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+
   const showPopup = (message, type = "info") => {
     setPopup({
       isOpen: true,
@@ -329,6 +332,62 @@ const ProfilePage = () => {
       message: "",
       onConfirm: null,
     });
+  };
+
+  const handleChangePassword = async (oldPassword, newPassword) => {
+    try {
+      await api.put("/users/password", {
+        oldPassword,
+        newPassword,
+      });
+      
+      // Đóng popup trước khi hiện thông báo thành công
+      setIsChangePasswordOpen(false);
+      
+      showPopup("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.", "success");
+      
+      // Auto logout sau 2 giây
+      setTimeout(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+      }, 2000);
+      
+    } catch (error) {
+      // console.error("Error changing password:", error);
+      const errorCode = error.response?.data?.code;
+      const errorMessage = error.response?.data?.message;
+      
+      // Xử lý các loại lỗi cụ thể - ưu tiên check mật khẩu hiện tại sai
+      if (error.response?.status === 400 || error.response?.status === 401) {
+        // Check mật khẩu hiện tại sai trước
+        if (
+          errorMessage?.toLowerCase().includes("incorrect") || 
+          errorMessage?.toLowerCase().includes("wrong") || 
+          errorMessage?.toLowerCase().includes("current password") ||
+          errorMessage?.toLowerCase().includes("old password") ||
+          errorCode === "INCORRECT_PASSWORD" ||
+          errorCode === "WRONG_PASSWORD"
+        ) {
+          showPopup("Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại.", "error");
+        } else if (errorMessage?.toLowerCase().includes("same") || errorCode === "SAME_PASSWORD") {
+          showPopup("Mật khẩu mới không được trùng với mật khẩu hiện tại.", "warning");
+        } else if (errorMessage?.toLowerCase().includes("weak") || errorCode === "WEAK_PASSWORD") {
+          showPopup("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.", "warning");
+        } else if (errorMessage?.toLowerCase().includes("required") || errorCode === "MISSING_FIELD") {
+          showPopup("Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.", "error");
+        } else {
+          showPopup("" + (errorMessage || "Có lỗi xảy ra khi đổi mật khẩu."), "error");
+        }
+      } else if (error.response?.status === 422) {
+        showPopup("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.", "warning");
+      } else {
+        showPopup("Có lỗi xảy ra. Vui lòng thử lại sau.", "error");
+      }
+      
+      // Throw error để popup không tự đóng
+      throw error;
+    }
   };
 
   const handleSave = async () => {
@@ -676,6 +735,12 @@ const ProfilePage = () => {
         onCancel={closeConfirmPopup}
       />
 
+      <ChangePasswordPopup
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+        onSubmit={handleChangePassword}
+      />
+
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
       <section className="profile-section user-info">
         <div className="section-header">
@@ -799,7 +864,12 @@ const ProfilePage = () => {
               </div>
             </div>
           )}
-          <button className="change-password-btn">Đổi mật khẩu</button>
+          <button 
+            className="change-password-btn"
+            onClick={() => setIsChangePasswordOpen(true)}
+          >
+            Đổi mật khẩu
+          </button>
         </div>
       </section>
 
