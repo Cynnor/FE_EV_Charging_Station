@@ -6,7 +6,7 @@ import ProfilePage from "./pages/profilePage";
 import BookingPage from "./pages/bookingPage";
 import PaymentPage from "./pages/PaymentPage/index";
 import PaymentSuccessPage from "./pages/paymentSuccessPage/index";
-import MembershipPage from "./pages/MembershipPage/index";
+import MembershipPage from "./pages/membershipPage/index";
 import Login from "./pages/loginPage";
 import Register from "./pages/registerPage";
 import ForgotPassword from "./pages/forgotPasswordPage";
@@ -23,7 +23,7 @@ import RevenueManagement from "./pages/adminDashboard/revenueManagement/index";
 import Analytics from "./pages/adminDashboard/analyticsManagement/index";
 import SettingManagement from "./pages/adminDashboard/settingManagement/index";
 import StaffLayout from "./components/staffLayout/index";
-import StaffOverview from "./pages/staffDashboard/Overview/index";
+import OverviewStaff from "./pages/staffDashboard/Overview/index";
 import ChargingSessions from "./pages/staffDashboard/chargingSessions/index";
 import StationStatus from "./pages/staffDashboard/stationStatus/index";
 import Reports from "./pages/staffDashboard/reports/index";
@@ -95,7 +95,7 @@ function App() {
         </ProtectedRoute>
       ),
       children: [
-        { path: "", element: <StaffOverview /> },
+        { path: "", element: <OverviewStaff /> },
         { path: "charging-ChargingSessions", element: <ChargingSessions /> },
         { path: "payment", element: <Payment /> },
         { path: "station-status", element: <StationStatus /> },

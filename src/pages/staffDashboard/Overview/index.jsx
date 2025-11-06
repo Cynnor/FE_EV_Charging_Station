@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import "./index.scss";
 import api from "../../../config/api";
 
-const Overview = () => {
+const OverviewStaff = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [stations, setStations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -455,11 +455,6 @@ const Overview = () => {
                         </div>
 
                         <div className="modal-body">
-                            <div className="station-info-section">
-                                <p className="station-address">{selectedStation.address}</p>
-                                <span className="status-badge active">Đang hoạt động</span>
-                            </div>
-
                             <div className="ports-section">
                                 <div className="section-header">
                                     <h3>Danh sách trụ sạc</h3>
@@ -631,104 +626,106 @@ const Overview = () => {
                                 ✕
                             </button>
                         </div>
-                        <form
-                            onSubmit={editingPort ? handleUpdatePort : handleAddPort}
-                            className="modal-body"
-                        >
-                            <div className="form-group">
-                                <label>Loại trụ</label>
-                                <select
-                                    value={portFormData.type}
-                                    onChange={(e) =>
-                                        setPortFormData({
-                                            ...portFormData,
-                                            type: e.target.value,
-                                        })
-                                    }
-                                    required
-                                >
-                                    <option value="AC">AC</option>
-                                    <option value="DC">DC</option>
-                                    <option value="DC_ULTRA">DC ULTRA</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Trạng thái</label>
-                                <select
-                                    value={portFormData.status}
-                                    onChange={(e) =>
-                                        setPortFormData({
-                                            ...portFormData,
-                                            status: e.target.value,
-                                        })
-                                    }
-                                    required
-                                >
-                                    <option value="available">Rỗi</option>
-                                    <option value="in_use">Đang sử dụng</option>
-                                    <option value="maintenance">Bảo trì</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Công suất (kW)</label>
-                                <input
-                                    type="number"
-                                    value={portFormData.powerKw}
-                                    onChange={(e) =>
-                                        setPortFormData({
-                                            ...portFormData,
-                                            powerKw: Number(e.target.value),
-                                        })
-                                    }
-                                    min="1"
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Tốc độ</label>
-                                <select
-                                    value={portFormData.speed}
-                                    onChange={(e) =>
-                                        setPortFormData({
-                                            ...portFormData,
-                                            speed: e.target.value,
-                                        })
-                                    }
-                                    required
-                                >
-                                    <option value="slow">Chậm</option>
-                                    <option value="fast">Nhanh</option>
-                                    <option value="ultra">Siêu nhanh</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Giá (VND/kWh)</label>
-                                <input
-                                    type="number"
-                                    value={portFormData.price}
-                                    onChange={(e) =>
-                                        setPortFormData({
-                                            ...portFormData,
-                                            price: Number(e.target.value),
-                                        })
-                                    }
-                                    min="0"
-                                    required
-                                />
-                            </div>
-                            <div className="modal-actions">
-                                <button
-                                    type="button"
-                                    className="btn-secondary"
-                                    onClick={() => setShowPortModal(false)}
-                                >
-                                    Hủy
-                                </button>
-                                <button type="submit" className="btn-primary">
-                                    {editingPort ? "Cập nhật" : "Thêm"}
-                                </button>
-                            </div>
-                        </form>
+                        <div className="modal-body">
+                            <form
+                                onSubmit={editingPort ? handleUpdatePort : handleAddPort}
+                                className="port-form"
+                            >
+                                <div className="form-group">
+                                    <label>Loại trụ</label>
+                                    <select
+                                        value={portFormData.type}
+                                        onChange={(e) =>
+                                            setPortFormData({
+                                                ...portFormData,
+                                                type: e.target.value,
+                                            })
+                                        }
+                                        required
+                                    >
+                                        <option value="AC">AC</option>
+                                        <option value="DC">DC</option>
+                                        <option value="DC_ULTRA">DC ULTRA</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Trạng thái</label>
+                                    <select
+                                        value={portFormData.status}
+                                        onChange={(e) =>
+                                            setPortFormData({
+                                                ...portFormData,
+                                                status: e.target.value,
+                                            })
+                                        }
+                                        required
+                                    >
+                                        <option value="available">Rỗi</option>
+                                        <option value="in_use">Đang sử dụng</option>
+                                        <option value="maintenance">Bảo trì</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Công suất (kW)</label>
+                                    <input
+                                        type="number"
+                                        value={portFormData.powerKw}
+                                        onChange={(e) =>
+                                            setPortFormData({
+                                                ...portFormData,
+                                                powerKw: Number(e.target.value),
+                                            })
+                                        }
+                                        min="1"
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Tốc độ</label>
+                                    <select
+                                        value={portFormData.speed}
+                                        onChange={(e) =>
+                                            setPortFormData({
+                                                ...portFormData,
+                                                speed: e.target.value,
+                                            })
+                                        }
+                                        required
+                                    >
+                                        <option value="slow">Chậm</option>
+                                        <option value="fast">Nhanh</option>
+                                        <option value="ultra">Siêu nhanh</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Giá (VND/kWh)</label>
+                                    <input
+                                        type="number"
+                                        value={portFormData.price}
+                                        onChange={(e) =>
+                                            setPortFormData({
+                                                ...portFormData,
+                                                price: Number(e.target.value),
+                                            })
+                                        }
+                                        min="0"
+                                        required
+                                    />
+                                </div>
+                                <div className="modal-actions">
+                                    <button
+                                        type="button"
+                                        className="btn-secondary"
+                                        onClick={() => setShowPortModal(false)}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button type="submit" className="btn-primary">
+                                        {editingPort ? "Cập nhật" : "Thêm"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}
@@ -754,55 +751,57 @@ const Overview = () => {
                                 ✕
                             </button>
                         </div>
-                        <form
-                            onSubmit={editingSlot ? handleUpdateSlot : handleAddSlot}
-                            className="modal-body"
-                        >
-                            <div className="form-group">
-                                <label>Số slot</label>
-                                <input
-                                    type="number"
-                                    value={slotFormData.slotNumber}
-                                    onChange={(e) =>
-                                        setSlotFormData({
-                                            ...slotFormData,
-                                            slotNumber: Number(e.target.value),
-                                        })
-                                    }
-                                    min="1"
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Trạng thái</label>
-                                <select
-                                    value={slotFormData.status}
-                                    onChange={(e) =>
-                                        setSlotFormData({
-                                            ...slotFormData,
-                                            status: e.target.value,
-                                        })
-                                    }
-                                    required
-                                >
-                                    <option value="available">Rỗi</option>
-                                    <option value="booked">Đã đặt</option>
-                                    <option value="in_use">Đang sử dụng</option>
-                                </select>
-                            </div>
-                            <div className="modal-actions">
-                                <button
-                                    type="button"
-                                    className="btn-secondary"
-                                    onClick={() => setShowSlotModal(false)}
-                                >
-                                    Hủy
-                                </button>
-                                <button type="submit" className="btn-primary">
-                                    {editingSlot ? "Cập nhật" : "Thêm"}
-                                </button>
-                            </div>
-                        </form>
+                        <div className="modal-body">
+                            <form
+                                onSubmit={editingSlot ? handleUpdateSlot : handleAddSlot}
+                                className="slot-form"
+                            >
+                                <div className="form-group">
+                                    <label>Số slot</label>
+                                    <input
+                                        type="number"
+                                        value={slotFormData.slotNumber}
+                                        onChange={(e) =>
+                                            setSlotFormData({
+                                                ...slotFormData,
+                                                slotNumber: Number(e.target.value),
+                                            })
+                                        }
+                                        min="1"
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Trạng thái</label>
+                                    <select
+                                        value={slotFormData.status}
+                                        onChange={(e) =>
+                                            setSlotFormData({
+                                                ...slotFormData,
+                                                status: e.target.value,
+                                            })
+                                        }
+                                        required
+                                    >
+                                        <option value="available">Rỗi</option>
+                                        <option value="booked">Đã đặt</option>
+                                        <option value="in_use">Đang sử dụng</option>
+                                    </select>
+                                </div>
+                                <div className="modal-actions">
+                                    <button
+                                        type="button"
+                                        className="btn-secondary"
+                                        onClick={() => setShowSlotModal(false)}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button type="submit" className="btn-primary">
+                                        {editingSlot ? "Cập nhật" : "Thêm"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}
@@ -810,4 +809,4 @@ const Overview = () => {
     );
 };
 
-export default Overview;
+export default OverviewStaff;

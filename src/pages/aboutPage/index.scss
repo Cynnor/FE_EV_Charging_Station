@@ -60,7 +60,6 @@
       max-width: 1200px;
       margin: 0 auto;
 
-
       /* Đảm bảo emoji không co lại */
       .icon {
         flex-shrink: 0; // icon không bị co lại
@@ -86,6 +85,7 @@
 
     .intro-content {
       flex: 1;
+      padding-left: 40px;
 
       h2 {
         font-size: 32px;
@@ -100,6 +100,10 @@
         line-height: 1.7;
         margin-bottom: 20px;
         color: #AAAAAA;
+      }
+
+      strong {
+        color: #198754;
       }
 
       .slogan {
@@ -161,7 +165,7 @@
 
   /* Đội ngũ */
   .about-team {
-    padding: 80px 20px;
+    padding: 0px 20px 80px 20px;
     background: transparent;
 
     h2 {

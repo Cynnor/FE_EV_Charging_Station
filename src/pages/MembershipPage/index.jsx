@@ -98,10 +98,13 @@ function MembershipPage() {
         const paymentUrl = response.data.data.paymentUrl;
         const subscriptionId = response.data.data.subscriptionId;
 
-        // Lưu subscriptionId vào localStorage để check payment status sau
+        // Lưu subscriptionId vào localStorage để verify khi VNPay redirect về
+        // BE đã set vnp_TxnRef = subscriptionId, nên khi VNPay redirect về,
+        // FE sẽ lấy vnp_TxnRef từ URL làm subscriptionId để check payment
         localStorage.setItem('pendingSubscriptionId', subscriptionId);
 
         // Redirect đến VNPay để thanh toán
+        // VNPay sẽ redirect về với vnp_TxnRef = subscriptionId
         window.location.href = paymentUrl;
       }
     } catch (err) {

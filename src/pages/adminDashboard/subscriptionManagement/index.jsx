@@ -82,46 +82,36 @@ const SubscriptionManagement = () => {
         }
     };
 
-    // POST - Tạo subscription plan mới (Admin only) - Dựa vào API specification
+    // POST - Tạo subscription plan mới (Admin only)
     const handleAddPlan = async (e) => {
         e.preventDefault();
 
-        // Validate required fields theo API spec
+        // Validate required fields
         if (!planFormData.name?.trim()) {
-            alert("Vui lòng nhập tên gói (required)");
-            return;
-        }
-        if (!planFormData.type || !['basic', 'standard', 'premium'].includes(planFormData.type)) {
-            alert("Vui lòng chọn loại gói hợp lệ (basic, standard, premium)");
-            return;
-        }
-        if (!planFormData.duration || !['1_month', '6_months', '12_months'].includes(planFormData.duration)) {
-            alert("Vui lòng chọn thời hạn hợp lệ");
-            return;
-        }
-        if (!planFormData.durationDays || Number(planFormData.durationDays) <= 0) {
-            alert("Vui lòng nhập số ngày hợp lệ (số dương)");
+            alert("Vui lòng nhập tên gói");
             return;
         }
         if (!planFormData.price || Number(planFormData.price) <= 0) {
             alert("Vui lòng nhập giá hợp lệ (số dương)");
             return;
         }
+        if (!planFormData.durationDays || Number(planFormData.durationDays) <= 0) {
+            alert("Vui lòng nhập số ngày hợp lệ (số dương)");
+            return;
+        }
 
         try {
-            // Xử lý features - đảm bảo đúng format theo API
-            const featuresData = {
-                maxReservations: -1,
-                maxVehicles: -1,
-                prioritySupport: false
-            };
+            // Xử lý features - chỉ gửi những field hợp lệ
+            const featuresData = {};
 
-            // maxReservations: nếu có giá trị thì convert, nếu rỗng thì -1 (không giới hạn)
+            // maxReservations: nếu có giá trị thì convert, nếu rỗng thì -1
             if (planFormData.features.maxReservations !== "" &&
                 planFormData.features.maxReservations !== null &&
                 planFormData.features.maxReservations !== undefined) {
                 const maxRes = Number(planFormData.features.maxReservations);
-                featuresData.maxReservations = !isNaN(maxRes) && maxRes >= -1 ? maxRes : -1;
+                featuresData.maxReservations = !isNaN(maxRes) ? maxRes : -1;
+            } else {
+                featuresData.maxReservations = -1;
             }
 
             // maxVehicles: tương tự
@@ -129,78 +119,51 @@ const SubscriptionManagement = () => {
                 planFormData.features.maxVehicles !== null &&
                 planFormData.features.maxVehicles !== undefined) {
                 const maxVeh = Number(planFormData.features.maxVehicles);
-                featuresData.maxVehicles = !isNaN(maxVeh) && maxVeh >= -1 ? maxVeh : -1;
+                featuresData.maxVehicles = !isNaN(maxVeh) ? maxVeh : -1;
+            } else {
+                featuresData.maxVehicles = -1;
             }
 
             // prioritySupport: luôn gửi boolean
             featuresData.prioritySupport = Boolean(planFormData.features.prioritySupport);
 
-            // discount: chỉ gửi nếu có giá trị > 0 và <= 100
+            // discount: chỉ gửi nếu có giá trị > 0
             if (planFormData.features.discount !== "" &&
                 planFormData.features.discount !== null &&
                 planFormData.features.discount !== undefined) {
                 const discount = Number(planFormData.features.discount);
-                if (!isNaN(discount) && discount > 0 && discount <= 100) {
+                if (!isNaN(discount) && discount > 0) {
                     featuresData.discount = discount;
                 }
             }
 
-            // Chuẩn bị data để gửi API theo specification
+            // Chuẩn bị data để gửi API
             const dataToSend = {
-                // Required fields
                 name: planFormData.name.trim(),
                 type: planFormData.type,
                 duration: planFormData.duration,
                 durationDays: Number(planFormData.durationDays),
                 price: Number(planFormData.price),
+                originalPrice: planFormData.originalPrice && planFormData.originalPrice !== ""
+                    ? Number(planFormData.originalPrice)
+                    : undefined,
+                description: planFormData.description?.trim() || "",
                 features: featuresData,
-                // Optional fields
-                ...(planFormData.originalPrice && planFormData.originalPrice !== "" && Number(planFormData.originalPrice) > 0 && {
-                    originalPrice: Number(planFormData.originalPrice)
-                }),
-                ...(planFormData.description?.trim() && {
-                    description: planFormData.description.trim()
-                }),
-                ...(planFormData.isActive !== undefined && {
-                    isActive: Boolean(planFormData.isActive)
-                }),
-                ...(planFormData.displayOrder !== undefined && planFormData.displayOrder !== "" && {
-                    displayOrder: Number(planFormData.displayOrder) || 0
-                })
+                isActive: Boolean(planFormData.isActive),
+                displayOrder: Number(planFormData.displayOrder) || 0,
             };
 
-            // Gọi API theo specification
-            const response = await api.post("/subscription-plans", dataToSend);
-
-            // Xử lý response theo API format
-            if (response.status === 201 || response.data?.success !== false) {
-                alert("Tạo gói đăng ký thành công!");
-                setShowAddPlanModal(false);
-                resetPlanForm();
-                fetchPlans(); // Reload danh sách
-            } else {
-                throw new Error(response.data?.message || "Không thể tạo gói đăng ký");
-            }
+            await api.post("/subscription-plans", dataToSend);
+            alert("Tạo gói đăng ký thành công!");
+            setShowAddPlanModal(false);
+            resetPlanForm();
+            fetchPlans();
         } catch (err) {
             console.error("Error adding plan:", err);
-
-            // Xử lý lỗi chi tiết theo response từ API
-            let errorMessage = "Không thể tạo gói đăng ký";
-
-            if (err.response?.status === 401) {
-                errorMessage = "Chưa đăng nhập hoặc phiên đăng nhập đã hết hạn";
-            } else if (err.response?.status === 403) {
-                errorMessage = "Không có quyền tạo gói đăng ký (chỉ Admin)";
-            } else if (err.response?.status === 400) {
-                errorMessage = err.response?.data?.message ||
-                    err.response?.data?.error ||
-                    "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại";
-            } else if (err.response?.data?.message) {
-                errorMessage = err.response.data.message;
-            } else if (err.message) {
-                errorMessage = err.message;
-            }
-
+            const errorMessage = err.response?.data?.message ||
+                err.response?.data?.error ||
+                err.message ||
+                "Không thể tạo gói đăng ký";
             alert(errorMessage);
         }
     };
@@ -1660,8 +1623,9 @@ const SubscriptionManagement = () => {
                 </div>
             )}
         </div>
-    )
-}
+    );
+};
+
 export default SubscriptionManagement;
 
 

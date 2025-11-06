@@ -38,21 +38,24 @@ export default function PaymentSuccessPage() {
 
             // Kiểm tra xem có phải VNPay return không
             if (vnpParams.vnp_ResponseCode) {
-                // Kiểm tra xem có phải subscription payment không
-                const orderInfo = decodeURIComponent(vnpParams.vnp_OrderInfo || '');
-                const isSubscriptionPayment = orderInfo.toLowerCase().includes('gói') ||
-                    orderInfo.toLowerCase().includes('goi') ||
-                    orderInfo.toLowerCase().includes('subscription') ||
-                    orderInfo.toLowerCase().includes('thanh toan goi');
-
-                // Lấy subscriptionId từ localStorage (đã lưu khi tạo payment)
+                // Lấy subscriptionId: vnp_TxnRef chính là subscriptionId (BE đã set vnp_TxnRef = subscriptionId)
+                const subscriptionId = vnpParams.vnp_TxnRef;
                 const pendingSubscriptionId = localStorage.getItem('pendingSubscriptionId');
+                
+                // Kiểm tra xem có phải subscription payment không
+                // Nếu vnp_TxnRef khớp với pendingSubscriptionId trong localStorage → subscription payment
+                // Hoặc nếu có vnp_TxnRef và có pendingSubscriptionId (trường hợp bảo đảm)
+                const isSubscriptionPayment = 
+                    subscriptionId && 
+                    pendingSubscriptionId && 
+                    subscriptionId === pendingSubscriptionId;
 
-                if (isSubscriptionPayment && pendingSubscriptionId) {
+                if (isSubscriptionPayment && subscriptionId) {
                     // Xử lý subscription payment
+                    // vnp_TxnRef chính là subscriptionId, dùng nó để gọi check-payment
                     try {
                         const response = await api.post('/subscriptions/check-payment-status', {
-                            subscriptionId: pendingSubscriptionId,
+                            subscriptionId: subscriptionId, // vnp_TxnRef = subscriptionId
                             vnp_Amount: vnpParams.vnp_Amount,
                             vnp_BankCode: vnpParams.vnp_BankCode,
                             vnp_BankTranNo: vnpParams.vnp_BankTranNo,
@@ -76,12 +79,13 @@ export default function PaymentSuccessPage() {
 
                             if (status === 'success' || vnpParams.vnp_ResponseCode === '00') {
                                 // Xóa pendingSubscriptionId sau khi xử lý thành công
+                                // vnp_TxnRef đã được dùng để check payment, không cần localStorage nữa
                                 localStorage.removeItem('pendingSubscriptionId');
 
                                 const subscriptionInfo = paymentData.subscription || paymentData.subscriptionData || paymentData;
 
                                 setPaymentInfo({
-                                    subscriptionId: pendingSubscriptionId,
+                                    subscriptionId: subscriptionId, // subscriptionId = vnp_TxnRef (từ URL VNPay)
                                     amount: parseInt(vnpParams.vnp_Amount) / 100,
                                     orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || ''),
                                     transactionNo: vnpParams.vnp_TransactionNo,
