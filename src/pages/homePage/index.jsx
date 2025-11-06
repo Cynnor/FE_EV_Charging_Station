@@ -52,11 +52,11 @@ const HomePage = () => {
 
     if (vnpResponseCode) {
       const queryString = window.location.search;
-      const newUrl = window.origin + "/payment-success" + queryString;
+      const newUrl =
+        window.location.origin + "/payment-success" + queryString;
       window.location.href = newUrl;
     }
   }, []);
-
   // ===== Fetch Station Data from API =====
   useEffect(() => {
     let isMounted = true;
@@ -343,3 +343,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

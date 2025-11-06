@@ -2,7 +2,7 @@ import "./index.scss";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import CustomPopup from "../../components/CustomPopup";
+import CustomPopup from "../../components/customPopup";
 import PaymentConfirmPopup from "../../components/paymentConfirmPopup";
 import ChargingStationCarousel from "../../components/chargingStationCarousel";
 
