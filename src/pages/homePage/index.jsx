@@ -4,7 +4,6 @@ import ChargingMap from "../../components/chargingMap";
 import "./index.scss";
 import api from "../../config/api";
 
-
 // ===== Helper Function =====
 const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -76,9 +75,7 @@ const HomePage = () => {
           stationsData = [res.data];
         }
 
-        stationsData = stationsData.filter(
-          (s) => s.latitude && s.longitude
-        );
+        stationsData = stationsData.filter((s) => s.latitude && s.longitude);
 
         const formatted = stationsData.map((s, index) => ({
           id: s.id || index + 1,
@@ -127,7 +124,12 @@ const HomePage = () => {
           if (mapStations.length > 0) {
             const withDistance = mapStations.map((s) => ({
               ...s,
-              distance: getDistanceKm(latitude, longitude, s.coords[0], s.coords[1]),
+              distance: getDistanceKm(
+                latitude,
+                longitude,
+                s.coords[0],
+                s.coords[1]
+              ),
             }));
             setNearbyStations(
               withDistance.sort((a, b) => a.distance - b.distance).slice(0, 5)
@@ -168,6 +170,17 @@ const HomePage = () => {
     }
   };
 
+  // ✅ Thêm nút "Thêm xe của bạn" → chuyển tới profilePage (section thêm xe)
+  const handleAddVehicle = () => {
+    const token = localStorage.getItem("token");
+    const redirectUrl = "/profile?section=add-vehicle&action=add";
+    if (!token) {
+      navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
+    } else {
+      navigate(redirectUrl);
+    }
+  };
+
   if (loading) {
     return (
       <div className="homepage__loading">
@@ -193,25 +206,22 @@ const HomePage = () => {
             <h1>Tìm trạm sạc xe điện dễ dàng, sạc nhanh chóng</h1>
             <p>
               Ứng dụng tìm kiếm và sử dụng trụ sạc xe điện hàng đầu Việt Nam.
-              Hơn 100+ trạm sạc trên toàn quốc, đặt chỗ trước, thanh toán tiện lợi.
+              Hơn 100+ trạm sạc trên toàn quốc, đặt chỗ trước, thanh toán tiện
+              lợi.
             </p>
             <div className="homepage__hero-actions">
-              <button
-                className="btn btn--primary"
-                onClick={handleFindStation}
-              >
+              <button className="btn btn--primary" onClick={handleFindStation}>
                 Tìm trạm sạc ngay
+              </button>
+              <button className="btn btn--secondary" onClick={handleAddVehicle}>
+                Thêm xe của bạn
               </button>
             </div>
           </div>
           <div className="homepage__hero-image">
             <div className="hero-visual">
               <div className="center-logo">
-                <img
-                  src="/assets/logo.jpg"
-                  alt="Logo"
-                  className="hero-logo"
-                />
+                <img src="/assets/logo.jpg" alt="Logo" className="hero-logo" />
               </div>
               <div className="charging-station">🚗</div>
               <div className="dashboard">⚡</div>
@@ -234,13 +244,17 @@ const HomePage = () => {
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${selectedId === station.id ? "is-selected" : ""}`}
+                    className={`station-item ${
+                      selectedId === station.id ? "is-selected" : ""
+                    }`}
                     onClick={() => setSelectedId(station.id)}
                   >
                     <div className="station-header">
                       <h4>{station.name}</h4>
                       {station.distance && (
-                        <span className="distance">{station.distance.toFixed(1)} km</span>
+                        <span className="distance">
+                          {station.distance.toFixed(1)} km
+                        </span>
                       )}
                       <div className={`status-indicator ${station.status}`}>
                         {station.status === "available" && "🟢"}
@@ -252,7 +266,8 @@ const HomePage = () => {
                       <div className="item">⚡ {station.speed}</div>
                       <div className="item">💰 {station.price}</div>
                       <div className="item">
-                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} | Ultra: {station.slots.ultra}
+                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} |
+                        Ultra: {station.slots.ultra}
                       </div>
                       <div className="item">📍 {station.address}</div>
                     </div>
@@ -276,7 +291,9 @@ const HomePage = () => {
                 zoom={12}
                 onSelect={(station) => handleMarkerClick(station.id)}
                 selectedStation={
-                  selectedId ? mapStations.find((s) => s.id === selectedId) : null
+                  selectedId
+                    ? mapStations.find((s) => s.id === selectedId)
+                    : null
                 }
                 userLocation={userLocation}
                 onUpdateLocation={updateLocation}
