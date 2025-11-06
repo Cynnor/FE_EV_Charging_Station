@@ -11,7 +11,7 @@ export default function PaymentPage() {
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  // Dữ liệu từ chargingSession page
+  // D? li?u t? chargingSession page
   const chargingData = state?.chargingData || null;
   const reservationId = localStorage.getItem("reservationId");
 
@@ -19,39 +19,36 @@ export default function PaymentPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [invoice, setInvoice] = useState(null);
 
-  // Kiểm tra dữ liệu chargingSession
+  // Ki?m tra d? li?u chargingSession
   if (!chargingData) {
     return (
       <div className="payment-page">
         <div className="error-container">
-          <h1>Lỗi</h1>
+          <h1>L?i</h1>
           <p>
-            Không tìm thấy dữ liệu phiên sạc. Vui lòng quay lại trang trước.
+            Kh�ng t�m th?y d? li?u phi�n s?c. Vui l�ng quay l?i trang tru?c.
           </p>
           <button className="back-btn" onClick={() => navigate(-1)}>
-            Quay lại
+            Quay l?i
           </button>
         </div>
       </div>
     );
   }
 
-  // Lấy giá từ chargingSession
+  // L?y gi� t? chargingSession
   const pricePerKwh = chargingData.chargingInfo?.energyPricePerKwh || 3858;
   const totalAmount = chargingData.chargingInfo?.totalCost || 0;
 
   const handleSandboxPay = async () => {
     setIsPaying(true);
 
-<<<<<<< HEAD
-                    {/* <div className="payment-methods">
-=======
     try {
       if (reservationId) {
-        // Thanh toán cho chargingSession với reservationId
+        // Thanh to�n cho chargingSession v?i reservationId
         const response = await api.post("/vnpay/checkout-url", {
           amount: Math.round(totalAmount),
-          orderInfo: `Thanh toan phi sạc - ${
+          orderInfo: `Thanh toan phi s?c - ${
             chargingData.vehicleInfo?.plateNumber || "N/A"
           }`,
           reservationId: reservationId,
@@ -59,19 +56,20 @@ export default function PaymentPage() {
         });
 
         if (response.data?.success && response.data?.data?.paymentUrl) {
-          // Redirect đến VNPay
+          // Redirect d?n VNPay
           window.location.href = response.data.data.paymentUrl;
           return;
         }
       }
 
-      // Fallback: Giả lập thanh toán thành công và chuyển đến success page
+      // Fallback: gi? l?p thanh to�n th�nh c�ng v� chuy?n d?n success page
       setTimeout(() => {
+        setIsPaying(false);
         navigate("/payment-success", {
           state: {
             reservationId: reservationId,
             amount: totalAmount,
-            orderInfo: `Thanh toan phi sạc - ${
+            orderInfo: `Thanh toan phi s?c - ${
               chargingData.vehicleInfo?.plateNumber || "N/A"
             }`,
             vehicleInfo: chargingData.vehicleInfo,
@@ -83,7 +81,7 @@ export default function PaymentPage() {
     } catch (error) {
       console.error("Payment error:", error);
       setIsPaying(false);
-      alert("Có lỗi xảy ra khi xử lý thanh toán. Vui lòng thử lại!");
+      alert("C� l?i x?y ra khi x? l� thanh to�n. Vui l�ng th? l?i!");
     }
   };
 
@@ -93,154 +91,135 @@ export default function PaymentPage() {
     <div className="payment-page">
       <div className="payment-container">
         <div className="left">
-          <h1>Thanh toán</h1>
+          <h1>Thanh to�n</h1>
 
           <div className="summary-card">
-            <h3>Thông tin phiên sạc</h3>
+            <h3>Th�ng tin phi�n s?c</h3>
             <p>
-              <b>Xe:</b> {chargingData.vehicleInfo?.plateNumber || "—"}
+              <b>Xe:</b> {chargingData.vehicleInfo?.plateNumber || "�"}
             </p>
             <p>
-              <b>Hãng xe:</b> {chargingData.vehicleInfo?.make}{" "}
+              <b>H�ng xe:</b> {chargingData.vehicleInfo?.make}{" "}
               {chargingData.vehicleInfo?.model}
             </p>
             <p>
-              <b>Mức sạc hiện tại:</b>{" "}
+              <b>M?c s?c hi?n t?i:</b>{" "}
               {chargingData.chargingInfo?.currentCharge || 0}%
             </p>
             <p>
-              <b>Thời gian sạc:</b>{" "}
-              {chargingData.chargingInfo?.timeElapsed || 0} phút
+              <b>Th?i gian s?c:</b>{" "}
+              {chargingData.chargingInfo?.timeElapsed || 0} ph�t
             </p>
             <p>
-              <b>Năng lượng tiêu thụ:</b>{" "}
+              <b>Nang lu?ng ti�u th?:</b>{" "}
               {chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0} kWh
             </p>
             <p>
-              <b>Bắt đầu lúc:</b>{" "}
+              <b>B?t d?u l�c:</b>{" "}
               {chargingData.chargingInfo?.startTime
                 ? new Date(chargingData.chargingInfo.startTime).toLocaleString(
                     "vi-VN"
                   )
-                : "—"}
+                : "�"}
             </p>
           </div>
 
           <div className="plan-card">
-            <h3>Chi tiết thanh toán</h3>
+            <h3>Chi ti?t thanh to�n</h3>
             <div className="charging-details">
-              <div className="detail-row">
-                <span>Phí đặt lịch:</span>
-                <span>
-                  {chargingData.chargingInfo?.bookingCost?.toLocaleString(
-                    "vi-VN"
-                  ) || 0}{" "}
-                  VNĐ
-                </span>
+              <div className="detail-item">
+                <span>S? kWh</span>
+                <span>{chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0}</span>
               </div>
-              <div className="detail-row">
-                <span>
-                  Phí điện (
-                  {chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0} kWh):
-                </span>
-                <span>
-                  {chargingData.chargingInfo?.energyCost?.toLocaleString(
-                    "vi-VN"
-                  ) || 0}{" "}
-                  VNĐ
-                </span>
+              <div className="detail-item">
+                <span>�on gi�</span>
+                <span>{pricePerKwh.toLocaleString("vi-VN")} VN�/kWh</span>
               </div>
-              <div className="detail-row total">
-                <span>
-                  <strong>Tổng cộng:</strong>
-                </span>
-                <span>
-                  <strong>{totalAmount.toLocaleString("vi-VN")} VNĐ</strong>
-                </span>
+              <div className="detail-item">
+                <span>Th?i gian s?c</span>
+                <span>{chargingData.chargingInfo?.timeElapsed || 0} ph�t</span>
+              </div>
+            </div>
+
+            <div className="amount-info">
+              <div className="amount-item">
+                <span>Chi ph� u?c t�nh</span>
+                <span>{totalAmount.toLocaleString("vi-VN")} VN�</span>
               </div>
             </div>
           </div>
 
-          {/* <div className="payment-methods">
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
-                        <h3>Phương thức thanh toán</h3>
-                        <div className="methods">
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="pm"
-                                    value="e_wallet"
-                                    checked={paymentMethod === "e_wallet"}
-                                    onChange={() => setPaymentMethod("e_wallet")}
-                                />
-                                Ví điện tử
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="pm"
-                                    value="banking"
-                                    checked={paymentMethod === "banking"}
-                                    onChange={() => setPaymentMethod("banking")}
-                                />
-                                Banking
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="pm"
-                                    value="card"
-                                    checked={paymentMethod === "card"}
-                                    onChange={() => setPaymentMethod("card")}
-                                />
-                                Thẻ
-                            </label>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="pm"
-                                    value="cod"
-                                    checked={paymentMethod === "cod"}
-                                    onChange={() => setPaymentMethod("cod")}
-                                />
-                                Thanh toán tại trạm
-                            </label>
-                        </div>
-                    </div> */}
-<<<<<<< HEAD
-                </div>
-=======
+          <div className="payment-methods">
+            <h3>Phuong th?c thanh to�n</h3>
+            <div className="methods">
+              <label>
+                <input
+                  type="radio"
+                  value="e_wallet"
+                  checked={paymentMethod === "e_wallet"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+                V� di?n t?
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="banking"
+                  checked={paymentMethod === "banking"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+                Chuy?n kho?n ng�n h�ng
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="card"
+                  checked={paymentMethod === "card"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+                Th? t�n d?ng
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="cod"
+                  checked={paymentMethod === "cod"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+                Thanh to�n t?i tr?m
+              </label>
+            </div>
+          </div>
         </div>
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 
         <div className="right">
           <div className="total-card">
-            <h3>Tổng thanh toán</h3>
+            <h3>T?ng thanh to�n</h3>
             <div className="row">
-              <span>Phí đặt lịch</span>
+              <span>Ph� d?t l?ch</span>
               <span className="value">
                 {chargingData.chargingInfo?.bookingCost?.toLocaleString(
                   "vi-VN"
                 ) || 0}{" "}
-                VNĐ
+                VN�
               </span>
             </div>
             <div className="row">
               <span>
-                Phí điện (
+                Ph� di?n (
                 {chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0} kWh)
               </span>
               <span className="value">
                 {chargingData.chargingInfo?.energyCost?.toLocaleString(
                   "vi-VN"
                 ) || 0}{" "}
-                VNĐ
+                VN�
               </span>
             </div>
             <div className="row total-row">
-              <span>Tổng cộng</span>
+              <span>T?ng c?ng</span>
               <span className="value">
-                {totalAmount.toLocaleString("vi-VN")} VNĐ
+                {totalAmount.toLocaleString("vi-VN")} VN�
               </span>
             </div>
             <button
@@ -248,53 +227,62 @@ export default function PaymentPage() {
               disabled={isPaying}
               onClick={handleSandboxPay}
             >
-              {isPaying ? "Đang xử lý..." : "Thanh toán"}
+              {isPaying ? "�ang x? l�..." : "Thanh to�n ngay"}
             </button>
-            <button className="back-btn" onClick={() => navigate(-1)}>
-              Quay lại
+            <button
+              className="invoice-btn"
+              onClick={() => setInvoice({
+                code: `INV-${Date.now()}`,
+                createdAt: new Date().toLocaleString("vi-VN"),
+                vehicleInfo: chargingData.vehicleInfo,
+                chargingInfo: chargingData.chargingInfo,
+                totalAmount: totalAmount,
+                paymentMethod: paymentMethod,
+              })}
+            >
+              Xem h�a don
             </button>
           </div>
 
           {invoice && (
-            <div className="invoice">
-              <h3>Hóa đơn điện tử</h3>
+            <div className="invoice-card">
+              <h3>H�a don chi ti?t</h3>
               <p>
-                <b>Mã hóa đơn:</b> {invoice.code}
+                <b>M� h�a don:</b> {invoice.code}
               </p>
               <p>
-                <b>Thời gian:</b> {invoice.createdAt}
+                <b>Ng�y t?o:</b> {invoice.createdAt}
               </p>
               <p>
-                <b>Xe:</b> {invoice.vehicleInfo?.plateNumber}
+                <b>Bi?n s? xe:</b> {invoice.vehicleInfo?.plateNumber}
               </p>
               <p>
-                <b>Hãng xe:</b> {invoice.vehicleInfo?.make}{" "}
+                <b>H�ng xe:</b> {invoice.vehicleInfo?.make}{" "}
                 {invoice.vehicleInfo?.model}
               </p>
               <p>
-                <b>Phí đặt lịch:</b>{" "}
-                {invoice.chargingInfo?.bookingCost?.toLocaleString("vi-VN")} VNĐ
+                <b>Ph� d?t l?ch:</b>{" "}
+                {invoice.chargingInfo?.bookingCost?.toLocaleString("vi-VN")} VN�
               </p>
               <p>
-                <b>Phí điện:</b>{" "}
-                {invoice.chargingInfo?.energyCost?.toLocaleString("vi-VN")} VNĐ
+                <b>Ph� di?n:</b>{" "}
+                {invoice.chargingInfo?.energyCost?.toLocaleString("vi-VN")} VN�
               </p>
               <p>
-                <b>Thanh toán qua:</b> {paymentMethod}
+                <b>Thanh to�n qua:</b> {paymentMethod}
               </p>
               <p className="grand-total">
-                <b>Tổng tiền:</b> {invoice.totalAmount.toLocaleString("vi-VN")}{" "}
-                VNĐ
+                <b>T?ng ti?n:</b> {invoice.totalAmount.toLocaleString("vi-VN")} VN�
               </p>
               <div className="invoice-actions">
                 <button
                   className="print-btn"
                   onClick={() => setShowInvoice(true)}
                 >
-                  🖨️ In hóa đơn
+                  ??? In h�a don
                 </button>
                 <button className="close-btn" onClick={() => setInvoice(null)}>
-                  ✖️ Đóng
+                  ?? ��ng
                 </button>
               </div>
             </div>
@@ -306,87 +294,84 @@ export default function PaymentPage() {
         <div className="invoice-print-container">
           <div className="invoice-print-content">
             <div className="invoice-header">
-              <div className="invoice-title">HÓA ĐƠN ĐIỆN TỬ</div>
-              <div className="invoice-code">Mã hóa đơn: {invoice.code}</div>
-              <div className="invoice-date">Ngày tạo: {invoice.createdAt}</div>
+              <div className="invoice-title">H�A �ON �I?N T?</div>
+              <div className="invoice-code">M� h�a don: {invoice.code}</div>
+              <div className="invoice-date">Ng�y t?o: {invoice.createdAt}</div>
             </div>
 
             <div className="invoice-info">
               <div className="info-section">
-                <h3>Thông tin xe</h3>
+                <h3>Th�ng tin xe</h3>
                 <div className="info-item">
-                  <span className="info-label">Biển số:</span>
+                  <span className="info-label">Bi?n s?:</span>
                   <span className="info-value">
                     {invoice.vehicleInfo?.plateNumber}
                   </span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Hãng xe:</span>
+                  <span className="info-label">H�ng xe:</span>
                   <span className="info-value">
                     {invoice.vehicleInfo?.make} {invoice.vehicleInfo?.model}
                   </span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Mức sạc:</span>
+                  <span className="info-label">M?c s?c:</span>
                   <span className="info-value">
                     {invoice.chargingInfo?.currentCharge}%
                   </span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Thời gian sạc:</span>
+                  <span className="info-label">Th?i gian s?c:</span>
                   <span className="info-value">
-                    {invoice.chargingInfo?.timeElapsed} phút
+                    {invoice.chargingInfo?.timeElapsed} ph�t
                   </span>
                 </div>
               </div>
 
               <div className="info-section">
-                <h3>Chi tiết thanh toán</h3>
+                <h3>Chi ti?t thanh to�n</h3>
                 <div className="info-item">
-                  <span className="info-label">Phí đặt lịch:</span>
+                  <span className="info-label">Ph� d?t l?ch:</span>
                   <span className="info-value">
-                    {invoice.chargingInfo?.bookingCost?.toLocaleString("vi-VN")}{" "}
-                    VNĐ
+                    {invoice.chargingInfo?.bookingCost?.toLocaleString("vi-VN")} VN�
                   </span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">
-                    Phí điện ({invoice.chargingInfo?.energyKwh?.toFixed(2)}{" "}
-                    kWh):
+                    Ph� di?n ({invoice.chargingInfo?.energyKwh?.toFixed(2)} kWh):
                   </span>
                   <span className="info-value">
-                    {invoice.chargingInfo?.energyCost?.toLocaleString("vi-VN")}{" "}
-                    VNĐ
+                    {invoice.chargingInfo?.energyCost?.toLocaleString("vi-VN")} VN�
                   </span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Thanh toán qua:</span>
+                  <span className="info-label">Thanh to�n qua:</span>
                   <span className="info-value">{invoice.paymentMethod}</span>
                 </div>
               </div>
             </div>
 
             <div className="total-section">
-              <div className="total-label">Tổng tiền</div>
+              <div className="total-label">T?ng ti?n</div>
               <div className="total-amount">
-                {invoice.totalAmount.toLocaleString()} đ
+                {invoice.totalAmount.toLocaleString()} d
               </div>
             </div>
 
             <div className="invoice-footer">
-              <p>Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện!</p>
-              <p>Hóa đơn này được tạo tự động bởi hệ thống</p>
+              <p>C?m on b?n d� s? d?ng d?ch v? s?c xe di?n!</p>
+              <p>H�a don n�y du?c t?o t? d?ng b?i h? th?ng</p>
             </div>
 
             <div className="invoice-actions no-print">
               <button className="print-btn" onClick={() => window.print()}>
-                🖨️ In hóa đơn
+                ??? In h�a don
               </button>
               <button
                 className="close-btn"
                 onClick={() => setShowInvoice(false)}
               >
-                ✖️ Đóng
+                ?? ��ng
               </button>
             </div>
           </div>

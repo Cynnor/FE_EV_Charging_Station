@@ -2,27 +2,12 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
-<<<<<<< HEAD
 import SupportPage from "./pages/supportPage/index";
-=======
-<<<<<<< HEAD
-import SupportPage from "./pages/supportPage/index";
-import StationManagement from "./pages/adminDashboard/stationManagement";
-import UserManagement from "./pages/adminDashboard/userManagement";
-import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement";
-import TransactionManagement from "./pages/adminDashboard/transactionManagement";
-import Analytics from "./pages/adminDashboard/analyticsManagement";
-import RevenueManagement from "./pages/adminDashboard/revenueManagement";
-import SettingManagement from "./pages/adminDashboard/settingManagement/index";
-import ForgotPassword from "./pages/forgotpasswordPage/forgotpassword";
-=======
->>>>>>> c4a3ed8cd263a7d0352cec131c8b4fb4648e207e
 import ProfilePage from "./pages/profilePage";
 import BookingPage from "./pages/bookingPage";
 import PaymentPage from "./pages/PaymentPage/index";
 import PaymentSuccessPage from "./pages/paymentSuccessPage/index";
 import MembershipPage from "./pages/MembershipPage/index";
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
 import Login from "./pages/loginPage";
 import Register from "./pages/registerPage";
 import ForgotPassword from "./pages/forgotPasswordPage";
@@ -33,6 +18,8 @@ import AdminLayout from "./components/adminLayout/index";
 import Overview from "./pages/adminDashboard/overViewManagement/index";
 import StationManagement from "./pages/adminDashboard/stationManagement/index";
 import UserManagement from "./pages/adminDashboard/userManagement/index";
+import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement/index";
+import TransactionManagement from "./pages/adminDashboard/transactionManagement/index";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement/index";
 import Analytics from "./pages/adminDashboard/analyticsManagement/index";
 import SettingManagement from "./pages/adminDashboard/settingManagement/index";

@@ -72,15 +72,9 @@
   backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 40px;
-<<<<<<< HEAD:src/pages/loginPage/login.scss
-  box-shadow:
-    0 20px 60px rgba(126, 211, 33, 0.08),
-    0 0 0 1px rgba(126, 211, 33, 0.08);
-=======
   box-shadow: 
     0 20px 60px rgba(25, 135, 84, 0.08),
     0 0 0 1px rgba(25, 135, 84, 0.08);
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533:src/pages/loginPage/index.scss
   width: 100%;
   max-width: 900px;
   display: grid;
@@ -110,26 +104,16 @@
   border-radius: 20px;
   background: linear-gradient(145deg, #ffffff, #f8fafc);
   padding: 6px;
-<<<<<<< HEAD:src/pages/loginPage/login.scss
-  box-shadow:
-    0 10px 30px rgba(126, 211, 33, 0.12),
-=======
   box-shadow: 
     0 10px 30px rgba(25, 135, 84, 0.12),
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533:src/pages/loginPage/index.scss
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: all 0.3s ease;
 }
 
 .logo-frame:hover {
   transform: translateY(-5px);
-<<<<<<< HEAD:src/pages/loginPage/login.scss
-  box-shadow:
-    0 20px 40px rgba(126, 211, 33, 0.16),
-=======
   box-shadow: 
     0 20px 40px rgba(25, 135, 84, 0.16),
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533:src/pages/loginPage/index.scss
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
@@ -258,15 +242,9 @@
 .form-input:focus {
   border-color: #198754;
   background: rgba(248, 255, 248, 0.8);
-<<<<<<< HEAD:src/pages/loginPage/login.scss
-  box-shadow:
-    0 0 0 3px rgba(126, 211, 33, 0.1),
-    0 4px 20px rgba(126, 211, 33, 0.08);
-=======
   box-shadow: 
     0 0 0 3px rgba(25, 135, 84, 0.1),
     0 4px 20px rgba(25, 135, 84, 0.08);
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533:src/pages/loginPage/index.scss
   transform: translateY(-1px);
 }
 
@@ -591,18 +569,13 @@
     padding: 14px 16px;
     font-size: 16px;
   }
-<<<<<<< HEAD:src/pages/loginPage/login.scss
-
-  .btn-login,
-  .btn-google {
-=======
   
   .password-wrapper .form-input {
     padding: 14px 50px 14px 16px;
   }
   
-  .btn-login, .btn-google {
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533:src/pages/loginPage/index.scss
+  .btn-login,
+  .btn-google {
     padding: 14px;
   }
 

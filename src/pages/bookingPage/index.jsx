@@ -460,38 +460,16 @@ export default function BookingPage() {
         const reservationId = reservationData?.id;
 
         if (reservationId) {
-<<<<<<< HEAD
-          console.log("✅ Reservation ID:", reservationId);
+          console.log("Reservation created successfully - ID:", reservationId);
 
-          // 👇 Lấy thông tin vehicle từ API hoặc state
-          let vehicleInfo = null;
-
-          // Nếu có selectedVehicle từ state (đã được set khi chọn xe)
-          if (selectedVehicle) {
-            vehicleInfo = selectedVehicle;
-          } else {
-            // Fallback: Fetch từ API nếu cần
-            vehicleInfo = {
-              id: vehicleId,
-              plateNumber: "N/A",
-              make: "N/A",
-              model: "N/A"
-            };
-          }
-=======
-          console.log("✅ Reservation thành công - ID:", reservationId);
-
-          // 👇 Gọi hàm cập nhật slot status qua API
           await handleUpdateSlot(selectedSlot.id, "booked");
 
-          let vehicleInfo = selectedVehicle || {
+          const vehicleInfo = selectedVehicle || {
             id: vehicleId,
             plateNumber: "N/A",
             make: "N/A",
             model: "N/A",
           };
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
-
           navigate("/booking-success", {
             state: {
               reservation: reservationData,
@@ -1144,8 +1122,6 @@ export default function BookingPage() {
 
                 <div className="confirmation-grid">
                   <div className="summary-section">
-<<<<<<< HEAD
-                    {/* Vehicle Selection Card */}
                     <div className="summary-card vehicle-selection-card">
                       <h3 style={{ textAlign: "center" }}>Xe của bạn</h3>
                       {selectedVehicle ? (
@@ -1153,15 +1129,21 @@ export default function BookingPage() {
                           <div className="selected-vehicle-info">
                             <div className="summary-item">
                               <span className="summary-label">Biển số:</span>
-                              <span className="summary-value">{selectedVehicle.plateNumber}</span>
+                              <span className="summary-value">
+                                {selectedVehicle.plateNumber}
+                              </span>
                             </div>
                             <div className="summary-item">
                               <span className="summary-label">Xe:</span>
-                              <span className="summary-value">{selectedVehicle.make} {selectedVehicle.model}</span>
+                              <span className="summary-value">
+                                {selectedVehicle.make} {selectedVehicle.model}
+                              </span>
                             </div>
                             <div className="summary-item">
                               <span className="summary-label">Loại sạc:</span>
-                              <span className="summary-value">{selectedVehicle.connectorType}</span>
+                              <span className="summary-value">
+                                {selectedVehicle.connectorType}
+                              </span>
                             </div>
                           </div>
                           <button
@@ -1180,10 +1162,35 @@ export default function BookingPage() {
                         </button>
                       )}
                     </div>
-
-=======
->>>>>>> e20dc5c3f3b0c1c7f431847d420b919bbb4c6533
-                    <div className="summary-card station-card">
+                            <div className=\"summary-item\">
+                              <span className=\"summary-label\">Xe:</span>
+                              <span className=\"summary-value\">
+                                {selectedVehicle.make} {selectedVehicle.model}
+                              </span>
+                            </div>
+                            <div className=\"summary-item\">
+                              <span className=\"summary-label\">Lo?i s?c:</span>
+                              <span className=\"summary-value\">
+                                {selectedVehicle.connectorType}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            className=\"change-vehicle-btn\"
+                            onClick={() => setShowVehicleModal(true)}
+                          >
+                            �?i xe kh�c
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className=\"select-vehicle-btn\"
+                          onClick={() => setShowVehicleModal(true)}
+                        >
+                          Ch?n xe
+                        </button>
+                      )}
+                    </div>                    <div className="summary-card station-card">
                       <h3 style={{ textAlign: "center" }}>
                         Thông tin trạm sạc
                       </h3>
@@ -1790,3 +1797,5 @@ export default function BookingPage() {
     </div>
   );
 }
+
+
