@@ -1166,35 +1166,7 @@ export default function BookingPage() {
                         </button>
                       )}
                     </div>
-                            <div className=\"summary-item\">
-                              <span className=\"summary-label\">Xe:</span>
-                              <span className=\"summary-value\">
-                                {selectedVehicle.make} {selectedVehicle.model}
-                              </span>
-                            </div>
-                            <div className=\"summary-item\">
-                              <span className=\"summary-label\">Lo?i s?c:</span>
-                              <span className=\"summary-value\">
-                                {selectedVehicle.connectorType}
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            className=\"change-vehicle-btn\"
-                            onClick={() => setShowVehicleModal(true)}
-                          >
-                            –?i xe kh·c
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className=\"select-vehicle-btn\"
-                          onClick={() => setShowVehicleModal(true)}
-                        >
-                          Ch?n xe
-                        </button>
-                      )}
-                    </div>                    <div className="summary-card station-card">
+                    <div className="summary-card station-card">
                       <h3 style={{ textAlign: "center" }}>
                         Th√¥ng tin tr·∫°m s·∫°c
                       </h3>
