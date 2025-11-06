@@ -16,6 +16,18 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
       path: "user-management",
     },
     {
+      id: "subscription-management",
+      icon: "📦",
+      label: "Quản lý gói đăng ký",
+      path: "subscription-management",
+    },
+    {
+      id: "transaction-management",
+      icon: "💳",
+      label: "Quản lý giao dịch",
+      path: "transaction-management",
+    },
+    {
       id: "revenue-management",
       icon: "💰",
       label: "Báo cáo doanh thu",

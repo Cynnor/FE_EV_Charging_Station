@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
+import SupportPage from "./pages/supportPage/index";
 import ProfilePage from "./pages/profilePage";
 import BookingPage from "./pages/bookingPage";
 import PaymentPage from "./pages/PaymentPage/index";
@@ -17,6 +18,8 @@ import AdminLayout from "./components/adminLayout/index";
 import Overview from "./pages/adminDashboard/overViewManagement/index";
 import StationManagement from "./pages/adminDashboard/stationManagement/index";
 import UserManagement from "./pages/adminDashboard/userManagement/index";
+import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement/index";
+import TransactionManagement from "./pages/adminDashboard/transactionManagement/index";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement/index";
 import Analytics from "./pages/adminDashboard/analyticsManagement/index";
 import SettingManagement from "./pages/adminDashboard/settingManagement/index";
@@ -37,7 +40,7 @@ function App() {
         { path: "", element: <HomePage /> },
         { path: "charging-stations", element: <ChargingStationsPage /> },
         { path: "about", element: <AboutPage /> },
-        // { path: "support", element: <SupportPage /> },
+        { path: "support", element: <SupportPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "booking/:stationId", element: <BookingPage /> },
         { path: "booking", element: <BookingPage /> },
@@ -77,6 +80,8 @@ function App() {
         { path: "", element: <Overview /> },
         { path: "station-management", element: <StationManagement /> },
         { path: "user-management", element: <UserManagement /> },
+        { path: "subscription-management", element: <SubscriptionManagement /> },
+        { path: "transaction-management", element: <TransactionManagement /> },
         { path: "revenue-management", element: <RevenueManagement /> },
         { path: "analytics-management", element: <Analytics /> },
         { path: "settings-management", element: <SettingManagement /> },

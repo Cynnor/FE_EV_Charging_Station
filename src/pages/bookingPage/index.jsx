@@ -88,8 +88,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 /** Map 1 item API -> 1 station cho UI map/list.
@@ -131,7 +131,7 @@ function mapPortToCharger(port, idx, baseLatLng) {
   const delta = 0.00012;
   const coords = [
     (baseLatLng?.[0] || 0) +
-      (idx % 3 === 0 ? delta : idx % 3 === 1 ? -delta : 0),
+    (idx % 3 === 0 ? delta : idx % 3 === 1 ? -delta : 0),
     (baseLatLng?.[1] || 0) + (idx % 2 === 0 ? delta : -delta),
   ];
 
@@ -332,8 +332,8 @@ export default function BookingPage() {
         districtFilter === "all"
           ? true
           : (station.address || "")
-              .toLowerCase()
-              .includes(districtFilter.toLowerCase());
+            .toLowerCase()
+            .includes(districtFilter.toLowerCase());
 
       return matchesSearch && matchesType && matchesDistrict;
     });
@@ -460,18 +460,16 @@ export default function BookingPage() {
         const reservationId = reservationData?.id;
 
         if (reservationId) {
-          console.log("✅ Reservation thành công - ID:", reservationId);
+          console.log("Reservation created successfully - ID:", reservationId);
 
-          // 👇 Gọi hàm cập nhật slot status qua API
           await handleUpdateSlot(selectedSlot.id, "booked");
 
-          let vehicleInfo = selectedVehicle || {
+          const vehicleInfo = selectedVehicle || {
             id: vehicleId,
             plateNumber: "N/A",
             make: "N/A",
             model: "N/A",
           };
-
           navigate("/booking-success", {
             state: {
               reservation: reservationData,
@@ -844,9 +842,8 @@ export default function BookingPage() {
                         key={station.id}
                         className={`station-card ${station.type
                           .toLowerCase()
-                          .replace(" ", "-")} ${
-                          selectedStation?.id === station.id ? "selected" : ""
-                        }`}
+                          .replace(" ", "-")} ${selectedStation?.id === station.id ? "selected" : ""
+                          }`}
                         onClick={() => {
                           setSelectedStation(station);
                           setSelectedCharger(null);
@@ -867,11 +864,10 @@ export default function BookingPage() {
                             <div
                               className="availability-fill"
                               style={{
-                                width: `${
-                                  station.total
+                                width: `${station.total
                                     ? (station.available / station.total) * 100
                                     : 0
-                                }%`,
+                                  }%`,
                               }}
                             ></div>
                           </div>
@@ -956,9 +952,8 @@ export default function BookingPage() {
                 {chargers.map((charger) => (
                   <div
                     key={charger.id}
-                    className={`charger-card ${charger.status} ${
-                      selectedCharger?.id === charger.id ? "selected" : ""
-                    }`}
+                    className={`charger-card ${charger.status} ${selectedCharger?.id === charger.id ? "selected" : ""
+                      }`}
                     onClick={() => {
                       if (charger.status === "available") {
                         console.log("✅ Charger được chọn:", charger);
@@ -1063,9 +1058,8 @@ export default function BookingPage() {
                   {slots.map((slot, index) => (
                     <div
                       key={slot.id}
-                      className={`slot-card ${slot.status} ${
-                        selectedSlot?.id === slot.id ? "selected" : ""
-                      }`}
+                      className={`slot-card ${slot.status} ${selectedSlot?.id === slot.id ? "selected" : ""
+                        }`}
                       onClick={() => {
                         if (slot.status === "booked") {
                           alert(
@@ -1132,6 +1126,46 @@ export default function BookingPage() {
 
                 <div className="confirmation-grid">
                   <div className="summary-section">
+                    <div className="summary-card vehicle-selection-card">
+                      <h3 style={{ textAlign: "center" }}>Xe của bạn</h3>
+                      {selectedVehicle ? (
+                        <>
+                          <div className="selected-vehicle-info">
+                            <div className="summary-item">
+                              <span className="summary-label">Biển số:</span>
+                              <span className="summary-value">
+                                {selectedVehicle.plateNumber}
+                              </span>
+                            </div>
+                            <div className="summary-item">
+                              <span className="summary-label">Xe:</span>
+                              <span className="summary-value">
+                                {selectedVehicle.make} {selectedVehicle.model}
+                              </span>
+                            </div>
+                            <div className="summary-item">
+                              <span className="summary-label">Loại sạc:</span>
+                              <span className="summary-value">
+                                {selectedVehicle.connectorType}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            className="change-vehicle-btn"
+                            onClick={() => setShowVehicleModal(true)}
+                          >
+                            Đổi xe khác
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="select-vehicle-btn"
+                          onClick={() => setShowVehicleModal(true)}
+                        >
+                          Chọn xe
+                        </button>
+                      )}
+                    </div>
                     <div className="summary-card station-card">
                       <h3 style={{ textAlign: "center" }}>
                         Thông tin trạm sạc
@@ -1643,9 +1677,8 @@ export default function BookingPage() {
                 {dateOptions.map((d) => (
                   <button
                     key={d.iso}
-                    className={`date-card ${
-                      formData.date === d.iso ? "selected" : ""
-                    }`}
+                    className={`date-card ${formData.date === d.iso ? "selected" : ""
+                      }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, date: d.iso }));
                       setShowDateModal(false);
@@ -1683,9 +1716,8 @@ export default function BookingPage() {
                 {timeSlots.map((t) => (
                   <button
                     key={t}
-                    className={`time-slot ${
-                      formData.startTime === t ? "selected" : ""
-                    }`}
+                    className={`time-slot ${formData.startTime === t ? "selected" : ""
+                      }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, startTime: t }));
                       setShowTimeModal(false);
@@ -1723,9 +1755,8 @@ export default function BookingPage() {
                 {endTimeSlots.map((t) => (
                   <button
                     key={t}
-                    className={`time-slot ${
-                      formData.endTime === t ? "selected" : ""
-                    }`}
+                    className={`time-slot ${formData.endTime === t ? "selected" : ""
+                      }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, endTime: t }));
                       setShowEndTimeModal(false);
@@ -1742,3 +1773,5 @@ export default function BookingPage() {
     </div>
   );
 }
+
+
