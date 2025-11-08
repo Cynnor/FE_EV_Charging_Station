@@ -2,13 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import "./index.scss";
 import ChargingMap from "../../components/chargingMap";
-// Removed unused import
 import api from "../../config/api";
 
 /** ============== MAPPERS & TYPES (JS) ============== */
 // Danh sách quận cố định theo yêu cầu (đã loại bỏ trùng lặp)
 const FIXED_DISTRICTS = [
   "Quận 1",
+  "Quận 2",
   "Quận 3",
   "Quận 4",
   "Quận 5",
@@ -171,6 +171,18 @@ function mapPortToCharger(port, idx, baseLatLng) {
   };
 }
 
+// ✅ Helper: chỉ cho phép chọn slot có trạng thái 'available'
+const SELECTABLE_SLOT_STATUS = "available";
+const NON_SELECTABLE_SLOT_STATUSES = [
+  "booked",
+  "reserved",
+  "occupied",
+  "maintenance",
+  "disabled",
+  "unavailable",
+];
+const isSlotSelectable = (status) => status === SELECTABLE_SLOT_STATUS;
+
 /** =================== COMPONENT =================== */
 export default function BookingPage() {
   const [vehicleId, setVehicleId] = useState("");
@@ -203,6 +215,7 @@ export default function BookingPage() {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [submitting, setSubmitting] = useState(false); // prevent double submit + show loading
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all"); // giữ state nhưng không áp dụng lọc loại trạm
@@ -342,9 +355,13 @@ export default function BookingPage() {
       // trường hợp 'Quận 1' khớp nhầm 'Quận 10'.
       let matchesDistrict = true;
       if (districtFilter !== "all") {
-        const stationDistrict = station.district || extractDistrictFromAddress(station.address) || null;
+        const stationDistrict =
+          station.district ||
+          extractDistrictFromAddress(station.address) ||
+          null;
         if (stationDistrict) {
-          matchesDistrict = stationDistrict.toLowerCase() === districtFilter.toLowerCase();
+          matchesDistrict =
+            stationDistrict.toLowerCase() === districtFilter.toLowerCase();
         } else {
           const escaped = escapeRegex(districtFilter);
           const re = new RegExp(`\\b${escaped}\\b`, "i");
@@ -402,13 +419,22 @@ export default function BookingPage() {
     endTime: "",
   });
 
-  // const handleChange = (e) => {
-  //   const { name, value } = e.target;
-  //   setFormData((prev) => ({ ...prev, [name]: value }));
-  // };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const handleSubmit = (e) => {
+  // Replace handleSubmit with async version: revalidate slot + validate time + guard
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+
+    // Chặn ngay nếu slot không còn 'available'
+    if (!selectedSlot || !isSlotSelectable(selectedSlot.status)) {
+      alert("❌ Slot không còn khả dụng. Vui lòng chọn slot khác.");
+      setStep(3);
+      return;
+    }
 
     if (!selectedStation || !selectedCharger || !selectedSlot) {
       alert("⚠️ Vui lòng chọn trạm, trụ và slot!");
@@ -420,6 +446,7 @@ export default function BookingPage() {
       return;
     }
 
+    // Build ISO in UTC
     const toUtcIso = (dateStr, timeStr) => {
       const [h, m] = timeStr.split(":").map(Number);
       const dt = new Date(dateStr);
@@ -430,6 +457,45 @@ export default function BookingPage() {
     const startAtIso = toUtcIso(formData.date, formData.startTime);
     const endAtIso = toUtcIso(formData.date, formData.endTime);
 
+    // Quick time validation to reduce 400 from API
+    const now = new Date();
+    const startDate = new Date(startAtIso);
+    const endDate = new Date(endAtIso);
+    if (endDate <= startDate) {
+      alert("❌ Giờ kết thúc phải sau giờ bắt đầu.");
+      return;
+    }
+    if (startDate < new Date(now.getTime() + 2 * 60 * 1000)) {
+      alert("❌ Giờ bắt đầu phải ở tương lai (ít nhất sau vài phút).");
+      return;
+    }
+
+    // Re-validate latest slot status before booking (avoid race conditions)
+    setSubmitting(true);
+    try {
+      const url = `/stations/ports/${encodeURIComponent(
+        selectedCharger.id
+      )}/slots`;
+      const { data } = await api.get(url);
+      const latest = data?.items || [];
+      setSlots(latest);
+      const current = latest.find((s) => s.id === selectedSlot.id);
+      if (!current || !isSlotSelectable(current.status)) {
+        alert(
+          "❌ Slot này vừa được đặt bởi người khác. Vui lòng chọn slot khác."
+        );
+        setSelectedSlot(null);
+        setStep(3);
+        setSubmitting(false);
+        return;
+      }
+    } catch (verifyErr) {
+      console.error("❌ Không thể xác minh trạng thái slot:", verifyErr);
+      alert("Không thể xác minh trạng thái slot. Vui lòng thử lại.");
+      setSubmitting(false);
+      return;
+    }
+
     const payload = {
       vehicleId,
       items: [
@@ -439,93 +505,78 @@ export default function BookingPage() {
           endAt: endAtIso,
         },
       ],
-      status: "pending",
+      // status: "pending", // để server quyết định trạng thái, tránh 400 nếu không cho phép
     };
 
-    console.log("🚀 Gửi reservation payload:", payload);
+    try {
+      const res = await api.post("/reservations", payload);
+      const reservationData = res.data.data || res.data;
+      const reservationId = reservationData?.id;
 
-    api
-      .post("/reservations", payload)
-      .then(async (res) => {
-        const reservationData = res.data.data || res.data;
-        const reservationId = reservationData?.id;
-
-        if (reservationId) {
-          console.log("Reservation created successfully - ID:", reservationId);
-
-          await handleUpdateSlot(selectedSlot.id, "booked");
-
-          const vehicleInfo = selectedVehicle || {
-            id: vehicleId,
-            plateNumber: "N/A",
-            make: "N/A",
-            model: "N/A",
-          };
-          navigate("/booking-success", {
-            state: {
-              reservation: reservationData,
-              station: selectedStation,
-              charger: selectedCharger,
-              vehicle: vehicleInfo,
-              bookingTime: {
-                date: formData.date,
-                startTime: formData.startTime,
-                endTime: formData.endTime,
-              },
+      if (reservationId) {
+        const vehicleInfo = selectedVehicle || {
+          id: vehicleId,
+          plateNumber: "N/A",
+          make: "N/A",
+          model: "N/A",
+        };
+        navigate("/booking-success", {
+          state: {
+            reservation: reservationData,
+            station: selectedStation,
+            charger: selectedCharger,
+            vehicle: vehicleInfo,
+            bookingTime: {
+              date: formData.date,
+              startTime: formData.startTime,
+              endTime: formData.endTime,
             },
-            replace: true,
-          });
-        } else {
-          console.warn("⚠️ Không tìm thấy reservationId trong response");
-          alert("Đặt chỗ thành công nhưng không nhận được ID.");
-          navigate("/", { replace: true });
+          },
+          replace: true,
+        });
+      } else {
+        console.warn("⚠️ Không tìm thấy reservationId trong response");
+        alert("Đặt chỗ thành công nhưng không nhận được ID.");
+        navigate("/", { replace: true });
+      }
+    } catch (err) {
+      console.error("❌ Lỗi khi tạo reservation:", err);
+
+      if (err.response?.status === 409) {
+        alert(
+          "❌ Slot này đã được đặt bởi người khác. Vui lòng chọn slot khác."
+        );
+        setSelectedSlot(null);
+        setStep(3);
+
+        // reload once
+        try {
+          const url = `/stations/ports/${encodeURIComponent(
+            selectedCharger.id
+          )}/slots`;
+          setSlotsLoading(true);
+          const { data } = await api.get(url);
+          setSlots(data?.items || []);
+        } catch (reloadErr) {
+          console.error("❌ Lỗi khi reload slots:", reloadErr);
+          setSlotsError("Không thể tải lại danh sách slot");
+          setSlots([]);
+        } finally {
+          setSlotsLoading(false);
         }
-      })
-      .catch((err) => {
-        console.error("❌ Lỗi khi tạo reservation:", err);
-
-        if (err.response?.status === 409) {
-          console.log("⚠️ Slot đã được đặt - reload lại danh sách slot");
-          alert(
-            "❌ Đặt chỗ thất bại: Slot này đã được đặt bởi người khác\n\nVui lòng chọn lại slot khác."
-          );
-
-          setSelectedSlot(null);
-          setStep(3);
-
-          // Reload slots 1 lần duy nhất khi có conflict
-          if (selectedCharger && selectedCharger.id) {
-            const url = `/stations/ports/${encodeURIComponent(
-              selectedCharger.id
-            )}/slots`;
-            setSlotsLoading(true);
-            api
-              .get(url)
-              .then(({ data }) => {
-                console.log("✅ Đã reload slots mới:", data?.items);
-                setSlots(data?.items || []);
-              })
-              .catch((reloadErr) => {
-                console.error("❌ Lỗi khi reload slots:", reloadErr);
-                setSlotsError("Không thể tải lại danh sách slot");
-                setSlots([]);
-              })
-              .finally(() => {
-                setSlotsLoading(false);
-              });
-          }
-        } else if (err.response?.status === 400) {
-          const errorMsg =
-            err.response.data?.message || "Dữ liệu đặt chỗ không hợp lệ";
-          console.log("⚠️ Lỗi dữ liệu:", errorMsg);
-          alert(`❌ Đặt chỗ thất bại: ${errorMsg}`);
-        } else {
-          const errorMsg =
-            err.response?.data?.message || err.message || "Lỗi không xác định";
-          console.log("⚠️ Lỗi đặt chỗ:", errorMsg);
-          alert(`❌ Đặt chỗ thất bại: ${errorMsg}`);
-        }
-      });
+      } else if (err.response?.status === 400) {
+        const errorMsg =
+          err.response.data?.message ||
+          "Dữ liệu đặt chỗ không hợp lệ (kiểm tra thời gian, slot/port).";
+        alert(`❌ Đặt chỗ thất bại: ${errorMsg}`);
+      } else {
+        const errorMsg =
+          err.response?.data?.message || err.message || "Lỗi không xác định";
+        alert(`❌ Đặt chỗ thất bại: ${errorMsg}`);
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
   // Lấy id xe khi vào trang booking
   useEffect(() => {
@@ -1049,45 +1100,50 @@ export default function BookingPage() {
                       Không có slot khả dụng cho trụ này
                     </div>
                   )}
-                  {slots.map((slot, index) => (
-                    <div
-                      key={slot.id}
-                      className={`slot-card ${slot.status} ${
-                        selectedSlot?.id === slot.id ? "selected" : ""
-                      }`}
-                      onClick={() => {
-                        if (slot.status === "booked") {
-                          alert(
-                            "❌ Slot này đã được đặt. Vui lòng chọn slot khác!"
-                          );
-                          return;
-                        }
-                        setSelectedSlot(slot);
-                      }}
-                    >
-                      <div className="slot-header">
-                        <span className="slot-number">Slot {index + 1}</span>
-                        <span className={`slot-status-badge ${slot.status}`}>
-                          {slot.status === "available" && "✓ Có sẵn"}
-                          {slot.status === "booked" && "✕ Đã đặt"}
+                  {slots.map((slot, index) => {
+                    const selectable = isSlotSelectable(slot.status);
+                    return (
+                      <div
+                        key={slot.id}
+                        className={`slot-card ${slot.status} ${
+                          selectedSlot?.id === slot.id ? "selected" : ""
+                        } ${!selectable ? "disabled" : ""}`}
+                        onClick={() => {
+                          if (!selectable) return;
+                          setSelectedSlot(slot);
+                        }}
+                      >
+                        <span className={`slot-status-chip ${slot.status}`}>
+                          {selectable ? "✓ Có sẵn" : "✕ Đã đặt"}
                         </span>
-                      </div>
 
-                      <div className="slot-duration">
-                        <span className="duration-icon">⏳</span>
-                        <span className="duration-text">
-                          Thời lượng: 24 giờ
-                        </span>
+                        <div className="slot-header">
+                          <span className="slot-number">Slot {index + 1}</span>
+                          {/* removed old inline status in header */}
+                          {/* <span className={`slot-status-badge ${slot.status}`}>...</span> */}
+                        </div>
+
+                        <div className="slot-duration">
+                          <span className="duration-icon">⏳</span>
+                          <span className="duration-text">
+                            Thời lượng: 24 giờ
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
               <button
                 className="next-button"
-                disabled={!selectedSlot}
-                onClick={() => selectedSlot && setStep(4)}
+                disabled={
+                  !selectedSlot || !isSlotSelectable(selectedSlot?.status)
+                }
+                onClick={() => {
+                  if (selectedSlot && isSlotSelectable(selectedSlot.status))
+                    setStep(4);
+                }}
               >
                 Tiếp tục xác nhận
               </button>
@@ -1121,46 +1177,6 @@ export default function BookingPage() {
 
                 <div className="confirmation-grid">
                   <div className="summary-section">
-                    <div className="summary-card vehicle-selection-card">
-                      <h3 style={{ textAlign: "center" }}>Xe của bạn</h3>
-                      {selectedVehicle ? (
-                        <>
-                          <div className="selected-vehicle-info">
-                            <div className="summary-item">
-                              <span className="summary-label">Biển số:</span>
-                              <span className="summary-value">
-                                {selectedVehicle.plateNumber}
-                              </span>
-                            </div>
-                            <div className="summary-item">
-                              <span className="summary-label">Xe:</span>
-                              <span className="summary-value">
-                                {selectedVehicle.make} {selectedVehicle.model}
-                              </span>
-                            </div>
-                            <div className="summary-item">
-                              <span className="summary-label">Loại sạc:</span>
-                              <span className="summary-value">
-                                {selectedVehicle.connectorType}
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            className="change-vehicle-btn"
-                            onClick={() => setShowVehicleModal(true)}
-                          >
-                            Đổi xe khác
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className="select-vehicle-btn"
-                          onClick={() => setShowVehicleModal(true)}
-                        >
-                          Chọn xe
-                        </button>
-                      )}
-                    </div>
                     <div className="summary-card station-card">
                       <h3 style={{ textAlign: "center" }}>
                         Thông tin trạm sạc
@@ -1387,22 +1403,34 @@ export default function BookingPage() {
                         </div>
                       </div>
 
-                      <button type="submit" className="submit-button">
-                        <span>Xác nhận </span>
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                        >
-                          <path
-                            d="M4 10h12M12 6l4 4-4 4"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                      <button
+                        type="submit"
+                        className="submit-button"
+                        disabled={
+                          !selectedSlot ||
+                          !isSlotSelectable(selectedSlot.status) ||
+                          submitting
+                        }
+                      >
+                        <span>
+                          {submitting ? "Đang xác nhận..." : "Xác nhận "}
+                        </span>
+                        {!submitting && (
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 20 20"
+                            fill="none"
+                          >
+                            <path
+                              d="M4 10h12M12 6l4 4-4 4"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        )}
                       </button>
                     </form>
                   </div>

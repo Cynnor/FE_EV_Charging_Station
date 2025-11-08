@@ -21,8 +21,6 @@ import UserManagement from "./pages/adminDashboard/userManagement/index";
 import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement/index";
 import TransactionManagement from "./pages/adminDashboard/transactionManagement/index";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement/index";
-import Analytics from "./pages/adminDashboard/analyticsManagement/index";
-import SettingManagement from "./pages/adminDashboard/settingManagement/index";
 import StaffLayout from "./components/staffLayout/index";
 import ChargingSessions from "./pages/staffDashboard/chargingSessions/index";
 import StationStatus from "./pages/staffDashboard/stationStatus/index";
@@ -80,11 +78,12 @@ function App() {
         { path: "", element: <Overview /> },
         { path: "station-management", element: <StationManagement /> },
         { path: "user-management", element: <UserManagement /> },
-        { path: "subscription-management", element: <SubscriptionManagement /> },
+        {
+          path: "subscription-management",
+          element: <SubscriptionManagement />,
+        },
         { path: "transaction-management", element: <TransactionManagement /> },
         { path: "revenue-management", element: <RevenueManagement /> },
-        { path: "analytics-management", element: <Analytics /> },
-        { path: "settings-management", element: <SettingManagement /> },
       ],
     },
     {
