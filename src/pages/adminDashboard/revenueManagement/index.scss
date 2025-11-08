@@ -1,4 +1,7 @@
 .revenue-management {
+  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
+  min-height: 100vh;
+
   // Page Header
   .page-header {
     display: flex;
@@ -9,16 +12,16 @@
     border-bottom: 1px solid #e2e8f0;
 
     .header-content {
-      h2 {
+      .main-title {
         margin: 0 0 4px 0;
         font-size: 24px;
         font-weight: 700;
-        color: #1e293b;
+        color: #333333;
       }
 
-      p {
+      .main-desc {
         margin: 0;
-        color: #64748b;
+        color: #AAAAAA;
         font-size: 14px;
       }
     }
@@ -75,17 +78,17 @@
       .revenue-content {
         flex: 1;
 
-        h3 {
+        .card-title {
           margin: 0 0 8px 0;
           font-size: 14px;
-          color: #64748b;
+          color: #AAAAAA;
           font-weight: 500;
         }
 
         .revenue-amount {
           font-size: 24px;
           font-weight: 700;
-          color: #1e293b;
+          color: #333333;
           margin-bottom: 4px;
         }
 
@@ -93,18 +96,12 @@
           font-size: 12px;
           font-weight: 500;
 
-          &.positive {
-            color: #059669;
-          }
-
-          &.negative {
-            color: #dc2626;
-          }
-
+          &.positive,
           &.increase {
-            color: #059669;
+            color: #198754;
           }
 
+          &.negative,
           &.decrease {
             color: #dc2626;
           }
@@ -139,11 +136,11 @@
       justify-content: space-between;
       align-items: center;
 
-      h3 {
-        margin: 0;
+      .card-title {
         font-size: 18px;
         font-weight: 600;
-        color: #1e293b;
+        color: #333333;
+        margin: 0;
       }
 
       .chart-controls {
@@ -158,11 +155,12 @@
           font-size: 12px;
           cursor: pointer;
           transition: all 0.2s;
+          color: #333333;
 
           &.active {
-            background: #7ed321;
-            border-color: #7ed321;
-            color: white;
+            background: #198754;
+            border-color: #198754;
+            color: #ffffff;
           }
         }
       }
@@ -189,14 +187,14 @@
 
       .revenue-bar {
         flex: 1;
-        background: linear-gradient(180deg, #7ed321, #a3e635);
+        background: linear-gradient(180deg, #198754, #E0F7E0);
         border-radius: 2px 2px 0 0;
         min-height: 20px;
         transition: all 0.3s ease;
         cursor: pointer;
 
         &:hover {
-          background: linear-gradient(180deg, #6bb81d, #7ed321);
+          background: linear-gradient(180deg, #146c43, #D1F5D1);
         }
       }
     }
@@ -223,10 +221,9 @@
         flex: 1;
 
         .station-name {
-          display: block;
           font-size: 14px;
           font-weight: 500;
-          color: #1e293b;
+          color: #333333;
           margin-bottom: 6px;
         }
 
@@ -255,7 +252,7 @@
         .revenue-amount {
           font-size: 14px;
           font-weight: 600;
-          color: #059669;
+          color: #198754;
         }
 
         .growth {
@@ -263,7 +260,7 @@
           font-weight: 500;
 
           &.positive {
-            color: #059669;
+            color: #198754;
           }
 
           &.negative {
@@ -284,17 +281,17 @@
       align-items: center;
       margin-bottom: 16px;
 
-      h3 {
-        margin: 0;
+      .card-title {
         font-size: 18px;
         font-weight: 600;
-        color: #1e293b;
+        color: #333333;
+        margin: 0;
       }
 
       .btn-link {
         background: none;
         border: none;
-        color: #7ed321;
+        color: #198754;
         font-size: 14px;
         cursor: pointer;
         font-weight: 500;
@@ -319,10 +316,10 @@
         padding: 16px 20px;
         font-size: 12px;
         font-weight: 600;
-        color: #64748b;
+        color: #AAAAAA;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        background: #f8fafc;
+        background: #E0F7E0;
         border-bottom: 1px solid #e2e8f0;
       }
 
@@ -330,17 +327,17 @@
         padding: 16px 20px;
         border-bottom: 1px solid #f1f5f9;
         font-size: 14px;
-        color: #374151;
+        color: #333333;
       }
 
       .user-name {
         font-weight: 500;
-        color: #1e293b;
+        color: #333333;
       }
 
       .amount {
         font-weight: 600;
-        color: #059669;
+        color: #198754;
       }
 
       .status-badge {
@@ -350,8 +347,8 @@
         font-weight: 500;
 
         &.completed {
-          background: #dcfce7;
-          color: #16a34a;
+          background: #d1f5d1;
+          color: #198754;
         }
 
         &.pending {
@@ -369,53 +366,69 @@
 
   // Analysis Section
   .analysis-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 32px;
+
     .analysis-card {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      border: 1px solid #f1f5f9;
+      background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(25, 135, 84, 0.08);
+      border: none;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 900px;
 
       .card-header {
-        padding: 24px;
-        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 24px;
+        text-align: left;
 
-        h3 {
+        .card-title {
+          font-size: 22px;
+          font-weight: 700;
+          color: #333333;
           margin: 0;
-          font-size: 18px;
-          font-weight: 600;
-          color: #1e293b;
         }
       }
 
       .analysis-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1px;
-        background: #f1f5f9;
+        gap: 16px;
+        background: none;
 
         .analysis-item {
           background: white;
-          padding: 24px;
+          border-radius: 12px;
+          box-shadow: 0 1px 4px rgba(25, 135, 84, 0.06);
+          padding: 24px 12px;
           text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
 
           .analysis-label {
-            font-size: 12px;
-            color: #64748b;
+            font-size: 13px;
+            color: #AAAAAA;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 8px;
+            font-weight: 500;
           }
 
           .analysis-value {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
-            color: #1e293b;
+            color: #198754;
             margin-bottom: 4px;
           }
 
           .analysis-date {
-            font-size: 12px;
-            color: #64748b;
+            font-size: 13px;
+            color: #AAAAAA;
           }
         }
       }
@@ -434,11 +447,11 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #7ed321;
-    color: white;
+    background: #198754;
+    color: #ffffff;
 
     &:hover {
-      background: #6bb81d;
+      background: #146c43;
     }
   }
 }

@@ -602,6 +602,45 @@ body {
       border-color: rgba($danger, 0.3);
     }
   }
+
+  /* Status badge for charger cards (Step 2) */
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+
+  .status-badge.available {
+    background: rgba($success, 0.12);
+    color: $success;
+    border-color: rgba($success, 0.18);
+  }
+
+  /* Make in_use display as red (busy) per request */
+  .status-badge.in_use {
+    background: rgba($danger, 0.10);
+    color: $danger;
+    border-color: rgba($danger, 0.16);
+  }
+
+  .status-badge.booked,
+  .status-badge.occupied {
+    background: rgba($danger, 0.10);
+    color: $danger;
+    border-color: rgba($danger, 0.16);
+  }
+
+  .status-badge.maintenance {
+    background: rgba($text-muted, 0.06);
+    color: $text-muted;
+    border-color: rgba($text-muted, 0.10);
+  }
 }
 
 .type-row {
@@ -1921,80 +1960,37 @@ body {
       }
     }
 
-    .slot-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e5e7eb;
-
-      .slot-number {
-        font-weight: 700;
-        font-size: 1.1rem;
-        color: $text-primary;
-      }
-
-      .slot-status-badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-
-        &.available {
-          background: rgba(25, 135, 84, 0.1);
-          color: $primary;
-        }
-
-        &.booked {
-          background: rgba(220, 38, 38, 0.1);
-          color: #dc2626;
-        }
-      }
+    // Step 3 – slot card styling moved from JSX
+    &.disabled {
+      cursor: not-allowed;
+      pointer-events: none;
+      opacity: 0.55;
     }
 
-    .slot-time-info {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 12px;
-      flex: 1;
+    .slot-status-chip {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      pointer-events: none;
 
-      .time-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .time-label {
-          font-size: 0.9rem;
-          color: $text-secondary;
-        }
-
-        .time-value {
-          font-size: 1rem;
-          font-weight: 600;
-          color: $text-primary;
-        }
-      }
-    }
-
-    .slot-duration {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: rgba(25, 135, 84, 0.05);
-      border-radius: 8px;
-      margin-top: auto;
-
-      .duration-icon {
-        font-size: 1.2rem;
+      &.available {
+        background-color: rgba(16, 185, 129, 0.15); // emerald-500 @ 15%
+        color: #10B981;
       }
 
-      .duration-text {
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: $text-primary;
+      // Treat any non-available status as "booked" appearance
+      &.booked,
+      &.reserved,
+      &.occupied,
+      &.maintenance,
+      &.disabled,
+      &.unavailable {
+        background-color: rgba(239, 68, 68, 0.15); // red-500 @ 15%
+        color: #EF4444;
       }
     }
   }

@@ -121,6 +121,8 @@ const RevenueManagement = () => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -129,8 +131,10 @@ const RevenueManagement = () => {
       {/* Header */}
       <div className="page-header">
         <div className="header-content">
-          <h2>Báo cáo doanh thu</h2>
-          <p>Thống kê chi tiết về doanh thu và hiệu quả kinh doanh</p>
+          <h2 className="main-title">Báo cáo doanh thu</h2>
+          <p className="main-desc">
+            Thống kê chi tiết về doanh thu và hiệu quả kinh doanh
+          </p>
         </div>
         <div className="header-actions">
           <select
@@ -143,9 +147,6 @@ const RevenueManagement = () => {
             <option value="3months">3 tháng qua</option>
             <option value="year">Năm nay</option>
           </select>
-          <button className="btn-primary">
-            <span>📊</span> Xuất báo cáo
-          </button>
         </div>
       </div>
 
@@ -155,7 +156,7 @@ const RevenueManagement = () => {
           <div key={index} className="revenue-card">
             <div className="revenue-icon">{stat.icon}</div>
             <div className="revenue-content">
-              <h3>{stat.title}</h3>
+              <h3 className="card-title">{stat.title}</h3>
               <div className="revenue-amount">{stat.value}</div>
               <div className={`revenue-change ${stat.changeType}`}>
                 {stat.change} {stat.comparison}
@@ -169,7 +170,7 @@ const RevenueManagement = () => {
       <div className="charts-grid">
         <div className="chart-card large">
           <div className="card-header">
-            <h3>Biểu đồ doanh thu 30 ngày qua</h3>
+            <h3 className="card-title">Biểu đồ doanh thu 30 ngày qua</h3>
             <div className="chart-controls">
               <button className="chart-type-btn active">Cột</button>
               <button className="chart-type-btn">Đường</button>
@@ -196,7 +197,7 @@ const RevenueManagement = () => {
 
         <div className="chart-card">
           <div className="card-header">
-            <h3>Doanh thu theo trạm</h3>
+            <h3 className="card-title">Doanh thu theo trạm</h3>
           </div>
           <div className="chart-content">
             <div className="station-revenue-list">
@@ -234,7 +235,7 @@ const RevenueManagement = () => {
       {/* Recent Transactions */}
       <div className="transactions-section">
         <div className="section-header">
-          <h3>Giao dịch gần đây</h3>
+          <h3 className="card-title">Giao dịch gần đây</h3>
           <button className="btn-link">Xem tất cả</button>
         </div>
         <div className="table-container">
@@ -277,7 +278,7 @@ const RevenueManagement = () => {
       <div className="analysis-section">
         <div className="analysis-card">
           <div className="card-header">
-            <h3>Phân tích chi tiết</h3>
+            <h3 className="card-title">Phân tích chi tiết</h3>
           </div>
           <div className="analysis-grid">
             <div className="analysis-item">
