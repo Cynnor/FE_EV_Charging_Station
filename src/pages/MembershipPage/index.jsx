@@ -82,13 +82,21 @@ function MembershipPage() {
     return grouped;
   };
 
-  // Implement payment flow cho subscription
+  // ===== SUBSCRIPTION PAYMENT FLOW =====
+  // Flow: 
+  // 1. User xem danh sách plans (GET /subscription-plans) - đã load trong loadSubscriptionData()
+  // 2. User chọn plan và gọi API này với planId
+  // 3. API tự động tạo subscription pending cho user
+  // 4. API trả về URL thanh toán VNPay + subscriptionId
+  // 5. User redirect đến VNPay để thanh toán
+  // 6. Sau khi VNPay return, gọi check-payment-status với subscriptionId (xử lý trong paymentSuccessPage)
   const handleSubscribe = async (plan) => {
     try {
       setSelectedPlan(plan);
       setShowPaymentModal(true);
 
       // Gọi API để tạo payment URL cho subscription
+      // API sẽ tự động tạo subscription (status: pending) và trả về paymentUrl + subscriptionId
       const response = await api.post('/subscriptions/payment', {
         planId: plan._id,
         locale: 'vn'

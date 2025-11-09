@@ -51,11 +51,14 @@ export default function PaymentSuccessPage() {
                     subscriptionId === pendingSubscriptionId;
 
                 if (isSubscriptionPayment && subscriptionId) {
-                    // Xử lý subscription payment
-                    // vnp_TxnRef chính là subscriptionId, dùng nó để gọi check-payment
+                    // ===== SUBSCRIPTION PAYMENT FLOW =====
+                    // Flow: User thanh toán xong, VNPay redirect về với query params
+                    // Frontend gọi API này với subscriptionId + VNPay query params
+                    // API verify signature, cập nhật transaction, activate subscription
+                    // Trả về trạng thái chi tiết
                     try {
                         const response = await api.post('/subscriptions/check-payment-status', {
-                            subscriptionId: subscriptionId, // vnp_TxnRef = subscriptionId
+                            subscriptionId: subscriptionId, // vnp_TxnRef = subscriptionId (từ BE)
                             vnp_Amount: vnpParams.vnp_Amount,
                             vnp_BankCode: vnpParams.vnp_BankCode,
                             vnp_BankTranNo: vnpParams.vnp_BankTranNo,
@@ -79,7 +82,6 @@ export default function PaymentSuccessPage() {
 
                             if (status === 'success' || vnpParams.vnp_ResponseCode === '00') {
                                 // Xóa pendingSubscriptionId sau khi xử lý thành công
-                                // vnp_TxnRef đã được dùng để check payment, không cần localStorage nữa
                                 localStorage.removeItem('pendingSubscriptionId');
 
                                 const subscriptionInfo = paymentData.subscription || paymentData.subscriptionData || paymentData;
@@ -97,13 +99,23 @@ export default function PaymentSuccessPage() {
                                     subscriptionInfo: subscriptionInfo
                                 });
                             } else if (status === 'failed') {
+                                // Xóa pendingSubscriptionId khi payment failed
+                                localStorage.removeItem('pendingSubscriptionId');
                                 setPaymentStatus('error');
                             } else if (status === 'cancelled') {
+                                // Xóa pendingSubscriptionId khi payment cancelled
+                                localStorage.removeItem('pendingSubscriptionId');
                                 setPaymentStatus('cancelled');
                             }
+                        } else {
+                            // API không trả về success
+                            localStorage.removeItem('pendingSubscriptionId');
+                            setPaymentStatus('error');
                         }
                     } catch (subError) {
                         console.error('Error checking subscription payment:', subError);
+                        // Xóa pendingSubscriptionId khi có lỗi
+                        localStorage.removeItem('pendingSubscriptionId');
                         setPaymentStatus('error');
                     }
                 } else {

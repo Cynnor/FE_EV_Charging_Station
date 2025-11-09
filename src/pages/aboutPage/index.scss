@@ -1,9 +1,8 @@
 .about-page {
   font-family: "Arial", sans-serif;
-  color: #333;
+  color: #333333;
   background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
   min-height: 100vh;
-
 
   /* Hero Banner Video */
   .about-banner {
@@ -111,7 +110,6 @@
         font-style: italic;
         font-weight: 600;
         color: #333333;
-
         background: rgba(255, 255, 255, 0.6);
         padding: 10px 15px;
         border-left: 5px solid #198754;
@@ -182,7 +180,7 @@
       gap: 25px;
 
       .team-card {
-        background: #198754;
+        background: rgba(255, 255, 255, 0.6);
         padding: 30px 20px;
         border-radius: 16px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -197,20 +195,19 @@
 
         .icon {
           font-size: 40px;
-          color: #ffffff;
+          color: #198754;
           margin-bottom: 15px;
         }
 
         h3 {
           color: #333333;
-          color: #ffffff;
           font-size: 18px;
           margin-bottom: 10px;
         }
 
         p {
           font-size: 14px;
-          color: #ffffff;
+          color: #AAAAAA;
           line-height: 1.6;
         }
       }

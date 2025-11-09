@@ -45,31 +45,6 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const itemRefs = useRef({});
 
-
-  // // ===== Xử lý VNPay return URL =====
-  // useEffect(() => {
-  //   const urlParams = new URLSearchParams(window.location.search);
-  //   const vnpResponseCode = urlParams.get('vnp_ResponseCode');
-
-  //   console.log('Checking VNPay return:', {
-  //     vnpResponseCode,
-  //     search: window.location.search,
-  //     pathname: window.location.pathname,
-  //     href: window.location.href
-  //   });
-
-  //   if (vnpResponseCode) {
-  //     // Có VNPay return parameters, redirect đến paymentSuccessPage
-  //     const queryString = window.location.search;
-
-  //     // Tạo URL mới cho payment-success
-  //     const newUrl = window.location.origin + '/payment-success' + queryString;
-
-  //     console.log('Redirecting to:', newUrl);
-  //     window.location.href = newUrl;
-  //   }
-  // }, []);
-
   // ===== Handle VNPay Return =====
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -77,12 +52,11 @@ const HomePage = () => {
 
     if (vnpResponseCode) {
       const queryString = window.location.search;
-      const newUrl = window.origin + "/payment-success" + queryString;
+      const newUrl =
+        window.location.origin + "/payment-success" + queryString;
       window.location.href = newUrl;
     }
   }, []);
-
-
   // ===== Fetch Station Data from API =====
   useEffect(() => {
     let isMounted = true;
@@ -270,9 +244,8 @@ const HomePage = () => {
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${
-                      selectedId === station.id ? "is-selected" : ""
-                    }`}
+                    className={`station-item ${selectedId === station.id ? "is-selected" : ""
+                      }`}
                     onClick={() => setSelectedId(station.id)}
                   >
                     <div className="station-header">
@@ -369,3 +342,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

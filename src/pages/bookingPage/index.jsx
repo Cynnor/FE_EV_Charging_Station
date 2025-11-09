@@ -386,11 +386,10 @@ export default function BookingPage() {
   });
 
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({ ...prev, [name]: value }));
+  // };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -437,25 +436,16 @@ export default function BookingPage() {
         const reservationId = reservationData?.id;
 
         if (reservationId) {
-          console.log("✅ Reservation ID:", reservationId);
+          console.log("Reservation created successfully - ID:", reservationId);
 
-          // 👇 Lấy thông tin vehicle từ API hoặc state
-          let vehicleInfo = null;
+          //await handleUpdateSlot(selectedSlot.id, "booked");
 
-          // Nếu có selectedVehicle từ state (đã được set khi chọn xe)
-          if (selectedVehicle) {
-            vehicleInfo = selectedVehicle;
-          } else {
-            // Fallback: Fetch từ API nếu cần
-            vehicleInfo = {
-              id: vehicleId,
-              plateNumber: "N/A",
-              make: "N/A",
-              model: "N/A"
-            };
-          }
-
-          // 👇 Chuyển đến trang BookingSuccess với đầy đủ thông tin
+          const vehicleInfo = selectedVehicle || {
+            id: vehicleId,
+            plateNumber: "N/A",
+            make: "N/A",
+            model: "N/A",
+          };
           navigate("/booking-success", {
             state: {
               reservation: reservationData,
@@ -1057,7 +1047,7 @@ export default function BookingPage() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                Quay lại
+                Quay lại2
               </button>
 
               <div className="confirmation-content">
@@ -1071,7 +1061,6 @@ export default function BookingPage() {
 
                 <div className="confirmation-grid">
                   <div className="summary-section">
-                    {/* Vehicle Selection Card */}
                     <div className="summary-card vehicle-selection-card">
                       <h3 style={{ textAlign: "center" }}>Xe của bạn</h3>
                       {selectedVehicle ? (
@@ -1079,15 +1068,21 @@ export default function BookingPage() {
                           <div className="selected-vehicle-info">
                             <div className="summary-item">
                               <span className="summary-label">Biển số:</span>
-                              <span className="summary-value">{selectedVehicle.plateNumber}</span>
+                              <span className="summary-value">
+                                {selectedVehicle.plateNumber}
+                              </span>
                             </div>
                             <div className="summary-item">
                               <span className="summary-label">Xe:</span>
-                              <span className="summary-value">{selectedVehicle.make} {selectedVehicle.model}</span>
+                              <span className="summary-value">
+                                {selectedVehicle.make} {selectedVehicle.model}
+                              </span>
                             </div>
                             <div className="summary-item">
                               <span className="summary-label">Loại sạc:</span>
-                              <span className="summary-value">{selectedVehicle.connectorType}</span>
+                              <span className="summary-value">
+                                {selectedVehicle.connectorType}
+                              </span>
                             </div>
                           </div>
                           <button
@@ -1106,7 +1101,6 @@ export default function BookingPage() {
                         </button>
                       )}
                     </div>
-
                     <div className="summary-card station-card">
                       <h3 style={{ textAlign: "center" }}>
                         Thông tin trạm sạc

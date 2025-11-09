@@ -1,27 +1,36 @@
+// Palette and tokens aligned with project
+$primary: #198754;
+$primary-hover: #146c43;
+$text-primary: #333333;
+$text-secondary: #AAAAAA;
+$card-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+$radius-md: 12px;
+$radius-lg: 16px;
+
 .payment-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0fad6 0%, #eafbcf 100%);
-    padding-top: 80px;
-    font-family: "Arial", sans-serif;
+    background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
+    padding-top: 100px;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .error-container {
     max-width: 600px;
     margin: 0 auto;
     background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    padding: 40px;
+    border-radius: $radius-lg;
+    box-shadow: $card-shadow;
+    padding: 32px;
     text-align: center;
 
     h1 {
         color: #e74c3c;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
     }
 
     p {
-        color: #666;
-        margin-bottom: 24px;
+        color: $text-secondary;
+        margin-bottom: 20px;
         font-size: 16px;
     }
 }
@@ -32,14 +41,14 @@
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 24px;
-    padding: 20px;
+    padding: 16px;
 }
 
 .left,
 .right {
     background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border-radius: $radius-lg;
+    box-shadow: $card-shadow;
     padding: 20px;
 }
 
@@ -47,9 +56,9 @@
 .plan-card,
 .payment-methods,
 .total-card {
-    background: #fafafa;
-    border: 1px solid #eee;
-    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: $radius-md;
     padding: 16px;
     margin-bottom: 16px;
 }
@@ -57,7 +66,14 @@
 h1,
 h3 {
     margin: 0 0 12px 0;
-    color: #144d1a;
+    color: $text-primary;
+}
+
+.summary-card h3,
+.plan-card h3,
+.payment-methods h3,
+.total-card h3 {
+    color: $primary;
 }
 
 .plan-types {
@@ -77,6 +93,31 @@ h3 {
     gap: 8px;
 }
 
+// Amount summary block in left pane
+.amount-info {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px dashed #e5e7eb;
+}
+
+.amount-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+
+    span:first-child {
+        color: $text-secondary;
+    }
+
+    span:last-child {
+        font-weight: 700;
+        color: $text-primary;
+    }
+}
+
+// Each detail row in left card
+.detail-item,
 .detail-row {
     display: flex;
     justify-content: space-between;
@@ -84,24 +125,23 @@ h3 {
     padding: 8px 0;
     border-bottom: 1px solid #eee;
 
-    &.total {
-        border-top: 2px solid #144d1a;
-        border-bottom: none;
-        font-weight: bold;
-        color: #144d1a;
-        margin-top: 8px;
-        padding-top: 12px;
-    }
-
     &:last-child {
         border-bottom: none;
     }
 }
 
-.payment-page {
-    &.grid {
-        display: grid;
-    }
+.detail-row.total {
+    border-top: 2px solid $primary;
+    border-bottom: none;
+    font-weight: 700;
+    color: $primary;
+    margin-top: 8px;
+    padding-top: 12px;
+}
+
+// Backward compatibility for any .payment-page.grid usage
+.payment-page.grid {
+    display: grid;
 }
 
 input,
@@ -113,13 +153,25 @@ select {
 }
 
 .price-note {
-    color: #666;
+    color: $text-secondary;
     font-size: 13px;
 }
 
 .methods {
     display: grid;
     gap: 8px;
+
+    label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: $text-primary;
+    }
+
+    input[type="radio"] {
+        accent-color: $primary;
+    }
 }
 
 .total-card .row {
@@ -129,7 +181,8 @@ select {
 }
 
 .total-card .value {
-    font-weight: bold;
+    font-weight: 700;
+    color: $text-primary;
 }
 
 .pay-btn {
@@ -138,10 +191,41 @@ select {
     padding: 12px;
     border: none;
     border-radius: 8px;
-    background: #28a745;
+    background: $primary;
     color: #fff;
     font-weight: 700;
     cursor: pointer;
+    transition: all .2s ease;
+
+    &:hover {
+        background: $primary-hover;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(25, 135, 84, .25);
+    }
+
+    &:disabled {
+        opacity: .7;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
+}
+
+.invoice-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #fff;
+    border: 2px solid $primary;
+    color: $primary;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+
+    &:hover {
+        background: rgba(25, 135, 84, 0.06);
+    }
 }
 
 .back-btn {
@@ -158,13 +242,32 @@ select {
     margin-top: 16px;
     background: #f8fff2;
     border: 1px solid #d8f2c0;
-    border-radius: 12px;
+    border-radius: $radius-md;
     padding: 16px;
 }
 
 .grand-total {
     font-size: 18px;
-    color: #1f7a2e;
+    color: $primary;
+}
+
+// Right side invoice preview card (in-page)
+.invoice-card {
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: $radius-md;
+    padding: 16px;
+    box-shadow: $card-shadow;
+
+    h3 {
+        color: $primary;
+        margin-bottom: 8px;
+    }
+
+    p {
+        color: $text-primary;
+        margin: 6px 0;
+    }
 }
 
 .invoice-actions {
@@ -184,24 +287,24 @@ select {
     }
 
     .print-btn {
-        background: #4CAF50;
-        color: white;
+        background: $primary;
+        color: #fff;
 
         &:hover {
-            background: #45a049;
+            background: $primary-hover;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 4px 8px rgba(25, 135, 84, .3);
         }
     }
 
     .close-btn {
-        background: #f44336;
-        color: white;
+        background: #6b7280;
+        color: #fff;
 
         &:hover {
-            background: #d32f2f;
+            background: #4b5563;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+            box-shadow: 0 4px 8px rgba(107, 114, 128, .3);
         }
     }
 }
@@ -222,29 +325,29 @@ select {
 }
 
 .invoice-print-content {
-    background: white;
-    border-radius: 12px;
+    background: #fff;
+    border-radius: $radius-md;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     max-width: 800px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
     padding: 40px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #333;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: $text-primary;
 }
 
 .invoice-header {
     text-align: center;
-    border-bottom: 2px solid #10b981;
+    border-bottom: 2px solid $primary;
     padding-bottom: 20px;
     margin-bottom: 30px;
 }
 
 .invoice-title {
     font-size: 28px;
-    font-weight: bold;
-    color: #10b981;
+    font-weight: 800;
+    color: $primary;
     margin-bottom: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -271,12 +374,12 @@ select {
 
 .info-section {
     h3 {
-        color: #10b981;
+        color: $primary;
         border-bottom: 2px solid #e5e7eb;
         padding-bottom: 10px;
         margin-bottom: 20px;
         font-size: 18px;
-        font-weight: 600;
+        font-weight: 700;
     }
 }
 
@@ -294,7 +397,7 @@ select {
 }
 
 .info-label {
-    font-weight: 500;
+    font-weight: 600;
     color: #374151;
     min-width: 120px;
 }
@@ -302,30 +405,30 @@ select {
 .info-value {
     color: #6b7280;
     text-align: right;
-    font-weight: 400;
+    font-weight: 500;
 }
 
 .total-section {
     background: linear-gradient(135deg, #f0fdf4, #dcfce7);
     padding: 25px;
-    border-radius: 12px;
+    border-radius: $radius-md;
     margin: 30px 0;
     text-align: center;
-    border: 2px solid #10b981;
+    border: 2px solid $primary;
 }
 
 .total-label {
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
     color: #374151;
     margin-bottom: 10px;
 }
 
 .total-amount {
     font-size: 32px;
-    font-weight: bold;
-    color: #10b981;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-weight: 800;
+    color: $primary;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .invoice-footer {
@@ -339,51 +442,6 @@ select {
 
     p {
         margin: 5px 0;
-    }
-}
-
-.invoice-actions {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
-}
-
-.print-btn,
-.close-btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.print-btn {
-    background: #10b981;
-    color: white;
-
-    &:hover {
-        background: #059669;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-}
-
-.close-btn {
-    background: #6b7280;
-    color: white;
-
-    &:hover {
-        background: #4b5563;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
     }
 }
 
@@ -424,7 +482,13 @@ select {
     }
 }
 
-// Mobile responsive
+// Responsive
+@media (max-width: 900px) {
+    .payment-container {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 768px) {
     .invoice-print-container {
         padding: 10px;
