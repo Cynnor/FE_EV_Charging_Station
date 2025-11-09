@@ -343,7 +343,7 @@ function MembershipPage() {
                       <span className="original-price">{formatPrice(currentPlan.originalPrice)}</span>
                     )}
                   </div>
-                  <p className="price-period">{formatDuration(currentPlan.duration)}</p>
+                  {/* <p className="price-period">{formatDuration(currentPlan.duration)}</p> */}
                 </div>
 
                 <p className="plan-description">{currentPlan.description}</p>

@@ -231,22 +231,23 @@
         }
     }
 
-    // Duration Selector - Spotify style
+    // Duration Selector - Improved contrast
     .duration-selector {
         margin-bottom: 24px;
 
         .duration-tabs {
             display: flex;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 4px;
-            border-radius: 10px;
-            min-height: 48px;
+            gap: 8px;
+            background: #f0f0f0;
+            padding: 6px;
+            border-radius: 12px;
+            min-height: 52px;
+            border: 1px solid rgba(25, 135, 84, 0.1);
 
             .no-duration-message {
                 padding: 10px;
                 text-align: center;
-                color: #AAAAAA;
+                color: #666666;
                 font-size: 14px;
                 width: 100%;
             }
@@ -255,10 +256,10 @@
         .duration-tab {
             flex: 1;
             padding: 12px 8px;
-            background: transparent;
-            border: none;
-            border-radius: 6px;
-            color: #AAAAAA;
+            background: #ffffff;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            color: #333333;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -267,39 +268,47 @@
             flex-direction: column;
             align-items: center;
             gap: 6px;
-            min-height: 48px;
+            min-height: 52px;
             justify-content: center;
 
             &:hover {
-                color: #333333;
-                background: rgba(25, 135, 84, 0.1);
-                transform: scale(1.02);
+                border-color: #198754;
+                background: rgba(25, 135, 84, 0.05);
+                color: #198754;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(25, 135, 84, 0.15);
             }
 
             &.active {
                 background: #198754;
+                border-color: #198754;
                 color: #ffffff;
                 font-weight: 700;
-                box-shadow: 0 2px 8px rgba(25, 135, 84, 0.3);
+                box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4);
+                transform: translateY(-2px);
 
                 .savings-badge {
-                    background: rgba(255, 255, 255, 0.25);
+                    background: rgba(255, 255, 255, 0.3);
                     color: #ffffff;
+                    border: 1px solid rgba(255, 255, 255, 0.4);
                 }
             }
 
             .duration-text {
                 font-size: 14px;
+                font-weight: inherit;
             }
 
             .savings-badge {
                 font-size: 10px;
-                padding: 2px 6px;
-                border-radius: 4px;
-                background: rgba(25, 135, 84, 0.2);
+                padding: 3px 8px;
+                border-radius: 6px;
+                background: rgba(25, 135, 84, 0.15);
                 color: #198754;
                 font-weight: 700;
                 text-transform: uppercase;
+                border: 1px solid rgba(25, 135, 84, 0.2);
+                white-space: nowrap;
             }
         }
     }

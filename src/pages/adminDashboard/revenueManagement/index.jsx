@@ -71,6 +71,7 @@ const RevenueManagement = () => {
         limit: 1000, // Lấy nhiều records để tính toán
         sortBy: "createdAt",
         sortOrder: "desc",
+        populate: "user", // Yêu cầu populate user object
       };
 
       const response = await api.get("/transactions", { params });
@@ -93,10 +94,12 @@ const RevenueManagement = () => {
 
       // Tính toán các thống kê
       calculateRevenueStats(transactionsData, fromDate, toDate);
-      calculateStationRevenue(transactionsData);
       calculateDailyRevenue(transactionsData, fromDate, toDate);
       calculateAnalysis(transactionsData);
-      
+
+      // Tính station revenue (async) - sẽ cập nhật analysis sau khi fetch xong
+      calculateStationRevenue(transactionsData);
+
       // Lấy 10 giao dịch gần đây nhất
       setRecentTransactions(transactionsData.slice(0, 10));
     } catch (err) {
@@ -145,7 +148,7 @@ const RevenueManagement = () => {
     const lastMonthRevenue = lastMonthTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
 
     // Tính phần trăm thay đổi
-    const todayChange = yesterdayRevenue > 0 
+    const todayChange = yesterdayRevenue > 0
       ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue * 100).toFixed(1)
       : 0;
     const monthChange = lastMonthRevenue > 0
@@ -203,46 +206,136 @@ const RevenueManagement = () => {
 
   // Tính doanh thu theo trạm (nếu có thông tin station trong transaction)
   const calculateStationRevenue = (transactions) => {
-    // Group by station (nếu transaction có reservationId, có thể lấy station từ reservation)
-    // Tạm thời group theo reservationId hoặc userId nếu không có station info
-    const stationMap = new Map();
+    // Group by reservationId để có thể fetch station info sau
+    const reservationMap = new Map();
+    const unknownStationKey = "unknown";
 
     transactions.forEach((transaction) => {
-      // Nếu có reservation, có thể fetch station info
-      // Tạm thời dùng userId làm key nếu không có station
-      const key = transaction.reservationId || transaction.userId || "Unknown";
-      const stationName = transaction.reservation?.station?.name || 
-                         transaction.stationName || 
-                         `Trạm ${key.slice(-4)}`;
+      // Chỉ group theo reservationId nếu có, nếu không thì group vào "Không xác định"
+      const reservationId = transaction.reservationId;
 
-      if (!stationMap.has(key)) {
-        stationMap.set(key, {
-          id: key,
-          name: stationName,
-          revenue: 0,
-          count: 0,
+      if (reservationId) {
+        if (!reservationMap.has(reservationId)) {
+          reservationMap.set(reservationId, {
+            id: reservationId,
+            name: "Đang tải...", // Sẽ được cập nhật sau
+            revenue: 0,
+            count: 0,
+          });
+        }
+        reservationMap.get(reservationId).revenue += transaction.amount || 0;
+        reservationMap.get(reservationId).count += 1;
+      } else {
+        // Nếu không có reservationId, group vào "Không xác định"
+        if (!reservationMap.has(unknownStationKey)) {
+          reservationMap.set(unknownStationKey, {
+            id: unknownStationKey,
+            name: "Không xác định",
+            revenue: 0,
+            count: 0,
+          });
+        }
+        reservationMap.get(unknownStationKey).revenue += transaction.amount || 0;
+        reservationMap.get(unknownStationKey).count += 1;
+      }
+    });
+
+    // Fetch station info từ reservations (nếu có)
+    const fetchStationNames = async () => {
+      const reservationIds = Array.from(reservationMap.keys()).filter(id => id !== unknownStationKey);
+
+      if (reservationIds.length === 0) {
+        // Không có reservation nào, chỉ hiển thị "Không xác định"
+        const stationArray = Array.from(reservationMap.values())
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 5);
+
+        const maxRevenue = stationArray.length > 0 ? stationArray[0].revenue : 1;
+        const stationsWithStats = stationArray.map((station) => ({
+          ...station,
+          percentage: (station.revenue / maxRevenue * 100).toFixed(0),
+          growth: 0,
+        }));
+        setStationRevenue(stationsWithStats);
+        return;
+      }
+
+      // Fetch reservations để lấy station info
+      try {
+        const reservationPromises = reservationIds.map(async (reservationId) => {
+          try {
+            const res = await api.get(`/reservations/${reservationId}`);
+            const reservation = res.data?.data || res.data;
+
+            // Lấy station name từ reservation
+            let stationName = "Không xác định";
+            if (reservation?.items?.[0]?.slot?.port) {
+              const portId = reservation.items[0].slot.port;
+              try {
+                const portRes = await api.get(`/stations/ports/${portId}`);
+                const portData = portRes.data?.data || portRes.data;
+                if (portData?.station) {
+                  const stationRes = await api.get(`/stations/${portData.station}`);
+                  const stationData = stationRes.data?.data || stationRes.data;
+                  stationName = stationData?.name || "Không xác định";
+                }
+              } catch (err) {
+                console.log("Error fetching station info:", err);
+              }
+            }
+
+            return { reservationId, stationName };
+          } catch (err) {
+            console.log(`Error fetching reservation ${reservationId}:`, err);
+            return { reservationId, stationName: "Không xác định" };
+          }
+        });
+
+        const results = await Promise.all(reservationPromises);
+
+        // Cập nhật tên trạm
+        results.forEach(({ reservationId, stationName }) => {
+          if (reservationMap.has(reservationId)) {
+            reservationMap.get(reservationId).name = stationName;
+          }
+        });
+      } catch (err) {
+        console.log("Error fetching station names:", err);
+        // Nếu lỗi, đặt tất cả thành "Không xác định"
+        reservationMap.forEach((station) => {
+          if (station.name === "Đang tải...") {
+            station.name = "Không xác định";
+          }
         });
       }
 
-      const station = stationMap.get(key);
-      station.revenue += transaction.amount || 0;
-      station.count += 1;
-    });
+      // Chuyển sang array và sắp xếp theo revenue
+      const stationArray = Array.from(reservationMap.values())
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5); // Top 5
 
-    // Chuyển sang array và sắp xếp theo revenue
-    const stationArray = Array.from(stationMap.values())
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5); // Top 5
+      // Tính percentage và growth
+      const maxRevenue = stationArray.length > 0 ? stationArray[0].revenue : 1;
+      const stationsWithStats = stationArray.map((station) => ({
+        ...station,
+        percentage: (station.revenue / maxRevenue * 100).toFixed(0),
+        growth: 0,
+      }));
 
-    // Tính percentage và growth (tạm thời để 0 vì cần so sánh với kỳ trước)
-    const maxRevenue = stationArray.length > 0 ? stationArray[0].revenue : 1;
-    const stationsWithStats = stationArray.map((station) => ({
-      ...station,
-      percentage: (station.revenue / maxRevenue * 100).toFixed(0),
-      growth: 0, // Cần so sánh với kỳ trước để tính growth
-    }));
+      setStationRevenue(stationsWithStats);
 
-    setStationRevenue(stationsWithStats);
+      // Cập nhật analysis với tên trạm chính xác
+      if (stationsWithStats.length > 0) {
+        const topStation = stationsWithStats[0];
+        setAnalysis(prev => ({
+          ...prev,
+          bestStation: topStation.name !== "Đang tải..." ? topStation.name : prev.bestStation,
+          bestStationRevenue: topStation.revenue,
+        }));
+      }
+    };
+
+    return fetchStationNames();
   };
 
   // Tính doanh thu theo ngày
@@ -309,27 +402,32 @@ const RevenueManagement = () => {
       }
     });
 
-    // Trạm hiệu quả nhất
-    const stationMap = new Map();
+    // Trạm hiệu quả nhất - tính từ transactions, group theo reservationId
+    const stationRevenueMap = new Map();
     transactions.forEach((transaction) => {
-      const key = transaction.reservationId || transaction.userId || "Unknown";
-      const stationName = transaction.reservation?.station?.name || 
-                         transaction.stationName || 
-                         `Trạm ${key.slice(-4)}`;
-      if (!stationMap.has(key)) {
-        stationMap.set(key, { name: stationName, revenue: 0 });
+      const reservationId = transaction.reservationId;
+      if (reservationId) {
+        if (!stationRevenueMap.has(reservationId)) {
+          stationRevenueMap.set(reservationId, { revenue: 0, count: 0 });
+        }
+        stationRevenueMap.get(reservationId).revenue += transaction.amount || 0;
+        stationRevenueMap.get(reservationId).count += 1;
       }
-      stationMap.get(key).revenue += transaction.amount || 0;
     });
 
-    let bestStation = "N/A";
+    // Tìm reservationId có doanh thu cao nhất
+    let bestReservationId = null;
     let bestStationRevenue = 0;
-    stationMap.forEach((station) => {
-      if (station.revenue > bestStationRevenue) {
-        bestStationRevenue = station.revenue;
-        bestStation = station.name;
+    stationRevenueMap.forEach((data, reservationId) => {
+      if (data.revenue > bestStationRevenue) {
+        bestStationRevenue = data.revenue;
+        bestReservationId = reservationId;
       }
     });
+
+    // Tên trạm sẽ được cập nhật sau khi fetch station info trong calculateStationRevenue
+    // Tạm thời hiển thị "Không xác định"
+    let bestStation = "Không xác định";
 
     // Thời gian cao điểm (giờ có nhiều giao dịch nhất)
     const hourMap = new Map();
@@ -390,31 +488,53 @@ const RevenueManagement = () => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   // Format date
   const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    if (!dateString) return "N/A";
+    try {
+      // Đảm bảo dateString là string hoặc Date object hợp lệ
+      const date = new Date(dateString);
+      // Kiểm tra nếu date không hợp lệ
+      if (isNaN(date.getTime())) {
+        return "N/A";
+      }
+      return date.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "Asia/Ho_Chi_Minh",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "N/A";
+    }
   };
 
   // Format date time
   const formatDateTime = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "N/A";
+      }
+      return date.toLocaleString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Ho_Chi_Minh",
+      });
+    } catch (error) {
+      console.error("Error formatting datetime:", error);
+      return "N/A";
+    }
   };
 
   // Get status badge
@@ -429,6 +549,24 @@ const RevenueManagement = () => {
       refunded: "↩️ Đã hoàn tiền",
     };
     return statusMap[status] || status;
+  };
+
+  // Helper to get display name for a transaction's user
+  const getUserDisplayName = (transaction) => {
+    if (!transaction) return "N/A";
+    const u = transaction.user || {};
+    return (
+      u.fullName ||
+      u.fullname ||
+      u.name ||
+      u.displayName ||
+      u.username ||
+      (u.email ? u.email.split("@")[0] : null) ||
+      transaction.email ||
+      transaction.payerEmail ||
+      (transaction.userId ? `User ${String(transaction.userId).slice(-6)}` : null) ||
+      "N/A"
+    );
   };
 
   // Tính max revenue cho biểu đồ
@@ -465,8 +603,10 @@ const RevenueManagement = () => {
       {/* Header */}
       <div className="page-header">
         <div className="header-content">
-          <h2>Báo cáo doanh thu</h2>
-          <p>Thống kê chi tiết về doanh thu và hiệu quả kinh doanh</p>
+          <h2 className="main-title">Báo cáo doanh thu</h2>
+          <p className="main-desc">
+            Thống kê chi tiết về doanh thu và hiệu quả kinh doanh
+          </p>
         </div>
         <div className="header-actions">
           <select
@@ -482,6 +622,8 @@ const RevenueManagement = () => {
           <button className="btn-primary" onClick={fetchRevenueData}>
             <span>🔄</span> Làm mới
           </button>
+
+
         </div>
       </div>
 
@@ -491,7 +633,7 @@ const RevenueManagement = () => {
           <div key={index} className="revenue-card">
             <div className="revenue-icon">{stat.icon}</div>
             <div className="revenue-content">
-              <h3>{stat.title}</h3>
+              <h3 className="card-title">{stat.title}</h3>
               <div className="revenue-amount">{stat.value}</div>
               <div className={`revenue-change ${stat.changeType}`}>
                 {stat.change} {stat.comparison}
@@ -528,7 +670,7 @@ const RevenueManagement = () => {
 
         <div className="chart-card">
           <div className="card-header">
-            <h3>Doanh thu theo trạm</h3>
+            <h3 className="card-title">Doanh thu theo trạm</h3>
           </div>
           <div className="chart-content">
             <div className="station-revenue-list">
@@ -550,9 +692,8 @@ const RevenueManagement = () => {
                       </span>
                       {station.growth !== 0 && (
                         <span
-                          className={`growth ${
-                            station.growth >= 0 ? "positive" : "negative"
-                          }`}
+                          className={`growth ${station.growth >= 0 ? "positive" : "negative"
+                            }`}
                         >
                           {station.growth >= 0 ? "↗" : "↘"}{" "}
                           {Math.abs(station.growth)}%
@@ -583,7 +724,6 @@ const RevenueManagement = () => {
           <table className="transactions-table">
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Người dùng</th>
                 <th>Số tiền</th>
                 <th>Thời gian</th>
@@ -594,10 +734,7 @@ const RevenueManagement = () => {
               {recentTransactions.length > 0 ? (
                 recentTransactions.map((transaction) => (
                   <tr key={transaction._id || transaction.id}>
-                    <td>#{transaction._id?.slice(-8) || transaction.id?.slice(-8) || "N/A"}</td>
-                    <td className="user-name">
-                      {transaction.user?.fullName || transaction.userId || "N/A"}
-                    </td>
+                    <td className="user-name">{getUserDisplayName(transaction)}</td>
                     <td className="amount">
                       {formatCurrency(transaction.amount)}
                     </td>
@@ -611,7 +748,7 @@ const RevenueManagement = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: "center", padding: "20px", color: "#999" }}>
+                  <td colSpan="4" style={{ textAlign: "center", padding: "20px", color: "#999" }}>
                     Không có giao dịch
                   </td>
                 </tr>
@@ -625,7 +762,7 @@ const RevenueManagement = () => {
       <div className="analysis-section">
         <div className="analysis-card">
           <div className="card-header">
-            <h3>Phân tích chi tiết</h3>
+            <h3 className="card-title">Phân tích chi tiết</h3>
           </div>
           <div className="analysis-grid">
             <div className="analysis-item">

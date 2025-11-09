@@ -33,18 +33,6 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
       label: "Báo cáo doanh thu",
       path: "revenue-management",
     },
-    {
-      id: "analytics-management",
-      icon: "📈",
-      label: "Phân tích",
-      path: "analytics-management",
-    },
-    {
-      id: "settings-management",
-      icon: "⚙️",
-      label: "Cài đặt",
-      path: "settings-management",
-    },
   ];
 
   return (

@@ -21,8 +21,6 @@ import UserManagement from "./pages/adminDashboard/userManagement/index";
 import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement/index";
 import TransactionManagement from "./pages/adminDashboard/transactionManagement/index";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement/index";
-import Analytics from "./pages/adminDashboard/analyticsManagement/index";
-import SettingManagement from "./pages/adminDashboard/settingManagement/index";
 import StaffLayout from "./components/staffLayout/index";
 import OverviewStaff from "./pages/staffDashboard/Overview/index";
 import ChargingSessions from "./pages/staffDashboard/chargingSessions/index";
@@ -45,7 +43,7 @@ function App() {
         { path: "profile", element: <ProfilePage /> },
         { path: "booking/:stationId", element: <BookingPage /> },
         { path: "booking", element: <BookingPage /> },
-        { path: "payment", element: <PaymentPage /> },
+        // { path: "payment", element: <PaymentPage /> },
         { path: "payment-success", element: <PaymentSuccessPage /> },
         { path: "membership", element: <MembershipPage /> },
       ],
@@ -71,6 +69,10 @@ function App() {
       element: <BookingSuccessPage />,
     },
     {
+      path: "payment",
+      element: <PaymentPage />
+    },
+    {
       path: "admin",
       element: (
         <ProtectedRoute allowedRoles={["admin"]}>
@@ -81,11 +83,12 @@ function App() {
         { path: "", element: <Overview /> },
         { path: "station-management", element: <StationManagement /> },
         { path: "user-management", element: <UserManagement /> },
-        { path: "subscription-management", element: <SubscriptionManagement /> },
+        {
+          path: "subscription-management",
+          element: <SubscriptionManagement />,
+        },
         { path: "transaction-management", element: <TransactionManagement /> },
         { path: "revenue-management", element: <RevenueManagement /> },
-        { path: "analytics-management", element: <Analytics /> },
-        { path: "settings-management", element: <SettingManagement /> },
       ],
     },
     {
