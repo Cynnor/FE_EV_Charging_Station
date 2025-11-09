@@ -1,8 +1,9 @@
 import "./index.scss"
+import { Link } from "react-router-dom"
 
 const Footer = () => {
   return (
-    <footer className="footer">
+  <footer className="footer footer--compact">
       <div className="footer__main">
         <div className="footer__top">
           <div className="footer__brand">
@@ -22,7 +23,7 @@ const Footer = () => {
               </svg>
               <div className="footer__contact-info">
                 <span className="footer__contact-label">Hotline</span>
-                <span className="footer__contact-value">0912.210.210 | 0983.535.110</span>
+                <span className="footer__contact-value">0123123123</span>
               </div>
             </div>
             <div className="footer__contact-item">
@@ -34,49 +35,20 @@ const Footer = () => {
               </svg>
               <div className="footer__contact-info">
                 <span className="footer__contact-label">Email</span>
-                <span className="footer__contact-value">hello@stouch.vn | support@stouch.vn</span>
+                <span className="footer__contact-value">support@evcharging.vn</span>
               </div>
             </div>
-          </div>
-        </div>
-        <div className="footer__info">
-          <div className="footer__col">
-            <div className="footer__col-title">Địa chỉ</div>
-            <div className="footer__col-content">
-              <p>Số nhà 243, Tổ 23, Xã Thư Lâm, TP Hà Nội</p>
-              <p>
-                <strong>Văn phòng Hà Nội:</strong> Tầng 2, Số 42, ngõ 178 Thái Hà, Phường Đống Đa
-              </p>
-              <p>
-                <strong>Website:</strong> www.stouch.vn
-              </p>
-            </div>
-          </div>
-          <div className="footer__col">
-            <div className="footer__col-title">Giải Pháp</div>
-            <div className="footer__col-content">
-              <a href="#">Văn phòng công sở</a>
-              <a href="#">Trung tâm thương hiệu</a>
-              <a href="#">Công ty năng lượng</a>
-              <a href="#">Điểm đỗ xe có phí</a>
-            </div>
-          </div>
-          <div className="footer__col">
-            <div className="footer__col-title">Tài Nguyên</div>
-            <div className="footer__col-content">
-              <a href="#">Bài viết</a>
-              <a href="#">Sự kiện</a>
-              <a href="#">Hướng dẫn sử dụng</a>
-              <a href="#">Ưu đãi</a>
-            </div>
-          </div>
-          <div className="footer__col">
-            <div className="footer__col-title">Công ty</div>
-            <div className="footer__col-content">
-              <a href="#">Nền tảng</a>
-              <a href="#">Đối tác</a>
-              <a href="#">Blog</a>
-              <a href="#">Liên hệ</a>
+             <div className="footer__contact-item">
+              <svg className="footer__contact-icon" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"
+                  fill="currentColor"
+                />
+              </svg>
+              <div className="footer__contact-info">
+                <span className="footer__contact-label">Địa chỉ</span>
+                <span className="footer__contact-value"> Nhà Văn Hóa sinh viên</span>
+              </div>
             </div>
           </div>
         </div>
@@ -108,10 +80,12 @@ const Footer = () => {
           </a>
         </div>
         <div className="footer__links">
-          <a href="#">Về Chúng Tôi</a>
-          <a href="#">Hỗ trợ</a>
-          <a href="#">Chính sách</a>
-          <a href="#">Điều khoản</a>
+          <Link to="/">Trang chủ</Link>
+          <Link to="/charging-station">Tìm trạm</Link>
+          <Link to="/booking">Đặt chỗ</Link>
+          <Link to="/">Hỗ trợ</Link>
+          <Link to="/">Chính sách</Link>
+          <Link to="/">Điều khoản</Link>
         </div>
       </div>
     </footer>
