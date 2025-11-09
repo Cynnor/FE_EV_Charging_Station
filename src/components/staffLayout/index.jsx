@@ -6,6 +6,8 @@ import "./index.scss";
 
 const pathToTab = {
     "": "overview",
+    "overview": "overview",
+    "charging-ChargingSessions": "charging-sessions",
     "charging-sessions": "charging-sessions",
     "payment": "payment",
     "station-status": "station-status",

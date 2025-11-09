@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import "./index.scss";
 import api from "../../../config/api";
+import { formatDate } from "../../../config/yob";
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all"); // ✅ New status filter
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,11 +74,25 @@ const UserManagement = () => {
     }
   };
 
+  // ✅ GET - Lấy thông tin user theo ID để edit
+  const fetchUserById = async (userId) => {
+    try {
+      const response = await api.get(`/users/${userId}`);
+      const userData = response.data.data || response.data;
+      return userData;
+    } catch (err) {
+      console.error("Error fetching user by ID:", err);
+      alert("Không thể tải thông tin người dùng!");
+      return null;
+    }
+  };
+
   // PUT - Cập nhật thông tin user
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.put("/users/profile", formData);
+      // ✅ Use userId from editingUser
+      const response = await api.put(`/users/${editingUser.userId}`, formData);
 
       console.log("Update response:", response.data);
 
@@ -118,6 +134,34 @@ const UserManagement = () => {
     }
   };
 
+  // DELETE - Vô hiệu hóa người dùng bằng cách cập nhật status thành disabled
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn vô hiệu hóa người dùng này?")) {
+      return;
+    }
+
+    try {
+      await api.put(`/users/${userId}`, {
+        status: "disabled",
+      });
+
+      alert("Vô hiệu hóa người dùng thành công!");
+
+      // Refresh lại danh sách
+      await fetchUsers();
+    } catch (err) {
+      console.error("Error disabling user:", err);
+
+      if (err.response?.status === 404) {
+        alert("Người dùng không tồn tại!");
+      } else if (err.response?.status === 403) {
+        alert("Bạn không có quyền vô hiệu hóa người dùng này!");
+      } else {
+        alert("Có lỗi xảy ra khi vô hiệu hóa người dùng. Vui lòng thử lại!");
+      }
+    }
+  };
+
   // Reset form thêm mới
   const resetAddForm = () => {
     setAddFormData({
@@ -140,18 +184,45 @@ const UserManagement = () => {
     }));
   };
 
-  // Mở modal Edit
-  const openEditModal = (user) => {
-    setEditingUser(user);
-    setFormData({
-      fullName: user.fullName || "",
-      email: user.email || "",
-      phoneNumber: user.phoneNumber || "",
-      address: user.address || "",
-      role: user.role || "USER",
-    });
-    setShowEditModal(true);
+  // ✅ Mở modal Edit - Load data from API theo userId
+  const openEditModal = async (user) => {
+    const userData = await fetchUserById(user.userId);
+    if (userData) {
+      setEditingUser(userData);
+      setFormData({
+        fullName: userData.fullName || "",
+        email: userData.email || "",
+        phoneNumber: userData.phone || userData.phoneNumber || "",
+        address: userData.address || "",
+        role: userData.role || "USER",
+      });
+      setShowEditModal(true);
+    }
   };
+
+  // Close modal functions - Prevent data reset for edit modal
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    // Keep formData as is for edit modal
+  };
+
+  const closeAddModal = () => {
+    setShowAddModal(false);
+    resetAddForm(); // Reset for add modal
+  };
+
+  // ✅ Scroll modal to top when opened
+  useEffect(() => {
+    if (showAddModal || showEditModal) {
+      // Small delay to ensure modal is rendered
+      setTimeout(() => {
+        const modalBody = document.querySelector(".modal-body");
+        if (modalBody) {
+          modalBody.scrollTop = 0;
+        }
+      }, 50);
+    }
+  }, [showAddModal, showEditModal]);
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -169,16 +240,18 @@ const UserManagement = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, roleFilter]);
+  }, [searchTerm, roleFilter, statusFilter]); // ✅ Added statusFilter
 
-  // Tính toán thống kê
+  // Tính toán thống kê - cập nhật để bao gồm status
   const safeUsers = Array.isArray(users) ? users : [];
   const totalUsers = safeUsers.length;
-  const adminCount = safeUsers.filter((u) => u.role === "ADMIN").length;
-  const staffCount = safeUsers.filter((u) => u.role === "STAFF").length;
-  const userCount = safeUsers.filter((u) => u.role === "USER").length;
+  const adminCount = safeUsers.filter((u) => u.role === "admin").length;
+  const staffCount = safeUsers.filter((u) => u.role === "staff").length;
+  const userCount = safeUsers.filter((u) => u.role === "user").length;
+  const activeUsers = safeUsers.filter((u) => u.status !== "disabled").length;
+  const disabledUsers = safeUsers.filter((u) => u.status === "disabled").length;
 
-  // Filter users - Cập nhật để search theo các fields mới
+  // Filter users - Updated role values
   const filteredUsers = safeUsers.filter((user) => {
     const matchesSearch =
       user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -186,7 +259,9 @@ const UserManagement = () => {
       user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.phone?.includes(searchTerm);
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    return matchesSearch && matchesRole;
+    const matchesStatus =
+      statusFilter === "all" || user.status === statusFilter;
+    return matchesSearch && matchesRole && matchesStatus;
   });
 
   // Pagination
@@ -215,6 +290,19 @@ const UserManagement = () => {
     }
   };
 
+  // ✅ Updated function to return status display
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case "active":
+      case "enabled":
+        return { icon: "🟢", text: "Hoạt động" };
+      case "disabled":
+        return { icon: "🔴", text: "Vô hiệu hóa" };
+      default:
+        return { icon: "❓", text: status || "Chưa xác định" };
+    }
+  };
+
   if (loading) {
     return (
       <div className="user-management">
@@ -239,12 +327,12 @@ const UserManagement = () => {
 
   return (
     <div className="user-management">
-      {/* Filters */}
+      {/* Filters - Updated role options */}
       <div className="filters-section">
         <div className="search-box">
           <input
             type="text"
-            placeholder="Tìm kiếm người dùng (tên, email, SĐT)..."
+            placeholder="Tìm kiếm..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -254,20 +342,32 @@ const UserManagement = () => {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="status-filter"
+            className="role-filter"
           >
             <option value="all">Tất cả vai trò</option>
-            <option value="ADMIN">Admin</option>
-            <option value="STAFF">Staff</option>
-            <option value="USER">User</option>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+            <option value="staff">Staff</option>
           </select>
-          <button className="btn-primary" onClick={() => setShowAddModal(true)}>
-            <span>➕</span> Thêm người dùng
-          </button>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="status-filter"
+          >
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Hoạt động</option>
+            <option value="disabled">Vô hiệu hóa</option>
+          </select>
         </div>
+        <button
+          className="btn-primary full-width"
+          onClick={() => setShowAddModal(true)}
+        >
+          <span>➕</span> Thêm người dùng
+        </button>
       </div>
 
-      {/* Statistics */}
+      {/* Statistics - Updated role counts */}
       <div className="stats-overview">
         <div className="stat-mini">
           <div className="stat-icon">👥</div>
@@ -277,24 +377,24 @@ const UserManagement = () => {
           </div>
         </div>
         <div className="stat-mini">
+          <div className="stat-icon">🟢</div>
+          <div className="stat-info">
+            <span className="stat-number">{activeUsers}</span>
+            <span className="stat-label">Hoạt động</span>
+          </div>
+        </div>
+        <div className="stat-mini">
+          <div className="stat-icon">🔴</div>
+          <div className="stat-info">
+            <span className="stat-number">{disabledUsers}</span>
+            <span className="stat-label">Vô hiệu hóa</span>
+          </div>
+        </div>
+        <div className="stat-mini">
           <div className="stat-icon">👑</div>
           <div className="stat-info">
             <span className="stat-number">{adminCount}</span>
             <span className="stat-label">Admin</span>
-          </div>
-        </div>
-        <div className="stat-mini">
-          <div className="stat-icon">👔</div>
-          <div className="stat-info">
-            <span className="stat-number">{staffCount}</span>
-            <span className="stat-label">Staff</span>
-          </div>
-        </div>
-        <div className="stat-mini">
-          <div className="stat-icon">👤</div>
-          <div className="stat-info">
-            <span className="stat-number">{userCount}</span>
-            <span className="stat-label">User</span>
           </div>
         </div>
       </div>
@@ -308,67 +408,72 @@ const UserManagement = () => {
               <th>Họ và tên</th>
               <th>Email</th>
               <th>Vai trò</th>
+              <th>Trạng thái</th>
               <th>Ngày sinh</th>
-              <th>Địa chỉ</th>
               <th>Số điện thoại</th>
               <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user) => (
-                <tr key={user.userId}>
-                  <td className="user-info">
-                    <div className="user-details">
-                      <span className="user-name">{user.username}</span>
-                    </div>
-                  </td>
-                  <td>{user.fullName}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    <span className={`role-badge ${user.role?.toLowerCase()}`}>
-                      {getRoleBadge(user.role)}
-                    </span>
-                  </td>
-                  <td>{user.dob || "N/A"}</td>
-                  <td>
-                    {user.address?.line1 ? (
-                      <span title={user.address.line1}>
-                        {user.address.line1.length > 30
-                          ? user.address.line1.substring(0, 30) + "..."
-                          : user.address.line1}
+              paginatedUsers.map((user) => {
+                const statusDisplay = getStatusDisplay(user.status);
+                return (
+                  <tr key={user.userId}>
+                    <td className="user-info">
+                      <div className="user-details">
+                        <span className="user-name">{user.username}</span>
+                      </div>
+                    </td>
+                    <td>{user.fullName}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <span
+                        className={`role-badge ${user.role?.toLowerCase()}`}
+                      >
+                        {getRoleBadge(user.role)}
                       </span>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                  <td>{user.phone || "N/A"}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        className="btn-icon view"
-                        title="Xem chi tiết"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowViewModal(true);
-                        }}
+                    </td>
+                    <td className="status-cell">
+                      <span
+                        className={`status-badge ${
+                          user.status === "disabled" ? "disabled" : "active"
+                        }`}
                       >
-                        👁️
-                      </button>
-                      <button
-                        className="btn-icon edit"
-                        title="Chỉnh sửa"
-                        onClick={() => openEditModal(user)}
-                      >
-                        ✏️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                        <span className="status-icon">
+                          {statusDisplay.icon}
+                        </span>
+                        <span className="status-text">
+                          {statusDisplay.text}
+                        </span>
+                      </span>
+                    </td>
+                    <td>{formatDate(user.dob)}</td>
+                    <td>{user.phone || "N/A"}</td>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="btn-icon edit"
+                          title="Chỉnh sửa"
+                          onClick={() => openEditModal(user)}
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="btn-icon delete"
+                          title="Vô hiệu hóa"
+                          onClick={() => handleDeleteUser(user.userId)}
+                        >
+                          🚫
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
-                <td colSpan="9" className="no-data">
+                <td colSpan="8" className="no-data">
                   Không tìm thấy người dùng nào
                 </td>
               </tr>
@@ -386,7 +491,6 @@ const UserManagement = () => {
         >
           ‹ Trước
         </button>
-
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
           <button
             key={p}
@@ -396,7 +500,6 @@ const UserManagement = () => {
             {p}
           </button>
         ))}
-
         <button
           className="page-btn"
           onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
@@ -406,94 +509,25 @@ const UserManagement = () => {
         </button>
       </div>
 
-      {/* View User Modal */}
-      {showViewModal && selectedUser && (
-        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
-          <div className="modal large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Chi tiết người dùng</h3>
-              <button
-                className="close-btn"
-                onClick={() => setShowViewModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="user-detail-content">
-                <div className="detail-group">
-                  <label>User ID:</label>
-                  <span>#{selectedUser.userId}</span>
-                </div>
-                <div className="detail-group">
-                  <label>Username:</label>
-                  <span>{selectedUser.username}</span>
-                </div>
-                <div className="detail-group">
-                  <label>Họ và tên:</label>
-                  <span>{selectedUser.fullName}</span>
-                </div>
-                <div className="detail-group">
-                  <label>Email:</label>
-                  <span>{selectedUser.email}</span>
-                </div>
-                <div className="detail-group">
-                  <label>Vai trò:</label>
-                  <span
-                    className={`role-badge ${selectedUser.role?.toLowerCase()}`}
-                  >
-                    {getRoleBadge(selectedUser.role)}
-                  </span>
-                </div>
-                <div className="detail-group">
-                  <label>Ngày sinh:</label>
-                  <span>{selectedUser.dob || "Chưa cập nhật"}</span>
-                </div>
-                <div className="detail-group">
-                  <label>Địa chỉ:</label>
-                  <span>{selectedUser.address?.line1 || "Chưa cập nhật"}</span>
-                </div>
-                <div className="detail-group">
-                  <label>Số điện thoại:</label>
-                  <span>{selectedUser.phone || "Chưa cập nhật"}</span>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn-secondary"
-                onClick={() => setShowViewModal(false)}
-              >
-                Đóng
-              </button>
-              <button
-                className="btn-primary"
-                onClick={() => {
-                  setShowViewModal(false);
-                  openEditModal(selectedUser);
-                }}
-              >
-                Chỉnh sửa
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit User Modal */}
+      {/* Edit User Modal - ✅ Fixed scroll issue */}
       {showEditModal && editingUser && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <div className="modal-header">
               <h3>Chỉnh sửa thông tin người dùng</h3>
-              <button
-                className="close-btn"
-                onClick={() => setShowEditModal(false)}
-              >
+              <button className="close-btn" onClick={closeEditModal}>
                 ✕
               </button>
             </div>
-            <div className="modal-body">
+            <div className="modal-body" style={{ overflowY: "auto", flex: 1 }}>
               <form className="user-form" onSubmit={handleUpdateUser}>
                 <div className="form-group">
                   <label>Họ và tên *</label>
@@ -506,7 +540,6 @@ const UserManagement = () => {
                     required
                   />
                 </div>
-
                 <div className="form-group">
                   <label>Email *</label>
                   <input
@@ -518,7 +551,6 @@ const UserManagement = () => {
                     required
                   />
                 </div>
-
                 <div className="form-group">
                   <label>Số điện thoại</label>
                   <input
@@ -529,7 +561,6 @@ const UserManagement = () => {
                     placeholder="Nhập số điện thoại"
                   />
                 </div>
-
                 <div className="form-group">
                   <label>Địa chỉ</label>
                   <input
@@ -540,7 +571,6 @@ const UserManagement = () => {
                     placeholder="Nhập địa chỉ"
                   />
                 </div>
-
                 <div className="form-group">
                   <label>Vai trò *</label>
                   <select
@@ -549,17 +579,16 @@ const UserManagement = () => {
                     onChange={handleInputChange}
                     required
                   >
-                    <option value="USER">User</option>
-                    <option value="STAFF">Staff</option>
-                    <option value="ADMIN">Admin</option>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
                   </select>
                 </div>
-
                 <div className="modal-footer">
                   <button
                     type="button"
                     className="btn-secondary"
-                    onClick={() => setShowEditModal(false)}
+                    onClick={closeEditModal}
                   >
                     Hủy
                   </button>
@@ -573,21 +602,22 @@ const UserManagement = () => {
         </div>
       )}
 
-      {/* Add User Modal */}
+      {/* Add User Modal - ✅ Fixed scroll issue */}
       {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+        <div className="modal-overlay">
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Thêm người dùng mới</h3>
-              <button
-                className="close-btn"
-                onClick={() => setShowAddModal(false)}
-              >
+              <button className="close-btn" onClick={closeAddModal}>
                 ✕
               </button>
             </div>
             <div className="modal-body">
               <form className="user-form" onSubmit={handleAddUser}>
+                <p className="info-message">
+                  💡 Vui lòng điền đầy đủ thông tin bên dưới. Role sẽ tự động
+                  được set thành <strong>USER</strong>
+                </p>
                 <div className="form-group">
                   <label>Username *</label>
                   <input
@@ -599,7 +629,6 @@ const UserManagement = () => {
                     required
                   />
                 </div>
-
                 <div className="form-group">
                   <label>Password *</label>
                   <input
@@ -611,42 +640,52 @@ const UserManagement = () => {
                     required
                   />
                 </div>
-
-                <div className="form-group">
-                  <label>Email *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={addFormData.email}
-                    onChange={handleAddInputChange}
-                    placeholder="Nhập email"
-                    required
-                  />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Email *</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={addFormData.email}
+                      onChange={handleAddInputChange}
+                      placeholder="Nhập email"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Họ và tên *</label>
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={addFormData.fullName}
+                      onChange={handleAddInputChange}
+                      placeholder="Nhập họ và tên"
+                      required
+                    />
+                  </div>
                 </div>
-
-                <div className="form-group">
-                  <label>Họ và tên *</label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={addFormData.fullName}
-                    onChange={handleAddInputChange}
-                    placeholder="Nhập họ và tên"
-                    required
-                  />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Ngày sinh</label>
+                    <input
+                      type="date"
+                      name="dob"
+                      value={addFormData.dob}
+                      onChange={handleAddInputChange}
+                      placeholder="YYYY-MM-DD"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Số điện thoại</label>
+                    <input
+                      type="tel"
+                      name="numberphone"
+                      value={addFormData.numberphone}
+                      onChange={handleAddInputChange}
+                      placeholder="+84901234567"
+                    />
+                  </div>
                 </div>
-
-                <div className="form-group">
-                  <label>Ngày sinh</label>
-                  <input
-                    type="date"
-                    name="dob"
-                    value={addFormData.dob}
-                    onChange={handleAddInputChange}
-                    placeholder="YYYY-MM-DD"
-                  />
-                </div>
-
                 <div className="form-group">
                   <label>Địa chỉ</label>
                   <input
@@ -657,38 +696,23 @@ const UserManagement = () => {
                     placeholder="Nhập địa chỉ"
                   />
                 </div>
-
-                <div className="form-group">
-                  <label>Số điện thoại</label>
-                  <input
-                    type="tel"
-                    name="numberphone"
-                    value={addFormData.numberphone}
-                    onChange={handleAddInputChange}
-                    placeholder="+84901234567"
-                  />
-                </div>
-
-                <p className="info-message">
-                  💡 Role sẽ tự động được set thành <strong>USER</strong>
-                </p>
-
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      resetAddForm();
-                    }}
-                  >
-                    Hủy
-                  </button>
-                  <button type="submit" className="btn-primary">
-                    Tạo người dùng
-                  </button>
-                </div>
               </form>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={closeAddModal}
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                onClick={handleAddUser}
+              >
+                Tạo người dùng
+              </button>
             </div>
           </div>
         </div>

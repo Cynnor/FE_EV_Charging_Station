@@ -12,8 +12,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
@@ -244,9 +244,8 @@ const HomePage = () => {
                   <div
                     key={station.id}
                     ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${
-                      selectedId === station.id ? "is-selected" : ""
-                    }`}
+                    className={`station-item ${selectedId === station.id ? "is-selected" : ""
+                      }`}
                     onClick={() => setSelectedId(station.id)}
                   >
                     <div className="station-header">

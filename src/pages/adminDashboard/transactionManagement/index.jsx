@@ -59,6 +59,8 @@ const TransactionManagement = () => {
                 limit: pageSize,
                 sortBy: sortBy,
                 sortOrder: sortOrder,
+                // Populate user object to get fullName/email if backend supports it
+                populate: "user",
             };
 
             // Add filters
@@ -175,6 +177,7 @@ const TransactionManagement = () => {
         }
     };
 
+
     // Format currency
     const formatCurrency = (amount) => {
         if (!amount && amount !== 0) return "—";
@@ -231,6 +234,24 @@ const TransactionManagement = () => {
             other: "🔷 Khác",
         };
         return methodMap[method] || method;
+    };
+
+    // Get readable user name from transaction
+    const getUserDisplayName = (transaction) => {
+        if (!transaction) return "N/A";
+        const u = transaction.user || {};
+        return (
+            u.fullName ||
+            u.fullname ||
+            u.name ||
+            u.displayName ||
+            u.username ||
+            (u.email ? u.email.split("@")[0] : null) ||
+            transaction.email ||
+            transaction.payerEmail ||
+            (transaction.userId ? `User ${String(transaction.userId).slice(-6)}` : null) ||
+            "N/A"
+        );
     };
 
     return (
@@ -406,7 +427,6 @@ const TransactionManagement = () => {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
                                         <th>Người dùng</th>
                                         <th>Số tiền</th>
                                         <th>Phương thức</th>
@@ -419,18 +439,13 @@ const TransactionManagement = () => {
                                     {transactions.map((transaction) => (
                                         <tr key={transaction._id || transaction.id}>
                                             <td>
-                                                <span className="transaction-id">
-                                                    #{transaction._id?.slice(-8) || transaction.id?.slice(-8) || "N/A"}
-                                                </span>
-                                            </td>
-                                            <td>
                                                 <div className="user-info">
                                                     <span className="user-name">
-                                                        {transaction.user?.fullName || transaction.userId || "N/A"}
+                                                        {getUserDisplayName(transaction)}
                                                     </span>
-                                                    {transaction.user?.email && (
-                                                        <span className="user-email">{transaction.user.email}</span>
-                                                    )}
+                                                    {/* {(transaction.user?.email || transaction.email || transaction.payerEmail) && (
+                                                        <span className="user-email">{transaction.user?.email || transaction.email || transaction.payerEmail}</span>
+                                                    )} */}
                                                 </div>
                                             </td>
                                             <td>
@@ -454,7 +469,7 @@ const TransactionManagement = () => {
                                                     className="btn-view"
                                                     onClick={() => handleViewDetail(transaction._id || transaction.id)}
                                                 >
-                                                    👁️ Chi tiết
+                                                    👁️
                                                 </button>
                                             </td>
                                         </tr>
@@ -506,13 +521,13 @@ const TransactionManagement = () => {
                                 <div className="detail-item">
                                     <label>Người dùng:</label>
                                     <span>
-                                        {selectedTransaction.user?.fullName || selectedTransaction.userId || "N/A"}
+                                        {getUserDisplayName(selectedTransaction)}
                                     </span>
                                 </div>
-                                <div className="detail-item">
+                                {/* <div className="detail-item">
                                     <label>Email:</label>
-                                    <span>{selectedTransaction.user?.email || "N/A"}</span>
-                                </div>
+                                    <span>{selectedTransaction.user?.email || selectedTransaction.email || selectedTransaction.payerEmail || "N/A"}</span>
+                                </div> */}
                                 <div className="detail-item">
                                     <label>Số tiền:</label>
                                     <span className="amount-large">{formatCurrency(selectedTransaction.amount)}</span>
