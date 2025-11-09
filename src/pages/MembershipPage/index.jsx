@@ -82,13 +82,21 @@ function MembershipPage() {
     return grouped;
   };
 
-  // Implement payment flow cho subscription
+  // ===== SUBSCRIPTION PAYMENT FLOW =====
+  // Flow: 
+  // 1. User xem danh sách plans (GET /subscription-plans) - đã load trong loadSubscriptionData()
+  // 2. User chọn plan và gọi API này với planId
+  // 3. API tự động tạo subscription pending cho user
+  // 4. API trả về URL thanh toán VNPay + subscriptionId
+  // 5. User redirect đến VNPay để thanh toán
+  // 6. Sau khi VNPay return, gọi check-payment-status với subscriptionId (xử lý trong paymentSuccessPage)
   const handleSubscribe = async (plan) => {
     try {
       setSelectedPlan(plan);
       setShowPaymentModal(true);
 
       // Gọi API để tạo payment URL cho subscription
+      // API sẽ tự động tạo subscription (status: pending) và trả về paymentUrl + subscriptionId
       const response = await api.post('/subscriptions/payment', {
         planId: plan._id,
         locale: 'vn'
@@ -98,10 +106,13 @@ function MembershipPage() {
         const paymentUrl = response.data.data.paymentUrl;
         const subscriptionId = response.data.data.subscriptionId;
 
-        // Lưu subscriptionId vào localStorage để check payment status sau
+        // Lưu subscriptionId vào localStorage để verify khi VNPay redirect về
+        // BE đã set vnp_TxnRef = subscriptionId, nên khi VNPay redirect về,
+        // FE sẽ lấy vnp_TxnRef từ URL làm subscriptionId để check payment
         localStorage.setItem('pendingSubscriptionId', subscriptionId);
 
         // Redirect đến VNPay để thanh toán
+        // VNPay sẽ redirect về với vnp_TxnRef = subscriptionId
         window.location.href = paymentUrl;
       }
     } catch (err) {
@@ -332,7 +343,7 @@ function MembershipPage() {
                       <span className="original-price">{formatPrice(currentPlan.originalPrice)}</span>
                     )}
                   </div>
-                  <p className="price-period">{formatDuration(currentPlan.duration)}</p>
+                  {/* <p className="price-period">{formatDuration(currentPlan.duration)}</p> */}
                 </div>
 
                 <p className="plan-description">{currentPlan.description}</p>

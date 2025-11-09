@@ -96,8 +96,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 /** Map 1 item API -> 1 station cho UI map/list.
@@ -141,7 +141,7 @@ function mapPortToCharger(port, idx, baseLatLng) {
   const delta = 0.00012;
   const coords = [
     (baseLatLng?.[0] || 0) +
-      (idx % 3 === 0 ? delta : idx % 3 === 1 ? -delta : 0),
+    (idx % 3 === 0 ? delta : idx % 3 === 1 ? -delta : 0),
     (baseLatLng?.[1] || 0) + (idx % 2 === 0 ? delta : -delta),
   ];
 
@@ -448,12 +448,12 @@ export default function BookingPage() {
 
     // Build ISO in UTC
     const toUtcIso = (dateStr, timeStr) => {
+      // dateStr: "YYYY-MM-DD", timeStr: "HH:mm" (local)
       const [h, m] = timeStr.split(":").map(Number);
       const dt = new Date(dateStr);
-      dt.setHours(h, m, 0, 0);
-      return dt.toISOString();
+      dt.setHours(h, m, 0, 0); // local time
+      return dt.toISOString(); // convert → UTC "Z"
     };
-
     const startAtIso = toUtcIso(formData.date, formData.startTime);
     const endAtIso = toUtcIso(formData.date, formData.endTime);
 
@@ -700,41 +700,37 @@ export default function BookingPage() {
     setFormData((prev) => ({ ...prev, endTime: endTimeSlots[0] }));
   }, [endTimeSlots]);
 
-  // Fetch slots when entering step 3 - KHÔNG auto-refresh
+  // Fetch slots when entering step 3
   useEffect(() => {
     async function fetchSlots() {
+      console.log("🚀 Step:", step);
+      console.log("🚀 selectedCharger:", selectedCharger); // 👈 Log xem có dữ liệu không
+      console.log("🚀 selectedCharger.id:", selectedCharger?.id); // 👈 Log ID
+
       if (step === 3 && selectedCharger && selectedCharger.id) {
         const url = `/stations/ports/${encodeURIComponent(
           selectedCharger.id
         )}/slots`;
-        console.log("✅ Fetch slots cho charger:", selectedCharger.id);
-
+        console.log("✅ Gọi API với URL:", url);
         setSlotsLoading(true);
         setSlotsError(null);
         try {
           const { data } = await api.get(url);
-          console.log("✅ Slots data:", data?.items);
+          console.log("✅ Response từ API slots:", data); // 👈 Log response
+          console.log("✅ data.items:", data?.items);
           setSlots(data?.items || []);
         } catch (e) {
-          console.error("❌ Lỗi khi fetch slots:", e);
+          console.error("❌ Lỗi khi gọi API slots:", e);
           setSlotsError(`Không thể tải slot. Chi tiết: ${e.message}`);
-          setSlots([]);
         } finally {
           setSlotsLoading(false);
         }
       } else {
         setSlots([]);
-        if (step !== 4) {
-          setSelectedSlot(null);
-        }
       }
     }
-
-    // CHỈ fetch 1 lần khi vào step 3 hoặc đổi charger
     fetchSlots();
-
-    // KHÔNG có auto-refresh interval nữa
-  }, [step, selectedCharger]); // Loại bỏ selectedSlot khỏi dependency array
+  }, [step, selectedCharger]);
 
   // Lấy danh sách xe khi vào trang booking
   useEffect(() => {
@@ -748,9 +744,7 @@ export default function BookingPage() {
         const defaultVehicleId = localStorage.getItem("defaultVehicleId");
 
         if (defaultVehicleId) {
-          const defaultVehicle = vehiclesList.find(
-            (v) => v.id === defaultVehicleId
-          );
+          const defaultVehicle = vehiclesList.find(v => v.id === defaultVehicleId);
           if (defaultVehicle) {
             setSelectedVehicle(defaultVehicle);
             setVehicleId(defaultVehicleId);
@@ -772,9 +766,7 @@ export default function BookingPage() {
 
   return (
     <div className="booking-wrapper">
-      <div
-        className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}
-      >
+      <div className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}>
         <div className="left-panel">
           <div className="panel-header">
             <h1>Đặt chỗ sạc xe</h1>
@@ -884,9 +876,8 @@ export default function BookingPage() {
                         key={station.id}
                         className={`station-card ${station.type
                           .toLowerCase()
-                          .replace(" ", "-")} ${
-                          selectedStation?.id === station.id ? "selected" : ""
-                        }`}
+                          .replace(" ", "-")} ${selectedStation?.id === station.id ? "selected" : ""
+                          }`}
                         onClick={() => {
                           setSelectedStation(station);
                           setSelectedCharger(null);
@@ -907,11 +898,10 @@ export default function BookingPage() {
                             <div
                               className="availability-fill"
                               style={{
-                                width: `${
-                                  station.total
-                                    ? (station.available / station.total) * 100
-                                    : 0
-                                }%`,
+                                width: `${station.total
+                                  ? (station.available / station.total) * 100
+                                  : 0
+                                  }%`,
                               }}
                             ></div>
                           </div>
@@ -965,26 +955,24 @@ export default function BookingPage() {
           {step === 2 && selectedStation && (
             <div className="charger-selection">
               <div className="selected-station-info">
-                <div className="back-button-wrapper">
-                  <button
-                    className="back-button"
-                    onClick={() => {
-                      setStep(1);
-                      setSelectedCharger(null);
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M12 4L6 10l6 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    Quay lại
-                  </button>
-                </div>
+                <button
+                  className="back-button"
+                  onClick={() => {
+                    setStep(1);
+                    setSelectedCharger(null);
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M12 4L6 10l6 6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Quay lại
+                </button>
                 <h2>{selectedStation.name}</h2>
               </div>
 
@@ -996,9 +984,8 @@ export default function BookingPage() {
                 {chargers.map((charger) => (
                   <div
                     key={charger.id}
-                    className={`charger-card ${charger.status} ${
-                      selectedCharger?.id === charger.id ? "selected" : ""
-                    }`}
+                    className={`charger-card ${charger.status} ${selectedCharger?.id === charger.id ? "selected" : ""
+                      }`}
                     onClick={() => {
                       if (charger.status === "available") {
                         console.log("✅ Charger được chọn:", charger);
@@ -1068,30 +1055,22 @@ export default function BookingPage() {
           {/* STEP 3: Slot selection */}
           {step === 3 && selectedCharger && (
             <div className="slot-selection">
-              <div className="back-button-wrapper">
-                <button className="back-button" onClick={() => setStep(2)}>
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M12 4L6 10l6 6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  Quay lại
-                </button>
-              </div>
+              <button className="back-button" onClick={() => setStep(2)}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M12 4L6 10l6 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Quay lại
+              </button>
               <h2>Chọn slot cho trụ sạc</h2>
-              <p className="selection-hint">
-                Chọn khung giờ phù hợp với lịch trình của bạn
-              </p>
-
-              {slotsLoading && (
-                <div className="loading-message">Đang tải slot…</div>
-              )}
+              {slotsLoading && <div>Đang tải slot…</div>}
               {slotsError && (
-                <div className="error-message">Lỗi: {slotsError}</div>
+                <div style={{ color: "tomato" }}>Lỗi: {slotsError}</div>
               )}
               {!slotsLoading && !slotsError && (
                 <div className="slots-grid">
@@ -1105,9 +1084,8 @@ export default function BookingPage() {
                     return (
                       <div
                         key={slot.id}
-                        className={`slot-card ${slot.status} ${
-                          selectedSlot?.id === slot.id ? "selected" : ""
-                        } ${!selectable ? "disabled" : ""}`}
+                        className={`slot-card ${slot.status} ${selectedSlot?.id === slot.id ? "selected" : ""
+                          } ${!selectable ? "disabled" : ""}`}
                         onClick={() => {
                           if (!selectable) return;
                           setSelectedSlot(slot);
@@ -1134,7 +1112,15 @@ export default function BookingPage() {
                   })}
                 </div>
               )}
-
+              {/* <button 
+                className="refresh-button" 
+                onClick={() => {
+                // Gọi lại API slots để cập nhật trạng thái mới nhất
+                fetchSlots(); // hoặc gọi lại useEffect
+              }}
+              >
+               🔄 Làm mới slot
+              </button> */}
               <button
                 className="next-button"
                 disabled={
@@ -1153,7 +1139,7 @@ export default function BookingPage() {
           {/* STEP 4: Confirmation */}
           {step === 4 && selectedStation && selectedCharger && selectedSlot && (
             <div className="booking-confirmation">
-              <button className="back-button" onClick={() => setStep(3)}>
+              <button className="back-button" onClick={() => setStep(2)}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path
                     d="M12 4L6 10l6 6"
@@ -1237,48 +1223,6 @@ export default function BookingPage() {
                   </div>
 
                   <div className="form-section">
-                    {/* Vehicle Selection Card - Moved to right column */}
-                    <div className="summary-card vehicle-selection-card">
-                      <h3 style={{ textAlign: "center" }}>Xe của bạn</h3>
-                      {selectedVehicle ? (
-                        <>
-                          <div className="selected-vehicle-info">
-                            <div className="summary-item">
-                              <span className="summary-label">Biển số:</span>
-                              <span className="summary-value">
-                                {selectedVehicle.plateNumber}
-                              </span>
-                            </div>
-                            <div className="summary-item">
-                              <span className="summary-label">Xe:</span>
-                              <span className="summary-value">
-                                {selectedVehicle.make} {selectedVehicle.model}
-                              </span>
-                            </div>
-                            <div className="summary-item">
-                              <span className="summary-label">Loại sạc:</span>
-                              <span className="summary-value">
-                                {selectedVehicle.connectorType}
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            className="change-vehicle-btn"
-                            onClick={() => setShowVehicleModal(true)}
-                          >
-                            Đổi xe khác
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className="select-vehicle-btn"
-                          onClick={() => setShowVehicleModal(true)}
-                        >
-                          Chọn xe
-                        </button>
-                      )}
-                    </div>
-
                     <form className="booking-form" onSubmit={handleSubmit}>
                       <div className="form-header">
                         <h3>Thời gian sạc</h3>
@@ -1322,6 +1266,7 @@ export default function BookingPage() {
                             </div>
                             <span className="datetime-arrow">→</span>
                           </div>
+                          {/* <div className="datetime-helper">💡 Nhấn để chọn 1 trong 3 ngày</div> */}
                         </div>
                       </div>
 
@@ -1360,6 +1305,7 @@ export default function BookingPage() {
                             </div>
                             <span className="datetime-arrow">→</span>
                           </div>
+                          {/* <div className="datetime-helper">💡 Chọn theo bước 15 phút, không chọn quá khứ</div> */}
                         </div>
                       </div>
 
@@ -1400,6 +1346,7 @@ export default function BookingPage() {
                             </div>
                             <span className="datetime-arrow">→</span>
                           </div>
+                          {/* <div className="datetime-helper">💡 Chỉ +30m, +60m, +90m sau giờ bắt đầu</div> */}
                         </div>
                       </div>
 
@@ -1441,9 +1388,7 @@ export default function BookingPage() {
         </div>
 
         {/* RIGHT PANEL: MAP */}
-        {(step === 1 ||
-          (step === 2 && selectedStation) ||
-          (step === 3 && selectedCharger)) && (
+        {step !== 4 && (
           <div className="right-panel">
             <div className="map-container">
               {step === 1 && (
@@ -1455,6 +1400,7 @@ export default function BookingPage() {
                   selectedStation={selectedStation}
                 />
               )}
+
               {step === 2 && selectedStation && (
                 <ChargingMap
                   stations={chargers}
@@ -1469,14 +1415,6 @@ export default function BookingPage() {
                   selectedStation={selectedCharger}
                 />
               )}
-              {step === 3 && selectedCharger && (
-                <ChargingMap
-                  stations={[selectedCharger]}
-                  center={selectedStation?.coords || defaultCenter}
-                  zoom={17}
-                  selectedStation={selectedCharger}
-                />
-              )}
             </div>
           </div>
         )}
@@ -1484,194 +1422,38 @@ export default function BookingPage() {
 
       {/* Vehicle Selection Modal */}
       {showVehicleModal && (
-        <div
-          className="datetime-modal-overlay"
-          onClick={() => setShowVehicleModal(false)}
-        >
-          <div
-            className="datetime-modal vehicle-modal-wrapper"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="datetime-modal-overlay" onClick={() => setShowVehicleModal(false)}>
+          <div className="vehicle-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Chọn xe của bạn</h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowVehicleModal(false)}
-              >
-                ×
-              </button>
+              <button className="modal-close" onClick={() => setShowVehicleModal(false)}>×</button>
             </div>
             <div className="modal-body">
               {vehicles.length === 0 ? (
-                <div className="no-vehicles-state">
-                  <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M17 8L18.8 3H21L19.45 8M10.5 20q-.625 0-1.063-.438T9 18.5q0-.625.438-1.063T10.5 17q.625 0 1.063.438T12 18.5q0 .625-.438 1.063T10.5 20m6 0q-.625 0-1.063-.438T15 18.5q0-.625.438-1.063T16.5 17q.625 0 1.063.438T18 18.5q0 .625-.438 1.063T16.5 20M6 8L7.8 3h6.975L16 8M3 10l2 9h17l-2.15-9H3z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      fill="none"
-                    />
-                  </svg>
-                  <p className="no-vehicles-title">Chưa có xe nào</p>
-                  <p className="no-vehicles-subtitle">
-                    Vui lòng thêm xe trong trang Profile để tiếp tục đặt chỗ
-                  </p>
-                  <button
-                    className="go-to-profile-btn"
-                    onClick={() => navigate("/profile")}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11h-2v-2h2v2zm0-4h-2V5h2v4z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                    Đi đến Profile
-                  </button>
+                <div className="no-vehicles">
+                  <p>Bạn chưa có xe nào. Vui lòng thêm xe trong trang Profile.</p>
+                  <button onClick={() => navigate('/profile')}>Đi đến Profile</button>
                 </div>
               ) : (
                 <div className="vehicles-grid-modal">
-                  {vehicles.map((vehicle) => {
-                    // Xác định loại xe dựa trên vehicle.type
-                    const isCar =
-                      vehicle.type?.toLowerCase() === "car" ||
-                      vehicle.type?.toLowerCase() === "oto" ||
-                      vehicle.type?.toLowerCase() === "ô tô";
-                    const isMotorbike =
-                      vehicle.type?.toLowerCase() === "motorbike" ||
-                      vehicle.type?.toLowerCase() === "xe máy" ||
-                      vehicle.type?.toLowerCase() === "motorcycle";
-
-                    return (
-                      <div
-                        key={vehicle.id}
-                        className={`vehicle-item-modal ${
-                          selectedVehicle?.id === vehicle.id ? "selected" : ""
-                        }`}
-                        onClick={() => {
-                          setSelectedVehicle(vehicle);
-                          setVehicleId(vehicle.id);
-                          setShowVehicleModal(false);
-                        }}
-                      >
-                        <div className="vehicle-icon-wrapper">
-                          {isCar ? (
-                            // Icon ô tô
-                            <svg
-                              width="48"
-                              height="48"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                            >
-                              <path
-                                d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"
-                                fill="currentColor"
-                              />
-                            </svg>
-                          ) : isMotorbike ? (
-                            // Icon xe máy
-                            <svg
-                              width="48"
-                              height="48"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                            >
-                              <path
-                                d="M12 11.5c0-1.1.9-2 2-2h2V8h-2c-1.66 0-3 1.34-3 3v2.5h2V11.5zM5 17c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4.5c-.83 0-1.5-.67-1.5-1.5S5.67 18 6.5 18s1.5.67 1.5 1.5S7.33 21 6.5 21zm11-4.5c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5.82 16H15v-1H9.69l1.56-2.34c.47-.71 1.31-1.16 2.22-1.16H15V9h-2.11c-1.87 0-3.6.93-4.62 2.48L5.82 16zm8.95-10l-2.12-2.12 1.41-1.41 3.54 3.54-3.54 3.53-1.41-1.41L16.77 6z"
-                                fill="currentColor"
-                              />
-                            </svg>
-                          ) : (
-                            // Icon mặc định (fallback)
-                            <svg
-                              width="48"
-                              height="48"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                            >
-                              <path
-                                d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"
-                                fill="currentColor"
-                              />
-                            </svg>
-                          )}
-                          {localStorage.getItem("defaultVehicleId") ===
-                            vehicle.id && (
-                            <span className="default-badge">
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 20 20"
-                                fill="none"
-                              >
-                                <path
-                                  d="M10 2l2.4 5.2 5.6.6-4.2 3.8 1.2 5.4-5-3-5 3 1.2-5.4L2 8.8l5.6-.6L10 2z"
-                                  fill="currentColor"
-                                />
-                              </svg>
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="vehicle-details">
-                          <div className="vehicle-plate-number">
-                            {vehicle.plateNumber}
-                          </div>
-                          <div className="vehicle-make-model">
-                            {vehicle.make} {vehicle.model}
-                          </div>
-                          <div className="vehicle-type-label">
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 20 20"
-                              fill="none"
-                            >
-                              <path
-                                d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"
-                                fill="currentColor"
-                              />
-                            </svg>
-                            {isCar
-                              ? "🚗 Ô tô"
-                              : isMotorbike
-                              ? "🏍️ Xe máy"
-                              : vehicle.type || "Xe"}
-                          </div>
-                          <div className="vehicle-connector">
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 20 20"
-                              fill="none"
-                            >
-                              <path
-                                d="M7 2v3M13 2v3M5 8h10M4 6h12a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1z"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                            {vehicle.connectorType}
-                          </div>
-                        </div>
-
-                        <div className="vehicle-select-indicator">
-                          <svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                          >
-                            <path
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              fill="currentColor"
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {vehicles.map((vehicle) => (
+                    <div
+                      key={vehicle.id}
+                      className={`vehicle-card-modal ${selectedVehicle?.id === vehicle.id ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedVehicle(vehicle);
+                        setVehicleId(vehicle.id);
+                        setShowVehicleModal(false);
+                      }}
+                    >
+                      <div className="vehicle-plate">{vehicle.plateNumber}</div>
+                      <div className="vehicle-model">{vehicle.make} {vehicle.model}</div>
+                      <div className="vehicle-type">{vehicle.connectorType}</div>
+                      {localStorage.getItem("defaultVehicleId") === vehicle.id && (
+                        <span className="default-badge-modal">Mặc định</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1700,9 +1482,8 @@ export default function BookingPage() {
                 {dateOptions.map((d) => (
                   <button
                     key={d.iso}
-                    className={`date-card ${
-                      formData.date === d.iso ? "selected" : ""
-                    }`}
+                    className={`date-card ${formData.date === d.iso ? "selected" : ""
+                      }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, date: d.iso }));
                       setShowDateModal(false);
@@ -1740,9 +1521,8 @@ export default function BookingPage() {
                 {timeSlots.map((t) => (
                   <button
                     key={t}
-                    className={`time-slot ${
-                      formData.startTime === t ? "selected" : ""
-                    }`}
+                    className={`time-slot ${formData.startTime === t ? "selected" : ""
+                      }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, startTime: t }));
                       setShowTimeModal(false);
@@ -1780,9 +1560,8 @@ export default function BookingPage() {
                 {endTimeSlots.map((t) => (
                   <button
                     key={t}
-                    className={`time-slot ${
-                      formData.endTime === t ? "selected" : ""
-                    }`}
+                    className={`time-slot ${formData.endTime === t ? "selected" : ""
+                      }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, endTime: t }));
                       setShowEndTimeModal(false);

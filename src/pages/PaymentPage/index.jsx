@@ -1,42 +1,40 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./index.scss";
 import api from "../../config/api";
 
 export default function PaymentPage() {
+  const navigate = useNavigate();
+  const { state } = useLocation();
+
+  // D·ªØ li·ªáu t·ª´ chargingSession page
+  const chargingData = state?.chargingData || null;
+  const reservationId = localStorage.getItem("reservationId");
+
+  const [isPaying, setIsPaying] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const navigate = useNavigate();
-  const { state } = useLocation();
-
-  // D? li?u t? chargingSession page
-  const chargingData = state?.chargingData || null;
-  const reservationId = localStorage.getItem("reservationId");
-
-  const [paymentMethod, setPaymentMethod] = useState("e_wallet"); // e_wallet | banking | card | cod
-  const [isPaying, setIsPaying] = useState(false);
-  const [invoice, setInvoice] = useState(null);
-
-  // Ki?m tra d? li?u chargingSession
+  // Ki·ªÉm tra d·ªØ li·ªáu chargingSession
   if (!chargingData) {
     return (
       <div className="payment-page">
         <div className="error-container">
-          <h1>L?i</h1>
+          <h1>L·ªói</h1>
           <p>
-            KhÙng tÏm th?y d? li?u phiÍn s?c. Vui lÚng quay l?i trang tru?c.
+            Kh√¥ng t√¨m th·∫•y d·ªØ li·ªáu phi√™n s·∫°c. Vui l√≤ng quay l·∫°i trang tr∆∞·ªõc.
           </p>
           <button className="back-btn" onClick={() => navigate(-1)}>
-            Quay l?i
+            Quay l·∫°i
           </button>
         </div>
       </div>
     );
   }
 
-  // L?y gi· t? chargingSession
+  // L·∫•y gi√° t·ª´ chargingSession
   const pricePerKwh = chargingData.chargingInfo?.energyPricePerKwh || 3858;
   const totalAmount = chargingData.chargingInfo?.totalCost || 0;
 
@@ -45,181 +43,136 @@ export default function PaymentPage() {
 
     try {
       if (reservationId) {
-        // Thanh to·n cho chargingSession v?i reservationId
+        // Thanh to√°n cho chargingSession v·ªõi reservationId
         const response = await api.post("/vnpay/checkout-url", {
           amount: Math.round(totalAmount),
-          orderInfo: `Thanh toan phi s?c - ${
-            chargingData.vehicleInfo?.plateNumber || "N/A"
-          }`,
+          orderInfo: `Thanh to√°n phi√™n s·∫°c - ${chargingData.vehicleInfo?.plateNumber || "N/A"
+            }`,
           reservationId: reservationId,
           locale: "vn",
         });
 
         if (response.data?.success && response.data?.data?.paymentUrl) {
-          // Redirect d?n VNPay
+          // Redirect ƒë·∫øn VNPay
           window.location.href = response.data.data.paymentUrl;
           return;
         }
       }
 
-      // Fallback: gi? l?p thanh to·n th‡nh cÙng v‡ chuy?n d?n success page
+      // Fallback: gi·∫£ l·∫≠p thanh to√°n th√†nh c√¥ng v√† chuy·ªÉn ƒë·∫øn success page
       setTimeout(() => {
         setIsPaying(false);
         navigate("/payment-success", {
           state: {
-            reservationId: reservationId,
+            reservationId,
             amount: totalAmount,
-            orderInfo: `Thanh toan phi s?c - ${
-              chargingData.vehicleInfo?.plateNumber || "N/A"
-            }`,
+            orderInfo: `Thanh to√°n phi√™n s·∫°c - ${chargingData.vehicleInfo?.plateNumber || "N/A"
+              }`,
             vehicleInfo: chargingData.vehicleInfo,
             chargingInfo: chargingData.chargingInfo,
-            paymentMethod: paymentMethod,
           },
         });
       }, 1200);
     } catch (error) {
       console.error("Payment error:", error);
       setIsPaying(false);
-      alert("CÛ l?i x?y ra khi x? l˝ thanh to·n. Vui lÚng th? l?i!");
+      alert("C√≥ l·ªói x·∫£y ra khi x·ª≠ l√Ω thanh to√°n. Vui l√≤ng th·ª≠ l·∫°i!");
     }
   };
-
-  const [showInvoice, setShowInvoice] = useState(false);
 
   return (
     <div className="payment-page">
       <div className="payment-container">
+        {/* LEFT */}
         <div className="left">
-          <h1>Thanh to·n</h1>
+          <h1>Thanh to√°n</h1>
 
           <div className="summary-card">
-            <h3>ThÙng tin phiÍn s?c</h3>
+            <h3>Th√¥ng tin phi√™n s·∫°c</h3>
             <p>
-              <b>Xe:</b> {chargingData.vehicleInfo?.plateNumber || "ó"}
+              <b>Xe:</b> {chargingData.vehicleInfo?.plateNumber || "‚Äî"}
             </p>
             <p>
-              <b>H„ng xe:</b> {chargingData.vehicleInfo?.make}{" "}
+              <b>H√£ng xe:</b> {chargingData.vehicleInfo?.make}{" "}
               {chargingData.vehicleInfo?.model}
             </p>
             <p>
-              <b>M?c s?c hi?n t?i:</b>{" "}
+              <b>M·ª©c s·∫°c hi·ªán t·∫°i:</b>{" "}
               {chargingData.chargingInfo?.currentCharge || 0}%
             </p>
             <p>
-              <b>Th?i gian s?c:</b>{" "}
-              {chargingData.chargingInfo?.timeElapsed || 0} ph˙t
+              <b>Th·ªùi gian s·∫°c:</b>{" "}
+              {chargingData.chargingInfo?.timeElapsed || 0} ph√∫t
             </p>
             <p>
-              <b>Nang lu?ng tiÍu th?:</b>{" "}
+              <b>NƒÉng l∆∞·ª£ng ti√™u th·ª•:</b>{" "}
               {chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0} kWh
             </p>
             <p>
-              <b>B?t d?u l˙c:</b>{" "}
+              <b>B·∫Øt ƒë·∫ßu l√∫c:</b>{" "}
               {chargingData.chargingInfo?.startTime
                 ? new Date(chargingData.chargingInfo.startTime).toLocaleString(
-                    "vi-VN"
-                  )
-                : "ó"}
+                  "vi-VN"
+                )
+                : "‚Äî"}
             </p>
           </div>
 
           <div className="plan-card">
-            <h3>Chi ti?t thanh to·n</h3>
+            <h3>Chi ti·∫øt thanh to√°n</h3>
             <div className="charging-details">
               <div className="detail-item">
-                <span>S? kWh</span>
+                <span>S·ªë kWh</span>
                 <span>{chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0}</span>
               </div>
               <div className="detail-item">
-                <span>–on gi·</span>
-                <span>{pricePerKwh.toLocaleString("vi-VN")} VN–/kWh</span>
+                <span>ƒê∆°n gi√°</span>
+                <span>{pricePerKwh.toLocaleString("vi-VN")} VNƒê/kWh</span>
               </div>
               <div className="detail-item">
-                <span>Th?i gian s?c</span>
-                <span>{chargingData.chargingInfo?.timeElapsed || 0} ph˙t</span>
+                <span>Th·ªùi gian s·∫°c</span>
+                <span>{chargingData.chargingInfo?.timeElapsed || 0} ph√∫t</span>
               </div>
             </div>
 
             <div className="amount-info">
               <div className="amount-item">
-                <span>Chi phÌ u?c tÌnh</span>
-                <span>{totalAmount.toLocaleString("vi-VN")} VN–</span>
+                <span>Chi ph√≠ ∆∞·ªõc t√≠nh</span>
+                <span>{totalAmount.toLocaleString("vi-VN")} VNƒê</span>
               </div>
-            </div>
-          </div>
-
-          <div className="payment-methods">
-            <h3>Phuong th?c thanh to·n</h3>
-            <div className="methods">
-              <label>
-                <input
-                  type="radio"
-                  value="e_wallet"
-                  checked={paymentMethod === "e_wallet"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                VÌ di?n t?
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  value="banking"
-                  checked={paymentMethod === "banking"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                Chuy?n kho?n ng‚n h‡ng
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  value="card"
-                  checked={paymentMethod === "card"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                Th? tÌn d?ng
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  value="cod"
-                  checked={paymentMethod === "cod"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-                Thanh to·n t?i tr?m
-              </label>
             </div>
           </div>
         </div>
 
+        {/* RIGHT */}
         <div className="right">
           <div className="total-card">
-            <h3>T?ng thanh to·n</h3>
+            <h3>T·ªïng thanh to√°n</h3>
             <div className="row">
-              <span>PhÌ d?t l?ch</span>
+              <span>Ph√≠ ƒë·∫∑t l·ªãch</span>
               <span className="value">
                 {chargingData.chargingInfo?.bookingCost?.toLocaleString(
                   "vi-VN"
                 ) || 0}{" "}
-                VN–
+                VNƒê
               </span>
             </div>
             <div className="row">
               <span>
-                PhÌ di?n (
+                Ph√≠ ƒëi·ªán (
                 {chargingData.chargingInfo?.energyKwh?.toFixed(2) || 0} kWh)
               </span>
               <span className="value">
                 {chargingData.chargingInfo?.energyCost?.toLocaleString(
                   "vi-VN"
                 ) || 0}{" "}
-                VN–
+                VNƒê
               </span>
             </div>
             <div className="row total-row">
-              <span>T?ng c?ng</span>
+              <span>T·ªïng c·ªông</span>
               <span className="value">
-                {totalAmount.toLocaleString("vi-VN")} VN–
+                {totalAmount.toLocaleString("vi-VN")} VNƒê
               </span>
             </div>
             <button
@@ -227,156 +180,11 @@ export default function PaymentPage() {
               disabled={isPaying}
               onClick={handleSandboxPay}
             >
-              {isPaying ? "–ang x? l˝..." : "Thanh to·n ngay"}
-            </button>
-            <button
-              className="invoice-btn"
-              onClick={() => setInvoice({
-                code: `INV-${Date.now()}`,
-                createdAt: new Date().toLocaleString("vi-VN"),
-                vehicleInfo: chargingData.vehicleInfo,
-                chargingInfo: chargingData.chargingInfo,
-                totalAmount: totalAmount,
-                paymentMethod: paymentMethod,
-              })}
-            >
-              Xem hÛa don
+              {isPaying ? "ƒêang x·ª≠ l√Ω..." : "Thanh to√°n ngay"}
             </button>
           </div>
-
-          {invoice && (
-            <div className="invoice-card">
-              <h3>HÛa don chi ti?t</h3>
-              <p>
-                <b>M„ hÛa don:</b> {invoice.code}
-              </p>
-              <p>
-                <b>Ng‡y t?o:</b> {invoice.createdAt}
-              </p>
-              <p>
-                <b>Bi?n s? xe:</b> {invoice.vehicleInfo?.plateNumber}
-              </p>
-              <p>
-                <b>H„ng xe:</b> {invoice.vehicleInfo?.make}{" "}
-                {invoice.vehicleInfo?.model}
-              </p>
-              <p>
-                <b>PhÌ d?t l?ch:</b>{" "}
-                {invoice.chargingInfo?.bookingCost?.toLocaleString("vi-VN")} VN–
-              </p>
-              <p>
-                <b>PhÌ di?n:</b>{" "}
-                {invoice.chargingInfo?.energyCost?.toLocaleString("vi-VN")} VN–
-              </p>
-              <p>
-                <b>Thanh to·n qua:</b> {paymentMethod}
-              </p>
-              <p className="grand-total">
-                <b>T?ng ti?n:</b> {invoice.totalAmount.toLocaleString("vi-VN")} VN–
-              </p>
-              <div className="invoice-actions">
-                <button
-                  className="print-btn"
-                  onClick={() => setShowInvoice(true)}
-                >
-                  ??? In hÛa don
-                </button>
-                <button className="close-btn" onClick={() => setInvoice(null)}>
-                  ?? –Ûng
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
-
-      {showInvoice && invoice && (
-        <div className="invoice-print-container">
-          <div className="invoice-print-content">
-            <div className="invoice-header">
-              <div className="invoice-title">H”A –ON –I?N T?</div>
-              <div className="invoice-code">M„ hÛa don: {invoice.code}</div>
-              <div className="invoice-date">Ng‡y t?o: {invoice.createdAt}</div>
-            </div>
-
-            <div className="invoice-info">
-              <div className="info-section">
-                <h3>ThÙng tin xe</h3>
-                <div className="info-item">
-                  <span className="info-label">Bi?n s?:</span>
-                  <span className="info-value">
-                    {invoice.vehicleInfo?.plateNumber}
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">H„ng xe:</span>
-                  <span className="info-value">
-                    {invoice.vehicleInfo?.make} {invoice.vehicleInfo?.model}
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">M?c s?c:</span>
-                  <span className="info-value">
-                    {invoice.chargingInfo?.currentCharge}%
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Th?i gian s?c:</span>
-                  <span className="info-value">
-                    {invoice.chargingInfo?.timeElapsed} ph˙t
-                  </span>
-                </div>
-              </div>
-
-              <div className="info-section">
-                <h3>Chi ti?t thanh to·n</h3>
-                <div className="info-item">
-                  <span className="info-label">PhÌ d?t l?ch:</span>
-                  <span className="info-value">
-                    {invoice.chargingInfo?.bookingCost?.toLocaleString("vi-VN")} VN–
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">
-                    PhÌ di?n ({invoice.chargingInfo?.energyKwh?.toFixed(2)} kWh):
-                  </span>
-                  <span className="info-value">
-                    {invoice.chargingInfo?.energyCost?.toLocaleString("vi-VN")} VN–
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Thanh to·n qua:</span>
-                  <span className="info-value">{invoice.paymentMethod}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="total-section">
-              <div className="total-label">T?ng ti?n</div>
-              <div className="total-amount">
-                {invoice.totalAmount.toLocaleString()} d
-              </div>
-            </div>
-
-            <div className="invoice-footer">
-              <p>C?m on b?n d„ s? d?ng d?ch v? s?c xe di?n!</p>
-              <p>HÛa don n‡y du?c t?o t? d?ng b?i h? th?ng</p>
-            </div>
-
-            <div className="invoice-actions no-print">
-              <button className="print-btn" onClick={() => window.print()}>
-                ??? In hÛa don
-              </button>
-              <button
-                className="close-btn"
-                onClick={() => setShowInvoice(false)}
-              >
-                ?? –Ûng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
