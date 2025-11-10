@@ -1,6 +1,6 @@
 @use "sass:color";
 
-// Color System - Updated to match new palette
+// Color System
 $primary: #198754;
 $primary-dark: #146c43;
 $primary-light: #9de04a;
@@ -37,7 +37,6 @@ $spacing-lg: 24px;
 $spacing-xl: 32px;
 $spacing-xxl: 48px;
 
-// Add a shared control height
 $control-height: 48px;
 
 // Border Radius
@@ -73,55 +72,53 @@ body {
   padding: $spacing-lg;
   padding-top: 100px;
   background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 // Container
 .booking-container {
   width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
-  margin-top: 15px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: $spacing-lg;
-  height: 600px;
+  
+  &.full-width {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    
+    .left-panel {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+  }
 
   &.confirmation-mode {
-    grid-template-columns: 1fr;
     max-width: 1200px;
-    height: auto; // Remove fixed height for Step 4
-    min-height: auto; // Allow natural content height
+    
+    .left-panel {
+      max-width: 100%;
+    }
   }
 }
 
-// Left Panel
+// Left Panel (Main Content)
 .left-panel {
   background: $bg-white;
   border-radius: $radius-lg;
   box-shadow: $shadow-md;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-// Panel Header
-.panel-header {
-  padding: $spacing-md $spacing-lg;
-  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: #ffffff;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  flex-shrink: 0;
-
-  h1 {
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: $spacing-md;
-    letter-spacing: -0.5px;
-    color: #ffffff;
+  padding: $spacing-xl;
+  position: relative;
+  
+  .panel-header {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: $text-primary;
+      margin-bottom: $spacing-lg;
+    }
   }
 }
 
@@ -129,603 +126,176 @@ body {
 .step-indicator {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: $spacing-xs;
-  background: rgba(255, 255, 255, 0.15);
-  padding: $spacing-sm;
-  border-radius: $radius-md;
- 
-
+  justify-content: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xl;
+  flex-wrap: wrap;
+  
   .step {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    flex: 1;
-    opacity: 0.5;
-    transition: all $transition-base;
-
-    &.active {
-      opacity: 1;
-      transform: scale(1.05);
-    }
-
+    gap: $spacing-xs;
+    min-width: 80px;
+    
     .step-number {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
+      background: $bg-gray;
+      color: $text-muted;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 15px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      font-size: 16px;
       transition: all $transition-base;
     }
-
-    &.active .step-number {
-      background: white;
-      color: $primary;
-      border-color: white;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
+    
     .step-label {
-      font-size: 11px;
+      font-size: 13px;
+      color: $text-muted;
       font-weight: 600;
       text-align: center;
-      white-space: nowrap;
+      transition: color $transition-base;
     }
-  }
-
-  .step-divider {
-    flex: 0 0 30px;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.3);
-    margin: 0 4px;
-    margin-bottom: 20px;
-  }
-}
-
-// Station Selection
-.station-selection {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-// Slot Selection
-.slot-selection {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  padding: $spacing-md;
-
-  h2 {
-    font-size: 18px;
-    font-weight: 700;
-    color: $text-primary;
-    margin-bottom: $spacing-md;
-    margin-top: 0;
-  }
-
-  .selection-hint {
-    text-align: center;
-    color: $text-secondary;
-    font-size: 1rem;
-    margin-bottom: 24px;
-  }
-
-  .loading-message,
-  .error-message,
-  .no-slots-message {
-    text-align: center;
-    padding: 20px;
-    border-radius: 12px;
-    margin: 20px 0;
-  }
-
-  .loading-message {
-    background: rgba(25, 135, 84, 0.1);
-    color: $text-primary;
-  }
-
-  .error-message {
-    background: rgba(220, 38, 38, 0.1);
-    color: #dc2626;
-  }
-
-  .no-slots-message {
-    background: rgba(170, 170, 170, 0.1);
-    color: #AAAAAA;
-  }
-
-  .slots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    max-height: calc(100vh - 400px);
-    padding-right: 8px;
-    margin-bottom: 24px;
-
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: $primary;
-      border-radius: 10px;
-
-      &:hover {
-        background: $primary-dark;
+    
+    &.active {
+      .step-number {
+        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        color: white;
+        box-shadow: $shadow-md;
       }
-    }
-  }
-
-  .slot-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    border: 2px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, $primary 0%, $primary-dark 100%);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.3s ease;
-    }
-
-    &:hover:not(.disabled) {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(25, 135, 84, 0.15);
-      border-color: $primary;
-
-      &::before {
-        transform: scaleX(1);
-      }
-
-      .slot-icon {
-        transform: scale(1.2) rotate(10deg);
-      }
-    }
-
-    &.selected {
-      border-color: $primary;
-      background: linear-gradient(135deg, rgba(224, 247, 224, 0.5) 0%, rgba(209, 245, 209, 0.3) 100%);
-      box-shadow: 0 8px 20px rgba(25, 135, 84, 0.25);
-
-      &::before {
-        transform: scaleX(1);
-      }
-
-      .slot-number-wrapper {
+      
+      .step-label {
         color: $primary-dark;
       }
-
-      .slot-icon {
-        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-        transform: scale(1.1);
-      }
-    }
-
-    &.disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-      background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
-
-      &:hover {
-        transform: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        border-color: #e5e7eb;
-
-        &::before {
-          transform: scaleX(0);
-        }
-      }
-
-      .slot-icon {
-        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-        opacity: 0.5;
-      }
     }
   }
-
-  .slot-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: $spacing-xs;
-    border-bottom: 2px solid $bg-gray;
-
-    .slot-status-chip {
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      border: 2px solid transparent;
-    }
-
-    .slot-status-chip.available {
-      background: rgba($success, 0.15);
-      color: $success;
-      border-color: rgba($success, 0.3);
-    }
-
-    .slot-status-chip.booked,
-    .slot-status-chip.reserved,
-    .slot-status-chip.occupied,
-    .slot-status-chip.maintenance,
-    .slot-status-chip.disabled,
-    .slot-status-chip.unavailable {
-      background: rgba($danger, 0.15);
-      color: $danger;
-      border-color: rgba($danger, 0.3);
-    }
-  }
-
-  .slot-number-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-  }
-
-  .slot-icon {
-    font-size: 32px;
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, rgba(224, 247, 224, 0.8) 0%, rgba(209, 245, 209, 0.6) 100%);
-    border-radius: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.1);
-    border: 2px solid rgba(25, 135, 84, 0.2);
-  }
-
-  .slot-number {
-    font-size: 18px;
-    font-weight: 700;
-    color: #333333;
-    letter-spacing: -0.3px;
-  }
-
-  .slot-body {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    flex: 1;
-  }
-
-  .slot-info-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.5) 100%);
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    transition: all 0.3s ease;
-
-    .slot-card:hover:not(.disabled) & {
-      background: linear-gradient(135deg, rgba(224, 247, 224, 0.3) 0%, rgba(209, 245, 209, 0.2) 100%);
-      border-color: rgba(25, 135, 84, 0.2);
-    }
-
-    .slot-card.selected & {
-      background: linear-gradient(135deg, rgba(224, 247, 224, 0.5) 0%, rgba(209, 245, 209, 0.3) 100%);
-      border-color: rgba(25, 135, 84, 0.3);
-    }
-  }
-
-  .info-icon {
-    font-size: 24px;
+  
+  .step-divider {
     width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-    border-radius: 8px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  .info-content {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1;
-  }
-
-  .info-label {
-    font-size: 12px;
-    color: #AAAAAA;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .info-value {
-    font-size: 15px;
-    font-weight: 700;
-    color: #333333;
-  }
-
-  .slot-unavailable-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.95);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    border-radius: 16px;
-    backdrop-filter: blur(4px);
-    padding: 20px;
-
-    .unavailable-icon {
-      font-size: 56px;
-      opacity: 0.7;
-      animation: pulse 2s infinite;
-    }
-
-    .unavailable-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      text-align: center;
-    }
-
-    .unavailable-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #EF4444;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .unavailable-subtitle {
-      font-size: 14px;
-      font-weight: 600;
-      color: #6b7280;
-    }
-  }
-
-  .next-button {
-    width: 100%;
-    padding: 16px 24px;
-    background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      transform: translate(-50%, -50%);
-      transition: width 0.6s, height 0.6s;
-    }
-
-    &:hover:not(:disabled) {
-      background: linear-gradient(135deg, $primary-dark 0%, darken($primary-dark, 5%) 100%);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(25, 135, 84, 0.4);
-
-      &::before {
-        width: 300px;
-        height: 300px;
-      }
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-      box-shadow: none;
-
-      &:hover {
-        transform: none;
-      }
-    }
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 0.5;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.05);
-    }
+    height: 2px;
+    background: $bg-gray;
+    margin: 0 $spacing-xs;
+    margin-bottom: 28px;
   }
 }
 
 // Search & Filters
 .search-filters {
-  padding: $spacing-md;
   display: flex;
-  gap: $spacing-sm;
-  border-bottom: 1px solid $border-color;
-  background: $bg-white;
-  flex-shrink: 0;
-}
-
-.search-box {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  .search-icon {
-    position: absolute;
-    left: $spacing-md;
-    top: 50%;                   // center vertically
-    transform: translateY(-50%);// center vertically
-    color: $text-muted;
-    pointer-events: none;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+  
+  .search-box {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+    
+    .search-icon {
+      position: absolute;
+      left: $spacing-md;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $text-muted;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    .search-input {
+      width: 100%;
+      height: $control-height;
+      padding: $spacing-sm $spacing-md $spacing-sm 44px;
+      border: 2px solid $border-color;
+      border-radius: $radius-md;
+      font-size: 15px;
+      transition: all $transition-base;
+      
+      &:focus {
+        outline: none;
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba(126, 211, 33, 0.1);
+      }
+      
+      &::placeholder {
+        color: $text-muted;
+      }
+    }
+    
+    .clear-search {
+      position: absolute;
+      right: $spacing-sm;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: $bg-gray;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      color: $text-secondary;
+      transition: all $transition-fast;
+      
+      &:hover {
+        background: $danger;
+        color: white;
+      }
+    }
   }
-
-  .search-input {
-    width: 100%;
-    height: $control-height;                               // unify height
-    padding: $spacing-sm $spacing-md $spacing-sm 44px;     // keep left for icon
+  
+  .filter-select {
+    min-width: 200px;
+    height: $control-height;
+    padding: $spacing-sm $spacing-md;
     border: 2px solid $border-color;
     border-radius: $radius-md;
     font-size: 15px;
-    transition: all $transition-base;
     background: $bg-white;
-
+    cursor: pointer;
+    transition: all $transition-base;
+    
     &:focus {
       outline: none;
       border-color: $primary;
       box-shadow: 0 0 0 3px rgba(126, 211, 33, 0.1);
     }
-
-    &::placeholder {
-      color: $text-muted;
-    }
-  }
-
-  .clear-search {
-    position: absolute;
-    right: $spacing-sm;
-    width: 24px;
-    height: 24px;
-    border: none;
-    background: $bg-gray;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    color: $text-secondary;
-    transition: all $transition-fast;
-
-    &:hover {
-      background: $danger;
-      color: white;
-    }
   }
 }
 
-.filter-select {
-  padding: $spacing-sm $spacing-md; // ensure same vertical padding
-  height: $control-height;          // unify height
-  box-sizing: border-box;
-  border: 2px solid $border-color;
-  border-radius: $radius-md;
-  font-size: 15px;
-  background: $bg-white;
-  cursor: pointer;
-  transition: all $transition-base;
-  min-width: 200px;
-
-  &:focus {
-    outline: none;
-    border-color: $primary;
-    box-shadow: 0 0 0 3px rgba(126, 211, 33, 0.1);
-  }
-}
-
-// Results Count
 .results-count {
-  padding: $spacing-sm $spacing-md;
-  font-size: 13px;
+  text-align: center;
+  margin-bottom: $spacing-lg;
+  font-size: 14px;
   color: $text-secondary;
-  background: $bg-light;
-  flex-shrink: 0;
-
+  
   strong {
     color: $primary;
     font-weight: 700;
   }
 }
 
-// Stations List
-.stations-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: $spacing-md;
+// Grid Layouts
+.stations-list,
+.chargers-grid,
+.slots-grid {
   display: grid;
+  gap: $spacing-lg;
+  padding: $spacing-md 0;
+}
+
+.stations-list {
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+}
+
+.chargers-grid {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.slots-grid {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: $spacing-sm;
-  align-content: start;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: $bg-light;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: $border-color;
-    border-radius: 3px;
-
-    &:hover {
-      background: $text-muted;
-    }
-  }
 }
 
 // Station Card
@@ -733,189 +303,66 @@ body {
   background: $bg-white;
   border: 2px solid $border-color;
   border-radius: $radius-md;
-  padding: $spacing-md $spacing-lg;
+  padding: $spacing-lg;
   cursor: pointer;
   transition: all $transition-base;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  min-height: 80px;
-  justify-content: center;
-
+  
   &:hover {
     border-color: $primary;
     box-shadow: $shadow-lg;
     transform: translateY(-2px);
   }
-
+  
   &.selected {
     border-color: $primary;
     background: $primary-pale;
     box-shadow: $shadow-md;
   }
-}
-
-// Station Header
-.station-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;  
-  gap: 3px;
-  margin-bottom: 1px;
-}
-
-.station-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: $text-primary;
-  line-height: 1;
-  flex: 10;  
-}
-
-// Type Badge
-.type-badge {
-  padding: 4px 8px;
-  border-radius: $radius-sm;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-  flex-shrink: 0;
-
-  &.ac {
-    background: rgba($info, 0.15);
-    color: $info;
-    border: 1px solid rgba($info, 0.3);
-  }
-
-  &.dc {
-    background: rgba($warning, 0.15);
-    color: color.adjust($warning, $lightness: -15%);
-    border: 1px solid rgba($warning, 0.3);
-  }
-
-  &.dc-ultra {
-    background: rgba($danger, 0.15);
-    color: $danger;
-    border: 1px solid rgba($danger, 0.3);
-  }
-}
-
-// Station Availability
-.station-availability {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  .availability-bar {
-    width: 100%;
-    height: 6px;
-    background: $bg-gray;
-    border-radius: 3px;
-    overflow: hidden;
-
-    .availability-fill {
-      height: 100%;
-      background: linear-gradient(90deg, $primary 0%, $primary-dark 100%);
-      transition: width $transition-base;
-    }
-  }
-
-  .availability-text {
-    font-size: 12px;
-    color: $text-secondary;
-    font-weight: 600;
-  }
-}
-
-
-
-// Charger Selection
-.charger-selection {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.selected-station-info {
-  padding: $spacing-md;
-  border-bottom: 1px solid $border-color;
-  background: $bg-light;
-  flex-shrink: 0;
-
-  h2 {
-    font-size: 18px;
-    font-weight: 700;
-    color: $text-primary;
-    margin-bottom: $spacing-xs;
-    margin-top: $spacing-xs;
-  }
-
-  .station-quick-info {
+  
+  .station-header {
     display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     gap: $spacing-sm;
-    flex-wrap: wrap;
-    font-size: 13px;
-    color: $text-secondary;
-
-    span {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .badge {
-      padding: 4px 8px;
-      border-radius: $radius-sm;
+    margin-bottom: $spacing-sm;
+    
+    .station-name {
+      font-size: 16px;
       font-weight: 600;
-      font-size: 11px;
-
-      &.ac {
-        background: rgba($info, 0.1);
-        color: $info;
-      }
-
-      &.dc {
-        background: rgba($warning, 0.1);
-        color: color.adjust($warning, $lightness: -10%);
-      }
+      color: $text-primary;
+      flex: 1;
+    }
+    
+    .station-distance {
+      font-size: 13px;
+      font-weight: 600;
+      color: $primary;
+      white-space: nowrap;
     }
   }
-}
-
-.selection-hint {
-  padding: $spacing-sm $spacing-md;
-  font-size: 13px;
-  color: $text-secondary;
-  background: $primary-pale;
-  border-left: 4px solid $primary;
-  flex-shrink: 0;
-}
-
-// Chargers Grid
-.chargers-grid {
-  flex: 1;
-  overflow-y: auto;
-  padding: $spacing-md;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: $spacing-sm;
-  align-content: start;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: $bg-light;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: $border-color;
-    border-radius: 3px;
-
-    &:hover {
-      background: $text-muted;
+  
+  .station-availability {
+    margin-top: $spacing-md;
+    
+    .availability-bar {
+      width: 100%;
+      height: 6px;
+      background: $bg-gray;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 6px;
+      
+      .availability-fill {
+        height: 100%;
+        background: linear-gradient(90deg, $primary 0%, $primary-dark 100%);
+        transition: width $transition-base;
+      }
+    }
+    
+    .availability-text {
+      font-size: 12px;
+      color: $text-secondary;
+      font-weight: 600;
     }
   }
 }
@@ -928,1883 +375,671 @@ body {
   padding: $spacing-md;
   cursor: pointer;
   transition: all $transition-base;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-
+  
   &.available:hover {
     border-color: $primary;
     box-shadow: $shadow-lg;
     transform: translateY(-2px);
   }
-
+  
   &.selected {
     border-color: $primary;
     background: $primary-pale;
     box-shadow: $shadow-md;
   }
-
-  &.occupied {
+  
+  &.in_use {
     opacity: 0.6;
     cursor: not-allowed;
-    background: $bg-light;
   }
-
-  &.maintenance {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: repeating-linear-gradient(
-      45deg,
-      $bg-white,
-      $bg-white 10px,
-      $bg-light 10px,
-      $bg-light 20px
-    );
-  }
-}
-
-.charger-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: $spacing-xs;
-  border-bottom: 2px solid $bg-gray;
-
-  h3 {
-    font-size: 16px;
-    font-weight: 700;
-    color: $text-primary;
-  }
-
-  .speed-badge {
-    margin: 0 $spacing-sm;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-    border: 2px solid transparent;
-
-    &.slow {
-      background: rgba($info, 0.12);
-      color: color.adjust($info, $lightness: -5%);
-      border-color: rgba($info, 0.3);
-    }
-
-    &.fast {
-      background: rgba($warning, 0.12);
-      color: color.adjust($warning, $lightness: -10%);
-      border-color: rgba($warning, 0.3);
-    }
-
-    &.super_fast {
-      background: rgba($danger, 0.12);
-      color: $danger;
-      border-color: rgba($danger, 0.3);
-    }
-  }
-
-  /* Status badge for charger cards (Step 2) */
-  .status-badge {
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-    border: 1px solid transparent;
-  }
-
-  .status-badge.available {
-    background: rgba($success, 0.12);
-    color: $success;
-    border-color: rgba($success, 0.18);
-  }
-
-  /* Make in_use display as red (busy) per request */
-  .status-badge.in_use {
-    background: rgba($danger, 0.10);
-    color: $danger;
-    border-color: rgba($danger, 0.16);
-  }
-
-  .status-badge.booked,
-  .status-badge.occupied {
-    background: rgba($danger, 0.10);
-    color: $danger;
-    border-color: rgba($danger, 0.16);
-  }
-
-  .status-badge.maintenance {
-    background: rgba($text-muted, 0.06);
-    color: $text-muted;
-    border-color: rgba($text-muted, 0.10);
-  }
-}
-
-.type-row {
-  margin-top: 6px;
-}
-
-.type-badge {
-  padding: 4px 8px;
-  border-radius: $radius-sm;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-  flex-shrink: 0;
-
-  &.ac {
-    background: rgba($info, 0.15);
-    color: $info;
-    border: 1px solid rgba($info, 0.3);
-  }
-
-  &.dc {
-    background: rgba($warning, 0.15);
-    color: color.adjust($warning, $lightness: -15%);
-    border: 1px solid rgba($warning, 0.3);
-  }
-
- &.dc-ultra {
-  background: rgba($danger, 0.12);
-  color: $danger;
-  border: 2px solid transparent;
-  border-color: rgba($danger, 0.3);
-}
-}
-
-.charger-specs {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-}
-
-.spec-item {
-  display: flex;
-  align-items: center;
-  gap: $spacing-xs;
-
-  .spec-icon {
-    font-size: 20px;
-    width: 28px;
-    text-align: center;
-  }
-
-  .spec-label {
-    font-size: 11px;
-    color: $text-secondary;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    font-weight: 600;
-  }
-
-  .spec-value {
-    font-size: 14px;
-    font-weight: 700;
-    color: $text-primary;
-  }
-}
-
-.charger-connector {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: $spacing-xs $spacing-sm;
-  background: $bg-light;
-  border-radius: $radius-sm;
-  font-size: 13px;
-
-  .connector-label {
-    color: $text-secondary;
-    font-weight: 600;
-  }
-
-  .connector-type {
-    color: $text-primary;
-    font-weight: 700;
-  }
-}
-
-// Booking Confirmation
-.booking-confirmation {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: visible; // Changed from auto to visible
-  padding: $spacing-md;
-
-  &::-webkit-scrollbar {
-    display: none; // Hide scrollbar since we use page scroll
-  }
-
-  > .back-button {
-    margin-bottom: $spacing-md;
-  }
-}
-
-.confirmation-content {
-  flex: 1;
-  width: 100%;
-}
-
-.confirmation-header {
-  text-align: center;
-  margin-bottom: $spacing-xl; // Increased spacing
-
-  .success-icon {
-    width: 60px;
-    height: 60px;
-    margin: 0 auto $spacing-md;
-    background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-    color: #ffffff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 36px;
-    box-shadow: $shadow-lg;
-  }
-
-  h2 {
-    font-size: 22px;
-    font-weight: 700;
-    color: $text-primary;
-    margin-bottom: $spacing-xs;
-  }
-
-  .confirmation-subtitle {
-    font-size: 13px;
-    color: $text-secondary;
-    line-height: 1.5;
-  }
-}
-
-.confirmation-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: $spacing-lg;
-  align-items: start;
-  margin-bottom: $spacing-xl; // Add bottom margin for spacing
-}
-
-.summary-section {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-}
-
-.summary-card {
-  background: $bg-white;
-  border: 2px solid $border-color;
-  border-radius: $radius-md;
-  padding: $spacing-md;
-  box-shadow: $shadow-sm;
-  display: flex;
-  flex-direction: column;
-  transition: all $transition-base;
-  min-height: auto; // Remove fixed min-height
-
-  &:hover {
-    border-color: $primary;
-    box-shadow: $shadow-lg;
-    transform: translateY(-4px);
-    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
-  }
-
-  h3 {
-    font-size: 16px;
-    font-weight: 700;
-    color: $text-primary;
-    margin-bottom: $spacing-md;
-    text-align: center;
-    padding-bottom: $spacing-md;
-    border-bottom: 2px solid $primary;
-    flex-shrink: 0;
-  }
-
-  // Make content area flex to fill space
-  > :not(h3) {
-    flex: 1;
-  }
-}
-
-// Ensure station and charger cards have same structure
-.summary-card.station-card,
-.summary-card.charger-card {
-  min-height: auto; // Remove fixed height
   
-  .summary-item {
-    padding: $spacing-sm 0;
-    
-    &:first-of-type {
-      padding-top: 0;
-    }
-  }
-}
-
-// Vehicle selection card matching height
-.vehicle-selection-card {
-  margin-bottom: 0 !important;
-  min-height: auto; // Remove fixed height
-  display: flex;
-  flex-direction: column;
-
-  h3 {
-    margin-bottom: $spacing-md;
-  }
-
-  .selected-vehicle-info {
-    flex: 1;
+  .charger-header {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start; // Changed from space-between
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: $spacing-xs;
+    border-bottom: 2px solid $bg-gray;
+    margin-bottom: $spacing-sm;
     
-    .summary-item {
-      padding: $spacing-sm 0;
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    
+    .speed-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
       
-      &:first-of-type {
-        padding-top: 0;
+      &.slow {
+        background: rgba($info, 0.12);
+        color: $info;
+      }
+      
+      &.fast {
+        background: rgba($warning, 0.12);
+        color: $warning;
+      }
+      
+      &.super_fast {
+        background: rgba($danger, 0.12);
+        color: $danger;
+      }
+    }
+    
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      
+      &.available {
+        background: rgba($success, 0.12);
+        color: $success;
+      }
+      
+      &.in_use {
+        background: rgba($danger, 0.10);
+        color: $danger;
       }
     }
   }
-
-  .change-vehicle-btn,
-  .select-vehicle-btn {
-    margin-top: $spacing-md; // Fixed margin instead of auto
-  }
-}
-
-.change-vehicle-btn,
-.select-vehicle-btn {
-  width: 100%;
-  padding: 12px 20px;
-  background: $primary;
-  color: #ffffff;
-  border: none;
-  border-radius: $radius-md;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: $spacing-md;
-
-  &:hover {
-    background: $primary-dark;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(25, 135, 84, 0.4);
-  }
-}
-
-.summary-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: $spacing-sm 0;
-  border-bottom: 1px solid $bg-gray;
-  gap: $spacing-sm;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  .summary-label {
-    font-size: 13px;
-    color: $text-secondary;
-    font-weight: 600;
-    flex-shrink: 0;
-    min-width: 80px;
-  }
-
-  .summary-value {
-    font-size: 13px;
-    color: $text-primary;
-    font-weight: 600;
-    text-align: right;
-    flex: 1;
-
-    &.highlight {
-      color: $primary-dark;
+  
+  .type-row {
+    margin-bottom: $spacing-sm;
+    
+    .type-badge {
+      padding: 4px 8px;
+      border-radius: $radius-sm;
+      font-size: 11px;
       font-weight: 700;
-      font-size: 14px;
-    }
-
-    &.status-available {
-      color: $success;
-      font-weight: 700;
+      
+      &.ac {
+        background: rgba($info, 0.15);
+        color: $info;
+      }
+      
+      &.dc {
+        background: rgba($warning, 0.15);
+        color: $warning;
+      }
+      
+      &.ultra {
+        background: rgba($danger, 0.12);
+        color: $danger;
+      }
     }
   }
-
-  &.highlight-item {
-    background: $primary-pale;
-    padding: $spacing-sm;
+  
+  .charger-specs {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+    margin-bottom: $spacing-sm;
+    
+    .spec-item {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      
+      .spec-icon {
+        font-size: 20px;
+        width: 28px;
+      }
+      
+      .spec-label {
+        font-size: 11px;
+        color: $text-secondary;
+        text-transform: uppercase;
+      }
+      
+      .spec-value {
+        font-size: 14px;
+        font-weight: 700;
+      }
+    }
+  }
+  
+  .charger-connector {
+    display: flex;
+    justify-content: space-between;
+    padding: $spacing-xs $spacing-sm;
+    background: $bg-light;
     border-radius: $radius-sm;
-    margin: $spacing-xs 0;
-    border-bottom: none;
+    font-size: 13px;
+    
+    .connector-label {
+      color: $text-secondary;
+      font-weight: 600;
+    }
+    
+    .connector-type {
+      font-weight: 700;
+    }
   }
 }
 
-// Form Section - ensure proper spacing
-.form-section {
-  position: relative; // Changed from sticky
-  top: auto; // Reset top position
-  height: auto; // Changed from fit-content
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-}
-
-.booking-form {
+// Slot Card - simplified
+.slot-card {
   background: $bg-white;
   border: 2px solid $border-color;
   border-radius: $radius-md;
   padding: $spacing-lg;
-  box-shadow: $shadow-sm;
-  display: flex;
-  flex-direction: column;
-
-  .form-header {
-    margin-bottom: $spacing-lg;
-    padding-bottom: $spacing-md;
-    border-bottom: 2px solid $bg-gray;
-    flex-shrink: 0;
-
-    h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: $text-primary;
-      margin-bottom: 4px;
-    }
-
-    p {
-      font-size: 13px;
-      color: $text-secondary;
-      line-height: 1.5;
-    }
-  }
-}
-
-.form-group {
-  margin-bottom: $spacing-lg;
-
-  label {
-    display: flex;
-    align-items: center;
-    gap: $spacing-xs;
-    font-size: 14px;
-    font-weight: 700;
-    color: $text-primary;
-    margin-bottom: $spacing-sm;
-
-    svg {
-      color: $primary;
-      width: 16px;
-      height: 16px;
-    }
-  }
-}
-
-.custom-datetime-picker {
+  cursor: pointer;
+  transition: all $transition-base;
   position: relative;
+  min-height: 180px;
   
-  .datetime-display {
-    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
-    border: 2px solid $primary;
-    border-radius: $radius-lg;
-    padding: $spacing-md $spacing-lg;
-    cursor: pointer;
-    transition: all $transition-base;
+  &:not(.disabled):hover {
+    border-color: $primary;
+    box-shadow: $shadow-lg;
+    transform: translateY(-4px);
+  }
+  
+  &.selected {
+    border-color: $primary;
+    background: $primary-pale;
+    box-shadow: $shadow-md;
+  }
+  
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: $bg-light;
+  }
+  
+  .slot-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 12px rgba(126, 211, 33, 0.15);
-    position: relative;
-    overflow: visible;
-    min-height: 70px;
-
-    &:hover {
-      border-color: $primary-dark;
-      box-shadow: 0 6px 20px rgba(126, 211, 33, 0.3);
-      transform: translateY(-3px);
-      background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.2) 100%);
-
-      .datetime-arrow {
-        transform: translateX(6px) scale(1.1);
-        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-        color: #ffffff;
-        box-shadow: 0 4px 12px rgba(126, 211, 33, 0.4);
-      }
-
-      .datetime-icon {
-        transform: scale(1.1);
-        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-        box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
-      }
-    }
-
-    &:active {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(126, 211, 33, 0.2);
-    }
-
-    .datetime-value {
+    margin-bottom: $spacing-md;
+    padding-bottom: $spacing-sm;
+    border-bottom: 2px solid $bg-gray;
+    
+    .slot-number-wrapper {
       display: flex;
       align-items: center;
-      gap: $spacing-md;
-      font-size: 16px;
-      font-weight: 700;
-      color: $text-primary;
-      flex: 1;
-
-      .datetime-icon {
+      gap: $spacing-sm;
+      
+      .slot-icon {
         font-size: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.25) 100%);
-        border-radius: $radius-md;
-        flex-shrink: 0;
-        transition: all $transition-base;
-        box-shadow: 0 2px 8px rgba(126, 211, 33, 0.15);
-        border: 2px solid rgba($primary, 0.3);
       }
-
-      span:last-child {
-        line-height: 1.4;
-        letter-spacing: -0.3px;
+      
+      .slot-number {
+        font-size: 16px;
+        font-weight: 700;
       }
     }
-
-    .datetime-arrow {
-      color: $primary;
-      font-size: 20px;
+    
+    .slot-status-chip {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
       font-weight: 700;
-      transition: all $transition-base;
+      
+      &.available {
+        background: rgba($success, 0.12);
+        color: $success;
+      }
+      
+      &.booked,
+      &.reserved,
+      &.occupied {
+        background: rgba($danger, 0.12);
+        color: $danger;
+      }
+    }
+  }
+  
+  .slot-body {
+    .slot-info-item {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      background: rgba($primary, 0.15);
-      border-radius: 50%;
-      border: 2px solid rgba($primary, 0.3);
-      flex-shrink: 0;
+      gap: $spacing-sm;
+      padding: $spacing-sm;
+      background: $bg-light;
+      border-radius: $radius-sm;
+      
+      .info-icon {
+        font-size: 20px;
+      }
+      
+      .info-content {
+        flex: 1;
+        
+        .info-label {
+          font-size: 11px;
+          color: $text-secondary;
+          text-transform: uppercase;
+        }
+        
+        .info-value {
+          font-size: 14px;
+          font-weight: 700;
+        }
+      }
     }
   }
-
-  .datetime-helper {
-    margin-top: $spacing-sm;
-    font-size: 12px;
-    color: $text-secondary;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding-left: 6px;
-    font-weight: 600;
-    font-style: italic;
-  }
-
-  input[type="date"],
-  input[type="time"] {
+  
+  .slot-unavailable-overlay {
     position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .react-datepicker-popper {
-    z-index: 1000 !important;
-  }
-
-  .react-datepicker {
-    position: absolute !important;
-    top: calc(100% + 8px) !important;
-    left: 0 !important;
-    z-index: 1000 !important;
-    box-shadow: $shadow-lg;
-    border: 2px solid $primary;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-sm;
     border-radius: $radius-md;
+    
+    .unavailable-icon {
+      font-size: 40px;
+    }
+    
+    .unavailable-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: $danger;
+    }
+    
+    .unavailable-subtitle {
+      font-size: 12px;
+      color: $text-muted;
+    }
   }
 }
 
-.price-estimate {
-  background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.05) 100%);
-  border: 2px solid $primary;
-  border-radius: $radius-md;
-  padding: $spacing-md;
-  margin-bottom: $spacing-lg;
-  text-align: center;
-
-  .estimate-label {
-    font-size: 12px;
-    color: $text-secondary;
-    font-weight: 600;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .estimate-value {
-    font-size: 22px;
-    font-weight: 700;
-    color: $primary-dark;
-  }
-}
-
-.submit-button {
-  width: 100%;
-  padding: $spacing-md $spacing-lg;
+.next-button {
+  display: block;
+  margin: $spacing-xl auto 0;
+  padding: $spacing-md $spacing-xxl;
   background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: #ffffff;
+  color: white;
   border: none;
   border-radius: $radius-md;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   transition: all $transition-base;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-sm;
-  box-shadow: $shadow-md;
-
-  &:hover {
+  min-width: 250px;
+  
+  &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: $shadow-lg;
   }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  svg {
-    transition: transform $transition-base;
-    width: 18px;
-    height: 18px;
-  }
-
-  &:hover svg {
-    transform: translateX(4px);
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 
-// Right Panel (Map)
-.right-panel {
-  background: $bg-white;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-md;
-  overflow: hidden;
-  height: 600px;
-}
-
-.map-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-
-  > div {
-    border-radius: $radius-lg;
+// Confirmation Step
+.booking-confirmation {
+  .confirmation-header {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+    
+    .success-icon {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto $spacing-md;
+      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: $shadow-lg;
+    }
+    
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: $spacing-xs;
+    }
+    
+    .confirmation-subtitle {
+      font-size: 14px;
+      color: $text-secondary;
+    }
+  }
+  
+  .confirmation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-xl;
+    margin-bottom: $spacing-xl;
+  }
+  
+  .summary-card {
+    background: $bg-white;
+    border: 2px solid $border-color;
+    border-radius: $radius-md;
+    padding: $spacing-lg;
+    
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: $spacing-md;
+      padding-bottom: $spacing-md;
+      border-bottom: 2px solid $primary;
+    }
+    
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: $spacing-sm 0;
+      border-bottom: 1px solid $bg-gray;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .summary-label {
+        font-size: 13px;
+        color: $text-secondary;
+        font-weight: 600;
+      }
+      
+      .summary-value {
+        font-size: 13px;
+        font-weight: 600;
+        text-align: right;
+        
+        &.highlight {
+          color: $primary-dark;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+  
+  .booking-form {
+    background: $bg-white;
+    border: 2px solid $border-color;
+    border-radius: $radius-md;
+    padding: $spacing-lg;
+    
+    .form-header {
+      margin-bottom: $spacing-lg;
+      padding-bottom: $spacing-md;
+      border-bottom: 2px solid $bg-gray;
+      
+      h3 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      
+      p {
+        font-size: 13px;
+        color: $text-secondary;
+      }
+    }
+    
+    .form-group {
+      margin-bottom: $spacing-lg;
+      
+      label {
+        display: flex;
+        align-items: center;
+        gap: $spacing-xs;
+        font-weight: 700;
+        margin-bottom: $spacing-sm;
+        
+        svg {
+          color: $primary;
+        }
+      }
+    }
+    
+    .submit-button {
+      width: 100%;
+      padding: $spacing-md;
+      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+      color: white;
+      border: none;
+      border-radius: $radius-md;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all $transition-base;
+      
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: $shadow-lg;
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
   }
 }
 
-// Modal Styles for Date/Time Picker
+// Custom datetime picker
+.custom-datetime-picker {
+  .datetime-display {
+    background: $bg-light;
+    border: 2px solid $primary;
+    border-radius: $radius-md;
+    padding: $spacing-md;
+    cursor: pointer;
+    transition: all $transition-base;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    &:hover {
+      border-color: $primary-dark;
+      box-shadow: $shadow-sm;
+    }
+    
+    .datetime-value {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      font-weight: 600;
+      
+      .datetime-icon {
+        font-size: 24px;
+      }
+    }
+    
+    .datetime-arrow {
+      color: $primary;
+      font-weight: 700;
+    }
+  }
+}
+
+// Modals
 .datetime-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  
-  animation: fadeIn 0.2s ease;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.datetime-modal {
+.datetime-modal,
+.vehicle-modal {
   background: $bg-white;
   border-radius: $radius-lg;
   box-shadow: $shadow-lg;
   width: 90%;
   max-width: 400px;
-  animation: slideUp 0.3s ease;
-  overflow: hidden;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.modal-header {
-  padding: $spacing-lg;
-  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-  color: #ffffff;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  h3 {
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0;
-    color: #ffffff;
-  }
-
-  .modal-close {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: #ffffff;
-    font-size: 28px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all $transition-base;
-    line-height: 1;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(90deg);
-    }
-  }
-}
-
-.modal-body {
-  padding: $spacing-xl;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-
-  .modal-date-input,
-  .modal-time-input {
-    width: 100%;
-    padding: $spacing-md;
-    border: 2px solid $primary;
-    border-radius: $radius-md;
-    font-size: 18px;
-    font-weight: 600;
-    color: $text-primary;
-    background: $primary-pale;
-    cursor: pointer;
-    transition: all $transition-base;
-
-    &:focus {
-      outline: none;
-      border-color: $primary-dark;
-      box-shadow: 0 0 0 4px rgba(126, 211, 33, 0.2);
-    }
-
-    &::-webkit-calendar-picker-indicator {
-      cursor: pointer;
-      font-size: 20px;
-      padding: $spacing-xs;
-      border-radius: $radius-sm;
-      transition: all $transition-base;
-
-      &:hover {
-        background: rgba($primary, 0.2);
-      }
-    }
-  }
-}
-
-// Vehicle Modal Styles
-.vehicle-modal-wrapper {
-  max-width: 600px;
-  width: 95%;
-}
-
-.no-vehicles-state {
-  text-align: center;
-  padding: $spacing-xxl $spacing-lg;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: $spacing-md;
-
-  svg {
-    color: $text-muted;
-    opacity: 0.5;
-  }
-
-  .no-vehicles-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: $text-primary;
-    margin: 0;
-  }
-
-  .no-vehicles-subtitle {
-    font-size: 14px;
-    color: $text-secondary;
-    line-height: 1.6;
-    max-width: 400px;
-    margin: 0;
-  }
-
-  .go-to-profile-btn {
-    margin-top: $spacing-md;
-    padding: $spacing-md $spacing-xl;
-    background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: $radius-md;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: $spacing-xs;
-    transition: all $transition-base;
-    box-shadow: $shadow-md;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: $shadow-lg;
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
-
-    svg {
-      color: #ffffff;
-      opacity: 1;
-    }
-  }
-}
-
-.vehicles-grid-modal {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-  max-height: 500px;
-  overflow-y: auto;
-  padding: $spacing-xs;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: $bg-light;
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: $border-color;
-    border-radius: 3px;
-
-    &:hover {
-      background: $text-muted;
-    }
-  }
-}
-
-.vehicle-item-modal {
-  background: linear-gradient(135deg, $bg-white 0%, $bg-light 100%);
-  border: 2px solid $border-color;
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
-  cursor: pointer;
-  transition: all $transition-base;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: $spacing-lg;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: $primary;
-    transform: scaleY(0);
-    transition: transform $transition-base;
-  }
-
-  &:hover {
-    border-color: $primary;
-    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
-    transform: translateX(4px);
-    box-shadow: $shadow-md;
-
-    &::before {
-      transform: scaleY(1);
-    }
-
-    .vehicle-icon-wrapper {
-      transform: scale(1.05);
-      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-
-      svg {
-        color: #ffffff;
-      }
-    }
-
-    .vehicle-select-indicator {
-      opacity: 0.7;
-      transform: scale(1.1);
-    }
-  }
-
-  &.selected {
-    border-color: $primary;
-    background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.15) 100%);
-    box-shadow: $shadow-md;
-
-    &::before {
-      transform: scaleY(1);
-    }
-
-    .vehicle-icon-wrapper {
-      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-      box-shadow: $shadow-md;
-
-      svg {
-        color: #ffffff;
-      }
-    }
-
-    .vehicle-select-indicator {
-      opacity: 1;
-      background: $primary;
-      border-color: $primary;
-
-      svg {
-        color: #ffffff;
-      }
-    }
-
-    .vehicle-plate-number {
-      color: $primary-dark;
-    }
-  }
-}
-
-.vehicle-icon-wrapper {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.2) 100%);
-  border-radius: $radius-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all $transition-base;
-  position: relative;
-  border: 2px solid rgba($primary, 0.3);
-  box-shadow: $shadow-sm;
-
-  svg {
-    color: $primary;
-    transition: all $transition-base;
-  }
-
-  .default-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(135deg, $warning 0%, color.adjust($warning, $lightness: -10%) 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba($warning, 0.4);
-    border: 2px solid $bg-white;
-
-    svg {
-      color: #ffffff;
-      width: 14px;
-      height: 14px;
-    }
-  }
-}
-
-.vehicle-details {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-
-  .vehicle-plate-number {
-    font-size: 20px;
-    font-weight: 700;
-    color: $text-primary;
-    letter-spacing: 0.5px;
-    transition: color $transition-base;
-  }
-
-  .vehicle-make-model {
-    font-size: 15px;
-    font-weight: 600;
-    color: $text-secondary;
-    line-height: 1.4;
-  }
-
-  .vehicle-type-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: $primary-dark;
-    font-weight: 700;
-    padding: 4px 8px;
-    background: rgba($primary, 0.1);
-    border-radius: $radius-sm;
-    width: fit-content;
-    border: 1px solid rgba($primary, 0.2);
-
-    svg {
-      color: $primary;
-      flex-shrink: 0;
-      display: none; // Hide the info icon, we use emoji instead
-    }
-  }
-
-  .vehicle-connector {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: $text-muted;
-    font-weight: 600;
-    margin-top: 2px;
-
-    svg {
-      color: $primary;
-      flex-shrink: 0;
-    }
-  }
-}
-
-// Responsive Design
-@media (max-width: 1200px) {
-  .booking-container {
-    grid-template-columns: 1fr;
-    gap: $spacing-md;
-    
-    &.confirmation-mode {
-      height: auto;
-    }
-  }
-
-  .right-panel {
-    position: relative;
-    top: 0;
-    height: 500px;
-  }
-
-  .confirmation-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .form-section {
-    position: relative;
-    top: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .booking-wrapper {
-    padding: $spacing-sm;
-  }
-
-  .panel-header {
-    padding: $spacing-lg $spacing-md;
-
-    h1 {
-      font-size: 22px;
-    }
-  }
-
-  .step-indicator {
-    padding: $spacing-sm;
-
-    .step {
-      .step-number {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
-      }
-
-      .step-label {
-        font-size: 11px;
-      }
-    }
-
-    .step-divider {
-      flex: 0 0 20px;
-      margin-bottom: 20px;
-    }
-  }
-
-  .search-filters {
-    flex-direction: column;
-    padding: $spacing-md;
-  }
-
-  .filter-select {
-    min-width: auto;
-  }
-
-  .stations-list {
-    grid-template-columns: 1fr;
-    padding: $spacing-md;
-  }
-
-  .chargers-grid {
-    grid-template-columns: 1fr;
-    padding: $spacing-md;
-  }
-
-  .confirmation-header {
-    .success-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto $spacing-md;
-      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      box-shadow: $shadow-lg;
-    }
-
-    h2 {
-      font-size: 22px;
-    }
-  }
-
-  .booking-form {
-    padding: $spacing-lg;
-  }
-
-  .price-estimate {
-    .estimate-value {
-      font-size: 24px;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .station-info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .info-item {
-    padding: $spacing-xs 0;
-  }
-
-  .booking-form {
-    padding: $spacing-md;
-  }
-
-  .submit-button {
-    font-size: 15px;
-    padding: $spacing-sm $spacing-md;
-  }
-}
-
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-xs $spacing-md;
-  background: linear-gradient(135deg, $bg-white 0%, $bg-light 100%);
-  border: 2px solid $border-color;
-  border-radius: $radius-md;
-  font-size: 14px;
-  font-weight: 600;
-  color: $text-primary;
-  cursor: pointer;
-  transition: all $transition-base;
-  box-shadow: $shadow-sm;
-  width: fit-content;
   
-  svg {
-    width: 16px;
-    height: 16px;
-    transition: transform $transition-base;
-    flex-shrink: 0;
-  }
-
-  &:hover {
+  .modal-header {
+    padding: $spacing-lg;
     background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-    color: #ffffff;
-    border-color: $primary;
-    transform: translateX(-4px);
-    box-shadow: $shadow-md;
-
-    svg {
-      transform: translateX(-2px);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+    }
+    
+    .modal-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 28px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all $transition-base;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+      }
     }
   }
-
-  &:active {
-    transform: translateX(-2px);
-    box-shadow: $shadow-sm;
+  
+  .modal-body {
+    padding: $spacing-xl;
   }
 }
 
-// Add new wrapper styling
-.back-button-wrapper {
-  margin-bottom: $spacing-md;
-  display: flex;
-  align-items: center;
-}
-
-// Step 3 custom date/time pickers
-.date-options {
+.date-options,
+.time-grid {
   display: grid;
-  grid-template-columns: 1fr;
   gap: $spacing-sm;
-  width: 100%;
 }
 
-.date-card {
-  padding: $spacing-md;
-  border: 2px solid $border-color;
-  border-radius: $radius-md;
-  background: linear-gradient(135deg, $bg-white 0%, $bg-light 100%);
-  font-weight: 700;
-  color: $text-primary;
-  cursor: pointer;
-  transition: all $transition-base;
-
-  &:hover {
-    border-color: $primary;
-    background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.08) 100%);
-    box-shadow: $shadow-sm;
-  }
-
-  &.selected {
-    border-color: $primary;
-    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
-    box-shadow: $shadow-md;
-  }
+.date-options {
+  grid-template-columns: 1fr;
 }
 
 .time-grid {
-  display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-sm;
-  width: 100%;
   max-height: 260px;
   overflow-y: auto;
 }
 
+.date-card,
 .time-slot {
-  padding: $spacing-sm $spacing-md;
+  padding: $spacing-md;
   border: 2px solid $border-color;
   border-radius: $radius-md;
   background: $bg-light;
   font-weight: 700;
-  color: $text-primary;
   cursor: pointer;
   text-align: center;
   transition: all $transition-base;
-
+  
   &:hover {
+    border-color: $primary;
+    background: $primary-pale;
+  }
+  
+  &.selected {
     border-color: $primary;
     background: $primary-pale;
     box-shadow: $shadow-sm;
   }
-
-  &.selected {
-    border-color: $primary;
-    background: linear-gradient(135deg, $bg-white 0%, $primary-pale 100%);
-    box-shadow: $shadow-md;
-  }
 }
 
-.slot-selection {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  padding: $spacing-md;
-
-  h2 {
-    font-size: 18px;
-    font-weight: 700;
-    color: $text-primary;
-    margin-bottom: $spacing-md;
-    margin-top: 0;
-  }
-
-  .selection-hint {
-    text-align: center;
-    color: $text-secondary;
-    font-size: 1rem;
-    margin-bottom: 24px;
-  }
-
-  .loading-message,
-  .error-message,
-  .no-slots-message {
-    text-align: center;
-    padding: 20px;
-    border-radius: 12px;
-    margin: 20px 0;
-  }
-
-  .loading-message {
-    background: rgba(25, 135, 84, 0.1);
-    color: $text-primary;
-  }
-
-  .error-message {
-    background: rgba(220, 38, 38, 0.1);
-    color: #dc2626;
-  }
-
-  .no-slots-message {
-    background: rgba(170, 170, 170, 0.1);
-    color: #AAAAAA;
-  }
-
-  .slots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    max-height: calc(100vh - 400px);
-    padding-right: 8px;
-    margin-bottom: 24px;
-
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: $primary;
-      border-radius: 10px;
-
-      &:hover {
-        background: $primary-dark;
-      }
-    }
-  }
-
-  .slot-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    border: 2px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, $primary 0%, $primary-dark 100%);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.3s ease;
-    }
-
-    &:hover:not(.disabled) {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(25, 135, 84, 0.15);
-      border-color: $primary;
-
-      &::before {
-        transform: scaleX(1);
-      }
-
-      .slot-icon {
-        transform: scale(1.2) rotate(10deg);
-      }
-    }
-
-    &.selected {
-      border-color: $primary;
-      background: linear-gradient(135deg, rgba(224, 247, 224, 0.5) 0%, rgba(209, 245, 209, 0.3) 100%);
-      box-shadow: 0 8px 20px rgba(25, 135, 84, 0.25);
-
-      &::before {
-        transform: scaleX(1);
-      }
-
-      .slot-number-wrapper {
-        color: $primary-dark;
-      }
-
-      .slot-icon {
-        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-        transform: scale(1.1);
-      }
-    }
-
-    &.disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-      background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
-
-      &:hover {
-        transform: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        border-color: #e5e7eb;
-
-        &::before {
-          transform: scaleX(0);
-        }
-      }
-
-      .slot-icon {
-        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-        opacity: 0.5;
-      }
-    }
-  }
-
-  .slot-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: $spacing-xs;
-    border-bottom: 2px solid $bg-gray;
-
-    .slot-status-chip {
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      border: 2px solid transparent;
-    }
-
-    .slot-status-chip.available {
-      background: rgba($success, 0.15);
-      color: $success;
-      border-color: rgba($success, 0.3);
-    }
-
-    .slot-status-chip.booked,
-    .slot-status-chip.reserved,
-    .slot-status-chip.occupied,
-    .slot-status-chip.maintenance,
-    .slot-status-chip.disabled,
-    .slot-status-chip.unavailable {
-      background: rgba($danger, 0.15);
-      color: $danger;
-      border-color: rgba($danger, 0.3);
-    }
-  }
-
-  .slot-number-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-  }
-
-  .slot-icon {
-    font-size: 32px;
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, rgba(224, 247, 224, 0.8) 0%, rgba(209, 245, 209, 0.6) 100%);
-    border-radius: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.1);
-    border: 2px solid rgba(25, 135, 84, 0.2);
-  }
-
-  .slot-number {
-    font-size: 18px;
-    font-weight: 700;
-    color: #333333;
-    letter-spacing: -0.3px;
-  }
-
-  .slot-body {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    flex: 1;
-  }
-
-  .slot-info-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.5) 100%);
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    transition: all 0.3s ease;
-
-    .slot-card:hover:not(.disabled) & {
-      background: linear-gradient(135deg, rgba(224, 247, 224, 0.3) 0%, rgba(209, 245, 209, 0.2) 100%);
-      border-color: rgba(25, 135, 84, 0.2);
-    }
-
-    .slot-card.selected & {
-      background: linear-gradient(135deg, rgba(224, 247, 224, 0.5) 0%, rgba(209, 245, 209, 0.3) 100%);
-      border-color: rgba(25, 135, 84, 0.3);
-    }
-  }
-
-  .info-icon {
-    font-size: 24px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-    border-radius: 8px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  .info-content {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1;
-  }
-
-  .info-label {
-    font-size: 12px;
-    color: #AAAAAA;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .info-value {
-    font-size: 15px;
-    font-weight: 700;
-    color: #333333;
-  }
-
-  .slot-unavailable-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.95);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    border-radius: 16px;
-    backdrop-filter: blur(4px);
-    padding: 20px;
-
-    .unavailable-icon {
-      font-size: 56px;
-      opacity: 0.7;
-      animation: pulse 2s infinite;
-    }
-
-    .unavailable-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      text-align: center;
-    }
-
-    .unavailable-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #EF4444;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .unavailable-subtitle {
-      font-size: 14px;
-      font-weight: 600;
-      color: #6b7280;
-    }
-  }
-}
-
-.vehicle-icon-wrapper {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.2) 100%);
-  border-radius: $radius-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all $transition-base;
-  position: relative;
-  border: 2px solid rgba($primary, 0.3);
-  box-shadow: $shadow-sm;
-
-  svg {
-    color: $primary;
-    transition: all $transition-base;
-  }
-
-  .default-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(135deg, $warning 0%, color.adjust($warning, $lightness: -10%) 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba($warning, 0.4);
-    border: 2px solid $bg-white;
-
-    svg {
-      color: #ffffff;
-      width: 14px;
-      height: 14px;
-    }
-  }
-}
-
-.vehicle-details {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-
-  .vehicle-plate-number {
-    font-size: 20px;
-    font-weight: 700;
-    color: $text-primary;
-    letter-spacing: 0.5px;
-    transition: color $transition-base;
-  }
-
-  .vehicle-make-model {
-    font-size: 15px;
-    font-weight: 600;
-    color: $text-secondary;
-    line-height: 1.4;
-  }
-
-  .vehicle-type-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: $primary-dark;
-    font-weight: 700;
-    padding: 4px 8px;
-    background: rgba($primary, 0.1);
-    border-radius: $radius-sm;
-    width: fit-content;
-    border: 1px solid rgba($primary, 0.2);
-
-    svg {
-      color: $primary;
-      flex-shrink: 0;
-      display: none; // Hide the info icon, we use emoji instead
-    }
-  }
-
-  .vehicle-connector {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: $text-muted;
-    font-weight: 600;
-    margin-top: 2px;
-
-    svg {
-      color: $primary;
-      flex-shrink: 0;
-    }
-  }
-}
-
-// Responsive Design
+// Responsive
 @media (max-width: 1200px) {
-  .booking-container {
-    grid-template-columns: 1fr;
-    gap: $spacing-md;
+  .left-panel {
+    .stations-list {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
     
-    &.confirmation-mode {
-      height: auto;
+    .chargers-grid {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+    
+    .slots-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
   }
-
-  .right-panel {
-    position: relative;
-    top: 0;
-    height: 500px;
-  }
-
+  
   .confirmation-grid {
     grid-template-columns: 1fr;
-  }
-
-  .form-section {
-    position: relative;
-    top: 0;
   }
 }
 
 @media (max-width: 768px) {
   .booking-wrapper {
     padding: $spacing-sm;
+    padding-top: 80px;
   }
-
-  .panel-header {
-    padding: $spacing-lg $spacing-md;
-
-    h1 {
+  
+  .left-panel {
+    padding: $spacing-lg;
+    
+    .panel-header h1 {
       font-size: 22px;
     }
   }
-
+  
   .step-indicator {
-    padding: $spacing-sm;
-
     .step {
+      min-width: 60px;
+      
       .step-number {
         width: 32px;
         height: 32px;
         font-size: 14px;
       }
-
+      
       .step-label {
         font-size: 11px;
       }
     }
-
+    
     .step-divider {
-      flex: 0 0 20px;
-      margin-bottom: 20px;
+      width: 20px;
     }
   }
-
+  
   .search-filters {
     flex-direction: column;
-    padding: $spacing-md;
+    
+    .search-box {
+      min-width: 100%;
+    }
+    
+    .filter-select {
+      width: 100%;
+    }
   }
-
-  .filter-select {
-    min-width: auto;
-  }
-
-  .stations-list {
+  
+  .stations-list,
+  .chargers-grid,
+  .slots-grid {
     grid-template-columns: 1fr;
-    padding: $spacing-md;
   }
-
-  .chargers-grid {
-    grid-template-columns: 1fr;
-    padding: $spacing-md;
-  }
-
-  .confirmation-header {
-    .success-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto $spacing-md;
-      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      box-shadow: $shadow-lg;
-    }
-
-    h2 {
-      font-size: 22px;
-    }
-  }
-
-  .booking-form {
-    padding: $spacing-lg;
-  }
-
-  .price-estimate {
-    .estimate-value {
-      font-size: 24px;
-    }
+  
+  .time-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 480px) {
-  .station-info-grid {
-    grid-template-columns: 1fr;
+  .time-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
-
-  .info-item {
-    padding: $spacing-xs 0;
-  }
-
-  .booking-form {
-    padding: $spacing-md;
-  }
-
-  .submit-button {
-    font-size: 15px;
-    padding: $spacing-sm $spacing-md;
+  
+  .step-indicator {
+    gap: 4px;
+    
+    .step-divider {
+      width: 12px;
+    }
   }
 }

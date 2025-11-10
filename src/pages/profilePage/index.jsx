@@ -334,6 +334,39 @@ const ProfilePage = () => {
     });
   };
 
+  const handleViewMap = (stationInfo) => {
+    if (!stationInfo?.latitude || !stationInfo?.longitude) {
+      showPopup("Không có thông tin tọa độ trạm sạc", "error");
+      return;
+    }
+
+    // Lấy vị trí hiện tại
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const currentLat = position.coords.latitude;
+          const currentLng = position.coords.longitude;
+          
+          // Mở Google Maps với route từ vị trí hiện tại đến trạm
+          const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLat}…Info.latitude},${stationInfo.longitude}&travelmode=driving`;
+          
+          window.open(googleMapsUrl, '_blank');
+        },
+        (error) => {
+          // Nếu không lấy được vị trí hiện tại, chỉ hiển thị trạm
+          console.error("Error getting location:", error);
+          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
+          window.open(googleMapsUrl, '_blank');
+        }
+      );
+    } else {
+      // Browser không hỗ trợ geolocation
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
+      window.open(googleMapsUrl, '_blank');
+    }
+  };
+
+
   const handleChangePassword = async (oldPassword, newPassword) => {
     try {
       await api.put("/users/password", {
