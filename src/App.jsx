@@ -94,7 +94,7 @@ function App() {
         </ProtectedRoute>
       ),
       children: [
-        // { path: "", element: <Overview /> },
+        { path: "", element: <Overview /> },
         { path: "charging-ChargingSessions", element: <ChargingSessions /> },
         { path: "payment", element: <Payment /> },
         { path: "station-status", element: <StationStatus /> },

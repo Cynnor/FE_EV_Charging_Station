@@ -1102,6 +1102,20 @@ export default function BookingPage() {
                   )}
                   {slots.map((slot, index) => {
                     const selectable = isSlotSelectable(slot.status);
+
+                    // Map status sang label tiếng Việt
+                    const getStatusLabel = (status) => {
+                      const statusLabels = {
+                        booked: "Đã được đặt trước",
+                        reserved: "Đã được giữ chỗ",
+                        occupied: "Đang sử dụng",
+                        maintenance: "Đang bảo trì",
+                        disabled: "Tạm ngưng",
+                        unavailable: "Không khả dụng",
+                      };
+                      return statusLabels[status] || "Không khả dụng";
+                    };
+
                     return (
                       <div
                         key={slot.id}
@@ -1113,22 +1127,43 @@ export default function BookingPage() {
                           setSelectedSlot(slot);
                         }}
                       >
-                        <span className={`slot-status-chip ${slot.status}`}>
-                          {selectable ? "✓ Có sẵn" : "✕ Đã đặt"}
-                        </span>
-
                         <div className="slot-header">
-                          <span className="slot-number">Slot {index + 1}</span>
-                          {/* removed old inline status in header */}
-                          {/* <span className={`slot-status-badge ${slot.status}`}>...</span> */}
-                        </div>
-
-                        <div className="slot-duration">
-                          <span className="duration-icon">⏳</span>
-                          <span className="duration-text">
-                            Thời lượng: 24 giờ
+                          <div className="slot-number-wrapper">
+                            <span className="slot-icon">
+                              {selectable ? "🔌" : "🔒"}
+                            </span>
+                            <span className="slot-number">
+                              Slot {index + 1}
+                            </span>
+                          </div>
+                          <span className={`slot-status-chip ${slot.status}`}>
+                            {selectable ? "✓ Có sẵn" : "✕ Đã đặt"}
                           </span>
                         </div>
+
+                        <div className="slot-body">
+                          <div className="slot-info-item">
+                            <span className="info-icon">⏳</span>
+                            <div className="info-content">
+                              <span className="info-label">Thời lượng</span>
+                              <span className="info-value">24 giờ</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {!selectable && (
+                          <div className="slot-unavailable-overlay">
+                            <span className="unavailable-icon">🚫</span>
+                            <div className="unavailable-content">
+                              <span className="unavailable-title">
+                                {getStatusLabel(slot.status)}
+                              </span>
+                              <span className="unavailable-subtitle">
+                                Vui lòng chọn slot khác
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

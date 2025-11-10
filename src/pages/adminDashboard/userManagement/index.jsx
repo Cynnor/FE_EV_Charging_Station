@@ -409,8 +409,6 @@ const UserManagement = () => {
               <th>Email</th>
               <th>Vai trò</th>
               <th>Trạng thái</th>
-              <th>Ngày sinh</th>
-              <th>Số điện thoại</th>
               <th>Thao tác</th>
             </tr>
           </thead>
@@ -448,8 +446,6 @@ const UserManagement = () => {
                         </span>
                       </span>
                     </td>
-                    <td>{formatDate(user.dob)}</td>
-                    <td>{user.phone || "N/A"}</td>
                     <td>
                       <div className="action-buttons">
                         <button
