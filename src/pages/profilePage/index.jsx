@@ -159,7 +159,7 @@ const ProfilePage = () => {
         }
       });
 
-      // Map ports to stations
+      // Map ports to stations - LƯU THÊM LONGITUDE VÀ LATITUDE
       portResults.forEach(({ portId, data }) => {
         if (data?.station && stationMap[data.station]) {
           const stationInfo = stationMap[data.station];
@@ -168,6 +168,8 @@ const ProfilePage = () => {
             stationId: data.station,
             address: stationInfo.address || "N/A",
             provider: stationInfo.provider || "N/A",
+            longitude: stationInfo.longitude,
+            latitude: stationInfo.latitude,
           };
         } else {
           stationData[portId] = {
@@ -175,6 +177,8 @@ const ProfilePage = () => {
             stationId: null,
             address: "N/A",
             provider: "N/A",
+            longitude: null,
+            latitude: null,
           };
         }
       });
@@ -694,6 +698,39 @@ const ProfilePage = () => {
 
   const handlePageClick = (pageNumber) => {
     setCurrentPage(pageNumber);
+  };
+
+  // Hàm xử lý xem bản đồ
+  const handleViewMap = (stationInfo) => {
+    if (!stationInfo?.latitude || !stationInfo?.longitude) {
+      showPopup("Không có thông tin tọa độ trạm sạc", "error");
+      return;
+    }
+
+    // Lấy vị trí hiện tại
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const currentLat = position.coords.latitude;
+          const currentLng = position.coords.longitude;
+          
+          // Mở Google Maps với route từ vị trí hiện tại đến trạm
+          const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLat},${currentLng}&destination=${stationInfo.latitude},${stationInfo.longitude}&travelmode=driving`;
+          
+          window.open(googleMapsUrl, '_blank');
+        },
+        (error) => {
+          // Nếu không lấy được vị trí hiện tại, chỉ hiển thị trạm
+          console.error("Error getting location:", error);
+          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
+          window.open(googleMapsUrl, '_blank');
+        }
+      );
+    } else {
+      // Browser không hỗ trợ geolocation
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
+      window.open(googleMapsUrl, '_blank');
+    }
   };
 
   useEffect(() => {
@@ -1279,6 +1316,13 @@ const ProfilePage = () => {
                                 }}
                               >
                                 Bắt đầu sạc
+                              </button>
+                              <button
+                                className="map-btn"
+                                onClick={() => handleViewMap(stationInfo)}
+                                title="Xem đường đi trên bản đồ"
+                              >
+                                🗺️
                               </button>
                               <button
                                 className="cancel-btn"
