@@ -37,7 +37,7 @@
         font-weight: 600;
       }
 
-      .back-btn {
+      .back-button {
         padding: 0.4rem 0.9rem;
         background: rgba(255, 255, 255, 0.95);
         color: #198754;
@@ -134,11 +134,12 @@
             margin: 0 0 0.6rem 0;
             font-size: 1.1rem;
             flex-shrink: 0;
+            font-weight: 600;
           }
 
           .info-grid {
             display: grid;
-            grid-template-columns: repeat(1, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 0.5rem;
             flex: 1;
             align-content: start;
@@ -157,8 +158,10 @@
               font-size: 0.95rem;
               font-weight: 500;
 
-              &.status-charging {
+              &.highlight {
                 color: #198754;
+                font-size: 1.1rem;
+                font-weight: 600;
               }
             }
           }
@@ -174,25 +177,28 @@
             margin: 0.6rem 0;
             overflow: hidden;
             border: 3px solid #198754;
+            position: relative;
 
             .battery-level {
+              position: absolute;
+              top: 0;
+              left: 0;
               height: 100%;
               background: linear-gradient(90deg, #198754, #146c43);
               display: flex;
               align-items: center;
               justify-content: center;
-              color: #ffffff;
-              font-weight: bold;
-              transition: width 0.3s ease;
-
-              &.charging {
-                animation: pulse 2s infinite;
-              }
+              transition: width 0.5s ease;
 
               span {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                color: #ffffff;
                 font-size: 1.1rem;
                 font-weight: 700;
                 text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                white-space: nowrap;
               }
             }
           }
@@ -211,10 +217,33 @@
               }
 
               .value {
-                color: #198754;
+                color: #333333;
                 font-size: 0.95rem;
                 font-weight: 500;
-                transition: all 0.3s ease;
+
+                &.highlight {
+                  color: #198754;
+                  font-size: 1.1rem;
+                  font-weight: 600;
+                }
+              }
+
+              .status-badge {
+                display: inline-block;
+                padding: 0.4rem 0.8rem;
+                border-radius: 6px;
+                font-size: 0.85rem;
+                font-weight: 600;
+
+                &.status-charging {
+                  background: #d4edda;
+                  color: #155724;
+                }
+
+                &.status-waiting {
+                  background: #fff3cd;
+                  color: #856404;
+                }
               }
             }
           }
@@ -267,7 +296,7 @@
 
           .vehicle-details {
             p {
-              color: #333333;
+              color: #AAAAAA;
               font-size: 0.85rem;
               margin: 0.4rem 0;
               padding: 0.5rem 0.8rem;
@@ -475,7 +504,6 @@
     .status-charging {
       color: #198754 !important;
       font-weight: 600;
-      animation: pulse 2s infinite;
     }
 
     .status-paused {
@@ -843,7 +871,7 @@
         gap: 0.5rem;
         padding: 0.5rem;
 
-        .back-btn {
+        .back-button {
           justify-self: start;
         }
 
@@ -873,7 +901,7 @@
         padding: 0.5rem;
         margin: 0.5rem;
 
-        .back-btn {
+        .back-button {
           justify-self: stretch;
         }
 
@@ -896,6 +924,14 @@
 
         .session-left {
           overflow: visible;
+
+          .info-card .info-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .charging-status .charging-details {
+            grid-template-columns: 1fr;
+          }
         }
 
         .session-right {
@@ -903,36 +939,6 @@
           max-height: 40vh;
         }
       }
-
-      .charging-controls {
-        flex-direction: column;
-        gap: 15px;
-
-        button {
-          width: 100%;
-          padding: 12px 30px;
-        }
-      }
-
-      .payment-section {
-        padding: 20px;
-        margin: 20px 15px;
-
-        .total-cost .cost-amount {
-          font-size: 2rem;
-        }
-      }
-    }
-  }
-
-  @keyframes pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-
-    50% {
-      opacity: 0.7;
     }
   }
 }
