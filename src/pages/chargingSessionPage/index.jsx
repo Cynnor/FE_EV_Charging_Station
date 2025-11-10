@@ -270,9 +270,9 @@ const ChargingSession = () => {
               currentCharge: 100,
               timeElapsed: prev.timeElapsed,
               durationHours: prev.durationHours,
-              totalCost: prev.chargingCost,
-              bookingCost: prev.bookingCost,
-              energyCost: prev.energyCost,
+              totalCost: Math.round(prev.chargingCost),
+              bookingCost: Math.round(prev.bookingCost),
+              energyCost: Math.round(prev.energyCost),
               energyKwh: prev.energyKwh,
               startTime: prev.startTime,
               powerKw: prev.chargeRate,
@@ -333,11 +333,11 @@ const ChargingSession = () => {
       return {
         ...prev,
         currentCharge: newCharge,
-        chargingCost: totalCost,
+        chargingCost: Math.round(totalCost),
         remainingTime: Math.ceil(newRemainingTime),
         timeElapsed: newTimeElapsed,
-        bookingCost: bookingCost,
-        energyCost: energyCost,
+        bookingCost: Math.round(bookingCost),
+        energyCost: Math.round(energyCost),
         energyKwh: energyKwh,
         durationHours: durationHours,
         thirtyMinIntervals: thirtyMinIntervals,
@@ -440,7 +440,6 @@ const ChargingSession = () => {
 
     showPopup("Chuyển đến trang thanh toán...", "success");
 
-    // Chuẩn bị dữ liệu thanh toán
     const paymentData = {
       chargingData: {
         vehicleInfo: {
@@ -452,9 +451,9 @@ const ChargingSession = () => {
           currentCharge: chargingData.currentCharge,
           timeElapsed: chargingData.timeElapsed,
           durationHours: chargingData.durationHours,
-          totalCost: chargingData.chargingCost,
-          bookingCost: chargingData.bookingCost,
-          energyCost: chargingData.energyCost,
+          totalCost: Math.round(chargingData.chargingCost),
+          bookingCost: Math.round(chargingData.bookingCost),
+          energyCost: Math.round(chargingData.energyCost),
           energyKwh: chargingData.energyKwh,
           startTime: chargingData.startTime,
           powerKw: chargingData.chargeRate,
@@ -542,7 +541,7 @@ const ChargingSession = () => {
       ) : (
         <div className="charging-session">
           <div className="header-container">
-            <button className="back-btn" onClick={() => navigate(-1)}>
+            <button className="back-button" onClick={() => navigate(-1)}>
               ← Quay lại
             </button>
             <h1>Thông tin phiên sạc</h1>
@@ -623,13 +622,30 @@ const ChargingSession = () => {
                     <h2>Trạng thái sạc</h2>
                     <div className="battery-indicator">
                       <div
-                        className={`battery-level ${
-                          isCharging ? "charging" : ""
-                        }`}
+                        className="battery-level"
                         style={{ width: `${chargingData.currentCharge}%` }}
                       >
-                        <span>{chargingData.currentCharge}%</span>
+                        {chargingData.currentCharge >= 20 && (
+                          <span>{chargingData.currentCharge}%</span>
+                        )}
                       </div>
+                      {chargingData.currentCharge < 20 && (
+                        <span
+                          className="battery-percentage-outside"
+                          style={{
+                            position: "absolute",
+                            left: "50%",
+                            top: "50%",
+                            transform: "translate(-50%, -50%)",
+                            color: "#333333",
+                            fontSize: "1.1rem",
+                            fontWeight: 700,
+                            zIndex: 1,
+                          }}
+                        >
+                          {chargingData.currentCharge}%
+                        </span>
+                      )}
                     </div>
                     <div className="charging-details">
                       <div className="detail-item">
@@ -654,35 +670,23 @@ const ChargingSession = () => {
                       <div className="detail-item">
                         <span className="label">Phí đặt lịch:</span>
                         <span className="value">
-                          {chargingData.bookingCost?.toLocaleString("vi-VN")}{" "}
+                          {Math.round(chargingData.bookingCost)?.toLocaleString("vi-VN")}{" "}
                           VNĐ
                         </span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Phí điện:</span>
                         <span className="value">
-                          {chargingData.energyCost?.toLocaleString("vi-VN")} VNĐ
+                          {Math.round(chargingData.energyCost)?.toLocaleString("vi-VN")} VNĐ
                         </span>
                       </div>
                       <div className="detail-item">
                         <span className="label">Tổng chi phí:</span>
                         <span className="value highlight">
-                          {chargingData.chargingCost.toLocaleString("vi-VN")}{" "}
+                          {Math.round(chargingData.chargingCost).toLocaleString("vi-VN")}{" "}
                           VNĐ
                         </span>
                       </div>
-                      {/* Debug Info - Có thể xóa khi production */}
-                      {chargingData.thirtyMinIntervals && (
-                        <div
-                          className="detail-item"
-                          style={{ fontSize: "0.9em", color: "#666" }}
-                        >
-                          <span className="label">Debug - Số lần 30p:</span>
-                          <span className="value">
-                            {chargingData.thirtyMinIntervals}
-                          </span>
-                        </div>
-                      )}
                       <div className="detail-item">
                         <span className="label">Thời gian còn lại:</span>
                         <span className="value">
@@ -698,8 +702,8 @@ const ChargingSession = () => {
                       <div className="detail-item">
                         <span className="label">Trạng thái:</span>
                         <span
-                          className={`value status-${
-                            isCharging ? "charging" : "waiting"
+                          className={`value status-badge ${
+                            isCharging ? "status-charging" : "status-waiting"
                           }`}
                         >
                           {isCharging ? "Đang sạc" : "Chờ bắt đầu"}
