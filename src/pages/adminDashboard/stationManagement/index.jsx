@@ -27,6 +27,11 @@ const StationManagement = () => {
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
   const pageSize = 7; // Số lượng trạm hiển thị mỗi trang
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Ref để scroll modal về đầu trang
   const modalBodyRef = useRef(null); // Reference đến phần body của modal
 
