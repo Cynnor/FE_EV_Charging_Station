@@ -8,7 +8,7 @@ const BookingSuccessPage = () => {
   const navigate = useNavigate();
 
   const { reservation, station, charger, bookingTime } = location.state || {};
-  
+
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -61,7 +61,9 @@ const BookingSuccessPage = () => {
           console.error("Error getting location:", error);
           setIsLoadingLocation(false);
           // Nếu không lấy được vị trí, vẫn hiển thị map nhưng không có user location
-          alert("Không thể lấy vị trí của bạn. Vui lòng bật định vị GPS và thử lại.");
+          alert(
+            "Không thể lấy vị trí của bạn. Vui lòng bật định vị GPS và thử lại."
+          );
         }
       );
     } else {
@@ -78,9 +80,12 @@ const BookingSuccessPage = () => {
   };
 
   // Lấy tọa độ của trạm sạc
-  const stationLocation = station?.coords && Array.isArray(station.coords) && station.coords.length === 2
-    ? [parseFloat(station.coords[0]), parseFloat(station.coords[1])]
-    : null;
+  const stationLocation =
+    station?.coords &&
+    Array.isArray(station.coords) &&
+    station.coords.length === 2
+      ? [parseFloat(station.coords[0]), parseFloat(station.coords[1])]
+      : null;
 
   return (
     <div className="booking-success-page">
@@ -171,25 +176,25 @@ const BookingSuccessPage = () => {
             </svg>
             Về trang chủ
           </button>
-          <button 
-            className="btn-start-charging" 
+          <button
+            className="btn-start-charging"
             onClick={handleStartCharging}
             disabled={isLoadingLocation}
           >
             {isLoadingLocation ? (
               <>
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 20 20" 
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
                   fill="none"
                   className="loading-spinner"
                 >
-                  <circle 
-                    cx="10" 
-                    cy="10" 
-                    r="8" 
-                    stroke="currentColor" 
+                  <circle
+                    cx="10"
+                    cy="10"
+                    r="8"
+                    stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeDasharray="40"
@@ -209,7 +214,7 @@ const BookingSuccessPage = () => {
                     strokeLinejoin="round"
                   />
                 </svg>
-                Tiến hành sạc
+                Chỉ đường đến trạm
               </>
             )}
           </button>

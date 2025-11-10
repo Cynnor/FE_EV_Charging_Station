@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import "./index.scss";
-import ChargingMap from "../../components/chargingMap";
 import api from "../../config/api";
 
 /** ============== MAPPERS & TYPES (JS) ============== */
@@ -769,7 +768,9 @@ export default function BookingPage() {
   return (
     <div className="booking-wrapper">
       <div
-        className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}
+        className={`booking-container full-width ${
+          step === 4 ? "confirmation-mode" : ""
+        }`}
       >
         <div className="left-panel">
           <div className="panel-header">
@@ -1430,52 +1431,15 @@ export default function BookingPage() {
           )}
         </div>
 
+        {/* ❌ Loại bỏ right-panel map */}
         {/* RIGHT PANEL: MAP */}
-        {step !== 4 && (
+        {/* {step !== 4 && (
           <div className="right-panel">
             <div className="map-container">
-              {step === 1 && (
-                <ChargingMap
-                  stations={filteredStations}
-                  center={selectedStation?.coords || defaultCenter}
-                  zoom={selectedStation ? 16 : 13}
-                  onSelect={(s) => setSelectedStation(s)}
-                  selectedStation={selectedStation}
-                />
-              )}
-
-              {step === 2 && selectedStation && (
-                <ChargingMap
-                  stations={chargers}
-                  center={selectedStation.coords}
-                  zoom={17}
-                  onSelect={(c) => {
-                    if (c.status === "available") {
-                      setSelectedCharger(c);
-                      setStep(3);
-                    }
-                  }}
-                  selectedStation={selectedCharger}
-                />
-              )}
-
-              {step === 3 && selectedStation && (
-                <ChargingMap
-                  stations={chargers}
-                  center={selectedStation.coords}
-                  zoom={17}
-                  onSelect={(c) => {
-                    if (c.status === "available") {
-                      setSelectedCharger(c);
-                      setStep(3);
-                    }
-                  }}
-                  selectedStation={selectedCharger}
-                />
-              )}
+              ...
             </div>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Vehicle Selection Modal */}
