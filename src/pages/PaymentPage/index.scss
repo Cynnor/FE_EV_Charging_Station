@@ -10,7 +10,7 @@ $radius-lg: 16px;
 .payment-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
-    padding-top: 100px;
+    padding: 120px 20px 40px;
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -19,19 +19,22 @@ $radius-lg: 16px;
     margin: 0 auto;
     background: #fff;
     border-radius: $radius-lg;
-    box-shadow: $card-shadow;
-    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 48px 32px;
     text-align: center;
+    animation: fadeIn 0.4s ease;
 
     h1 {
         color: #e74c3c;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
+        font-size: 28px;
     }
 
     p {
         color: $text-secondary;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
         font-size: 16px;
+        line-height: 1.6;
     }
 }
 
@@ -39,41 +42,78 @@ $radius-lg: 16px;
     max-width: 1200px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 24px;
-    padding: 16px;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 32px;
+    padding: 0;
 }
 
 .left,
 .right {
     background: #fff;
-    border-radius: $radius-lg;
-    box-shadow: $card-shadow;
-    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+    padding: 32px;
+    animation: slideUp 0.5s ease;
+    border: 1px solid rgba(25, 135, 84, 0.08);
+}
+
+.left {
+    h1 {
+        font-size: 32px;
+        font-weight: 800;
+        color: $text-primary;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid rgba(25, 135, 84, 0.1);
+    }
 }
 
 .summary-card,
 .plan-card,
 .payment-methods,
 .total-card {
-    background: #fff;
-    border: 1px solid #f0f0f0;
-    border-radius: $radius-md;
-    padding: 16px;
-    margin-bottom: 16px;
-}
+    background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+    border: 1px solid rgba(25, 135, 84, 0.12);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
 
-h1,
-h3 {
-    margin: 0 0 12px 0;
-    color: $text-primary;
-}
+    &:hover {
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.08);
+        transform: translateY(-2px);
+    }
 
-.summary-card h3,
-.plan-card h3,
-.payment-methods h3,
-.total-card h3 {
-    color: $primary;
+    h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: $primary;
+        margin: 0 0 16px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: $primary;
+            border-radius: 2px;
+        }
+    }
+
+    p {
+        margin: 10px 0;
+        color: $text-primary;
+        font-size: 15px;
+        line-height: 1.6;
+
+        b {
+            color: $text-secondary;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+    }
 }
 
 .plan-types {
@@ -122,8 +162,20 @@ h3 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 15px;
+
+    span:first-child {
+        color: $text-secondary;
+        font-weight: 500;
+    }
+
+    span:last-child {
+        color: $text-primary;
+        font-weight: 700;
+        text-align: right;
+    }
 
     &:last-child {
         border-bottom: none;
@@ -177,7 +229,27 @@ select {
 .total-card .row {
     display: flex;
     justify-content: space-between;
-    margin: 8px 0;
+    margin: 12px 0;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 15px;
+
+    &:last-child:not(.total-row) {
+        border-bottom: none;
+    }
+
+    &.total-row {
+        border-top: 2px solid $primary;
+        border-bottom: none;
+        margin-top: 16px;
+        padding-top: 16px;
+        font-size: 18px;
+        font-weight: 800;
+
+        .value {
+            color: $primary;
+        }
+    }
 }
 
 .total-card .value {
@@ -187,27 +259,58 @@ select {
 
 .pay-btn {
     width: 100%;
-    margin-top: 12px;
-    padding: 12px;
+    margin-top: 24px;
+    padding: 16px 24px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     background: $primary;
     color: #fff;
     font-weight: 700;
+    font-size: 16px;
     cursor: pointer;
-    transition: all .2s ease;
+    transition: all .3s ease;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
 
     &:hover {
         background: $primary-hover;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(25, 135, 84, .35);
+
+        &::before {
+            width: 300px;
+            height: 300px;
+        }
+    }
+
+    &:active {
         transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(25, 135, 84, .25);
     }
 
     &:disabled {
-        opacity: .7;
+        opacity: .6;
         cursor: not-allowed;
         box-shadow: none;
         transform: none;
+
+        &:hover::before {
+            width: 0;
+            height: 0;
+        }
     }
 }
 
@@ -230,12 +333,45 @@ select {
 
 .back-btn {
     width: 100%;
-    margin-top: 8px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    margin-top: 12px;
+    padding: 12px 20px;
+    border: 2px solid rgba(25, 135, 84, 0.2);
+    border-radius: 12px;
     background: #fff;
+    color: $primary;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+        background: rgba(25, 135, 84, 0.05);
+        border-color: $primary;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.1);
+    }
+}
+
+// Animations
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .invoice {
@@ -484,12 +620,49 @@ select {
 
 // Responsive
 @media (max-width: 900px) {
+    .payment-page {
+        padding: 100px 16px 32px;
+    }
+
     .payment-container {
         grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .left,
+    .right {
+        padding: 24px;
+    }
+
+    .left h1 {
+        font-size: 26px;
     }
 }
 
 @media (max-width: 768px) {
+    .payment-page {
+        padding: 90px 12px 24px;
+    }
+
+    .left,
+    .right {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .summary-card,
+    .plan-card,
+    .payment-methods,
+    .total-card {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .left h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
     .invoice-print-container {
         padding: 10px;
     }

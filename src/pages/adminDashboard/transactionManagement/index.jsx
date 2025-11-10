@@ -465,7 +465,7 @@ const TransactionManagement = () => {
                                                 <span className="date">{formatDate(transaction.createdAt)}</span>
                                             </td>
                                             <td>
-                                                <button
+                                                <button title="Chi tiết"
                                                     className="btn-view"
                                                     onClick={() => handleViewDetail(transaction._id || transaction.id)}
                                                 >
