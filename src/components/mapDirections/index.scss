@@ -1,0 +1,158 @@
+.map-directions-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-in;
+
+  .map-error {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 400px;
+
+    p {
+      margin-bottom: 20px;
+      font-size: 1rem;
+      color: #333;
+    }
+  }
+
+  .map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px 12px 0 0;
+    width: 100%;
+    max-width: 900px;
+
+    h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #198754;
+    }
+
+    .btn-close-map {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      color: #666;
+      cursor: pointer;
+      width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #f0f0f0;
+        color: #333;
+      }
+    }
+  }
+
+  .directions-map {
+    width: 100%;
+    max-width: 900px;
+    height: 70vh;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .btn-close-map {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Tùy chỉnh leaflet routing machine
+.leaflet-routing-container {
+  background: white !important;
+  padding: 10px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+
+  h2 {
+    font-size: 1rem !important;
+    margin-bottom: 10px !important;
+    color: #198754 !important;
+  }
+
+  .leaflet-routing-alt {
+    padding: 10px !important;
+
+    table {
+      font-size: 0.9rem !important;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .map-directions-container {
+    padding: 10px;
+
+    .map-header {
+      padding: 12px 15px;
+
+      h3 {
+        font-size: 1rem;
+      }
+    }
+
+    .directions-map {
+      height: 60vh;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .map-directions-container {
+    padding: 0;
+
+    .map-header {
+      border-radius: 0;
+    }
+
+    .directions-map {
+      max-width: 100%;
+      height: calc(100vh - 60px);
+      border-radius: 0;
+    }
+  }
+}
+

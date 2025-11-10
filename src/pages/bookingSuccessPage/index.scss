@@ -229,17 +229,35 @@
   color: #ffffff;
   box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);
 
-  &:hover {
+  &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(20, 108, 67, 0.4);
 
-    svg {
+    svg:not(.loading-spinner) {
       transform: scale(1.1) rotate(10deg);
     }
   }
 
   &:active {
     transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .loading-spinner {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 
