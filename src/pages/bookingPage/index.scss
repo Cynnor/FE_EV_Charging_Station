@@ -71,7 +71,21 @@ body {
   min-height: 100vh;
   padding: $spacing-lg;
   padding-top: 100px;
-  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 600px;
+    background: radial-gradient(circle at 30% 20%, rgba(74, 222, 128, 0.1), transparent 50%),
+                radial-gradient(circle at 80% 60%, rgba(59, 130, 246, 0.1), transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
 // Container
@@ -79,6 +93,8 @@ body {
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
   
   &.full-width {
     display: flex;
@@ -103,9 +119,11 @@ body {
 
 // Left Panel (Main Content)
 .left-panel {
-  background: $bg-white;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-md;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(16, 185, 129, 0.1);
   padding: $spacing-xl;
   position: relative;
   
@@ -114,9 +132,12 @@ body {
     margin-bottom: $spacing-xl;
     
     h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: $text-primary;
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #16a34a, #4ade80);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin-bottom: $spacing-lg;
     }
   }
@@ -130,26 +151,53 @@ body {
   gap: $spacing-sm;
   margin-bottom: $spacing-xl;
   flex-wrap: wrap;
+  padding: 24px;
+  background: rgba(240, 253, 244, 0.5);
+  border-radius: 20px;
+  border: 2px solid rgba(16, 185, 129, 0.1);
   
   .step {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: $spacing-xs;
-    min-width: 80px;
+    min-width: 90px;
+    padding: 12px;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    
+    &.current {
+      background: rgba(16, 185, 129, 0.1);
+      transform: scale(1.05);
+    }
+    
+    &.disabled {
+      opacity: 0.5;
+      
+      .step-number {
+        cursor: not-allowed;
+      }
+    }
+    
+    &:not(.disabled):hover {
+      background: rgba(16, 185, 129, 0.08);
+      transform: translateY(-2px);
+    }
     
     .step-number {
-      width: 40px;
-      height: 40px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background: $bg-gray;
       color: $text-muted;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      font-size: 16px;
-      transition: all $transition-base;
+      font-weight: 800;
+      font-size: 18px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .step-label {
@@ -162,23 +210,27 @@ body {
     
     &.active {
       .step-number {
-        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        background: linear-gradient(135deg, #16a34a, #059669);
         color: white;
-        box-shadow: $shadow-md;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        transform: scale(1.05);
       }
       
       .step-label {
-        color: $primary-dark;
+        color: #16a34a;
+        font-weight: 700;
       }
     }
   }
   
   .step-divider {
-    width: 40px;
-    height: 2px;
-    background: $bg-gray;
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
     margin: 0 $spacing-xs;
     margin-bottom: 28px;
+    border-radius: 2px;
+    transition: all 0.3s ease;
   }
 }
 
@@ -291,7 +343,8 @@ body {
 }
 
 .chargers-grid {
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: $spacing-lg;
 }
 
 .slots-grid {
@@ -367,25 +420,63 @@ body {
   }
 }
 
+// Selected Station Info
+.selected-station-info {
+  text-align: center;
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-lg;
+  border: 2px solid rgba(16, 185, 129, 0.1);
+  
+  h2 {
+    font-size: 24px;
+    font-weight: 800;
+    color: $text-primary;
+    margin-bottom: $spacing-xs;
+    background: linear-gradient(135deg, #16a34a, #4ade80);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .station-address {
+    font-size: 14px;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+.selection-hint {
+  text-align: center;
+  font-size: 15px;
+  color: $text-secondary;
+  margin-bottom: $spacing-lg;
+  padding: $spacing-sm $spacing-lg;
+  background: rgba(16, 185, 129, 0.05);
+  border-radius: $radius-md;
+  border-left: 4px solid #16a34a;
+}
+
 // Charger Card
 .charger-card {
   background: $bg-white;
   border: 2px solid $border-color;
-  border-radius: $radius-md;
-  padding: $spacing-md;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
   cursor: pointer;
   transition: all $transition-base;
   
   &.available:hover {
-    border-color: $primary;
-    box-shadow: $shadow-lg;
-    transform: translateY(-2px);
+    border-color: #16a34a;
+    box-shadow: 0 12px 40px rgba(16, 185, 129, 0.15);
+    transform: translateY(-4px);
   }
   
   &.selected {
-    border-color: $primary;
-    background: $primary-pale;
-    box-shadow: $shadow-md;
+    border-color: #16a34a;
+    background: linear-gradient(to bottom, rgba(240, 253, 244, 0.8), rgba(255, 255, 255, 0.9));
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.2);
   }
   
   &.in_use {
@@ -397,35 +488,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: $spacing-xs;
-    border-bottom: 2px solid $bg-gray;
-    margin-bottom: $spacing-sm;
+    padding-bottom: $spacing-sm;
+    border-bottom: 2px solid rgba(16, 185, 129, 0.1);
+    margin-bottom: $spacing-md;
     
     h3 {
-      font-size: 16px;
-      font-weight: 700;
-    }
-    
-    .speed-badge {
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      
-      &.slow {
-        background: rgba($info, 0.12);
-        color: $info;
-      }
-      
-      &.fast {
-        background: rgba($warning, 0.12);
-        color: $warning;
-      }
-      
-      &.super_fast {
-        background: rgba($danger, 0.12);
-        color: $danger;
-      }
+      font-size: 18px;
+      font-weight: 800;
+      color: $text-primary;
     }
     
     .status-badge {
@@ -447,12 +517,16 @@ body {
   }
   
   .type-row {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
     margin-bottom: $spacing-sm;
+    flex-wrap: wrap;
     
     .type-badge {
-      padding: 4px 8px;
+      padding: 6px 12px;
       border-radius: $radius-sm;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       
       &.ac {
@@ -470,28 +544,56 @@ body {
         color: $danger;
       }
     }
+    
+    .speed-badge {
+      padding: 6px 12px;
+      border-radius: $radius-sm;
+      font-size: 12px;
+      font-weight: 700;
+      
+      &.slow {
+        background: rgba($info, 0.12);
+        color: $info;
+      }
+      
+      &.fast {
+        background: rgba($warning, 0.12);
+        color: $warning;
+      }
+      
+      &.super_fast {
+        background: rgba($danger, 0.12);
+        color: $danger;
+      }
+    }
   }
   
   .charger-specs {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-xs;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-sm;
     margin-bottom: $spacing-sm;
     
     .spec-item {
       display: flex;
-      align-items: center;
-      gap: $spacing-xs;
+      flex-direction: column;
+      padding: $spacing-sm;
+      background: rgba(16, 185, 129, 0.05);
+      border-radius: $radius-sm;
+      border: 1px solid rgba(16, 185, 129, 0.1);
+      transition: all 0.3s ease;
       
-      .spec-icon {
-        font-size: 20px;
-        width: 28px;
+      &:hover {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.2);
       }
       
       .spec-label {
         font-size: 11px;
         color: $text-secondary;
         text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 4px;
       }
       
       .spec-value {
@@ -501,23 +603,6 @@ body {
     }
   }
   
-  .charger-connector {
-    display: flex;
-    justify-content: space-between;
-    padding: $spacing-xs $spacing-sm;
-    background: $bg-light;
-    border-radius: $radius-sm;
-    font-size: 13px;
-    
-    .connector-label {
-      color: $text-secondary;
-      font-weight: 600;
-    }
-    
-    .connector-type {
-      font-weight: 700;
-    }
-  }
 }
 
 // Slot Card - simplified
@@ -557,20 +642,16 @@ body {
     padding-bottom: $spacing-sm;
     border-bottom: 2px solid $bg-gray;
     
-    .slot-number-wrapper {
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
-      
-      .slot-icon {
-        font-size: 28px;
-      }
-      
-      .slot-number {
-        font-size: 16px;
-        font-weight: 700;
-      }
-    }
+     .slot-number-wrapper {
+       display: flex;
+       align-items: center;
+       gap: $spacing-sm;
+       
+       .slot-number {
+         font-size: 16px;
+         font-weight: 700;
+       }
+     }
     
     .slot-status-chip {
       padding: 4px 10px;
@@ -592,63 +673,89 @@ body {
     }
   }
   
-  .slot-body {
-    .slot-info-item {
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
-      padding: $spacing-sm;
-      background: $bg-light;
-      border-radius: $radius-sm;
-      
-      .info-icon {
-        font-size: 20px;
-      }
-      
-      .info-content {
-        flex: 1;
-        
-        .info-label {
-          font-size: 11px;
-          color: $text-secondary;
-          text-transform: uppercase;
-        }
-        
-        .info-value {
-          font-size: 14px;
-          font-weight: 700;
-        }
-      }
-    }
-  }
   
-  .slot-unavailable-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.95);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: $spacing-sm;
-    border-radius: $radius-md;
-    
-    .unavailable-icon {
-      font-size: 40px;
-    }
-    
-    .unavailable-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: $danger;
-    }
-    
-    .unavailable-subtitle {
-      font-size: 12px;
-      color: $text-muted;
-    }
-  }
-}
+   .slot-body {
+     padding: $spacing-sm 0;
+     
+     .slot-info-row {
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       padding: $spacing-xs 0;
+       border-bottom: 1px solid $bg-gray;
+       
+       &:last-child {
+         border-bottom: none;
+       }
+       
+       .info-label {
+         font-size: 12px;
+         color: $text-secondary;
+         font-weight: 600;
+       }
+       
+       .info-value {
+         font-size: 13px;
+         font-weight: 700;
+         color: $text-primary;
+         
+         &.available {
+           color: $success;
+         }
+       }
+     }
+   }
+   
+   .slot-unavailable-overlay {
+     position: absolute;
+     inset: 0;
+     background: rgba(255, 255, 255, 0.95);
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     gap: $spacing-sm;
+     border-radius: $radius-md;
+     text-align: center;
+     padding: $spacing-md;
+     
+     .unavailable-slot-number {
+       position: absolute;
+       top: $spacing-sm;
+       left: $spacing-sm;
+       font-size: 13px;
+       font-weight: 700;
+       color: $danger;
+       background: rgba($danger, 0.1);
+       padding: 4px 10px;
+       border-radius: $radius-sm;
+     }
+     
+     .unavailable-icon {
+       font-size: 40px;
+     }
+     
+     .unavailable-content {
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       gap: 4px;
+     }
+     
+     .unavailable-title {
+       font-size: 14px;
+       font-weight: 700;
+       color: $danger;
+       text-align: center;
+     }
+     
+     .unavailable-subtitle {
+       font-size: 12px;
+       color: $text-secondary;
+       text-align: center;
+     }
+   }
+ }
 
 .next-button {
   display: block;
@@ -672,6 +779,408 @@ body {
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+}
+
+// Merged Step 3: Slot Selection + Confirmation
+.booking-confirmation-merged {
+  .selected-details-section {
+    margin-bottom: $spacing-xl;
+    
+    .detail-card {
+      background: #fff;
+      border: 2px solid rgba(16, 185, 129, 0.2);
+      border-radius: $radius-lg;
+      overflow: hidden;
+      
+       .detail-header {
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         gap: $spacing-sm;
+         padding: $spacing-md $spacing-lg;
+         background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+         border-bottom: 2px solid rgba(16, 185, 129, 0.15);
+         
+         h3 {
+           font-size: 16px;
+           font-weight: 700;
+           color: $text-primary;
+           margin: 0;
+         }
+       }
+      
+      .detail-body-combined {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: $spacing-lg;
+        padding: $spacing-lg;
+        
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+          gap: $spacing-md;
+          
+          .divider-vertical {
+            display: none;
+          }
+        }
+        
+        .divider-vertical {
+          width: 2px;
+          background: linear-gradient(to bottom, transparent, rgba(16, 185, 129, 0.2), transparent);
+        }
+        
+        .station-section,
+        .charger-section {
+          .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #16a34a;
+            text-transform: uppercase;
+            margin-bottom: $spacing-sm;
+            letter-spacing: 0.5px;
+          }
+          
+          .detail-name {
+            font-size: 18px;
+            font-weight: 800;
+            color: $text-primary;
+            margin-bottom: $spacing-md;
+          }
+          
+           .detail-info {
+             display: flex;
+             align-items: flex-start;
+             gap: $spacing-xs;
+             padding: 4px 0;
+             font-size: 14px;
+             color: $text-secondary;
+           }
+           
+           .distance-time-info {
+             display: flex;
+             flex-direction: column;
+             gap: 6px;
+             margin-top: $spacing-sm;
+             
+             .info-item {
+               display: flex;
+               align-items: baseline;
+               gap: $spacing-sm;
+               
+               .info-label {
+                 font-size: 12px;
+                 color: $text-secondary;
+                 font-weight: 600;
+                 min-width: 120px;
+               }
+               
+               .info-value {
+                 font-size: 14px;
+                 font-weight: 700;
+                 color: $text-primary;
+               }
+             }
+           }
+          
+          .detail-specs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: $spacing-sm;
+            
+            .spec-badge {
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              padding: $spacing-sm;
+              background: rgba(16, 185, 129, 0.05);
+              border-radius: $radius-sm;
+              border: 1px solid rgba(16, 185, 129, 0.1);
+              
+              .spec-label {
+                font-size: 11px;
+                color: $text-secondary;
+                font-weight: 600;
+                text-transform: uppercase;
+              }
+              
+              .spec-value {
+                font-size: 14px;
+                font-weight: 700;
+                color: $text-primary;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .merged-content-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xl;
+  }
+  
+  .slot-selection-section {
+    background: #fff;
+    border: 2px solid rgba(16, 185, 129, 0.2);
+    border-radius: $radius-lg;
+    padding: $spacing-lg;
+    
+    h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: $spacing-md;
+      color: $text-primary;
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+    }
+    
+    .loading-message,
+    .error-message {
+      padding: $spacing-md;
+      border-radius: $radius-md;
+      text-align: center;
+      font-size: 14px;
+    }
+    
+    .loading-message {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+    
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    .slots-grid-compact {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: $spacing-md;
+    }
+  }
+  
+  .booking-form-section {
+    background: #fff;
+    border: 2px solid rgba(16, 185, 129, 0.2);
+    border-radius: $radius-lg;
+    padding: $spacing-lg;
+    
+    h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: $spacing-md;
+      color: $text-primary;
+    }
+    
+    .form-content-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-lg;
+    }
+    
+    .vehicle-selection-compact {
+      
+      .form-label {
+        display: flex;
+        align-items: center;
+        gap: $spacing-xs;
+        font-size: 14px;
+        font-weight: 600;
+        color: $text-primary;
+        margin-bottom: $spacing-sm;
+      }
+      
+       .selected-vehicle-display {
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
+         padding: $spacing-md;
+         background: #fff;
+         border: 2px solid rgba(16, 185, 129, 0.2);
+         border-radius: $radius-md;
+         cursor: pointer;
+         transition: all 0.3s ease;
+         
+         &:hover {
+           border-color: #16a34a;
+           box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+         }
+         
+         .vehicle-info {
+           display: flex;
+           align-items: center;
+           gap: $spacing-md;
+           
+           .vehicle-icon {
+             font-size: 32px;
+           }
+           
+           .vehicle-details {
+             display: flex;
+             flex-direction: column;
+             gap: 4px;
+             
+             .vehicle-plate {
+               font-size: 16px;
+               font-weight: 700;
+               color: $text-primary;
+             }
+             
+             .vehicle-model {
+               font-size: 13px;
+               color: $text-secondary;
+             }
+           }
+         }
+        
+        .change-btn {
+          padding: 6px 12px;
+          background: rgba(16, 185, 129, 0.1);
+          border: none;
+          border-radius: $radius-sm;
+          font-size: 13px;
+          font-weight: 600;
+          color: #16a34a;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            background: rgba(16, 185, 129, 0.2);
+          }
+        }
+      }
+      
+      .select-vehicle-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: $spacing-xs;
+        padding: $spacing-md;
+        background: rgba(16, 185, 129, 0.1);
+        border: 2px dashed rgba(16, 185, 129, 0.3);
+        border-radius: $radius-md;
+        font-size: 14px;
+        font-weight: 600;
+        color: #16a34a;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        
+        .btn-icon {
+          font-size: 20px;
+          font-weight: 400;
+        }
+        
+        &:hover {
+          background: rgba(16, 185, 129, 0.15);
+          border-color: #16a34a;
+        }
+      }
+    }
+    
+     .booking-form-compact {
+       .form-label {
+         display: flex;
+         align-items: center;
+         gap: $spacing-xs;
+         font-size: 14px;
+         font-weight: 600;
+         color: $text-primary;
+         margin-bottom: $spacing-sm;
+       }
+       
+       .reservation-notice {
+         padding: $spacing-sm $spacing-md;
+         background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.05));
+         border-left: 3px solid #f59e0b;
+         border-radius: $radius-sm;
+         font-size: 13px;
+         color: #92400e;
+         margin-bottom: $spacing-md;
+         font-weight: 600;
+       }
+       
+       .form-grid-two {
+         display: grid;
+         grid-template-columns: repeat(2, 1fr);
+         gap: $spacing-md;
+         margin-bottom: $spacing-lg;
+         
+         @media (max-width: 768px) {
+           grid-template-columns: 1fr;
+         }
+       }
+       
+       .input-label {
+         font-size: 12px;
+         font-weight: 600;
+         color: $text-secondary;
+         margin-bottom: $spacing-xs;
+         text-transform: uppercase;
+       }
+      
+      .form-group-compact {
+        .date-input-field,
+        .time-input-field {
+          width: 100%;
+          padding: $spacing-md;
+          background: #fff;
+          border: 2px solid $border-color;
+          border-radius: $radius-md;
+          font-size: 14px;
+          font-weight: 600;
+          color: $text-primary;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          
+          &:hover {
+            border-color: #16a34a;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+          }
+          
+          &:focus {
+            outline: none;
+            border-color: #16a34a;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+          }
+          
+          // Style cho date/time picker icon
+          &::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(98%) contrast(119%);
+          }
+        }
+      }
+    }
+    
+    .submit-button-compact {
+      width: 100%;
+      padding: $spacing-md $spacing-lg;
+      background: linear-gradient(135deg, #16a34a, #059669);
+      color: #fff;
+      border: none;
+      border-radius: $radius-md;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #059669, #047857);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
   }
 }
 
@@ -910,6 +1419,103 @@ body {
   
   .modal-body {
     padding: $spacing-xl;
+    
+    .no-vehicles {
+      text-align: center;
+      padding: $spacing-xl;
+      
+      p {
+        margin-bottom: $spacing-lg;
+        color: $text-secondary;
+      }
+      
+      button {
+        padding: $spacing-sm $spacing-lg;
+        background: $primary;
+        color: white;
+        border: none;
+        border-radius: $radius-md;
+        cursor: pointer;
+        font-weight: 600;
+        
+        &:hover {
+          background: $primary-dark;
+        }
+      }
+    }
+    
+    .vehicles-grid-modal {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: $spacing-md;
+      
+      .vehicle-card-modal {
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+        padding: $spacing-md;
+        border: 2px solid $border-color;
+        border-radius: $radius-md;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        
+        &:hover {
+          border-color: $primary;
+          box-shadow: $shadow-sm;
+        }
+        
+        &.selected {
+          border-color: $primary;
+          background: $primary-pale;
+          box-shadow: $shadow-md;
+        }
+        
+        .vehicle-icon-large {
+          font-size: 48px;
+          flex-shrink: 0;
+        }
+        
+        .vehicle-info-modal {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          
+          .vehicle-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: $text-primary;
+          }
+          
+          .vehicle-plate-large {
+            font-size: 18px;
+            font-weight: 800;
+            color: $primary;
+            letter-spacing: 0.5px;
+          }
+          
+          .vehicle-connector {
+            font-size: 12px;
+            color: $text-secondary;
+            font-weight: 600;
+          }
+        }
+        
+        .default-badge-modal {
+          position: absolute;
+          top: $spacing-xs;
+          right: $spacing-xs;
+          padding: 4px 8px;
+          background: $primary;
+          color: white;
+          font-size: 10px;
+          font-weight: 700;
+          border-radius: $radius-sm;
+          text-transform: uppercase;
+        }
+      }
+    }
   }
 }
 

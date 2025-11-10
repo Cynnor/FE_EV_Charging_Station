@@ -92,13 +92,16 @@ const ChargingSession = () => {
         // Get portId from reservation structure - support both old and new formats
         let portId = null;
 
-        // New format: reservation.items[0].slot.port
+        // New format: reservation.items[0].slot.port (can be object or string)
         if (reservation.items?.[0]?.slot?.port) {
-          portId = reservation.items[0].slot.port;
+          const port = reservation.items[0].slot.port;
+          // If port is an object, get its _id or id property
+          portId = typeof port === 'object' ? (port._id || port.id) : port;
         }
         // Old format: reservation.portId
         else if (reservation.portId) {
-          portId = reservation.portId;
+          const port = reservation.portId;
+          portId = typeof port === 'object' ? (port._id || port.id) : port;
         }
 
         if (!portId) {

@@ -1,16 +1,10 @@
 import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-routing-machine";
 import "./index.scss";
-
-// Icon user
-const userIcon = new L.Icon({
-  iconUrl: "/assets/UserIcon.png",
-  iconSize: [40, 40],
-});
 
 // Icon station
 const stationIcon = new L.Icon({
@@ -97,10 +91,19 @@ const MapDirections = ({ userLocation, stationLocation, stationInfo, onClose }) 
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
         />
 
-        {/* Marker vị trí người dùng */}
-        <Marker position={userLocation} icon={userIcon}>
+        {/* Circle marker vị trí người dùng - Round dot */}
+        <CircleMarker
+          center={userLocation}
+          radius={10}
+          pathOptions={{
+            color: '#3b82f6',
+            fillColor: '#3b82f6',
+            fillOpacity: 1,
+            weight: 3,
+          }}
+        >
           <Popup>📍 Vị trí của bạn</Popup>
-        </Marker>
+        </CircleMarker>
 
         {/* Marker trạm sạc */}
         <Marker position={stationLocation} icon={stationIcon}>

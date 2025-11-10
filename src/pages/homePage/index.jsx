@@ -1,5 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Badge, Tag, Tooltip } from "antd";
+import { 
+  MapPin, 
+  Zap, 
+  DollarSign, 
+  Navigation, 
+  Clock,
+  Activity,
+  CheckCircle,
+  AlertCircle
+} from "lucide-react";
 import ChargingMap from "../../components/chargingMap";
 import "./index.scss";
 import api from "../../config/api";
@@ -213,9 +224,6 @@ const HomePage = () => {
               <button className="btn btn--primary" onClick={handleFindStation}>
                 Tìm trạm sạc ngay
               </button>
-              <button className="btn btn--secondary" onClick={handleAddVehicle}>
-                Thêm xe của bạn
-              </button>
             </div>
           </div>
           <div className="homepage__hero-image">
@@ -233,53 +241,105 @@ const HomePage = () => {
         {/* ===== Map + Station List ===== */}
         <section className="homepage__map" ref={mapSectionRef}>
           <div className="section-header">
-            <h2>Bản đồ trạm sạc</h2>
-            <p>Tìm kiếm và xem thông tin chi tiết các trụ sạc gần bạn</p>
+            <h2>Trạm sạc gần bạn</h2>
           </div>
           <div className="map-container">
             <div className="station-list">
-              <h3>Trạm sạc gần bạn</h3>
               <div className="station-scroll">
-                {nearbyStations.map((station) => (
-                  <div
-                    key={station.id}
-                    ref={(el) => (itemRefs.current[station.id] = el)}
-                    className={`station-item ${selectedId === station.id ? "is-selected" : ""
-                      }`}
-                    onClick={() => setSelectedId(station.id)}
-                  >
-                    <div className="station-header">
-                      <h4>{station.name}</h4>
-                      {station.distance && (
-                        <span className="distance">
-                          {station.distance.toFixed(1)} km
-                        </span>
-                      )}
-                      <div className={`status-indicator ${station.status}`}>
-                        {station.status === "available" && "🟢"}
-                        {station.status === "busy" && "🟡"}
-                        {station.status === "maintenance" && "🔴"}
+                {nearbyStations.length === 0 ? (
+                  <div className="empty-state">
+                    <AlertCircle size={48} color="#94a3b8" />
+                    <p>Không tìm thấy trạm sạc gần bạn</p>
+                    <span>Vui lòng bật định vị để tìm trạm gần nhất</span>
+                  </div>
+                ) : (
+                  nearbyStations.map((station) => (
+                    <div
+                      key={station.id}
+                      ref={(el) => (itemRefs.current[station.id] = el)}
+                      className={`station-card ${selectedId === station.id ? "selected" : ""}`}
+                      onClick={() => setSelectedId(station.id)}
+                    >
+                      <div className="card-top">
+                        <div className="station-name-status">
+                          <h4>{station.name}</h4>
+                          {station.status === "available" ? (
+                            <Tag color="success" icon={<CheckCircle size={12} />}>Sẵn sàng</Tag>
+                          ) : station.status === "busy" ? (
+                            <Tag color="warning" icon={<Clock size={12} />}>Đang bận</Tag>
+                          ) : (
+                            <Tag color="error" icon={<AlertCircle size={12} />}>Bảo trì</Tag>
+                          )}
+                        </div>
+                        {station.distance && (
+                          <div className="distance">
+                            <Navigation size={14} />
+                            <span>{station.distance.toFixed(1)} km</span>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    <div className="station-details">
-                      <div className="item">⚡ {station.speed}</div>
-                      <div className="item">💰 {station.price}</div>
-                      <div className="item">
-                        🔌 AC: {station.slots.ac} | DC: {station.slots.dc} |
-                        Ultra: {station.slots.ultra}
+
+                      <div className="card-info">
+                        <div className="info-grid">
+                          <div className="info-cell">
+                            <Zap size={16} color="#16a34a" />
+                            <div>
+                              <span className="label">Tốc độ</span>
+                              <span className="value">{station.speed}</span>
+                            </div>
+                          </div>
+                          <div className="info-cell">
+                            <DollarSign size={16} color="#16a34a" />
+                            <div>
+                              <span className="label">Giá</span>
+                              <span className="value price">{station.price}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="ports">
+                          {station.slots.ac > 0 && (
+                            <Tooltip title="AC - Sạc chậm">
+                              <Badge count={station.slots.ac} style={{ backgroundColor: '#3b82f6' }}>
+                                <Tag color="blue">AC</Tag>
+                              </Badge>
+                            </Tooltip>
+                          )}
+                          {station.slots.dc > 0 && (
+                            <Tooltip title="DC - Sạc nhanh">
+                              <Badge count={station.slots.dc} style={{ backgroundColor: '#16a34a' }}>
+                                <Tag color="green">DC</Tag>
+                              </Badge>
+                            </Tooltip>
+                          )}
+                          {station.slots.ultra > 0 && (
+                            <Tooltip title="Ultra - Sạc siêu nhanh">
+                              <Badge count={station.slots.ultra} style={{ backgroundColor: '#8b5cf6' }}>
+                                <Tag color="purple">Ultra</Tag>
+                              </Badge>
+                            </Tooltip>
+                          )}
+                        </div>
+
+                        <div className="address">
+                          <MapPin size={14} color="#f59e0b" />
+                          <span>{station.address}</span>
+                        </div>
                       </div>
-                      <div className="item">📍 {station.address}</div>
-                    </div>
-                    <div className="station-actions">
+
                       <button
-                        className="btn-small btn-primary"
-                        onClick={() => handleBooking(station.id)}
+                        className="book-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBooking(station.id);
+                        }}
                       >
-                        Đặt chỗ
+                        <Activity size={16} />
+                        Đặt chỗ ngay
                       </button>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
