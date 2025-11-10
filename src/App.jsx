@@ -2,7 +2,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
-import SupportPage from "./pages/supportPage/index";
 import ProfilePage from "./pages/profilePage";
 import BookingPage from "./pages/bookingPage";
 import PaymentPage from "./pages/PaymentPage/index";
@@ -22,6 +21,7 @@ import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagemen
 import TransactionManagement from "./pages/adminDashboard/transactionManagement/index";
 import RevenueManagement from "./pages/adminDashboard/revenueManagement/index";
 import StaffLayout from "./components/staffLayout/index";
+import OverviewStaff from "./pages/staffDashboard/Overview/index";
 import ChargingSessions from "./pages/staffDashboard/chargingSessions/index";
 import StationStatus from "./pages/staffDashboard/stationStatus/index";
 import Reports from "./pages/staffDashboard/reports/index";
@@ -38,11 +38,11 @@ function App() {
         { path: "", element: <HomePage /> },
         { path: "charging-stations", element: <ChargingStationsPage /> },
         { path: "about", element: <AboutPage /> },
-        { path: "support", element: <SupportPage /> },
+        // { path: "support", element: <SupportPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "booking/:stationId", element: <BookingPage /> },
         { path: "booking", element: <BookingPage /> },
-        { path: "payment", element: <PaymentPage /> },
+        // { path: "payment", element: <PaymentPage /> },
         { path: "payment-success", element: <PaymentSuccessPage /> },
         { path: "membership", element: <MembershipPage /> },
       ],
@@ -66,6 +66,10 @@ function App() {
     {
       path: "booking-success",
       element: <BookingSuccessPage />,
+    },
+    {
+      path: "payment",
+      element: <PaymentPage />,
     },
     {
       path: "admin",
@@ -94,7 +98,7 @@ function App() {
         </ProtectedRoute>
       ),
       children: [
-        { path: "", element: <Overview /> },
+        { path: "", element: <OverviewStaff /> },
         { path: "charging-ChargingSessions", element: <ChargingSessions /> },
         { path: "payment", element: <Payment /> },
         { path: "station-status", element: <StationStatus /> },

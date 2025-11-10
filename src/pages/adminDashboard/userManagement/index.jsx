@@ -36,6 +36,11 @@ const UserManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // GET - Lấy danh sách tất cả users (admin only)
   const fetchUsers = async () => {
     try {

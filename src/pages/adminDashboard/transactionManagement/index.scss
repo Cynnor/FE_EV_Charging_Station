@@ -340,20 +340,60 @@
             font-size: 13px;
         }
 
-        .btn-view {
-            padding: 6px 12px;
-            background: #198754;
-            color: #ffffff;
+        // Unified action buttons to match user-management page
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-action {
+            padding: 6px 10px;
             border: none;
             border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
             cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f0f0f0;
+            color: #333333;
             transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 
             &:hover {
-                background: #146c43;
-                transform: translateY(-1px);
+                transform: translateY(-2px);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+        }
+
+        .btn-edit {
+            @extend .btn-action;
+
+            &:hover {
+                background: #fff3cd;
+            }
+        }
+
+        .btn-delete {
+            @extend .btn-action;
+
+            &:hover {
+                background: #f8d7da;
+            }
+        }
+
+        .btn-view {
+            @extend .btn-action;
+            background: #f1f3f1;
+            color: #131212;
+
+            &:hover {
+                background: #eaeeec;
+                box-shadow: 0 2px 6px rgba(20, 108, 67, 0.3);
             }
         }
     }
@@ -567,5 +607,3 @@
         }
     }
 }
-
-

@@ -21,6 +21,11 @@ const Overview = () => {
   const [recentStations, setRecentStations] = useState([]);
   const navigate = useNavigate();
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch overview statistics
   const fetchStats = async () => {
     try {
@@ -28,9 +33,19 @@ const Overview = () => {
 
       // Fetch stations data
       const stationsResponse = await api.get("/stations");
-      const stations = Array.isArray(stationsResponse.data)
-        ? stationsResponse.data
-        : stationsResponse.data.data || [];
+
+      // ✅ Handle different response formats
+      let stations = [];
+      if (
+        stationsResponse.data.items &&
+        Array.isArray(stationsResponse.data.items)
+      ) {
+        stations = stationsResponse.data.items;
+      } else if (Array.isArray(stationsResponse.data.data)) {
+        stations = stationsResponse.data.data;
+      } else if (Array.isArray(stationsResponse.data)) {
+        stations = stationsResponse.data;
+      }
 
       // Fetch users data
       const usersResponse = await api.get("/users/get-all");
@@ -50,18 +65,20 @@ const Overview = () => {
         (s) => s.status === "inactive"
       ).length;
 
-      // Calculate charger statistics
+      // ✅ Calculate charger statistics from ports
       let totalChargers = 0;
       let activeChargers = 0;
       let maintenanceChargers = 0;
 
       stations.forEach((station) => {
-        if (station.chargers && Array.isArray(station.chargers)) {
-          totalChargers += station.chargers.length;
-          activeChargers += station.chargers.filter(
+        // Check both 'ports' and 'chargers' fields
+        const chargers = station.ports || station.chargers;
+        if (chargers && Array.isArray(chargers)) {
+          totalChargers += chargers.length;
+          activeChargers += chargers.filter(
             (c) => c.status === "available" || c.status === "active"
           ).length;
-          maintenanceChargers += station.chargers.filter(
+          maintenanceChargers += chargers.filter(
             (c) => c.status === "maintenance"
           ).length;
         }
@@ -86,7 +103,7 @@ const Overview = () => {
       }));
       setWeeklyData(generatedWeeklyData);
 
-      // Get 5 most recent stations
+      // ✅ Get 5 most recent stations - use 'id' field
       const sortedStations = [...stations]
         .sort((a, b) => {
           const dateA = new Date(a.createdAt || 0);
@@ -137,16 +154,6 @@ const Overview = () => {
         });
       }
 
-      if (totalChargers > 0) {
-        activities.push({
-          id: 4,
-          type: "info",
-          title: "Cổng sạc",
-          message: `${activeChargers}/${totalChargers} cổng sạc đang hoạt động`,
-          time: "Hôm nay",
-        });
-      }
-
       setRecentActivities(activities);
     } catch (err) {
       console.error("Error fetching stats:", err);
@@ -166,7 +173,7 @@ const Overview = () => {
       subtitle: `${stats.activeStations} đang hoạt động`,
       icon: "🔌",
       color: "blue",
-      onClick: () => navigate("/admin/stations"),
+      onClick: () => navigate("/admin/station-management"),
     },
     {
       title: "Trạm bảo trì",
@@ -174,15 +181,7 @@ const Overview = () => {
       subtitle: `${stats.inactiveStations} không hoạt động`,
       icon: "🔧",
       color: "orange",
-      onClick: () => navigate("/admin/stations"),
-    },
-    {
-      title: "Tổng cổng sạc",
-      value: stats.totalChargers,
-      subtitle: `${stats.activeChargers} đang sẵn sàng`,
-      icon: "⚡",
-      color: "green",
-      onClick: () => navigate("/admin/stations"),
+      onClick: () => navigate("/admin/station-management"),
     },
     {
       title: "Người dùng",
@@ -190,7 +189,7 @@ const Overview = () => {
       subtitle: "Tài khoản đã đăng ký",
       icon: "👥",
       color: "purple",
-      onClick: () => navigate("/admin/users"),
+      onClick: () => navigate("/admin/user-management"),
     },
   ];
 
@@ -327,7 +326,7 @@ const Overview = () => {
             <h3>Trạm sạc gần đây</h3>
             <button
               className="btn-link"
-              onClick={() => navigate("/admin/stations")}
+              onClick={() => navigate("/admin/station-management")}
             >
               Xem tất cả
             </button>
@@ -335,12 +334,12 @@ const Overview = () => {
           <div className="recent-grid">
             {recentStations.map((station) => (
               <div
-                key={station.stationId}
+                key={station.id}
                 className="station-card"
-                onClick={() => navigate(`/admin/stations`)}
+                onClick={() => navigate("/admin/station-management")}
               >
                 <div className="station-header">
-                  <h4>{station.stationName || "Không có tên"}</h4>
+                  <h4>{station.name || "Không có tên"}</h4>
                   <span className={`status-badge ${station.status}`}>
                     {station.status === "active"
                       ? "🟢 Hoạt động"
@@ -353,13 +352,11 @@ const Overview = () => {
                   📍 {station.address || "Chưa có địa chỉ"}
                 </p>
                 <div className="station-info">
-                  <span>⚡ {station.chargers?.length || 0} cổng sạc</span>
                   <span>
-                    ⏰{" "}
-                    {station.openTime && station.closeTime
-                      ? `${station.openTime} - ${station.closeTime}`
-                      : "24/7"}
+                    ⚡ {(station.ports || station.chargers)?.length || 0} cổng
+                    sạc
                   </span>
+                  <span>🏢 {station.provider || "Chưa có nhà cung cấp"}</span>
                 </div>
               </div>
             ))}
@@ -373,7 +370,7 @@ const Overview = () => {
         <div className="actions-grid">
           <button
             className="action-card primary"
-            onClick={() => navigate("/admin/stations")}
+            onClick={() => navigate("/admin/station-management")}
           >
             <div className="action-icon">🔌</div>
             <div className="action-content">
@@ -383,36 +380,12 @@ const Overview = () => {
           </button>
           <button
             className="action-card"
-            onClick={() => navigate("/admin/users")}
+            onClick={() => navigate("/admin/user-management")}
           >
             <div className="action-icon">👥</div>
             <div className="action-content">
               <h4>Quản lý người dùng</h4>
               <p>Quản lý {stats.totalUsers} tài khoản</p>
-            </div>
-          </button>
-          <button
-            className="action-card"
-            onClick={() => {
-              alert("Tính năng đang phát triển!");
-            }}
-          >
-            <div className="action-icon">📊</div>
-            <div className="action-content">
-              <h4>Báo cáo thống kê</h4>
-              <p>Xem báo cáo chi tiết</p>
-            </div>
-          </button>
-          <button
-            className="action-card"
-            onClick={() => {
-              alert("Tính năng đang phát triển!");
-            }}
-          >
-            <div className="action-icon">⚙️</div>
-            <div className="action-content">
-              <h4>Cài đặt hệ thống</h4>
-              <p>Cấu hình và tùy chỉnh</p>
             </div>
           </button>
         </div>
