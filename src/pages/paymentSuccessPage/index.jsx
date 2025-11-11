@@ -135,10 +135,25 @@ export default function PaymentSuccessPage() {
           if (vehicleId) {
             console.log('💳 Checking payment status for vehicle:', vehicleId);
             console.log('💳 VNPay Response Code:', vnpParams.vnp_ResponseCode);
+            console.log('💳 VNPay Transaction Status:', vnpParams.vnp_TransactionStatus);
+            console.log('💳 VNPay All Params:', vnpParams);
 
             // Gọi API mới để kiểm tra trạng thái thanh toán
+            // GỬI TẤT CẢ VNPay params để backend verify signature
             const response = await api.post("/vnpay/check-payment-status", {
               vehicleId: vehicleId,
+              vnp_Amount: vnpParams.vnp_Amount,
+              vnp_BankCode: vnpParams.vnp_BankCode,
+              vnp_BankTranNo: vnpParams.vnp_BankTranNo,
+              vnp_CardType: vnpParams.vnp_CardType,
+              vnp_OrderInfo: vnpParams.vnp_OrderInfo,
+              vnp_PayDate: vnpParams.vnp_PayDate,
+              vnp_ResponseCode: vnpParams.vnp_ResponseCode,
+              vnp_TmnCode: vnpParams.vnp_TmnCode,
+              vnp_TransactionNo: vnpParams.vnp_TransactionNo,
+              vnp_TransactionStatus: vnpParams.vnp_TransactionStatus,
+              vnp_TxnRef: vnpParams.vnp_TxnRef,
+              vnp_SecureHash: vnpParams.vnp_SecureHash,
             });
 
             console.log('💳 Check Payment Status Response:', response.data);
