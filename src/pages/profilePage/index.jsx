@@ -884,6 +884,12 @@ const ProfilePage = () => {
       return;
     }
 
+    // Check if running in secure context (HTTPS or localhost)
+    if (!window.isSecureContext) {
+      setQrScanError("Camera chỉ hoạt động trên HTTPS hoặc localhost.");
+      return;
+    }
+
     try {
       barcodeDetectorRef.current = new window.BarcodeDetector({
         formats: ["qr_code"],
@@ -896,22 +902,89 @@ const ProfilePage = () => {
     }
 
     try {
+      console.log("Requesting camera permission...");
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: { 
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false,
       });
+      
+      console.log("Camera permission granted, stream:", stream);
       streamRef.current = stream;
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            await videoRef.current.play();
+            console.log("Video started playing");
+            animationFrameRef.current = requestAnimationFrame(() => {
+              scanVideoFrame();
+            });
+          } catch (playError) {
+            console.error("Video play error:", playError);
+            setQrScanError("Không thể phát video từ camera.");
+          }
+        };
       }
-      animationFrameRef.current = requestAnimationFrame(() => {
-        scanVideoFrame();
-      });
     } catch (error) {
-      setQrScanError(
-        "Không thể truy cập camera. Vui lòng cho phép quyền sử dụng camera."
-      );
+      console.error("Camera access error:", error);
+      
+      // Handle specific error types
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        setQrScanError(
+          "Quyền truy cập camera bị từ chối. Vui lòng cho phép quyền camera trong cài đặt trình duyệt."
+        );
+      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+        setQrScanError(
+          "Không tìm thấy camera. Vui lòng kiểm tra kết nối camera của thiết bị."
+        );
+      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
+        setQrScanError(
+          "Camera đang được sử dụng bởi ứng dụng khác. Vui lòng đóng các ứng dụng khác và thử lại."
+        );
+      } else if (error.name === "OverconstrainedError" || error.name === "ConstraintNotSatisfiedError") {
+        setQrScanError(
+          "Camera không hỗ trợ các yêu cầu được chỉ định. Đang thử lại với cài đặt cơ bản..."
+        );
+        
+        // Try again with basic constraints
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+          streamRef.current = basicStream;
+          
+          if (videoRef.current) {
+            videoRef.current.srcObject = basicStream;
+            videoRef.current.onloadedmetadata = async () => {
+              try {
+                await videoRef.current.play();
+                console.log("Video started playing with basic constraints");
+                animationFrameRef.current = requestAnimationFrame(() => {
+                  scanVideoFrame();
+                });
+              } catch (playError) {
+                console.error("Video play error:", playError);
+                setQrScanError("Không thể phát video từ camera.");
+              }
+            };
+          }
+        } catch (retryError) {
+          console.error("Retry error:", retryError);
+          setQrScanError("Không thể truy cập camera ngay cả với cài đặt cơ bản.");
+        }
+      } else {
+        setQrScanError(
+          `Lỗi camera: ${error.message || "Vui lòng cho phép quyền sử dụng camera."}`
+        );
+      }
     }
   }, [scanVideoFrame]);
 
@@ -920,29 +993,59 @@ const ProfilePage = () => {
       setQrScanError("Không tìm thấy phần hiển thị camera để quét.");
       return;
     }
+    
+    // Check if running in secure context (HTTPS or localhost)
+    if (!window.isSecureContext) {
+      setQrScanError("Camera chỉ hoạt động trên HTTPS hoặc localhost.");
+      return;
+    }
+    
     try {
+      console.log("Starting ZXing scanner...");
       const reader = new BrowserQRCodeReader(undefined, {
         delayBetweenScanAttempts: 300,
         delayBetweenScanSuccess: 800,
       });
       zxingReaderRef.current = reader;
+      
       const controls = await reader.decodeFromVideoDevice(
         undefined,
         videoRef.current,
         (result, err, controls) => {
           if (result && !processingRef.current) {
+            console.log("QR Code detected:", result.getText());
             processingRef.current = true;
             setIsProcessingQr(true);
             handleQrPayload(result.getText());
           }
+          if (err && err.name !== "NotFoundException") {
+            console.error("ZXing scan error:", err);
+          }
         }
       );
       zxingControlsRef.current = controls;
+      console.log("ZXing scanner started successfully");
     } catch (error) {
       console.error("ZXing error:", error);
-      setQrScanError(
-        "Không thể mở camera để quét mã. Vui lòng kiểm tra quyền camera của trình duyệt."
-      );
+      
+      // Handle specific error types
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        setQrScanError(
+          "Quyền truy cập camera bị từ chối. Vui lòng cho phép quyền camera trong cài đặt trình duyệt."
+        );
+      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+        setQrScanError(
+          "Không tìm thấy camera. Vui lòng kiểm tra kết nối camera của thiết bị."
+        );
+      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
+        setQrScanError(
+          "Camera đang được sử dụng bởi ứng dụng khác. Vui lòng đóng các ứng dụng khác và thử lại."
+        );
+      } else {
+        setQrScanError(
+          `Không thể mở camera: ${error.message || "Vui lòng kiểm tra quyền camera của trình duyệt."}`
+        );
+      }
     }
   }, [handleQrPayload]);
 
@@ -1046,6 +1149,11 @@ const ProfilePage = () => {
               <div>
                 <h3>Quét mã QR đặt chỗ</h3>
                 <p>Hướng camera vào mã QR khách hàng cung cấp để check-in.</p>
+                {!window.isSecureContext && (
+                  <p style={{ color: '#ff6b6b', fontSize: '0.9em', marginTop: '8px' }}>
+                    ⚠️ Camera yêu cầu kết nối HTTPS hoặc localhost
+                  </p>
+                )}
               </div>
               <button
                 className="qr-modal-close"
@@ -1058,15 +1166,25 @@ const ProfilePage = () => {
 
             {isBarcodeSupported ? (
               <div className="qr-video-wrapper">
-                <video ref={videoRef} playsInline muted autoPlay />
+                <video 
+                  ref={videoRef} 
+                  playsInline 
+                  muted 
+                  autoPlay
+                  style={{ width: '100%', maxWidth: '100%', height: 'auto' }}
+                />
                 <div className="qr-scan-guide" />
               </div>
             ) : (
-              <div className="qr-unsupported">
-                <p>
-                  Thiết bị không hỗ trợ quét QR tự động. Vui lòng dùng ô bên
-                  dưới để nhập dữ liệu QR thủ công.
-                </p>
+              <div className="qr-video-wrapper">
+                <video 
+                  ref={videoRef} 
+                  playsInline 
+                  muted 
+                  autoPlay
+                  style={{ width: '100%', maxWidth: '100%', height: 'auto' }}
+                />
+                <div className="qr-scan-guide" />
               </div>
             )}
 
