@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import CustomPopup from "../../components/customPopup";
 import ConfirmPopup from "../../components/confirmPopup/index.jsx";
 import ChangePasswordPopup from "../../components/changePasswordPopup/index.jsx";
+import { BrowserQRCodeReader } from "@zxing/browser";
 import {
   MapPin,
   X,
@@ -48,15 +49,20 @@ const ProfilePage = () => {
   const streamRef = useRef(null);
   const animationFrameRef = useRef(null);
   const barcodeDetectorRef = useRef(null);
+  const zxingReaderRef = useRef(null);
+  const zxingControlsRef = useRef(null);
+  const processingRef = useRef(false);
   const normalizedRole = (userRole || "").toLowerCase();
   const canUseQrTools =
     normalizedRole === "staff" || normalizedRole === "admin";
   const roleDisplayLabel = userRole || normalizedRole.toUpperCase();
-  const qrStatusText = !isBarcodeSupported
-    ? "Thiết bị không hỗ trợ camera. Vui lòng nhập dữ liệu QR bên dưới."
-    : isProcessingQr
+  const qrStatusText = isProcessingQr
     ? "Đang xác thực mã QR..."
-    : "Đưa mã QR vào khung hình để check-in.";
+    : "Cho phép sử dụng camera và đưa mã QR vào khung hình để check-in.";
+
+  useEffect(() => {
+    processingRef.current = isProcessingQr;
+  }, [isProcessingQr]);
 
   const [reservations, setReservations] = useState([]);
   const [txLoading, setTxLoading] = useState(true);
@@ -777,6 +783,14 @@ const ProfilePage = () => {
       streamRef.current = null;
     }
     barcodeDetectorRef.current = null;
+    if (zxingControlsRef.current) {
+      zxingControlsRef.current.stop();
+      zxingControlsRef.current = null;
+    }
+    if (zxingReaderRef.current) {
+      zxingReaderRef.current.reset();
+      zxingReaderRef.current = null;
+    }
     setIsProcessingQr(false);
   }, []);
 
@@ -848,8 +862,9 @@ const ProfilePage = () => {
       const barcodes = await barcodeDetectorRef.current.detect(bitmap);
       bitmap.close();
 
-      if (barcodes.length && !isProcessingQr) {
+      if (barcodes.length && !processingRef.current) {
         setIsProcessingQr(true);
+        processingRef.current = true;
         await handleQrPayload(barcodes[0].rawValue);
       }
     } catch (error) {
@@ -863,16 +878,9 @@ const ProfilePage = () => {
     }
   }, [handleQrPayload, isProcessingQr, isQrScannerOpen]);
 
-  const startQrScanner = useCallback(async () => {
+  const startBarcodeDetectorScanner = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       setQrScanError("Thiết bị không hỗ trợ camera.");
-      return;
-    }
-
-    if (!isBarcodeSupported) {
-      setQrScanError(
-        "Trình duyệt không hỗ trợ quét QR tự động. Vui lòng nhập dữ liệu thủ công."
-      );
       return;
     }
 
@@ -905,7 +913,55 @@ const ProfilePage = () => {
         "Không thể truy cập camera. Vui lòng cho phép quyền sử dụng camera."
       );
     }
-  }, [isBarcodeSupported, scanVideoFrame]);
+  }, [scanVideoFrame]);
+
+  const startZxingScanner = useCallback(async () => {
+    if (!videoRef.current) {
+      setQrScanError("Không tìm thấy phần hiển thị camera để quét.");
+      return;
+    }
+    try {
+      const reader = new BrowserQRCodeReader(undefined, {
+        delayBetweenScanAttempts: 300,
+        delayBetweenScanSuccess: 800,
+      });
+      zxingReaderRef.current = reader;
+      const controls = await reader.decodeFromVideoDevice(
+        undefined,
+        videoRef.current,
+        (result, err, controls) => {
+          if (result && !processingRef.current) {
+            processingRef.current = true;
+            setIsProcessingQr(true);
+            handleQrPayload(result.getText());
+          }
+        }
+      );
+      zxingControlsRef.current = controls;
+    } catch (error) {
+      console.error("ZXing error:", error);
+      setQrScanError(
+        "Không thể mở camera để quét mã. Vui lòng kiểm tra quyền camera của trình duyệt."
+      );
+    }
+  }, [handleQrPayload]);
+
+  const startQrScanner = useCallback(async () => {
+    setQrScanError("");
+    setManualQrValue("");
+    setIsProcessingQr(false);
+    processingRef.current = false;
+
+    if (isBarcodeSupported) {
+      await startBarcodeDetectorScanner();
+    } else {
+      await startZxingScanner();
+    }
+  }, [
+    isBarcodeSupported,
+    startBarcodeDetectorScanner,
+    startZxingScanner,
+  ]);
 
   const handleManualSubmit = async () => {
     if (!manualQrValue.trim()) {
@@ -925,14 +981,9 @@ const ProfilePage = () => {
   };
 
   useEffect(() => {
-    if (isQrScannerOpen && isBarcodeSupported) {
-      setQrScanError("");
-      setManualQrValue("");
-      setIsProcessingQr(false);
+    if (isQrScannerOpen) {
       startQrScanner();
-    }
-
-    if (!isQrScannerOpen) {
+    } else {
       stopQrScanner();
       setManualQrValue("");
       setQrScanError("");
@@ -941,12 +992,7 @@ const ProfilePage = () => {
     return () => {
       stopQrScanner();
     };
-  }, [
-    isQrScannerOpen,
-    isBarcodeSupported,
-    startQrScanner,
-    stopQrScanner,
-  ]);
+  }, [isQrScannerOpen, startQrScanner, stopQrScanner]);
 
   useEffect(() => {
     // Kiểm tra flag scroll đến lịch sử

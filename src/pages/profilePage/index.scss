@@ -1335,6 +1335,7 @@ $shadow-lg: rgba(0, 0, 0, 0.15);
   }
 
   .profile-toolbar {
+    margin-top: 80px;
     flex-direction: column;
     align-items: flex-start;
 
@@ -1346,6 +1347,11 @@ $shadow-lg: rgba(0, 0, 0, 0.15);
         flex: 1;
       }
     }
+  }
+
+  .qr-scanner-overlay {
+    align-items: flex-start;
+    padding-top: 120px;
   }
 
   .section-header {
@@ -1491,6 +1497,10 @@ $shadow-lg: rgba(0, 0, 0, 0.15);
   .pagination-number {
     width: 40px;
     height: 40px;
+  }
+
+  .qr-scanner-overlay {
+    padding-top: 140px;
   }
 
   .qr-scanner-modal {
