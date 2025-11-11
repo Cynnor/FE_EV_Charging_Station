@@ -1,11 +1,22 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import "./index.scss";
 import api from "../../config/api";
 import { useNavigate } from "react-router-dom";
 import CustomPopup from "../../components/customPopup";
 import ConfirmPopup from "../../components/confirmPopup/index.jsx";
 import ChangePasswordPopup from "../../components/changePasswordPopup/index.jsx";
-
+import {
+  MapPin,
+  X,
+  Zap,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  QrCode,
+  RefreshCcw,
+} from "lucide-react";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -25,6 +36,27 @@ const ProfilePage = () => {
   // ===== Station mapping =====
   const [stationMap, setStationMap] = useState({});
   const [portTypeMap, setPortTypeMap] = useState({});
+  const [userRole, setUserRole] = useState("");
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
+  const [qrScanError, setQrScanError] = useState("");
+  const [manualQrValue, setManualQrValue] = useState("");
+  const [isProcessingQr, setIsProcessingQr] = useState(false);
+  const [isBarcodeSupported, setIsBarcodeSupported] = useState(
+    typeof window !== "undefined" && "BarcodeDetector" in window
+  );
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const barcodeDetectorRef = useRef(null);
+  const normalizedRole = (userRole || "").toLowerCase();
+  const canUseQrTools =
+    normalizedRole === "staff" || normalizedRole === "admin";
+  const roleDisplayLabel = userRole || normalizedRole.toUpperCase();
+  const qrStatusText = !isBarcodeSupported
+    ? "Thiết bị không hỗ trợ camera. Vui lòng nhập dữ liệu QR bên dưới."
+    : isProcessingQr
+    ? "Đang xác thực mã QR..."
+    : "Đưa mã QR vào khung hình để check-in.";
 
   const [reservations, setReservations] = useState([]);
   const [txLoading, setTxLoading] = useState(true);
@@ -41,6 +73,12 @@ const ProfilePage = () => {
     if (savedDefaultVehicle) {
       setDefaultVehicleId(savedDefaultVehicle);
     }
+  }, []);
+
+  useEffect(() => {
+    setIsBarcodeSupported(
+      typeof window !== "undefined" && "BarcodeDetector" in window
+    );
   }, []);
 
   // Add helper function to normalize reservations
@@ -63,43 +101,8 @@ const ProfilePage = () => {
     });
   };
 
-  // Update reservation fetch with pagination
-  useEffect(() => {
-    if (!vehicles.length) return;
-    let mounted = true;
-
-    const fetchReservations = async () => {
-      try {
-        setTxLoading(true);
-        const res = await api.get(`/reservations`);
-        // console.log("Raw reservation data:", res.data);
-
-        if (mounted) {
-          const reservationList = res.data?.data?.items || [];
-          // console.log("Processed reservations:", reservationList);
-
-          const normalized = normalizeReservations(reservationList);
-
-          setReservations(normalized);
-          setTotalPages(Math.ceil(normalized.length / itemsPerPage));
-
-          // Fetch station info for all ports
-          await fetchStationInfo(normalized);
-        }
-      } catch (err) {
-        // console.error("Error fetching reservations:", err);
-        if (mounted) setReservations([]);
-      } finally {
-        if (mounted) setTxLoading(false);
-      }
-    };
-
-    fetchReservations();
-    return () => (mounted = false);
-  }, [vehicles]);
-
   // Fetch station information from port IDs - OPTIMIZED VERSION
-  const fetchStationInfo = async (reservationList) => {
+  const fetchStationInfo = useCallback(async (reservationList = []) => {
     try {
       const portIds = new Set();
       reservationList.forEach((r) => {
@@ -188,7 +191,34 @@ const ProfilePage = () => {
     } catch (error) {
       // console.error("Error fetching station info:", error);
     }
-  };
+  }, []);
+
+  const loadReservations = useCallback(async () => {
+    try {
+      setTxLoading(true);
+      const res = await api.get(`/reservations`);
+      const reservationList = res.data?.data?.items || [];
+      const normalized = normalizeReservations(reservationList);
+      const total = Math.ceil(normalized.length / itemsPerPage);
+
+      setReservations(normalized);
+      setTotalPages(total);
+      setCurrentPage((prev) => (prev > (total || 1) ? 1 : prev));
+
+      await fetchStationInfo(normalized);
+    } catch (err) {
+      // console.error("Error fetching reservations:", err);
+      setReservations([]);
+      setTotalPages(0);
+      setCurrentPage(1);
+    } finally {
+      setTxLoading(false);
+    }
+  }, [fetchStationInfo, itemsPerPage]);
+
+  useEffect(() => {
+    loadReservations();
+  }, [loadReservations]);
 
   const fetchUserData = async () => {
     try {
@@ -197,16 +227,24 @@ const ProfilePage = () => {
       // console.log("User data:", response.data.data);
 
       if (response.data.data) {
+        const profileData = response.data.data;
         const userData = {
-          fullname: response.data.data.fullName || "",
-          email: response.data.data.email || "",
-          phone: response.data.data.phone || "",
-          address: response.data.data.address.line1 || "",
-          dob: response.data.data.dob || "",
+          fullname: profileData.fullName || "",
+          email: profileData.email || "",
+          phone: profileData.phone || "",
+          address: profileData.address?.line1 || "",
+          dob: profileData.dob || "",
         };
 
         setUserInfo(userData);
         setOriginalUserInfo(userData);
+        const detectedRole =
+          profileData.role ||
+          profileData.roleName ||
+          profileData.userRole ||
+          profileData?.roleInfo ||
+          "";
+        setUserRole(detectedRole || "");
       }
     } catch (error) {
       // console.error("Error fetching user data:", error);
@@ -653,17 +691,7 @@ const ProfilePage = () => {
       try {
         // console.log('Cancelling reservation:', reservationId);
         await api.patch(`/reservations/${reservationId}/cancel`);
-
-        const res = await api.get(`/reservations`);
-        const reservationList = res.data?.data?.items || [];
-        const normalized = normalizeReservations(reservationList);
-
-        setReservations(normalized);
-        setTotalPages(Math.ceil(normalized.length / itemsPerPage));
-
-        if (currentPage > Math.ceil(normalized.length / itemsPerPage)) {
-          setCurrentPage(1);
-        }
+        await loadReservations();
 
         closeConfirmPopup();
         showPopup("Hủy đặt chỗ thành công!", "success");
@@ -735,6 +763,191 @@ const ProfilePage = () => {
     }
   };
 
+  const stopQrScanner = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    barcodeDetectorRef.current = null;
+    setIsProcessingQr(false);
+  }, []);
+
+  const submitQrPayload = useCallback(
+    async (payload) => {
+      try {
+        const res = await api.post("/reservations/qr-check", payload);
+        const message =
+          res.data?.message || "Check-in bằng QR thành công";
+        setPopup({
+          isOpen: true,
+          message,
+          type: "success",
+        });
+        setIsQrScannerOpen(false);
+        await loadReservations();
+        setIsProcessingQr(false);
+      } catch (error) {
+        const errMessage =
+          error.response?.data?.message ||
+          "Không thể xác thực mã QR. Vui lòng thử lại.";
+        setQrScanError(errMessage);
+        setIsProcessingQr(false);
+      }
+    },
+    [loadReservations]
+  );
+
+  const handleQrPayload = useCallback(
+    async (rawValue) => {
+      try {
+        const parsed =
+          typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
+        if (!parsed?.reservationId || !parsed?.hash) {
+          throw new Error("INVALID_QR_DATA");
+        }
+        await submitQrPayload(parsed);
+      } catch (error) {
+        const isInvalid = error.message === "INVALID_QR_DATA";
+        setQrScanError(
+          isInvalid
+            ? "Dữ liệu QR không hợp lệ. Vui lòng quét lại mã chính xác."
+            : "Không thể đọc mã QR. Hãy giữ chắc thiết bị và thử lại."
+        );
+        setIsProcessingQr(false);
+      }
+    },
+    [submitQrPayload]
+  );
+
+  const scanVideoFrame = useCallback(async () => {
+    if (
+      !barcodeDetectorRef.current ||
+      !videoRef.current ||
+      !isQrScannerOpen
+    ) {
+      return;
+    }
+
+    if (videoRef.current.readyState < 2) {
+      animationFrameRef.current = requestAnimationFrame(() => {
+        scanVideoFrame();
+      });
+      return;
+    }
+
+    try {
+      const bitmap = await createImageBitmap(videoRef.current);
+      const barcodes = await barcodeDetectorRef.current.detect(bitmap);
+      bitmap.close();
+
+      if (barcodes.length && !isProcessingQr) {
+        setIsProcessingQr(true);
+        await handleQrPayload(barcodes[0].rawValue);
+      }
+    } catch (error) {
+      console.error("QR detect error:", error);
+    } finally {
+      if (barcodeDetectorRef.current && isQrScannerOpen) {
+        animationFrameRef.current = requestAnimationFrame(() => {
+          scanVideoFrame();
+        });
+      }
+    }
+  }, [handleQrPayload, isProcessingQr, isQrScannerOpen]);
+
+  const startQrScanner = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setQrScanError("Thiết bị không hỗ trợ camera.");
+      return;
+    }
+
+    if (!isBarcodeSupported) {
+      setQrScanError(
+        "Trình duyệt không hỗ trợ quét QR tự động. Vui lòng nhập dữ liệu thủ công."
+      );
+      return;
+    }
+
+    try {
+      barcodeDetectorRef.current = new window.BarcodeDetector({
+        formats: ["qr_code"],
+      });
+    } catch (error) {
+      setQrScanError(
+        "Không thể khởi tạo trình quét. Vui lòng cập nhật trình duyệt."
+      );
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      animationFrameRef.current = requestAnimationFrame(() => {
+        scanVideoFrame();
+      });
+    } catch (error) {
+      setQrScanError(
+        "Không thể truy cập camera. Vui lòng cho phép quyền sử dụng camera."
+      );
+    }
+  }, [isBarcodeSupported, scanVideoFrame]);
+
+  const handleManualSubmit = async () => {
+    if (!manualQrValue.trim()) {
+      setQrScanError("Vui lòng nhập dữ liệu QR.");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(manualQrValue.trim());
+      setQrScanError("");
+      setIsProcessingQr(true);
+      await submitQrPayload(parsed);
+    } catch (error) {
+      setQrScanError("Dữ liệu JSON không hợp lệ. Vui lòng kiểm tra lại.");
+      setIsProcessingQr(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isQrScannerOpen && isBarcodeSupported) {
+      setQrScanError("");
+      setManualQrValue("");
+      setIsProcessingQr(false);
+      startQrScanner();
+    }
+
+    if (!isQrScannerOpen) {
+      stopQrScanner();
+      setManualQrValue("");
+      setQrScanError("");
+    }
+
+    return () => {
+      stopQrScanner();
+    };
+  }, [
+    isQrScannerOpen,
+    isBarcodeSupported,
+    startQrScanner,
+    stopQrScanner,
+  ]);
+
   useEffect(() => {
     // Kiểm tra flag scroll đến lịch sử
     const shouldScroll = sessionStorage.getItem("scrollToHistory");
@@ -779,6 +992,93 @@ const ProfilePage = () => {
         onClose={() => setIsChangePasswordOpen(false)}
         onSubmit={handleChangePassword}
       />
+
+      {canUseQrTools && isQrScannerOpen && (
+        <div className="qr-scanner-overlay">
+          <div className="qr-scanner-modal">
+            <div className="qr-scanner-header">
+              <div>
+                <h3>Quét mã QR đặt chỗ</h3>
+                <p>Hướng camera vào mã QR khách hàng cung cấp để check-in.</p>
+              </div>
+              <button
+                className="qr-modal-close"
+                onClick={() => setIsQrScannerOpen(false)}
+                aria-label="Đóng"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {isBarcodeSupported ? (
+              <div className="qr-video-wrapper">
+                <video ref={videoRef} playsInline muted autoPlay />
+                <div className="qr-scan-guide" />
+              </div>
+            ) : (
+              <div className="qr-unsupported">
+                <p>
+                  Thiết bị không hỗ trợ quét QR tự động. Vui lòng dùng ô bên
+                  dưới để nhập dữ liệu QR thủ công.
+                </p>
+              </div>
+            )}
+
+            <div className="qr-status">
+              <span>{qrStatusText}</span>
+              {qrScanError && <p className="qr-error">{qrScanError}</p>}
+            </div>
+
+            <div className="qr-manual-input">
+              <label>Nhập dữ liệu QR (JSON)</label>
+              <textarea
+                rows={3}
+                value={manualQrValue}
+                onChange={(e) => setManualQrValue(e.target.value)}
+                placeholder='{"reservationId":"","hash":""}'
+              />
+              <button
+                className="qr-submit-btn"
+                onClick={handleManualSubmit}
+                disabled={isProcessingQr || !manualQrValue.trim()}
+              >
+                {isProcessingQr ? "Đang gửi..." : "Gửi thủ công"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {canUseQrTools && (
+        <div className="profile-toolbar">
+          <div className="toolbar-info">
+            <span className="role-chip">
+              {(roleDisplayLabel || "STAFF").toUpperCase()}
+            </span>
+            <div>
+              <h3>QR Check-in</h3>
+              <p>Nhân viên có thể quét mã QR của khách hàng để check-in nhanh.</p>
+            </div>
+          </div>
+          <div className="toolbar-actions">
+            <button
+              className="qr-scan-btn"
+              onClick={() => setIsQrScannerOpen(true)}
+            >
+              <QrCode size={18} />
+              Quét QR check-in
+            </button>
+            <button
+              className="qr-refresh-btn"
+              onClick={loadReservations}
+              disabled={txLoading}
+            >
+              <RefreshCcw size={16} />
+              Làm mới dữ liệu
+            </button>
+          </div>
+        </div>
+      )}
 
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
       <section className="profile-section user-info">
@@ -965,19 +1265,46 @@ const ProfilePage = () => {
                 </h3>
                 <div className="vehicle-info">
                   <p>
-                    <b>Hãng:</b> {vehicle.make || "Chưa cập nhật"}
+                    <b>Hãng:</b>
+                    <span>{vehicle.make || "Chưa cập nhật"}</span>
                   </p>
                   <p>
-                    <b>Mẫu:</b> {vehicle.model || "Chưa cập nhật"}
+                    <b>Mẫu:</b>
+                    <span>{vehicle.model || "Chưa cập nhật"}</span>
                   </p>
                   <p>
-                    <b>Năm:</b> {vehicle.year || "Chưa cập nhật"}
+                    <b>Năm sản xuất:</b>
+                    <span>{vehicle.year || "Chưa cập nhật"}</span>
                   </p>
                   <p>
-                    <b>Loại sạc:</b>{" "}
-                    {vehicle.connectorType + "-" + vehicle.batteryCapacityKwh ||
-                      "Chưa cập nhật"}{" "}
-                    kWh
+                    <b>Màu xe:</b>
+                    <span>{vehicle.color || "Chưa cập nhật"}</span>
+                  </p>
+                  <p>
+                    <b>Số khung (VIN):</b>
+                    <span>{vehicle.vin || "Chưa cập nhật"}</span>
+                  </p>
+                  <p>
+                    <b>Loại xe:</b>
+                    <span>
+                      {vehicle.type === "car"
+                        ? "Ô tô"
+                        : vehicle.type === "motorbike"
+                        ? "Xe máy"
+                        : "Chưa cập nhật"}
+                    </span>
+                  </p>
+                  <p>
+                    <b>Dung lượng pin:</b>
+                    <span>
+                      {vehicle.batteryCapacityKwh
+                        ? `${vehicle.batteryCapacityKwh} kWh`
+                        : "Chưa cập nhật"}
+                    </span>
+                  </p>
+                  <p>
+                    <b>Loại cổng sạc:</b>
+                    <span>{vehicle.connectorType || "Chưa cập nhật"}</span>
                   </p>
                 </div>
                 <div className="vehicle-actions">
@@ -1196,7 +1523,12 @@ const ProfilePage = () => {
       </section>
 
       <section className="profile-section history-section">
-        <h2>Lịch sử đặt chỗ</h2>
+        <div className="section-header">
+          <h2>
+            <Calendar size={28} style={{ marginRight: '12px', verticalAlign: 'middle' }} />
+            Lịch sử đặt chỗ
+          </h2>
+        </div>
         <div className="history-table-wrapper">
           <table className="history-table">
             <thead>
@@ -1213,8 +1545,8 @@ const ProfilePage = () => {
             <tbody>
               {txLoading ? (
                 <tr>
-                  <td colSpan={5} style={{ color: "#666" }}>
-                    Đang tải...
+                  <td colSpan={5} style={{ color: "#666", textAlign: "center", padding: "40px" }}>
+                    <div className="loading-spinner">Đang tải...</div>
                   </td>
                 </tr>
               ) : getPaginatedReservations().length > 0 ? (
@@ -1231,65 +1563,73 @@ const ProfilePage = () => {
 
                   return (
                     <tr key={reservationId}>
-                      <td>{stationInfo.stationName}</td>
                       <td>
-                        {reservation.vehicle?.plateNumber || "N/A"}
-                        <br />
-                        <small style={{ color: "#666" }}>
-                          {reservation.vehicle?.make}{" "}
-                          {reservation.vehicle?.model}
-                        </small>
+                        <div className="station-name-cell">
+                          <MapPin size={16} color="#16a34a" />
+                          <span>{stationInfo.stationName}</span>
+                        </div>
                       </td>
                       <td>
-                        <div style={{ fontSize: "0.85rem" }}>
-                          <div>
-                            Bắt đầu: {formatDateTime(firstItem?.startAt)}
+                        <div className="vehicle-info-cell">
+                          <strong>{reservation.vehicle?.plateNumber || "N/A"}</strong>
+                          <small>
+                            {reservation.vehicle?.make}{" "}
+                            {reservation.vehicle?.model}
+                          </small>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="time-info-cell">
+                          <div className="time-row">
+                            <Clock size={14} />
+                            <span>Bắt đầu: {formatDateTime(firstItem?.startAt)}</span>
                           </div>
-                          <div>
-                            Kết thúc: {formatDateTime(firstItem?.endAt)}
+                          <div className="time-row">
+                            <Clock size={14} />
+                            <span>Kết thúc: {formatDateTime(firstItem?.endAt)}</span>
                           </div>
                         </div>
                       </td>
                       <td>
                         <span className={`status-badge ${reservation.status}`}>
+                          {reservation.status === "pending" && <AlertCircle size={14} />}
+                          {reservation.status === "confirmed" && <CheckCircle size={14} />}
+                          {reservation.status === "cancelled" && <XCircle size={14} />}
+                          {reservation.status === "payment-success" && <CheckCircle size={14} />}
                           {getStatusText(reservation.status)}
                         </span>
                       </td>
-                      <td
-                        style={{ textAlign: "center", verticalAlign: "middle" }}
-                      >
-                        <div
-                          className="action-buttons"
-                          style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                          }}
-                        >
+                      <td className="action-column">
+                        {(reservation.status === "pending" ||
+                          reservation.status === "confirmed") && (
+                          <button
+                            className="row-cancel-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelReservation(reservationId);
+                            }}
+                            title="Hủy đặt chỗ"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                        <div className="action-buttons">
                           {reservation.status === "pending" && (
                             <>
                               <button
-                                className="map-btn"
+                                className="action-btn map-btn"
                                 onClick={() => handleViewMap(stationInfo)}
                                 title="Xem đường đi trên bản đồ"
                               >
-                                🗺️
-                              </button>
-                              <button
-                                className="cancel-btn"
-                                onClick={() =>
-                                  handleCancelReservation(reservationId)
-                                }
-                              >
-                                Hủy
+                                <MapPin size={16} />
+                                Xem bản đồ
                               </button>
                             </>
                           )}
                           {reservation.status === "confirmed" && (
                             <>
                               <button
-                                className="start-charge-btn"
+                                className="action-btn start-btn"
                                 onClick={() => {
                                   if (reservationId && vehicleId) {
                                     const firstItem = reservation.items?.[0];
@@ -1345,26 +1685,30 @@ const ProfilePage = () => {
                                   }
                                 }}
                               >
+                                <Zap size={16} />
                                 Bắt đầu sạc
                               </button>
                               <button
-                                className="map-btn"
+                                className="action-btn map-btn"
                                 onClick={() => handleViewMap(stationInfo)}
                                 title="Xem đường đi trên bản đồ"
                               >
-                                🗺️
+                                <MapPin size={16} />
+                                Xem bản đồ
                               </button>
                             </>
                           )}
                           {reservation.status === "cancelled" && (
-                            <span style={{ color: "#666", fontSize: "0.9rem" }}>
-                              Đã hủy
-                            </span>
+                            <div className="status-info-cell cancelled">
+                              <XCircle size={16} />
+                              <span>Đã hủy</span>
+                            </div>
                           )}
                           {reservation.status === "payment-success" && (
-                            <span style={{ color: "#4caf50", fontSize: "0.9rem" }}>
-                              ✓ Đã thanh toán
-                            </span>
+                            <div className="status-info-cell success">
+                              <CheckCircle size={16} />
+                              <span>Đã thanh toán</span>
+                            </div>
                           )}
                         </div>
                       </td>
@@ -1425,7 +1769,12 @@ const ProfilePage = () => {
       </section>
 
       <section className="profile-section analysis-section">
-        <h2>Phân tích giao dịch</h2>
+        <div className="section-header">
+          <h2>
+            <span className="stats-icon">📊</span>
+            Thống kê giao dịch
+          </h2>
+        </div>
         <div className="analysis-cards">
           <div className="analysis-card">
             <div className="icon-box cost">
@@ -1467,3 +1816,8 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
+
+
+
+
+

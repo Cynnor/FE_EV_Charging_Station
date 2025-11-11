@@ -472,7 +472,7 @@ export default function PaymentSuccessPage() {
             {paymentInfo?.isSubscription
               ? "Gói đăng ký của bạn đã được kích hoạt tự động. Bạn có thể bắt đầu sử dụng ngay!"
               : paymentInfo?.isChargingSession
-              ? `Đã cập nhật trạng thái ${paymentInfo.updatedSessions} phiên sạc và giải phóng ${paymentInfo.updatedSlots} cổng sạc.`
+              ? "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."
               : "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."}
           </p>
 
@@ -578,49 +578,6 @@ export default function PaymentSuccessPage() {
                         </span>
                       </div>
                     )}
-                    <div className="detail-item">
-                      <span className="label">
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <rect
-                            x="2"
-                            y="3"
-                            width="20"
-                            height="14"
-                            rx="2"
-                            ry="2"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          />
-                        </svg>
-                        Phiên sạc đã cập nhật
-                      </span>
-                      <span className="value">{paymentInfo.updatedSessions || 0} phiên</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <path
-                            d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        Cổng sạc đã giải phóng
-                      </span>
-                      <span className="value">{paymentInfo.updatedSlots || 0} cổng</span>
-                    </div>
                     {paymentInfo.amount && (
                       <div className="detail-item highlight">
                         <span className="label">
