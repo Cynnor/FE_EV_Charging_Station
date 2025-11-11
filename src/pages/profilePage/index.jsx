@@ -528,6 +528,7 @@ const ProfilePage = () => {
       pending: "Chờ thanh toán",
       confirmed: "Đã check-in - Sẵn sàng sạc",
       cancelled: "Đã hủy",
+      "payment-success": "Thanh toán thành công",
     };
     return statusMap[status] || status;
   };
@@ -1358,6 +1359,11 @@ const ProfilePage = () => {
                           {reservation.status === "cancelled" && (
                             <span style={{ color: "#666", fontSize: "0.9rem" }}>
                               Đã hủy
+                            </span>
+                          )}
+                          {reservation.status === "payment-success" && (
+                            <span style={{ color: "#4caf50", fontSize: "0.9rem" }}>
+                              ✓ Đã thanh toán
                             </span>
                           )}
                         </div>

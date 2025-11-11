@@ -474,6 +474,11 @@
       background: rgba(220, 38, 38, 0.15);
       color: #dc2626;
     }
+
+    &.payment-success {
+      background: rgba(76, 175, 80, 0.15);
+      color: #4caf50;
+    }
   }
 
   .action-buttons {
