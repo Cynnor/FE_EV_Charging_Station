@@ -784,13 +784,15 @@ const ProfilePage = () => {
     }
     barcodeDetectorRef.current = null;
     if (zxingControlsRef.current) {
-      zxingControlsRef.current.stop();
+      try {
+        zxingControlsRef.current.stop();
+      } catch (error) {
+        console.log("Error stopping ZXing controls:", error);
+      }
       zxingControlsRef.current = null;
     }
-    if (zxingReaderRef.current) {
-      zxingReaderRef.current.reset();
-      zxingReaderRef.current = null;
-    }
+    // ZXing reader doesn't need reset, just set to null
+    zxingReaderRef.current = null;
     setIsProcessingQr(false);
   }, []);
 
@@ -800,13 +802,23 @@ const ProfilePage = () => {
         const res = await api.post("/reservations/qr-check", payload);
         const message =
           res.data?.message || "Check-in bằng QR thành công";
+        
+        // Stop scanner first to clean up resources
+        stopQrScanner();
+        
+        // Close the modal
+        setIsQrScannerOpen(false);
+        
+        // Show success message
         setPopup({
           isOpen: true,
           message,
           type: "success",
         });
-        setIsQrScannerOpen(false);
+        
+        // Reload reservations
         await loadReservations();
+        
         setIsProcessingQr(false);
       } catch (error) {
         const errMessage =
@@ -816,7 +828,7 @@ const ProfilePage = () => {
         setIsProcessingQr(false);
       }
     },
-    [loadReservations]
+    [loadReservations, stopQrScanner]
   );
 
   const handleQrPayload = useCallback(
