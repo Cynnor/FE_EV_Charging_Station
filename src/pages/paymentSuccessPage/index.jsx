@@ -129,43 +129,64 @@ export default function PaymentSuccessPage() {
             setPaymentStatus("error");
           }
         } else {
-          // Xử lý booking payment (reservation)
-          const reservationId =
-            vnpParams.vnp_TxnRef || localStorage.getItem("reservationId");
+          // Xử lý charging session payment với vehicleId
+          const vehicleId = localStorage.getItem('paymentVehicleId');
 
-          if (reservationId) {
-            // Gọi API để kiểm tra trạng thái thanh toán
+          if (vehicleId) {
+            console.log('💳 Checking payment status for vehicle:', vehicleId);
+            console.log('💳 VNPay Response Code:', vnpParams.vnp_ResponseCode);
+
+            // Gọi API mới để kiểm tra trạng thái thanh toán
             const response = await api.post("/vnpay/check-payment-status", {
-              reservationId: reservationId,
-              ...vnpParams,
+              vehicleId: vehicleId,
             });
+
+            console.log('💳 Check Payment Status Response:', response.data);
 
             if (response.data?.success) {
               const paymentData = response.data.data;
-              const status =
-                paymentData.paymentStatus || response.data.paymentStatus;
+              const status = paymentData.paymentStatus || response.data.paymentStatus;
+              
+              console.log('💳 Payment Status:', status);
+              console.log('💳 Updated Sessions:', paymentData.updatedSessions);
+              console.log('💳 Updated Slots:', paymentData.updatedSlots);
+
               setPaymentStatus(status);
 
               // Xử lý các trạng thái: success, failed, cancelled
               if (status === "success") {
+                // Xóa vehicleId sau khi xử lý thành công
+                localStorage.removeItem('paymentVehicleId');
+
                 setPaymentInfo({
-                  reservationId: reservationId,
-                  amount: parseInt(vnpParams.vnp_Amount) / 100, // VNPay trả về amount * 100
-                  orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || ""),
-                  transactionNo: vnpParams.vnp_TransactionNo,
+                  vehicleId: vehicleId,
+                  amount: paymentData.amount || parseInt(vnpParams.vnp_Amount) / 100,
+                  orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || "Thanh toán phiên sạc"),
+                  transactionNo: paymentData.transactionId || vnpParams.vnp_TransactionNo,
                   bankCode: vnpParams.vnp_BankCode,
                   cardType: vnpParams.vnp_CardType,
                   payDate: vnpParams.vnp_PayDate,
-                  vehicleInfo: state?.vehicleInfo,
-                  chargingInfo: state?.chargingInfo,
-                  paymentMethod: state?.paymentMethod || "vnpay",
+                  paymentMethod: "vnpay",
+                  isChargingSession: true,
+                  updatedSessions: paymentData.updatedSessions || 0,
+                  updatedSlots: paymentData.updatedSlots || 0,
+                  sessionIds: paymentData.sessionIds || [],
+                  slotIds: paymentData.slotIds || [],
                 });
               } else if (status === "failed") {
+                localStorage.removeItem('paymentVehicleId');
                 setPaymentStatus("error");
               } else if (status === "cancelled") {
+                localStorage.removeItem('paymentVehicleId');
                 setPaymentStatus("cancelled");
               }
+            } else {
+              localStorage.removeItem('paymentVehicleId');
+              setPaymentStatus("error");
             }
+          } else {
+            console.warn('⚠️ No vehicleId found in localStorage');
+            setPaymentStatus("error");
           }
         }
       } else if (state?.reservationId) {
@@ -416,11 +437,15 @@ export default function PaymentSuccessPage() {
           <h1 className="success-title">
             {paymentInfo?.isSubscription
               ? "Đăng ký gói thành công!"
+              : paymentInfo?.isChargingSession
+              ? "Thanh toán phiên sạc thành công!"
               : "Thanh toán thành công!"}
           </h1>
           <p className="success-message">
             {paymentInfo?.isSubscription
               ? "Gói đăng ký của bạn đã được kích hoạt tự động. Bạn có thể bắt đầu sử dụng ngay!"
+              : paymentInfo?.isChargingSession
+              ? `Đã cập nhật trạng thái ${paymentInfo.updatedSessions} phiên sạc và giải phóng ${paymentInfo.updatedSlots} cổng sạc.`
               : "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."}
           </p>
 
@@ -458,12 +483,114 @@ export default function PaymentSuccessPage() {
                   </svg>
                   {paymentInfo.isSubscription
                     ? "Chi tiết đăng ký gói"
+                    : paymentInfo.isChargingSession
+                    ? "Chi tiết thanh toán phiên sạc"
                     : "Chi tiết giao dịch"}
                 </h3>
               </div>
 
               <div className="details-grid">
-                {paymentInfo.isSubscription ? (
+                {paymentInfo.isChargingSession ? (
+                  <>
+                    <div className="detail-item">
+                      <span className="label">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Mã xe
+                      </span>
+                      <span className="value">
+                        #{paymentInfo.vehicleId?.slice(-8) || "N/A"}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <rect
+                            x="2"
+                            y="3"
+                            width="20"
+                            height="14"
+                            rx="2"
+                            ry="2"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          />
+                        </svg>
+                        Phiên sạc đã cập nhật
+                      </span>
+                      <span className="value">{paymentInfo.updatedSessions || 0} phiên</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Cổng sạc đã giải phóng
+                      </span>
+                      <span className="value">{paymentInfo.updatedSlots || 0} cổng</span>
+                    </div>
+                    {paymentInfo.amount && (
+                      <div className="detail-item highlight">
+                        <span className="label">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <line
+                              x1="12"
+                              y1="1"
+                              x2="12"
+                              y2="23"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            />
+                            <path
+                              d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          Số tiền
+                        </span>
+                        <span className="value amount">
+                          {paymentInfo.amount.toLocaleString("vi-VN")} VNĐ
+                        </span>
+                      </div>
+                    )}
+                  </>
+                ) : paymentInfo.isSubscription ? (
                   <>
                     <div className="detail-item">
                       <span className="label">

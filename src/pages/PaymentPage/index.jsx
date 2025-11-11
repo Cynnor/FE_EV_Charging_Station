@@ -42,41 +42,49 @@ export default function PaymentPage() {
     setIsPaying(true);
 
     try {
-      if (reservationId) {
-        // Thanh toán cho chargingSession với reservationId
-        const response = await api.post("/vnpay/checkout-url", {
-          amount: Math.round(totalAmount),
-          orderInfo: `Thanh toán phiên sạc - ${chargingData.vehicleInfo?.plateNumber || "N/A"
-            }`,
-          reservationId: reservationId,
-          locale: "vn",
-        });
-
-        if (response.data?.success && response.data?.data?.paymentUrl) {
-          // Redirect đến VNPay
-          window.location.href = response.data.data.paymentUrl;
-          return;
-        }
+      // Lấy vehicleId từ chargingData
+      const vehicleId = chargingData.vehicleInfo?.id || chargingData.vehicleInfo?.vehicleId;
+      
+      if (!vehicleId) {
+        throw new Error("Không tìm thấy thông tin xe");
       }
 
-      // Fallback: giả lập thanh toán thành công và chuyển đến success page
-      setTimeout(() => {
-        setIsPaying(false);
-        navigate("/payment-success", {
-          state: {
-            reservationId,
-            amount: totalAmount,
-            orderInfo: `Thanh toán phiên sạc - ${chargingData.vehicleInfo?.plateNumber || "N/A"
-              }`,
-            vehicleInfo: chargingData.vehicleInfo,
-            chargingInfo: chargingData.chargingInfo,
-          },
-        });
-      }, 1200);
+      console.log('💳 Creating VNPay payment URL for vehicle:', vehicleId);
+      console.log('💳 Total Amount:', totalAmount);
+
+      // Gọi API mới: POST /vnpay/checkout-url với vehicleId
+      const response = await api.post("/vnpay/checkout-url", {
+        vehicleId: vehicleId,
+        locale: "vn",
+        orderType: "other"
+      });
+
+      console.log('💳 VNPay Response:', response.data);
+
+      if (response.data?.success && response.data?.data?.paymentUrl) {
+        const pricingDetails = response.data.data.pricingDetails;
+        
+        console.log('💳 Pricing Details:', pricingDetails);
+        console.log('  - Total Sessions:', pricingDetails?.totalSessions);
+        console.log('  - Total Minutes:', pricingDetails?.totalMinutes);
+        console.log('  - Total Cost:', pricingDetails?.total);
+        
+        // Lưu vehicleId vào localStorage để sử dụng ở payment success page
+        localStorage.setItem('paymentVehicleId', vehicleId);
+        
+        // Redirect đến VNPay
+        window.location.href = response.data.data.paymentUrl;
+        return;
+      } else {
+        throw new Error("Không thể tạo URL thanh toán");
+      }
     } catch (error) {
       console.error("Payment error:", error);
+      console.error("Error details:", error.response?.data);
       setIsPaying(false);
-      alert("Có lỗi xảy ra khi xử lý thanh toán. Vui lòng thử lại!");
+      
+      const errorMessage = error.response?.data?.message || error.message || "Có lỗi xảy ra khi xử lý thanh toán";
+      alert(errorMessage + "\n\nVui lòng thử lại!");
     }
   };
 

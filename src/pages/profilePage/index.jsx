@@ -338,38 +338,6 @@ const ProfilePage = () => {
     });
   };
 
-  const handleViewMap = (stationInfo) => {
-    if (!stationInfo?.latitude || !stationInfo?.longitude) {
-      showPopup("Không có thông tin tọa độ trạm sạc", "error");
-      return;
-    }
-
-    // Lấy vị trí hiện tại
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const currentLat = position.coords.latitude;
-          const currentLng = position.coords.longitude;
-          
-          // Mở Google Maps với route từ vị trí hiện tại đến trạm
-          const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLat}…Info.latitude},${stationInfo.longitude}&travelmode=driving`;
-          
-          window.open(googleMapsUrl, '_blank');
-        },
-        (error) => {
-          // Nếu không lấy được vị trí hiện tại, chỉ hiển thị trạm
-          console.error("Error getting location:", error);
-          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
-          window.open(googleMapsUrl, '_blank');
-        }
-      );
-    } else {
-      // Browser không hỗ trợ geolocation
-      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
-      window.open(googleMapsUrl, '_blank');
-    }
-  };
-
 
   const handleChangePassword = async (oldPassword, newPassword) => {
     try {
@@ -557,8 +525,8 @@ const ProfilePage = () => {
   // Helper function to get status text
   const getStatusText = (status) => {
     const statusMap = {
-      pending: "Chờ xử lý",
-      confirmed: "Thanh toán thành công",
+      pending: "Chờ thanh toán",
+      confirmed: "Đã check-in - Sẵn sàng sạc",
       cancelled: "Đã hủy",
     };
     return statusMap[status] || status;
@@ -1301,11 +1269,45 @@ const ProfilePage = () => {
                           {reservation.status === "pending" && (
                             <>
                               <button
+                                className="map-btn"
+                                onClick={() => handleViewMap(stationInfo)}
+                                title="Xem đường đi trên bản đồ"
+                              >
+                                🗺️
+                              </button>
+                              <button
+                                className="cancel-btn"
+                                onClick={() =>
+                                  handleCancelReservation(reservationId)
+                                }
+                              >
+                                Hủy
+                              </button>
+                            </>
+                          )}
+                          {reservation.status === "confirmed" && (
+                            <>
+                              <button
                                 className="start-charge-btn"
                                 onClick={() => {
                                   if (reservationId && vehicleId) {
                                     const firstItem = reservation.items?.[0];
                                     const portInfo = firstItem?.slot?.port;
+
+                                    console.log('📍 ===== NAVIGATE TO CHARGING SESSION PAGE (from Profile) =====');
+                                    console.log('This is ONLY navigation, NOT starting the charging yet!');
+                                    console.log('User needs to click "Bắt đầu sạc" button on charging session page to actually start.');
+                                    console.log('Reservation:', reservation);
+                                    console.log('First Item:', firstItem);
+                                    console.log('Slot:', firstItem?.slot);
+                                    console.log('Charger:', portInfo);
+                                    
+                                    // Extract port ID
+                                    let extractedPortId = null;
+                                    if (portInfo) {
+                                      extractedPortId = typeof portInfo === 'object' ? (portInfo._id || portInfo.id) : portInfo;
+                                    }
+                                    console.log('Extracted Port ID:', extractedPortId);
 
                                     localStorage.setItem(
                                       "reservationId",
@@ -1316,29 +1318,23 @@ const ProfilePage = () => {
                                       vehicleId
                                     );
 
-                                    navigate("/chargingSession", {
-                                      state: {
-                                        reservation: {
-                                          id: reservationId,
-                                          portId: portInfo?._id || portInfo,
-                                          powerKw: portInfo?.powerKw || 150,
-                                          status: reservation.status,
-                                          startAt: firstItem?.startAt,
-                                          endAt: firstItem?.endAt,
-                                        },
-                                        vehicle: {
-                                          id: vehicleId,
-                                          plateNumber:
-                                            reservation.vehicle?.plateNumber,
-                                          make: reservation.vehicle?.make,
-                                          model: reservation.vehicle?.model,
-                                          batteryCapacityKwh:
-                                            reservation.vehicle
-                                              ?.batteryCapacityKwh,
-                                          connectorType:
-                                            reservation.vehicle?.connectorType,
-                                        },
+                                    // Pass complete reservation object
+                                    const navState = {
+                                      reservation: reservation, // Pass entire reservation object with qrCheck, status, items
+                                      vehicle: {
+                                        id: vehicleId,
+                                        plateNumber: reservation.vehicle?.plateNumber,
+                                        make: reservation.vehicle?.make,
+                                        model: reservation.vehicle?.model,
+                                        batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
+                                        connectorType: reservation.vehicle?.connectorType,
                                       },
+                                    };
+                                    
+                                    console.log('Navigation State:', navState);
+
+                                    navigate("/chargingSession", {
+                                      state: navState,
                                     });
                                   } else {
                                     showPopup(
@@ -1356,14 +1352,6 @@ const ProfilePage = () => {
                                 title="Xem đường đi trên bản đồ"
                               >
                                 🗺️
-                              </button>
-                              <button
-                                className="cancel-btn"
-                                onClick={() =>
-                                  handleCancelReservation(reservationId)
-                                }
-                              >
-                                Hủy
                               </button>
                             </>
                           )}

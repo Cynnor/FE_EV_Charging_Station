@@ -79,7 +79,9 @@ const BookingSuccessPage = () => {
     const portId = portFromSlot || charger?.id || charger?._id;
     
     // Debug: Log the data we're working with
-    console.log("=== BOOKING SUCCESS -> CHARGING SESSION ===");
+    console.log("📍 ===== NAVIGATE TO CHARGING SESSION PAGE =====");
+    console.log("This is ONLY navigation, NOT starting the charging yet!");
+    console.log("User needs to click 'Bắt đầu sạc' button on charging session page to actually start.");
     console.log("Reservation:", reservation);
     console.log("First Item:", firstItem);
     console.log("Slot:", firstItem?.slot);
@@ -160,9 +162,16 @@ const BookingSuccessPage = () => {
               <CheckCircle size={48} strokeWidth={2.5} />
             </div>
             <h1 className="success-title">Đặt chỗ thành công!</h1>
-            <p className="success-subtitle">
-              Slot sạc của bạn sẽ được giữ chỗ trong vòng 15 phút
-            </p>
+            {reservation?.status !== 'confirmed' && (
+              <p className="success-subtitle">
+                Slot sạc của bạn sẽ được giữ chỗ trong vòng 15 phút
+              </p>
+            )}
+            {reservation?.status === 'confirmed' && (
+              <p className="success-subtitle" style={{ color: '#28a745' }}>
+                ✅ Đã thanh toán - Sẵn sàng để sạc
+              </p>
+            )}
           </div>
 
           <div className="booking-details-content">
