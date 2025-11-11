@@ -1,6 +1,6 @@
 import "./index.scss";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "../../config/api";
 import CustomPopup from "../../components/customPopup";
 import PaymentConfirmPopup from "../../components/paymentConfirmPopup";
@@ -39,6 +39,9 @@ const ChargingSession = () => {
   const [reservationStream, setReservationStream] = useState(null);
   const [pricingStream, setPricingStream] = useState(null);
   const [reservationData, setReservationData] = useState(null);
+  
+  // Track if check-in notification has been shown
+  const hasShownCheckInNotification = useRef(false);
 
   // Add popup state
   const [popup, setPopup] = useState({
@@ -94,7 +97,8 @@ const ChargingSession = () => {
 
   // Kiểm tra readiness của reservation
   const getReservationReadiness = () => {
-    const reservation = location.state?.reservation;
+    // Use reservationData from stream if available, otherwise fallback to location.state
+    const reservation = reservationData || location.state?.reservation;
     if (!reservation) return { ready: false, reasons: [] };
     
     const reasons = [];
@@ -488,6 +492,32 @@ const ChargingSession = () => {
       console.log('🧹 =================================');
     };
   }, [location.state]);
+
+  // Watch for reservation data changes from stream
+  useEffect(() => {
+    if (reservationData) {
+      console.log('📡 ===== RESERVATION DATA UPDATED =====');
+      console.log('📡 Status:', reservationData.status);
+      console.log('📡 QR Check:', reservationData.qrCheck);
+      console.log('📡 Updated At:', reservationData.updatedAt);
+      
+      // Check if reservation is now ready for charging
+      const isReady = reservationData.status === 'confirmed' && reservationData.qrCheck === true;
+      if (isReady) {
+        console.log('✅ Reservation is now READY for charging!');
+        
+        // Only show notification once
+        if (!hasShownCheckInNotification.current && !isCharging && !isPaused) {
+          hasShownCheckInNotification.current = true;
+          showPopup('✅ Check-in thành công! Bạn có thể bắt đầu sạc ngay.', 'success');
+          console.log('✅ Notification shown (will not show again)');
+        } else {
+          console.log('ℹ️ Notification already shown or charging in progress, skipping');
+        }
+      }
+      console.log('📡 ======================================');
+    }
+  }, [reservationData, isCharging, isPaused]);
 
   // Debug: Log pricingEstimate changes
   useEffect(() => {
@@ -1193,14 +1223,17 @@ const ChargingSession = () => {
     }
 
     try {
-      // Lấy thông tin từ location.state
-      const reservation = location.state?.reservation;
+      // Lấy thông tin từ location.state, nhưng merge với reservationData từ stream
+      const baseReservation = location.state?.reservation;
       const vehicle = location.state?.vehicle;
 
-      if (!reservation || !vehicle) {
+      if (!baseReservation || !vehicle) {
         showPopup("Không tìm thấy thông tin đặt chỗ hoặc xe", "error");
         return;
       }
+
+      // Use reservation data from stream if available, otherwise use base reservation
+      const reservation = reservationData ? { ...baseReservation, ...reservationData } : baseReservation;
 
       // Lấy slotId từ reservation
       let slotId = null;
@@ -1232,9 +1265,10 @@ const ChargingSession = () => {
 
       console.log('=== STARTING CHARGING SESSION ===');
       console.log('Request Body:', requestBody);
-      console.log('Reservation:', reservation);
+      console.log('Reservation (merged with stream):', reservation);
       console.log('Reservation Status:', reservation.status);
       console.log('Reservation qrCheck:', reservation.qrCheck);
+      console.log('Stream Data:', reservationData);
       console.log('Vehicle:', vehicle);
       console.log('Slot ID:', slotId);
       console.log('Reservation ID:', reservationId);
@@ -1840,22 +1874,22 @@ const ChargingSession = () => {
                               <div style={{
                                 marginTop: '12px',
                                 padding: '8px 12px',
-                                backgroundColor: location.state?.reservation?.qrCheck ? '#d4edda' : '#fff3cd',
-                                border: `1px solid ${location.state?.reservation?.qrCheck ? '#c3e6cb' : '#ffc107'}`,
+                                backgroundColor: (reservationData?.qrCheck ?? location.state?.reservation?.qrCheck) ? '#d4edda' : '#fff3cd',
+                                border: `1px solid ${(reservationData?.qrCheck ?? location.state?.reservation?.qrCheck) ? '#c3e6cb' : '#ffc107'}`,
                                 borderRadius: '6px',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '8px'
                               }}>
                                 <span style={{ fontSize: '16px' }}>
-                                  {location.state?.reservation?.qrCheck ? '✅' : '⏳'}
+                                  {(reservationData?.qrCheck ?? location.state?.reservation?.qrCheck) ? '✅' : '⏳'}
                                 </span>
                                 <span style={{ 
                                   fontSize: '13px',
                                   fontWeight: '600',
-                                  color: location.state?.reservation?.qrCheck ? '#155724' : '#856404'
+                                  color: (reservationData?.qrCheck ?? location.state?.reservation?.qrCheck) ? '#155724' : '#856404'
                                 }}>
-                                  {location.state?.reservation?.qrCheck ? 'Đã check-in' : 'Chờ check-in'}
+                                  {(reservationData?.qrCheck ?? location.state?.reservation?.qrCheck) ? 'Đã check-in' : 'Chờ check-in'}
                                 </span>
                               </div>
                             </div>
