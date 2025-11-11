@@ -51,6 +51,7 @@ export default function PaymentPage() {
 
       console.log('💳 Creating VNPay payment URL for vehicle:', vehicleId);
       console.log('💳 Total Amount:', totalAmount);
+      console.log('💳 Reservation ID:', reservationId);
 
       // Gọi API mới: POST /vnpay/checkout-url với vehicleId
       const response = await api.post("/vnpay/checkout-url", {
@@ -69,8 +70,11 @@ export default function PaymentPage() {
         console.log('  - Total Minutes:', pricingDetails?.totalMinutes);
         console.log('  - Total Cost:', pricingDetails?.total);
         
-        // Lưu vehicleId vào localStorage để sử dụng ở payment success page
+        // Lưu vehicleId và reservationId vào localStorage để sử dụng ở payment success page
         localStorage.setItem('paymentVehicleId', vehicleId);
+        if (reservationId) {
+          localStorage.setItem('paymentReservationId', reservationId);
+        }
         
         // Redirect đến VNPay
         window.location.href = response.data.data.paymentUrl;

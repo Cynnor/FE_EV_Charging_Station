@@ -131,16 +131,18 @@ export default function PaymentSuccessPage() {
         } else {
           // Xử lý charging session payment với vehicleId
           const vehicleId = localStorage.getItem('paymentVehicleId');
+          const reservationId = localStorage.getItem('paymentReservationId');
 
           if (vehicleId) {
             console.log('💳 Checking payment status for vehicle:', vehicleId);
+            console.log('💳 Reservation ID:', reservationId);
             console.log('💳 VNPay Response Code:', vnpParams.vnp_ResponseCode);
             console.log('💳 VNPay Transaction Status:', vnpParams.vnp_TransactionStatus);
             console.log('💳 VNPay All Params:', vnpParams);
 
             // Gọi API mới để kiểm tra trạng thái thanh toán
-            // GỬI TẤT CẢ VNPay params để backend verify signature
-            const response = await api.post("/vnpay/check-payment-status", {
+            // GỬI TẤT CẢ VNPay params + reservationId để backend verify signature
+            const requestBody = {
               vehicleId: vehicleId,
               vnp_Amount: vnpParams.vnp_Amount,
               vnp_BankCode: vnpParams.vnp_BankCode,
@@ -154,7 +156,15 @@ export default function PaymentSuccessPage() {
               vnp_TransactionStatus: vnpParams.vnp_TransactionStatus,
               vnp_TxnRef: vnpParams.vnp_TxnRef,
               vnp_SecureHash: vnpParams.vnp_SecureHash,
-            });
+            };
+
+            // Thêm reservationId nếu có
+            if (reservationId) {
+              requestBody.reservationId = reservationId;
+            }
+
+            console.log('💳 Request Body:', requestBody);
+            const response = await api.post("/vnpay/check-payment-status", requestBody);
 
             console.log('💳 Check Payment Status Response:', response.data);
 
@@ -170,11 +180,14 @@ export default function PaymentSuccessPage() {
 
               // Xử lý các trạng thái: success, failed, cancelled
               if (status === "success") {
-                // Xóa vehicleId sau khi xử lý thành công
+                // Xóa vehicleId và reservationId sau khi xử lý thành công
                 localStorage.removeItem('paymentVehicleId');
+                localStorage.removeItem('paymentReservationId');
 
                 setPaymentInfo({
                   vehicleId: vehicleId,
+                  reservationId: paymentData.reservationId || reservationId,
+                  reservationUpdated: paymentData.reservationUpdated || false,
                   amount: paymentData.amount || parseInt(vnpParams.vnp_Amount) / 100,
                   orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || "Thanh toán phiên sạc"),
                   transactionNo: paymentData.transactionId || vnpParams.vnp_TransactionNo,
@@ -190,13 +203,16 @@ export default function PaymentSuccessPage() {
                 });
               } else if (status === "failed") {
                 localStorage.removeItem('paymentVehicleId');
+                localStorage.removeItem('paymentReservationId');
                 setPaymentStatus("error");
               } else if (status === "cancelled") {
                 localStorage.removeItem('paymentVehicleId');
+                localStorage.removeItem('paymentReservationId');
                 setPaymentStatus("cancelled");
               }
             } else {
               localStorage.removeItem('paymentVehicleId');
+              localStorage.removeItem('paymentReservationId');
               setPaymentStatus("error");
             }
           } else {
@@ -529,6 +545,43 @@ export default function PaymentSuccessPage() {
                         #{paymentInfo.vehicleId?.slice(-8) || "N/A"}
                       </span>
                     </div>
+                    {paymentInfo.reservationId && (
+                      <div className="detail-item">
+                        <span className="label">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <rect
+                              x="2"
+                              y="3"
+                              width="20"
+                              height="14"
+                              rx="2"
+                              ry="2"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            />
+                          </svg>
+                          Mã đặt chỗ
+                        </span>
+                        <span className="value">
+                          #{paymentInfo.reservationId?.slice(-8) || "N/A"}
+                          {paymentInfo.reservationUpdated && (
+                            <span style={{ 
+                              marginLeft: '8px', 
+                              color: '#16a34a',
+                              fontSize: '12px',
+                              fontWeight: '600'
+                            }}>
+                              ✓ Đã cập nhật
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                     <div className="detail-item">
                       <span className="label">
                         <svg
