@@ -36,6 +36,9 @@ const ChargingSession = () => {
   const [pricingEstimate, setPricingEstimate] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [eventSource, setEventSource] = useState(null);
+  const [reservationStream, setReservationStream] = useState(null);
+  const [pricingStream, setPricingStream] = useState(null);
+  const [reservationData, setReservationData] = useState(null);
 
   // Add popup state
   const [popup, setPopup] = useState({
@@ -361,6 +364,7 @@ const ChargingSession = () => {
         let initialPinFromSession = null;
         let totalDurationMinutes = null;
         let totalSessionsCount = 0;
+        let pinGainPercent = null;
         
         if (sessionsData) {
           initialPinFromSession = sessionsData.earliestSession.initialPercent;
@@ -373,6 +377,11 @@ const ChargingSession = () => {
           console.log('  - Initial Pin (from earliest):', initialPinFromSession + '%');
           console.log('  - Current Pin:', vehicleData.pin + '%');
           console.log('  - Pin Gain:', (vehicleData.pin - initialPinFromSession) + '%');
+
+          if (initialPinFromSession !== null && initialPinFromSession !== undefined && 
+              vehicleData.pin !== null && vehicleData.pin !== undefined) {
+            pinGainPercent = vehicleData.pin - initialPinFromSession;
+          }
         }
 
         // Set vehicle data with current pin and session info
@@ -388,6 +397,7 @@ const ChargingSession = () => {
           sessionDurationMinutes: totalDurationMinutes, // TOTAL duration from ALL sessions
           totalSessionsCount: totalSessionsCount, // Number of completed sessions
           hasCompletedSession: sessionsData !== null,
+          pinGainPercent: pinGainPercent,
         });
       } catch (error) {
         console.error('Error fetching vehicle data:', error);
@@ -404,6 +414,7 @@ const ChargingSession = () => {
           sessionDurationMinutes: null,
           totalSessionsCount: 0,
           hasCompletedSession: false,
+          pinGainPercent: null,
         });
       }
     };
@@ -418,6 +429,92 @@ const ChargingSession = () => {
       initializeChargingSession();
     }
   }, [vehicleData, portInfo]);
+
+  // Start reservation and pricing streams when component mounts
+  useEffect(() => {
+    console.log('🔄 ========== STREAMS useEffect TRIGGERED ==========');
+    const reservation = location.state?.reservation;
+    const vehicle = location.state?.vehicle;
+    
+    console.log('🔄 Reservation:', reservation);
+    console.log('🔄 Vehicle:', vehicle);
+
+    if (reservation && vehicle) {
+      // Get reservationId
+      const reservationId = reservation._id || reservation.id;
+      const vehicleId = vehicle.id || vehicle._id;
+
+      console.log('🔄 ===== STARTING REAL-TIME STREAMS =====');
+      console.log('🔄 Reservation ID:', reservationId);
+      console.log('🔄 Vehicle ID:', vehicleId);
+      console.log('🔄 =======================================');
+
+      // Start reservation stream to track QR check, status, etc.
+      if (reservationId) {
+        console.log('🔄 📡 Calling startReservationStream...');
+        startReservationStream(reservationId);
+      } else {
+        console.warn('🔄 ⚠️ No reservationId found, skipping reservation stream');
+      }
+
+      // Start pricing stream to track pricing from completed sessions
+      if (vehicleId) {
+        console.log('🔄 💰 Calling startPricingStream...');
+        startPricingStream(vehicleId);
+      } else {
+        console.warn('🔄 ⚠️ No vehicleId found, skipping pricing stream');
+      }
+    } else {
+      console.warn('🔄 ⚠️ No reservation or vehicle data, streams not started');
+      console.log('🔄 Reservation exists:', !!reservation);
+      console.log('🔄 Vehicle exists:', !!vehicle);
+    }
+
+    // Cleanup function
+    return () => {
+      console.log('🧹 ===== CLEANING UP STREAMS =====');
+      if (reservationStream) {
+        console.log('🧹 Closing reservation stream...');
+        reservationStream.close();
+      } else {
+        console.log('🧹 No reservation stream to close');
+      }
+      if (pricingStream) {
+        console.log('🧹 Closing pricing stream...');
+        pricingStream.close();
+      } else {
+        console.log('🧹 No pricing stream to close');
+      }
+      console.log('🧹 =================================');
+    };
+  }, [location.state]);
+
+  // Debug: Log pricingEstimate changes
+  useEffect(() => {
+    console.log('💰 📊 ===== PRICING ESTIMATE STATE CHANGED =====');
+    console.log('💰 📊 pricingEstimate:', pricingEstimate);
+    console.log('💰 📊 pricingEstimate exists:', !!pricingEstimate);
+    if (pricingEstimate) {
+      console.log('💰 📊 totalSessions:', pricingEstimate.totalSessions);
+      console.log('💰 📊 totalMinutes:', pricingEstimate.totalMinutes);
+      console.log('💰 📊 portType:', pricingEstimate.portType);
+      console.log('💰 📊 total:', pricingEstimate.total);
+    }
+    console.log('💰 📊 ===============================================');
+  }, [pricingEstimate]);
+
+  // Debug: Log chargingData changes
+  useEffect(() => {
+    if (chargingData) {
+      console.log('⚡ 📊 ===== CHARGING DATA STATE CHANGED =====');
+      console.log('⚡ 📊 totalSessionsCount:', chargingData.totalSessionsCount);
+      console.log('⚡ 📊 sessionDurationMinutes:', chargingData.sessionDurationMinutes);
+      console.log('⚡ 📊 hasCompletedSession:', chargingData.hasCompletedSession);
+      console.log('⚡ 📊 timeElapsed:', chargingData.timeElapsed);
+      console.log('⚡ 📊 chargingCost:', chargingData.chargingCost);
+      console.log('⚡ 📊 ===========================================');
+    }
+  }, [chargingData]);
 
   // Cleanup SSE khi component unmount
   useEffect(() => {
@@ -505,6 +602,12 @@ const ChargingSession = () => {
       portType: portInfo.portType,
       // Store previous sessions duration to add to current session
       previousSessionsDuration: initialTimeElapsed,
+      pinGainPercent: vehicleData.pinGainPercent ?? (
+        vehicleData.currentPin !== null && vehicleData.currentPin !== undefined &&
+        vehicleData.sessionInitialPin !== null && vehicleData.sessionInitialPin !== undefined
+          ? vehicleData.currentPin - vehicleData.sessionInitialPin
+          : null
+      ),
     });
   };
 
@@ -588,6 +691,13 @@ const ChargingSession = () => {
                       // CỘNG THÊM thời gian từ các sessions trước (nếu có)
                       const previousDuration = prev.previousSessionsDuration || 0;
                       const totalTimeElapsed = previousDuration + currentSessionMinutes;
+                      const sessionInitialPercent = prev.sessionInitialPin ?? prev.initialCharge ?? null;
+                      const resolvedCurrentPin = currentPercent ?? prev.currentPin ?? null;
+                      let updatedPinGainPercent = prev.pinGainPercent ?? null;
+                      if (sessionInitialPercent !== null && sessionInitialPercent !== undefined &&
+                          resolvedCurrentPin !== null && resolvedCurrentPin !== undefined) {
+                        updatedPinGainPercent = resolvedCurrentPin - sessionInitialPercent;
+                      }
 
                       // Tính chi phí dựa trên TỔNG THỜI GIAN (sessions cũ + session hiện tại)
                       const durationHours = totalTimeElapsed / 60;
@@ -611,6 +721,8 @@ const ChargingSession = () => {
                         energyCost: Math.round(energyCost),
                         energyKwh: energyKwh,
                         remainingTime: Math.ceil(remainingTime),
+                        currentPin: resolvedCurrentPin ?? prev.currentPin,
+                        pinGainPercent: updatedPinGainPercent,
                       };
                     });
 
@@ -666,6 +778,344 @@ const ChargingSession = () => {
 
     // Hiển thị modal thanh toán thay vì auto redirect
     showPaymentPopup();
+  };
+
+  // Start Reservation Stream - Track reservation status in real-time (QR check, etc.)
+  const startReservationStream = async (reservationId) => {
+    if (!reservationId) {
+      console.warn('⚠️ No reservationId provided for reservation stream');
+      return;
+    }
+
+    console.log('🔄 Starting reservation stream for:', reservationId);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${api.defaults.baseURL}/reservations/${reservationId}/stream`,
+        {
+          method: 'GET',
+          headers: {
+            'Accept': 'text/event-stream',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const mockReservationStream = {
+        close: () => {
+          console.log('🔴 Closing reservation stream');
+          reader.cancel();
+        }
+      };
+      setReservationStream(mockReservationStream);
+
+      const readStream = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              console.log('✅ Reservation stream ended');
+              break;
+            }
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.startsWith('event: ')) {
+                const eventType = line.substring(7).trim();
+                console.log('📡 Reservation event:', eventType);
+              }
+
+              if (line.startsWith('data: ')) {
+                const dataStr = line.substring(6);
+                try {
+                  const data = JSON.parse(dataStr);
+                  console.log('📦 Reservation data:', data);
+                  
+                  // Update reservation data state
+                  setReservationData(data);
+                  
+                  // Update specific fields if needed
+                  if (data.qrCheck !== undefined) {
+                    console.log('✅ QR Check status updated:', data.qrCheck);
+                  }
+                  if (data.status) {
+                    console.log('📊 Reservation status:', data.status);
+                  }
+                } catch (parseError) {
+                  console.error('Error parsing reservation stream data:', parseError);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error reading reservation stream:', error);
+        }
+      };
+
+      readStream();
+    } catch (error) {
+      console.error('Error starting reservation stream:', error);
+    }
+  };
+
+  // Start Pricing Stream - Track pricing in real-time for all completed sessions
+  const startPricingStream = async (vehicleId) => {
+    if (!vehicleId) {
+      console.warn('⚠️ No vehicleId provided for pricing stream');
+      return;
+    }
+
+    console.log('💰 ========== STARTING PRICING STREAM ==========');
+    console.log('💰 Vehicle ID:', vehicleId);
+    console.log('💰 API Base URL:', api.defaults.baseURL);
+    console.log('💰 Full URL:', `${api.defaults.baseURL}/pricing/estimate-vehicle-stream`);
+
+    try {
+      const token = localStorage.getItem('token');
+      console.log('💰 Token exists:', !!token);
+      
+      const requestBody = { vehicleId };
+      console.log('💰 Request body:', JSON.stringify(requestBody));
+      
+      console.log('💰 Initiating fetch...');
+      const response = await fetch(
+        `${api.defaults.baseURL}/pricing/estimate-vehicle-stream`,
+        {
+          method: 'POST',
+          headers: {
+            'Accept': 'text/event-stream',
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      console.log('💰 Response received!');
+      console.log('💰 Response status:', response.status);
+      console.log('💰 Response ok:', response.ok);
+      console.log('💰 Response headers:', response.headers);
+
+      if (!response.ok) {
+        console.error('❌ Response not OK!');
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      console.log('💰 Starting to read stream...');
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const mockPricingStream = {
+        close: () => {
+          console.log('🔴 Closing pricing stream');
+          reader.cancel();
+        }
+      };
+      setPricingStream(mockPricingStream);
+      console.log('💰 Pricing stream object set!');
+
+      const readStream = async () => {
+        console.log('💰 Starting readStream loop...');
+        try {
+          let chunkCount = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              console.log('✅ Pricing stream ended (done=true)');
+              break;
+            }
+
+            chunkCount++;
+            console.log(`💰 Received chunk #${chunkCount}, size:`, value?.length);
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            console.log(`💰 Processing ${lines.length} lines from chunk #${chunkCount}`);
+
+            for (const line of lines) {
+              if (!line.trim()) continue; // Skip empty lines
+              
+              console.log('💰 Processing line:', line);
+              
+              if (line.startsWith('event: ')) {
+                const eventType = line.substring(7).trim();
+                console.log('💰 ===== EVENT RECEIVED =====');
+                console.log('💰 Event type:', eventType);
+                
+                if (eventType === 'session_count_changed') {
+                  console.log('🔔 🔔 🔔 New completed session detected!');
+                } else if (eventType === 'pricing_data') {
+                  console.log('💰 💰 💰 Pricing data event!');
+                } else if (eventType === 'stream_end') {
+                  console.log('🏁 Stream end event received');
+                }
+              }
+
+              if (line.startsWith('data: ')) {
+                const dataStr = line.substring(6);
+                console.log('💰 Raw pricing data string:', dataStr);
+                try {
+                  const data = JSON.parse(dataStr);
+                  console.log('💰 ===== PRICING DATA RECEIVED =====');
+                  console.log('💰 Full data:', JSON.stringify(data, null, 2));
+                  
+                  // Check if this is stream_end event (has 'reason' field) or pricing data
+                  if (data.reason) {
+                    console.log('🏁 Stream end data received, skipping state update');
+                    console.log('🏁 Reason:', data.reason);
+                    continue; // Skip this data, don't update state
+                  }
+                  
+                  // Only process if we have actual pricing data (has totalSessions field)
+                  if (!data.totalSessions && data.totalSessions !== 0) {
+                    console.log('⚠️ Data missing totalSessions field, skipping');
+                    continue;
+                  }
+                  
+                  console.log('💰 vehicleId:', data.vehicleId);
+                  console.log('💰 totalSessions:', data.totalSessions);
+                  console.log('💰 totalMinutes:', data.totalMinutes);
+                  console.log('💰 totalDurationHours:', data.totalDurationHours);
+                  console.log('💰 portType:', data.portType);
+                  console.log('💰 powerKw:', data.powerKw);
+                  console.log('💰 bookingBasePrice:', data.bookingBasePrice);
+                  console.log('💰 energyKwh:', data.energyKwh);
+                  console.log('💰 bookingCost:', data.bookingCost);
+                  console.log('💰 energyCost:', data.energyCost);
+                  console.log('💰 total:', data.total);
+                  console.log('💰 sessionDetails:', data.sessionDetails);
+                  console.log('💰 ===================================');
+                  
+                  const sessionDetails = Array.isArray(data.sessionDetails) ? data.sessionDetails : [];
+                  const firstSessionDetail = sessionDetails.length > 0 ? sessionDetails[0] : null;
+                  const lastSessionDetail = sessionDetails.length > 0 ? sessionDetails[sessionDetails.length - 1] : null;
+                  const streamInitialPin = firstSessionDetail?.initialPercent;
+                  const streamLastEndPercent = lastSessionDetail?.endPercent;
+                  const streamLastCurrentPercent = lastSessionDetail?.currentPercent;
+                  const streamCurrentPin = streamLastEndPercent ?? streamLastCurrentPercent ?? null;
+                  
+                  // Update pricing estimate state with actual pricing data
+                  console.log('💰 Setting pricingEstimate state with valid pricing data...');
+                  setPricingEstimate(data);
+                  console.log('💰 pricingEstimate state updated!');
+                  
+                  // Update charging data with pricing info
+                  console.log('💰 Updating chargingData state...');
+                  setChargingData(prev => {
+                    if (!prev) {
+                      console.log('💰 ⚠️ chargingData is null, skipping update');
+                      return prev;
+                    }
+
+                      const toNumber = (value) => {
+                        if (value === null || value === undefined) return null;
+                        const parsed = Number(value);
+                        return Number.isNaN(parsed) ? null : parsed;
+                      };
+                    
+                    const resolvedSessionInitialPinRaw = streamInitialPin ?? prev.sessionInitialPin ?? prev.initialCharge ?? null;
+                    const resolvedSessionInitialPin = toNumber(resolvedSessionInitialPinRaw);
+                    const streamFallbackPin = data.currentPin ?? data.currentPercent ?? null;
+                    const resolvedCurrentPinRaw = streamCurrentPin ?? streamFallbackPin ?? prev.currentPin ?? prev.currentCharge ?? null;
+                    const resolvedCurrentPin = toNumber(resolvedCurrentPinRaw);
+                    let resolvedPinGainPercent = prev.pinGainPercent ?? null;
+                    if (resolvedSessionInitialPin !== null && resolvedCurrentPin !== null) {
+                      resolvedPinGainPercent = resolvedCurrentPin - resolvedSessionInitialPin;
+                    }
+
+                    const updated = {
+                      ...prev,
+                      timeElapsed: data.totalMinutes || prev.timeElapsed,
+                      bookingCost: data.bookingCost || prev.bookingCost,
+                      energyCost: data.energyCost || prev.energyCost,
+                      energyKwh: data.energyKwh || prev.energyKwh,
+                      chargingCost: data.total || prev.chargingCost,
+                      totalSessionsCount: data.totalSessions || prev.totalSessionsCount,
+                      durationHours: data.totalDurationHours || prev.durationHours,
+                      portType: data.portType || prev.portType,
+                      sessionDetails: data.sessionDetails || prev.sessionDetails,
+                      sessionInitialPin: resolvedSessionInitialPin ?? prev.sessionInitialPin,
+                      currentPin: resolvedCurrentPin ?? prev.currentPin ?? null,
+                      pinGainPercent: resolvedPinGainPercent,
+                    };
+                    console.log('💰 Updated chargingData:', updated);
+                    return updated;
+                  });
+                  console.log('💰 chargingData state updated!');
+
+                  // Update vehicle data if we have session details
+                  if (data.sessionDetails && data.sessionDetails.length > 0) {
+                    console.log('💰 Updating vehicleData state...');
+                    setVehicleData(prev => {
+                      if (!prev) {
+                        console.log('💰 ⚠️ vehicleData is null, skipping update');
+                        return prev;
+                      }
+                      const toNumber = (value) => {
+                        if (value === null || value === undefined) return null;
+                        const parsed = Number(value);
+                        return Number.isNaN(parsed) ? null : parsed;
+                      };
+                      const sessionInitialPinRaw = streamInitialPin ?? prev.sessionInitialPin;
+                      const currentPinRaw = streamCurrentPin ?? data.currentPin ?? data.currentPercent ?? prev.currentPin;
+                      const sessionInitialPin = toNumber(sessionInitialPinRaw);
+                      const currentPin = toNumber(currentPinRaw);
+                      const pinGainPercent =
+                        sessionInitialPin !== null && currentPin !== null
+                          ? currentPin - sessionInitialPin
+                          : (prev.pinGainPercent ?? null);
+                      const updated = {
+                        ...prev,
+                        sessionDurationMinutes: data.totalMinutes,
+                        totalSessionsCount: data.totalSessions,
+                        hasCompletedSession: data.totalSessions > 0,
+                        sessionInitialPin: sessionInitialPin ?? prev.sessionInitialPin ?? null,
+                        currentPin: currentPin ?? prev.currentPin ?? null,
+                        pinGainPercent: pinGainPercent,
+                      };
+                      console.log('💰 Updated vehicleData:', updated);
+                      return updated;
+                    });
+                    console.log('💰 vehicleData state updated!');
+                  }
+                } catch (parseError) {
+                  console.error('❌ Error parsing pricing stream data:', parseError);
+                  console.error('❌ Raw data string:', dataStr);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error reading pricing stream:', error);
+          console.error('❌ Error stack:', error.stack);
+        }
+      };
+
+      readStream();
+    } catch (error) {
+      console.error('❌ ===== ERROR STARTING PRICING STREAM =====');
+      console.error('❌ Error:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      console.error('❌ ==========================================');
+    }
   };
 
   // TẠM THỜI TẮT - Hàm gọi API gây xung đột với tính toán local
@@ -1106,6 +1556,73 @@ const ChargingSession = () => {
     </div>
   );
 
+  const pricingSessionDetails = Array.isArray(pricingEstimate?.sessionDetails) ? pricingEstimate.sessionDetails : [];
+  const pricingFirstSession = pricingSessionDetails.length > 0 ? pricingSessionDetails[0] : null;
+  const pricingLastSession = pricingSessionDetails.length > 0 ? pricingSessionDetails[pricingSessionDetails.length - 1] : null;
+
+  const toNumeric = (value) => {
+    if (value === null || value === undefined) return null;
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  };
+
+  const sessionInitialPercent = (() => {
+    const candidates = [
+      chargingData?.sessionInitialPin,
+      pricingFirstSession?.initialPercent,
+      vehicleData?.sessionInitialPin,
+    ];
+    for (const candidate of candidates) {
+      const numeric = toNumeric(candidate);
+      if (numeric !== null) return numeric;
+    }
+    return null;
+  })();
+
+  const sessionCurrentPercent = (() => {
+    const candidates = [
+      chargingData?.currentPin,
+      pricingLastSession?.endPercent,
+      pricingLastSession?.currentPercent,
+      vehicleData?.currentPin,
+      chargingData?.currentCharge,
+    ];
+    for (const candidate of candidates) {
+      const numeric = toNumeric(candidate);
+      if (numeric !== null) return numeric;
+    }
+    return null;
+  })();
+
+  const totalTimeMinutes = (() => {
+    const candidates = [
+      chargingData?.timeElapsed,
+      chargingData?.sessionDurationMinutes,
+      pricingEstimate?.totalMinutes,
+      vehicleData?.sessionDurationMinutes,
+    ];
+    for (const candidate of candidates) {
+      const numeric = toNumeric(candidate);
+      if (numeric !== null) return numeric;
+    }
+    return null;
+  })();
+
+  const pinGainPercent = (() => {
+    const candidates = [
+      chargingData?.pinGainPercent,
+      vehicleData?.pinGainPercent,
+    ];
+    for (const candidate of candidates) {
+      const numeric = toNumeric(candidate);
+      if (numeric !== null) return numeric;
+    }
+    if (sessionInitialPercent !== null && sessionCurrentPercent !== null) {
+      return sessionCurrentPercent - sessionInitialPercent;
+    }
+    return null;
+  })();
+
   return (
     <div className="charging-session-page">
       <CustomPopup
@@ -1281,146 +1798,10 @@ const ChargingSession = () => {
                           <span className="stat-value">{chargingData.currentCharge}%</span>
                           <span className="stat-label">Mức pin</span>
                         </div>
-                        <div className="stat-large">
-                          <span className="stat-value">{formatTimeElapsed(chargingData.timeElapsed || 0)}</span>
-                          <span className="stat-label">Đã sạc</span>
-                        </div>
                       </div>
                     </div>
 
                     <div className="info-grid-modern">
-                      {/* Session History Info - if available */}
-                      {chargingData.hasCompletedSession && chargingData.sessionInitialPin !== null && (
-                        <div className="info-group" style={{
-                          gridColumn: '1 / -1',
-                          background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
-                          padding: '20px',
-                          borderRadius: '12px',
-                          border: '2px solid #0ea5e9',
-                          marginBottom: '16px'
-                        }}>
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            marginBottom: '12px',
-                            justifyContent: 'space-between'
-                          }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                              <span style={{ fontSize: '24px' }}>📊</span>
-                              <h3 style={{ 
-                                margin: 0,
-                                fontSize: '16px',
-                                fontWeight: '700',
-                                color: '#0c4a6e'
-                              }}>
-                                Lịch sử phiên sạc đã hoàn thành
-                              </h3>
-                            </div>
-                            <div style={{
-                              padding: '6px 12px',
-                              background: 'rgba(59, 130, 246, 0.15)',
-                              borderRadius: '20px',
-                              fontSize: '12px',
-                              fontWeight: '700',
-                              color: '#1e40af'
-                            }}>
-                              {chargingData.totalSessionsCount || 0} phiên
-                            </div>
-                          </div>
-                          <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                            gap: '12px'
-                          }}>
-                            <div style={{
-                              padding: '12px',
-                              background: 'rgba(255, 255, 255, 0.7)',
-                              borderRadius: '8px',
-                              border: '1px solid rgba(14, 165, 233, 0.3)'
-                            }}>
-                              <div style={{
-                                fontSize: '11px',
-                                color: '#64748b',
-                                marginBottom: '4px',
-                                fontWeight: '600'
-                              }}>Pin ban đầu</div>
-                              <div style={{
-                                fontSize: '18px',
-                                fontWeight: '700',
-                                color: '#0c4a6e'
-                              }}>{chargingData.sessionInitialPin}%</div>
-                            </div>
-                            <div style={{
-                              padding: '12px',
-                              background: 'rgba(255, 255, 255, 0.7)',
-                              borderRadius: '8px',
-                              border: '1px solid rgba(14, 165, 233, 0.3)'
-                            }}>
-                              <div style={{
-                                fontSize: '11px',
-                                color: '#64748b',
-                                marginBottom: '4px',
-                                fontWeight: '600'
-                              }}>Pin hiện tại</div>
-                              <div style={{
-                                fontSize: '18px',
-                                fontWeight: '700',
-                                color: '#0c4a6e'
-                              }}>{chargingData.currentPin}%</div>
-                            </div>
-                            <div style={{
-                              padding: '12px',
-                              background: 'rgba(255, 255, 255, 0.7)',
-                              borderRadius: '8px',
-                              border: '1px solid rgba(14, 165, 233, 0.3)'
-                            }}>
-                              <div style={{
-                                fontSize: '11px',
-                                color: '#64748b',
-                                marginBottom: '4px',
-                                fontWeight: '600'
-                              }}>Tổng thời gian</div>
-                              <div style={{
-                                fontSize: '18px',
-                                fontWeight: '700',
-                                color: '#0c4a6e'
-                              }}>{formatTimeElapsed(chargingData.sessionDurationMinutes || 0)}</div>
-                            </div>
-                            <div style={{
-                              padding: '12px',
-                              background: 'rgba(255, 255, 255, 0.7)',
-                              borderRadius: '8px',
-                              border: '1px solid rgba(14, 165, 233, 0.3)'
-                            }}>
-                              <div style={{
-                                fontSize: '11px',
-                                color: '#64748b',
-                                marginBottom: '4px',
-                                fontWeight: '600'
-                              }}>Pin tăng</div>
-                              <div style={{
-                                fontSize: '18px',
-                                fontWeight: '700',
-                                color: '#16a34a'
-                              }}>+{(chargingData.currentPin - chargingData.sessionInitialPin).toFixed(0)}%</div>
-                            </div>
-                          </div>
-                          <div style={{
-                            marginTop: '12px',
-                            padding: '10px',
-                            background: 'rgba(34, 197, 94, 0.1)',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            color: '#15803d',
-                            fontWeight: '600',
-                            textAlign: 'center'
-                          }}>
-                            💡 Chi phí được tính từ tổng thời gian {chargingData.totalSessionsCount || 0} phiên sạc đã hoàn thành
-                          </div>
-                        </div>
-                      )}
-
                       {/* QR Code Section */}
                       {location.state?.reservation?.qr && (
                         <div className="info-group" style={{
@@ -1524,10 +1905,25 @@ const ChargingSession = () => {
                             </div>
                           </div>
                           <div className="info-item-modern">
-                            <span className="item-icon">🔌</span>
+                            <span className="item-icon">🔋</span>
                             <div className="item-content">
-                              <span className="item-label">Công suất</span>
-                              <span className="item-value">{chargingData.chargeRate} kW</span>
+                              <span className="item-label">Pin ban đầu</span>
+                              <span className="item-value">
+                                {sessionInitialPercent !== null
+                                  ? `${Math.round(sessionInitialPercent).toLocaleString('vi-VN')}%`
+                                  : 'N/A'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="info-item-modern">
+                            <span className="item-icon">⚡</span>
+                            <div className="item-content">
+                              <span className="item-label">Pin hiện tại</span>
+                              <span className="item-value">
+                                {sessionCurrentPercent !== null
+                                  ? `${Math.round(sessionCurrentPercent).toLocaleString('vi-VN')}%`
+                                  : 'N/A'}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -1541,6 +1937,17 @@ const ChargingSession = () => {
                             <div className="item-content">
                               <span className="item-label">Năng lượng tiêu thụ</span>
                               <span className="item-value">{chargingData.energyKwh?.toFixed(2) || 0} kWh</span>
+                            </div>
+                          </div>
+                          <div className="info-item-modern">
+                            <span className="item-icon">⏱️</span>
+                            <div className="item-content">
+                              <span className="item-label">Tổng thời gian (phút)</span>
+                              <span className="item-value">
+                                {totalTimeMinutes !== null
+                                  ? Math.max(0, Math.round(totalTimeMinutes)).toLocaleString('vi-VN')
+                                  : 'N/A'}
+                              </span>
                             </div>
                           </div>
                           <div className="info-item-modern highlight-item">
@@ -1568,6 +1975,17 @@ const ChargingSession = () => {
                             <div className="item-content">
                               <span className="item-label">Phí điện</span>
                               <span className="item-value">{Math.round(chargingData.energyCost || 0)?.toLocaleString("vi-VN")} VNĐ</span>
+                            </div>
+                          </div>
+                          <div className="info-item-modern highlight-item">
+                            <span className="item-icon">📈</span>
+                            <div className="item-content">
+                              <span className="item-label">Pin tăng %</span>
+                              <span className="item-value">
+                                {pinGainPercent !== null
+                                  ? `${pinGainPercent > 0 ? '+' : ''}${Math.round(pinGainPercent).toLocaleString('vi-VN')}%`
+                                  : 'N/A'}
+                              </span>
                             </div>
                           </div>
                         </div>

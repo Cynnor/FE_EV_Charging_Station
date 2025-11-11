@@ -144,6 +144,7 @@ export default function PaymentSuccessPage() {
             // GỬI TẤT CẢ VNPay params + reservationId để backend verify signature
             const requestBody = {
               vehicleId: vehicleId,
+              ...(reservationId && { reservationId: reservationId }),
               vnp_Amount: vnpParams.vnp_Amount,
               vnp_BankCode: vnpParams.vnp_BankCode,
               vnp_BankTranNo: vnpParams.vnp_BankTranNo,
@@ -157,11 +158,6 @@ export default function PaymentSuccessPage() {
               vnp_TxnRef: vnpParams.vnp_TxnRef,
               vnp_SecureHash: vnpParams.vnp_SecureHash,
             };
-
-            // Thêm reservationId nếu có
-            if (reservationId) {
-              requestBody.reservationId = reservationId;
-            }
 
             console.log('💳 Request Body:', requestBody);
             const response = await api.post("/vnpay/check-payment-status", requestBody);

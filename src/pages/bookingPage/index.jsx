@@ -466,10 +466,12 @@ export default function BookingPage() {
     const endAtIso = toUtcIso(formData.date, calculatedEndTime);
 
     // Quick time validation to reduce 400 from API
+    // Allow booking time within 5 minutes in the past
     const now = new Date();
     const startDate = new Date(startAtIso);
-    if (startDate < new Date(now.getTime() + 2 * 60 * 1000)) {
-      alert("❌ Giờ bắt đầu phải ở tương lai (ít nhất sau vài phút).");
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    if (startDate < fiveMinutesAgo) {
+      alert("❌ Giờ bắt đầu không được quá 5 phút trong quá khứ.");
       return;
     }
 
