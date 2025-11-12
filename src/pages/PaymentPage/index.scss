@@ -40,6 +40,8 @@ $radius-lg: 16px;
 
 .payment-container {
     max-width: 1200px;
+    position: relative;
+    top: -60px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1.8fr 1fr;

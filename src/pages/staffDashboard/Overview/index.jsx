@@ -9,6 +9,7 @@ const OverviewStaff = () => {
     const [error, setError] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
     const [portSlots, setPortSlots] = useState({}); // { portId: [slots] }
+    const [slotReservations, setSlotReservations] = useState({}); // { slotId: reservation }
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPortModal, setShowPortModal] = useState(false);
     const [showSlotModal, setShowSlotModal] = useState(false);
@@ -42,16 +43,50 @@ const OverviewStaff = () => {
 
     // Helper function để refresh stations và update selected station
     const refreshStationsAndSelected = async () => {
-        const response = await api.get("/stations", {
-            params: { page: 1, limit: 100, includePorts: true },
-        });
-        const stationsData = parseStationsData(response);
-        const activeStations = stationsData.filter((s) => s.status === "active");
-        setStations(activeStations);
+        try {
+            // 1. Refresh danh sách stations
+            const response = await api.get("/stations", {
+                params: { page: 1, limit: 100, includePorts: true },
+            });
+            const stationsData = parseStationsData(response);
+            const activeStations = stationsData.filter((s) => s.status === "active");
+            setStations(activeStations);
 
-        if (selectedStation) {
-            const updated = stationsData.find((s) => s.id === selectedStation.id);
-            if (updated) setSelectedStation(updated);
+            // 2. Nếu đang xem chi tiết một station, fetch fresh data cho station đó
+            if (selectedStation) {
+                try {
+                    const detailResponse = await api.get(`/stations/${selectedStation.id}`, {
+                        params: { includePorts: true }
+                    });
+
+                    let freshStation = null;
+                    if (detailResponse.data?.data) {
+                        freshStation = detailResponse.data.data;
+                    } else if (detailResponse.data) {
+                        freshStation = detailResponse.data;
+                    }
+
+                    if (freshStation) {
+                        setSelectedStation(freshStation);
+
+                        // Refresh slots cho tất cả ports
+                        if (Array.isArray(freshStation.ports) && freshStation.ports.length > 0) {
+                            freshStation.ports.forEach((port) => {
+                                if (port.id) {
+                                    fetchPortSlots(port.id);
+                                }
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error refreshing selected station:", err);
+                    // Fallback: Tìm trong danh sách stations
+                    const updated = stationsData.find((s) => s.id === selectedStation.id);
+                    if (updated) setSelectedStation(updated);
+                }
+            }
+        } catch (err) {
+            console.error("Error refreshing stations:", err);
         }
     };
 
@@ -87,10 +122,12 @@ const OverviewStaff = () => {
         fetchStations();
     }, []);
 
-    // Lấy danh sách slots của một port
+    // Lấy danh sách slots của một port và check reservations
     const fetchPortSlots = async (portId) => {
         try {
             setLoadingSlots(true);
+
+            // 1. Fetch slots
             const response = await api.get(`/stations/ports/${portId}/slots`);
 
             let raw = [];
@@ -107,10 +144,101 @@ const OverviewStaff = () => {
                 raw = response.data.data.items;
             }
 
-            setPortSlots((prev) => ({
-                ...prev,
-                [portId]: raw || [],
-            }));
+            // 2. Fetch active reservations để check slot nào đang được đặt
+            try {
+                const reservationResponse = await api.get("/reservations", {
+                    params: {
+                        status: "pending,confirmed,active", // Lấy reservations đang active
+                        limit: 1000
+                    }
+                });
+
+                let reservations = [];
+                if (Array.isArray(reservationResponse.data?.items)) {
+                    reservations = reservationResponse.data.items;
+                } else if (Array.isArray(reservationResponse.data?.data?.items)) {
+                    reservations = reservationResponse.data.data.items;
+                } else if (Array.isArray(reservationResponse.data?.data)) {
+                    reservations = reservationResponse.data.data;
+                } else if (Array.isArray(reservationResponse.data)) {
+                    reservations = reservationResponse.data;
+                }
+
+                // Map reservations by slotId
+                const reservationMap = {};
+                reservations.forEach(reservation => {
+                    if (reservation.items && Array.isArray(reservation.items)) {
+                        reservation.items.forEach(item => {
+                            if (item.slot) {
+                                const slotId = typeof item.slot === 'object' ? item.slot.id || item.slot._id : item.slot;
+                                if (slotId) {
+                                    reservationMap[slotId] = reservation;
+                                }
+                            }
+                        });
+                    }
+                });
+
+                setSlotReservations(prev => ({
+                    ...prev,
+                    ...reservationMap
+                }));
+
+                // 3. Update slot status dựa trên reservation và slot status
+                const updatedSlots = raw.map(slot => {
+                    const slotId = slot.id || slot._id;
+                    const hasReservation = reservationMap[slotId];
+                    const slotStatus = slot.status || slot.actualStatus;
+
+                    // Nếu slot có status là "in_use" hoặc "occupied", ưu tiên hiển thị "in_use"
+                    if (slotStatus === "in_use" || slotStatus === "occupied") {
+                        return {
+                            ...slot,
+                            actualStatus: "in_use",
+                            reservationInfo: hasReservation || null
+                        };
+                    }
+
+                    // Nếu có reservation, check status của reservation
+                    if (hasReservation) {
+                        // Nếu reservation đã confirmed và đang active, slot đang được sử dụng
+                        if (hasReservation.status === "confirmed" || hasReservation.status === "active") {
+                            return {
+                                ...slot,
+                                actualStatus: "in_use",
+                                reservationInfo: hasReservation
+                            };
+                        }
+                        // Nếu reservation pending, slot đã được đặt
+                        return {
+                            ...slot,
+                            actualStatus: "booked",
+                            reservationInfo: hasReservation
+                        };
+                    }
+
+                    // Nếu không có reservation, dùng status gốc của slot
+                    return {
+                        ...slot,
+                        actualStatus: slotStatus || "available",
+                        reservationInfo: null
+                    };
+                });
+
+                setPortSlots((prev) => ({
+                    ...prev,
+                    [portId]: updatedSlots || [],
+                }));
+
+            } catch (err) {
+                console.error("Error fetching reservations:", err);
+                // Nếu không lấy được reservations, vẫn hiển thị slots với status gốc
+                setPortSlots((prev) => ({
+                    ...prev,
+                    [portId]: raw.map(slot => ({ ...slot, actualStatus: slot.status })) || [],
+                }));
+            }
+
         } catch (err) {
             console.error(`Error fetching slots for port ${portId}:`, err);
             setPortSlots((prev) => ({
@@ -133,22 +261,26 @@ const OverviewStaff = () => {
         );
     }, [stations, searchTerm]);
 
-    // Mở modal chi tiết trạm
-    const handleStationClick = async (station) => {
-        setSelectedStation(station);
-        // Fetch slots cho tất cả các ports
-        if (Array.isArray(station.ports) && station.ports.length > 0) {
-            station.ports.forEach((port) => {
-                if (port.id) {
-                    fetchPortSlots(port.id);
-                }
-            });
+    // Mở modal chi tiết trụ (hiển thị slots)
+    const handlePortClick = async (port, station) => {
+        const portId = port.id || port._id;
+        if (!portId) {
+            alert("Không tìm thấy thông tin trụ sạc!");
+            return;
         }
+
+        setSelectedPort(port);
+        setSelectedStation(station); // Lưu station để có thể thêm/sửa port
+        setShowPortModal(false); // Đảm bảo port modal đóng
+        setShowSlotModal(false); // Đảm bảo slot modal đóng
+
+        // Tự động fetch slots khi mở modal
+        await fetchPortSlots(portId);
     };
 
-    // Đóng modal chi tiết
-    const handleCloseDetailModal = () => {
-        setSelectedStation(null);
+    // Đóng modal chi tiết trụ
+    const handleClosePortDetailModal = () => {
+        setSelectedPort(null);
         setPortSlots({});
     };
 
@@ -180,28 +312,33 @@ const OverviewStaff = () => {
     // Thêm port mới
     const handleAddPort = async (e) => {
         e.preventDefault();
-        if (!selectedStation) return;
+        const station = selectedStation;
+        if (!station || !station.id) {
+            alert("Không tìm thấy thông tin trạm!");
+            return;
+        }
 
         try {
             // Thêm port mới vào danh sách ports của station
             const updatedPorts = [
-                ...(selectedStation.ports || []),
+                ...(station.ports || []),
                 { ...portFormData }
             ];
 
             // Cập nhật station với port mới
             const stationUpdate = {
-                ...selectedStation,
-                ports: updatedPorts.map(({ id, ...port }) => port), // Loại bỏ id nếu có
+                ...station,
+                ports: updatedPorts.map(({ id, _id, ...port }) => port), // Loại bỏ id nếu có
             };
 
             await api.put(
-                `/stations/${selectedStation.id}`,
+                `/stations/${station.id}`,
                 stationUpdate
             );
 
             alert("Thêm trụ sạc thành công!");
             setShowPortModal(false);
+            setEditingPort(null);
             await refreshStationsAndSelected();
         } catch (err) {
             console.error("Error adding port:", err);
@@ -212,23 +349,29 @@ const OverviewStaff = () => {
     // Cập nhật port
     const handleUpdatePort = async (e) => {
         e.preventDefault();
-        if (!selectedStation || !editingPort) return;
+        const station = selectedStation;
+        if (!station || !station.id || !editingPort) {
+            alert("Không tìm thấy thông tin trạm hoặc trụ sạc!");
+            return;
+        }
 
         try {
             // Cập nhật port trong danh sách ports của station
-            const updatedPorts = (selectedStation.ports || []).map((port) =>
-                port.id === editingPort.id
+            const updatedPorts = (station.ports || []).map((port) => {
+                const portId = port.id || port._id;
+                const editingPortId = editingPort.id || editingPort._id;
+                return portId === editingPortId
                     ? { ...port, ...portFormData }
-                    : port
-            );
+                    : port;
+            });
 
             // Cập nhật station với port đã chỉnh sửa
             const stationUpdate = {
-                ...selectedStation,
+                ...station,
                 ports: updatedPorts,
             };
 
-            await api.put(`/stations/${selectedStation.id}`, stationUpdate);
+            await api.put(`/stations/${station.id}`, stationUpdate);
 
             alert("Cập nhật trụ sạc thành công!");
             setShowPortModal(false);
@@ -244,19 +387,25 @@ const OverviewStaff = () => {
     const handleDeletePort = async (portId) => {
         if (!window.confirm("Bạn có chắc chắn muốn xóa trụ sạc này?")) return;
 
+        const station = selectedStation;
+        if (!station || !station.id) {
+            alert("Không tìm thấy thông tin trạm!");
+            return;
+        }
+
         try {
             // Xóa port khỏi danh sách ports của station
-            const updatedPorts = (selectedStation.ports || []).filter(
-                (port) => port.id !== portId
+            const updatedPorts = (station.ports || []).filter(
+                (port) => (port.id || port._id) !== portId
             );
 
             // Cập nhật station với ports đã xóa port
             const stationUpdate = {
-                ...selectedStation,
+                ...station,
                 ports: updatedPorts,
             };
 
-            await api.put(`/stations/${selectedStation.id}`, stationUpdate);
+            await api.put(`/stations/${station.id}`, stationUpdate);
 
             alert("Xóa trụ sạc thành công!");
             await refreshStationsAndSelected();
@@ -386,7 +535,6 @@ const OverviewStaff = () => {
                         <div
                             key={station.id}
                             className="station-card"
-                            onClick={() => handleStationClick(station)}
                         >
                             <div className="station-header">
                                 <div className="station-info">
@@ -405,13 +553,31 @@ const OverviewStaff = () => {
                                 </div>
                                 <div className="ports-grid">
                                     {station.ports && station.ports.length > 0 ? (
-                                        station.ports.map((port) => (
-                                            <div key={port.id} className="port-item">
+                                        station.ports.map((port, portIndex) => (
+                                            <div
+                                                key={port.id || port._id || `port-${portIndex}`}
+                                                className="port-item"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handlePortClick(port, station);
+                                                }}
+                                            >
+                                                <div className="port-header">
+                                                    <h4 className="port-title">Trụ {portIndex + 1}</h4>
+                                                    <span className={`port-speed-badge ${port.speed || 'fast'}`}>
+                                                        {port.speed === 'ultra' ? 'Super Fast' :
+                                                            port.speed === 'fast' ? 'Fast' : 'Slow'}
+                                                    </span>
+                                                </div>
                                                 <div className="port-info">
                                                     <span className="port-type">{port.type || "N/A"}</span>
-                                                    <span className="port-power">
-                                                        {port.powerKw || 0} kW
-                                                    </span>
+                                                    <div className="port-power-info">
+                                                        <span className="power-icon">⚡</span>
+                                                        <div className="power-details">
+                                                            <span className="power-label">CÔNG SUẤT</span>
+                                                            <span className="power-value">{port.powerKw || 0} kW</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div className={`port-status ${port.status || "unknown"}`}>
                                                     {port.status === "available"
@@ -434,171 +600,145 @@ const OverviewStaff = () => {
                 )}
             </div>
 
-            {/* Station Detail Modal */}
-            {selectedStation && (
+            {/* Port Detail Modal - Hiển thị slots của trụ */}
+            {selectedPort && selectedStation && (
                 <div
                     className="modal-overlay"
-                    onClick={handleCloseDetailModal}
+                    onClick={handleClosePortDetailModal}
                 >
                     <div
-                        className="modal-content station-detail-modal"
+                        className="modal-content port-detail-modal"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="modal-header">
-                            <h2>{selectedStation.name || `Trạm ${selectedStation.id}`}</h2>
+                            <div className="port-modal-header-info">
+                                <h2>Trụ {selectedPort.type || 'N/A'}</h2>
+                                <span className={`port-speed-badge-modal ${selectedPort.speed || 'fast'}`}>
+                                    {selectedPort.speed === 'ultra' ? 'Super Fast' :
+                                        selectedPort.speed === 'fast' ? 'Fast' : 'Slow'}
+                                </span>
+                            </div>
                             <button
                                 className="close-btn"
-                                onClick={handleCloseDetailModal}
+                                onClick={handleClosePortDetailModal}
                             >
                                 ✕
                             </button>
                         </div>
 
                         <div className="modal-body">
-                            <div className="ports-section">
-                                <div className="section-header">
-                                    <h3>Danh sách trụ sạc</h3>
+                            <div className="port-detail-info">
+                                <div className="port-type-info">
+                                    <span className="port-type-label">{selectedPort.type || 'N/A'}</span>
+                                </div>
+                                <div className="port-power-section">
+                                    <span className="power-icon-large">⚡</span>
+                                    <div className="power-details-large">
+                                        <span className="power-label-large">CÔNG SUẤT</span>
+                                        <span className="power-value-large">{selectedPort.powerKw || 0} kW</span>
+                                    </div>
+                                </div>
+                                <div className="port-actions-header">
                                     <button
-                                        className="btn-primary btn-add"
-                                        onClick={() => handleOpenPortModal(selectedStation)}
+                                        className="btn-secondary btn-small"
+                                        onClick={() => handleOpenPortModal(selectedStation, selectedPort)}
                                     >
-                                        + Thêm trụ
+                                        Sửa trụ
+                                    </button>
+                                    <button
+                                        className="btn-danger btn-small"
+                                        onClick={() => {
+                                            if (window.confirm("Bạn có chắc chắn muốn xóa trụ này?")) {
+                                                handleDeletePort(selectedPort.id || selectedPort._id);
+                                                handleClosePortDetailModal();
+                                            }
+                                        }}
+                                    >
+                                        Xóa trụ
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="slots-section">
+                                <div className="slots-header">
+                                    <h3>Danh sách Slots ({portSlots[selectedPort.id || selectedPort._id]?.length || 0})</h3>
+                                    <button
+                                        className="btn-primary btn-small"
+                                        onClick={() => handleOpenSlotModal(selectedPort)}
+                                    >
+                                        + Thêm slot
                                     </button>
                                 </div>
 
-                                {selectedStation.ports &&
-                                    selectedStation.ports.length > 0 ? (
-                                    <div className="ports-detail-list">
-                                        {selectedStation.ports.map((port) => (
-                                            <div key={port.id} className="port-detail-card">
-                                                <div className="port-detail-header">
-                                                    <div className="port-detail-info">
-                                                        <h4>
-                                                            Trụ {port.type} - {port.powerKw || 0} kW
-                                                        </h4>
+                                {loadingSlots && !portSlots[selectedPort.id || selectedPort._id] ? (
+                                    <div className="loading-slots">Đang tải...</div>
+                                ) : portSlots[selectedPort.id || selectedPort._id] &&
+                                    portSlots[selectedPort.id || selectedPort._id].length > 0 ? (
+                                    <div className="slots-grid">
+                                        {portSlots[selectedPort.id || selectedPort._id].map((slot, slotIndex) => {
+                                            // Lấy slotNumber từ slot, nếu không có thì dùng index + 1 (giống booking page)
+                                            const slotNumber = slot.slotNumber ?? (slotIndex + 1);
+                                            // Lấy status từ actualStatus (đã được xử lý) hoặc status gốc
+                                            // Dùng trực tiếp status từ API, không normalize (giống booking page)
+                                            const slotStatus = slot.actualStatus ?? slot.status ?? "available";
+
+                                            return (
+                                                <div
+                                                    key={slot.id || slot._id || `slot-${slotIndex}`}
+                                                    className="slot-item"
+                                                >
+                                                    <div className="slot-info">
+                                                        <span className="slot-name">Slot {slotNumber}</span>
                                                         <span
-                                                            className={`port-status-badge ${port.status || "unknown"}`}
+                                                            className={`slot-status ${slotStatus}`}
                                                         >
-                                                            {port.status === "available"
+                                                            {slotStatus === "available"
                                                                 ? "Rỗi"
-                                                                : port.status === "in_use" ||
-                                                                    port.status === "occupied"
-                                                                    ? "Đang sử dụng"
-                                                                    : port.status === "maintenance"
-                                                                        ? "Bảo trì"
-                                                                        : "Không xác định"}
+                                                                : slotStatus === "booked" || slotStatus === "reserved"
+                                                                    ? "Đã đặt"
+                                                                    : slotStatus === "in_use" || slotStatus === "occupied"
+                                                                        ? "Đang sử dụng"
+                                                                        : slotStatus === "maintenance"
+                                                                            ? "Bảo trì"
+                                                                            : slotStatus === "disabled" || slotStatus === "unavailable"
+                                                                                ? "Không khả dụng"
+                                                                                : "Không xác định"}
                                                         </span>
+                                                        {slot.reservationInfo && (
+                                                            <span className="reservation-badge">
+                                                                📅 {slot.reservationInfo.status === "confirmed" || slot.reservationInfo.status === "active"
+                                                                    ? "Đã xác nhận"
+                                                                    : "Đang chờ"}
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <div className="port-actions">
+                                                    <div className="slot-actions">
                                                         <button
-                                                            className="btn-secondary btn-small"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleOpenPortModal(selectedStation, port);
-                                                            }}
+                                                            className="btn-icon"
+                                                            onClick={() =>
+                                                                handleOpenSlotModal(selectedPort, slot)
+                                                            }
+                                                            title="Sửa"
                                                         >
-                                                            Sửa
+                                                            ✏️
                                                         </button>
                                                         <button
-                                                            className="btn-danger btn-small"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDeletePort(port.id);
-                                                            }}
+                                                            className="btn-icon"
+                                                            onClick={() =>
+                                                                handleDeleteSlot(slot.id || slot._id, selectedPort.id || selectedPort._id)
+                                                            }
+                                                            title="Xóa"
                                                         >
-                                                            Xóa
+                                                            🗑️
                                                         </button>
                                                     </div>
                                                 </div>
-
-                                                <div className="slots-section">
-                                                    <div className="slots-header">
-                                                        <span>Slots ({portSlots[port.id]?.length || 0})</span>
-                                                        <button
-                                                            className="btn-link btn-small"
-                                                            onClick={() => {
-                                                                if (!portSlots[port.id]) {
-                                                                    fetchPortSlots(port.id);
-                                                                }
-                                                            }}
-                                                        >
-                                                            {portSlots[port.id]
-                                                                ? "Tải lại"
-                                                                : "Xem slots"}
-                                                        </button>
-                                                        <button
-                                                            className="btn-link btn-small"
-                                                            onClick={() => handleOpenSlotModal(port)}
-                                                        >
-                                                            + Thêm slot
-                                                        </button>
-                                                    </div>
-
-                                                    {loadingSlots && !portSlots[port.id] ? (
-                                                        <div className="loading-slots">Đang tải...</div>
-                                                    ) : portSlots[port.id] &&
-                                                        portSlots[port.id].length > 0 ? (
-                                                        <div className="slots-grid">
-                                                            {portSlots[port.id].map((slot) => (
-                                                                <div
-                                                                    key={slot.id}
-                                                                    className="slot-item"
-                                                                >
-                                                                    <div className="slot-info">
-                                                                        <span>Slot #{slot.slotNumber}</span>
-                                                                        <span
-                                                                            className={`slot-status ${slot.status || "unknown"}`}
-                                                                        >
-                                                                            {slot.status === "available"
-                                                                                ? "Rỗi"
-                                                                                : slot.status === "booked"
-                                                                                    ? "Đã đặt"
-                                                                                    : slot.status === "in_use"
-                                                                                        ? "Đang sử dụng"
-                                                                                        : "Không xác định"}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="slot-actions">
-                                                                        <button
-                                                                            className="btn-icon"
-                                                                            onClick={() =>
-                                                                                handleOpenSlotModal(port, slot)
-                                                                            }
-                                                                            title="Sửa"
-                                                                        >
-                                                                            ✏️
-                                                                        </button>
-                                                                        <button
-                                                                            className="btn-icon"
-                                                                            onClick={() =>
-                                                                                handleDeleteSlot(slot.id, port.id)
-                                                                            }
-                                                                            title="Xóa"
-                                                                        >
-                                                                            🗑️
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="no-slots">
-                                                            Chưa có slot nào. Nhấn "Thêm slot" để tạo.
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 ) : (
-                                    <div className="no-ports">
-                                        <p>Chưa có trụ sạc nào</p>
-                                        <button
-                                            className="btn-primary"
-                                            onClick={() => handleOpenPortModal(selectedStation)}
-                                        >
-                                            Thêm trụ đầu tiên
-                                        </button>
+                                    <div className="no-slots">
+                                        <p>Chưa có slot nào. Nhấn "Thêm slot" để tạo.</p>
                                     </div>
                                 )}
                             </div>
@@ -607,11 +747,14 @@ const OverviewStaff = () => {
                 </div>
             )}
 
-            {/* Port Modal */}
+            {/* Port Modal - Form riêng khi thêm/sửa */}
             {showPortModal && (
                 <div
                     className="modal-overlay"
-                    onClick={() => setShowPortModal(false)}
+                    onClick={() => {
+                        setShowPortModal(false);
+                        setEditingPort(null);
+                    }}
                 >
                     <div
                         className="modal-content port-modal"
@@ -621,7 +764,10 @@ const OverviewStaff = () => {
                             <h2>{editingPort ? "Sửa trụ sạc" : "Thêm trụ sạc mới"}</h2>
                             <button
                                 className="close-btn"
-                                onClick={() => setShowPortModal(false)}
+                                onClick={() => {
+                                    setShowPortModal(false);
+                                    setEditingPort(null);
+                                }}
                             >
                                 ✕
                             </button>
@@ -712,16 +858,19 @@ const OverviewStaff = () => {
                                         required
                                     />
                                 </div>
-                                <div className="modal-actions">
+                                <div className="form-actions">
                                     <button
                                         type="button"
                                         className="btn-secondary"
-                                        onClick={() => setShowPortModal(false)}
+                                        onClick={() => {
+                                            setShowPortModal(false);
+                                            setEditingPort(null);
+                                        }}
                                     >
                                         Hủy
                                     </button>
                                     <button type="submit" className="btn-primary">
-                                        {editingPort ? "Cập nhật" : "Thêm"}
+                                        {editingPort ? "Cập nhật" : "Thêm mới"}
                                     </button>
                                 </div>
                             </form>

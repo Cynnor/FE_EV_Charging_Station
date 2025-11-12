@@ -177,36 +177,109 @@
                 gap: 12px;
 
                 .port-item {
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    padding: 12px;
+                    background: white;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 12px;
+                    padding: 16px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
                     display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+                    flex-direction: column;
+                    gap: 12px;
+
+                    &:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                        border-color: #7ed321;
+                    }
+
+                    .port-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 8px;
+
+                        .port-title {
+                            margin: 0;
+                            font-size: 18px;
+                            font-weight: 700;
+                            color: #1e293b;
+                        }
+
+                        .port-speed-badge {
+                            padding: 4px 10px;
+                            border-radius: 12px;
+                            font-size: 11px;
+                            font-weight: 600;
+                            text-transform: uppercase;
+
+                            &.ultra {
+                                background: #fee2e2;
+                                color: #dc2626;
+                            }
+
+                            &.fast {
+                                background: #dbeafe;
+                                color: #2563eb;
+                            }
+
+                            &.slow {
+                                background: #fef3c7;
+                                color: #d97706;
+                            }
+                        }
+                    }
 
                     .port-info {
                         display: flex;
                         flex-direction: column;
-                        gap: 4px;
+                        gap: 12px;
 
                         .port-type {
-                            font-size: 14px;
+                            font-size: 16px;
                             font-weight: 600;
                             color: #1e293b;
                         }
 
-                        .port-power {
-                            font-size: 12px;
-                            color: #64748b;
+                        .port-power-info {
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+
+                            .power-icon {
+                                font-size: 24px;
+                                color: #f59e0b;
+                            }
+
+                            .power-details {
+                                display: flex;
+                                flex-direction: column;
+                                gap: 2px;
+
+                                .power-label {
+                                    font-size: 10px;
+                                    font-weight: 600;
+                                    color: #94a3b8;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.5px;
+                                }
+
+                                .power-value {
+                                    font-size: 18px;
+                                    font-weight: 700;
+                                    color: #1e293b;
+                                }
+                            }
                         }
                     }
 
                     .port-status {
-                        padding: 4px 8px;
-                        border-radius: 6px;
-                        font-size: 11px;
+                        padding: 6px 12px;
+                        border-radius: 8px;
+                        font-size: 12px;
                         font-weight: 600;
+                        text-align: center;
+                        margin-top: auto;
 
                         &.available {
                             background: #d1fae5;
@@ -219,9 +292,25 @@
                             color: #2563eb;
                         }
 
+                        &.booked {
+                            background: #fef3c7;
+                            color: #d97706;
+                        }
+
+                        &.inactive {
+                            background: #f3f4f6;
+                            color: #6b7280;
+                        }
+
                         &.maintenance {
                             background: #fef3c7;
                             color: #d97706;
+                        }
+
+                        &.disabled,
+                        &.unavailable {
+                            background: #fee2e2;
+                            color: #dc2626;
                         }
 
                         &.unknown {
@@ -355,14 +444,112 @@
         }
     }
 
-    // Station Detail Modal
-    .station-detail-modal {
-        .ports-section {
-            .section-header {
+    // Port Detail Modal
+    .port-detail-modal {
+        max-width: 900px;
+        width: 90%;
+
+        .modal-header {
+            .port-modal-header-info {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+
+                h2 {
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #1e293b;
+                }
+
+                .port-speed-badge-modal {
+                    padding: 6px 12px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+
+                    &.ultra {
+                        background: #fee2e2;
+                        color: #dc2626;
+                    }
+
+                    &.fast {
+                        background: #dbeafe;
+                        color: #2563eb;
+                    }
+
+                    &.slow {
+                        background: #fef3c7;
+                        color: #d97706;
+                    }
+                }
+            }
+        }
+
+        .port-detail-info {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+
+            .port-type-info {
+                margin-bottom: 20px;
+
+                .port-type-label {
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #1e293b;
+                }
+            }
+
+            .port-power-section {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-bottom: 20px;
+
+                .power-icon-large {
+                    font-size: 32px;
+                    color: #f59e0b;
+                }
+
+                .power-details-large {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+
+                    .power-label-large {
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: #94a3b8;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+
+                    .power-value-large {
+                        font-size: 24px;
+                        font-weight: 700;
+                        color: #1e293b;
+                    }
+                }
+            }
+
+            .port-actions-header {
+                display: flex;
+                gap: 12px;
+            }
+        }
+
+        .slots-section {
+            .slots-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 24px;
+                padding-bottom: 16px;
+                border-bottom: 2px solid #e2e8f0;
 
                 h3 {
                     margin: 0;
@@ -370,48 +557,43 @@
                     font-weight: 700;
                     color: #1e293b;
                 }
-
-                .btn-add {
-                    padding: 10px 20px;
-                    font-size: 14px;
-                }
             }
 
-            .ports-detail-list {
-                display: flex;
-                flex-direction: column;
-                gap: 24px;
-                margin-top: 450px;
-            }
+            .slots-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 16px;
 
-            .port-detail-card {
-                background: #f8fafc;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
-                padding: 20px;
-
-                .port-detail-header {
+                .slot-item {
+                    background: white;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 12px;
+                    padding: 16px;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 20px;
+                    transition: all 0.2s;
 
-                    .port-detail-info {
+                    &:hover {
+                        border-color: #7ed321;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    }
+
+                    .slot-info {
                         display: flex;
                         flex-direction: column;
                         gap: 8px;
+                        flex: 1;
 
-                        h4 {
-                            margin: 0;
-                            font-size: 18px;
+                        .slot-name {
+                            font-size: 16px;
                             font-weight: 700;
                             color: #1e293b;
                         }
 
-                        .port-status-badge {
-                            display: inline-block;
+                        .slot-status {
                             padding: 4px 10px;
-                            border-radius: 12px;
+                            border-radius: 8px;
                             font-size: 12px;
                             font-weight: 600;
                             width: fit-content;
@@ -421,10 +603,20 @@
                                 color: #059669;
                             }
 
+                            &.booked {
+                                background: #fef3c7;
+                                color: #d97706;
+                            }
+
                             &.in_use,
                             &.occupied {
                                 background: #dbeafe;
                                 color: #2563eb;
+                            }
+
+                            &.inactive {
+                                background: #f3f4f6;
+                                color: #6b7280;
                             }
 
                             &.maintenance {
@@ -432,16 +624,237 @@
                                 color: #d97706;
                             }
 
+                            &.disabled,
+                            &.unavailable {
+                                background: #fee2e2;
+                                color: #dc2626;
+                            }
+
                             &.unknown {
                                 background: #f1f5f9;
                                 color: #64748b;
+                            }
+                        }
+
+                        .reservation-badge {
+                            font-size: 11px;
+                            color: #64748b;
+                        }
+                    }
+
+                    .slot-actions {
+                        display: flex;
+                        gap: 8px;
+                    }
+                }
+            }
+
+            .no-slots {
+                text-align: center;
+                padding: 48px;
+                color: #94a3b8;
+                font-size: 14px;
+            }
+        }
+    }
+
+    // Station Detail Modal
+    .station-detail-modal {
+        max-width: 1600px;
+        width: 95%;
+
+        .modal-body {
+            max-height: calc(90vh - 120px);
+            overflow-y: auto;
+        }
+
+        .ports-section {
+            .section-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 28px;
+                padding-bottom: 16px;
+                border-bottom: 2px solid #e2e8f0;
+
+                h3 {
+                    margin: 0;
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: #1e293b;
+
+                    &::before {
+                        content: "⚡ ";
+                        color: #7ed321;
+                    }
+                }
+
+                .btn-add {
+                    padding: 12px 24px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    background: linear-gradient(135deg, #7ed321, #a3e635);
+                    border: none;
+                    color: white;
+                    border-radius: 10px;
+                    transition: all 0.3s ease;
+
+                    &:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(126, 211, 33, 0.4);
+                    }
+                }
+            }
+
+            .ports-detail-list {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+                max-height: calc(90vh - 200px);
+                overflow-y: auto;
+                padding-right: 8px;
+
+                // Custom scrollbar
+                &::-webkit-scrollbar {
+                    width: 8px;
+                }
+
+                &::-webkit-scrollbar-track {
+                    background: #f1f5f9;
+                    border-radius: 4px;
+                }
+
+                &::-webkit-scrollbar-thumb {
+                    background: #cbd5e1;
+                    border-radius: 4px;
+
+                    &:hover {
+                        background: #94a3b8;
+                    }
+                }
+            }
+
+            .port-detail-card {
+                background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+                border: 2px solid #e2e8f0;
+                border-radius: 16px;
+                padding: 24px;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: visible;
+
+                &::before {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 4px;
+                    background: linear-gradient(90deg, #7ed321 0%, #a3e635 50%, #7ed321 100%);
+                    border-radius: 16px 16px 0 0;
+                }
+
+                &:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 12px 30px rgba(25, 135, 84, 0.2);
+                    border-color: #7ed321;
+                }
+
+                .port-detail-header {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                    margin-bottom: 20px;
+                    padding-bottom: 16px;
+                    border-bottom: 1px dashed #e2e8f0;
+
+                    .port-detail-info {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+
+                        h4 {
+                            margin: 0;
+                            font-size: 19px;
+                            font-weight: 700;
+                            color: #1e293b;
+
+                            &::before {
+                                content: "🔌 ";
+                                margin-right: 6px;
+                            }
+                        }
+
+                        .port-status-badge {
+                            display: inline-block;
+                            padding: 6px 14px;
+                            border-radius: 20px;
+                            font-size: 12px;
+                            font-weight: 700;
+                            width: fit-content;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+
+                            &.available {
+                                background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+                                color: #059669;
+                                border: 1px solid #059669;
+                            }
+
+                            &.in_use,
+                            &.occupied {
+                                background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+                                color: #2563eb;
+                                border: 1px solid #2563eb;
+                            }
+
+                            &.maintenance {
+                                background: linear-gradient(135deg, #fef3c7, #fde68a);
+                                color: #d97706;
+                                border: 1px solid #d97706;
+                            }
+
+                            &.unknown {
+                                background: #f1f5f9;
+                                color: #64748b;
+                                border: 1px solid #cbd5e1;
                             }
                         }
                     }
 
                     .port-actions {
                         display: flex;
-                        gap: 8px;
+                        gap: 10px;
+
+                        button {
+                            padding: 10px 18px;
+                            font-size: 13px;
+                            font-weight: 600;
+                            border-radius: 10px;
+                            transition: all 0.2s ease;
+                        }
+
+                        .btn-secondary {
+                            background: #f1f5f9;
+                            color: #475569;
+                            border: 1px solid #e2e8f0;
+
+                            &:hover {
+                                background: #e2e8f0;
+                                transform: translateY(-2px);
+                            }
+                        }
+
+                        .btn-danger {
+                            background: linear-gradient(135deg, #fee2e2, #fecaca);
+                            color: #dc2626;
+                            border: 1px solid #fca5a5;
+
+                            &:hover {
+                                background: linear-gradient(135deg, #fecaca, #fca5a5);
+                                transform: translateY(-2px);
+                            }
+                        }
                     }
                 }
 
@@ -449,23 +862,50 @@
                     .slots-header {
                         display: flex;
                         align-items: center;
-                        gap: 16px;
-                        margin-bottom: 16px;
-                        font-size: 14px;
+                        justify-content: space-between;
+                        margin-bottom: 14px;
+                        font-size: 13px;
                         font-weight: 600;
-                        color: #1e293b;
+                        color: #475569;
+
+                        button {
+                            font-size: 12px;
+                            padding: 6px 12px;
+                        }
                     }
 
                     .loading-slots {
                         text-align: center;
-                        padding: 24px;
+                        padding: 20px;
                         color: #64748b;
+                        font-size: 14px;
                     }
 
                     .slots-grid {
                         display: grid;
                         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
                         gap: 12px;
+                        max-height: 300px;
+                        overflow-y: auto;
+                        padding-right: 4px;
+
+                        &::-webkit-scrollbar {
+                            width: 6px;
+                        }
+
+                        &::-webkit-scrollbar-track {
+                            background: #f1f5f9;
+                            border-radius: 3px;
+                        }
+
+                        &::-webkit-scrollbar-thumb {
+                            background: #cbd5e1;
+                            border-radius: 3px;
+
+                            &:hover {
+                                background: #94a3b8;
+                            }
+                        }
                     }
 
                     .slot-item {
@@ -748,6 +1188,23 @@
     .btn-small {
         padding: 6px 12px;
         font-size: 12px;
+    }
+}
+
+// Port Modal - Form riêng
+.port-modal {
+    max-width: 600px;
+    width: 90%;
+}
+
+// Responsive cho layout 2 cột
+@media (max-width: 1200px) {
+    .station-detail-modal {
+        .ports-section {
+            .ports-detail-list {
+                grid-template-columns: 1fr;
+            }
+        }
     }
 }
 

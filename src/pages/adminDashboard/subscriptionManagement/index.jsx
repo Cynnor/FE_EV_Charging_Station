@@ -540,17 +540,17 @@ const SubscriptionManagement = () => {
                                                 </td>
                                                 <td>
                                                     <div className="action-buttons">
-                                                        <button
+                                                        <button title="Chỉnh sửa"
                                                             className="btn-edit"
                                                             onClick={() => handleEditClickPlan(plan)}
                                                         >
-                                                            ✏️ Sửa
+                                                            ✏️
                                                         </button>
-                                                        <button
+                                                        <button title="Xóa"
                                                             className="btn-delete"
                                                             onClick={() => handleDeletePlan(plan._id)}
                                                         >
-                                                            🗑️ Xóa
+                                                            🗑️
                                                         </button>
                                                     </div>
                                                 </td>
