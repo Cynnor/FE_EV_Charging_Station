@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge, Tag, Tooltip } from "antd";
-import { 
-  MapPin, 
-  Zap, 
-  DollarSign, 
-  Navigation, 
+import {
+  MapPin,
+  Zap,
+  DollarSign,
+  Navigation,
   Clock,
   Activity,
   CheckCircle,
