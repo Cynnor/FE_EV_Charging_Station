@@ -37,8 +37,10 @@ const SubscriptionManagement = () => {
     const [subscriptions, setSubscriptions] = useState([]);
     const [loadingSubscriptions, setLoadingSubscriptions] = useState(true);
     const [errorSubscriptions, setErrorSubscriptions] = useState(null);
-    const [showAddSubscriptionModal, setShowAddSubscriptionModal] = useState(false);
-    const [showEditSubscriptionModal, setShowEditSubscriptionModal] = useState(false);
+    const [showAddSubscriptionModal, setShowAddSubscriptionModal] =
+        useState(false);
+    const [showEditSubscriptionModal, setShowEditSubscriptionModal] =
+        useState(false);
     const [editingSubscription, setEditingSubscription] = useState(null);
     const [subscriptionFormData, setSubscriptionFormData] = useState({
         userId: "",
@@ -54,6 +56,11 @@ const SubscriptionManagement = () => {
     const [currentPagePlans, setCurrentPagePlans] = useState(1);
     const [currentPageSubscriptions, setCurrentPageSubscriptions] = useState(1);
     const pageSize = 10;
+
+    // Scroll to top when component mounts
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     // ==================== SUBSCRIPTION PLANS FUNCTIONS ====================
 
@@ -105,9 +112,11 @@ const SubscriptionManagement = () => {
             const featuresData = {};
 
             // maxReservations: nếu có giá trị thì convert, nếu rỗng thì -1
-            if (planFormData.features.maxReservations !== "" &&
+            if (
+                planFormData.features.maxReservations !== "" &&
                 planFormData.features.maxReservations !== null &&
-                planFormData.features.maxReservations !== undefined) {
+                planFormData.features.maxReservations !== undefined
+            ) {
                 const maxRes = Number(planFormData.features.maxReservations);
                 featuresData.maxReservations = !isNaN(maxRes) ? maxRes : -1;
             } else {
@@ -115,9 +124,11 @@ const SubscriptionManagement = () => {
             }
 
             // maxVehicles: tương tự
-            if (planFormData.features.maxVehicles !== "" &&
+            if (
+                planFormData.features.maxVehicles !== "" &&
                 planFormData.features.maxVehicles !== null &&
-                planFormData.features.maxVehicles !== undefined) {
+                planFormData.features.maxVehicles !== undefined
+            ) {
                 const maxVeh = Number(planFormData.features.maxVehicles);
                 featuresData.maxVehicles = !isNaN(maxVeh) ? maxVeh : -1;
             } else {
@@ -125,12 +136,16 @@ const SubscriptionManagement = () => {
             }
 
             // prioritySupport: luôn gửi boolean
-            featuresData.prioritySupport = Boolean(planFormData.features.prioritySupport);
+            featuresData.prioritySupport = Boolean(
+                planFormData.features.prioritySupport
+            );
 
             // discount: chỉ gửi nếu có giá trị > 0
-            if (planFormData.features.discount !== "" &&
+            if (
+                planFormData.features.discount !== "" &&
                 planFormData.features.discount !== null &&
-                planFormData.features.discount !== undefined) {
+                planFormData.features.discount !== undefined
+            ) {
                 const discount = Number(planFormData.features.discount);
                 if (!isNaN(discount) && discount > 0) {
                     featuresData.discount = discount;
@@ -144,9 +159,10 @@ const SubscriptionManagement = () => {
                 duration: planFormData.duration,
                 durationDays: Number(planFormData.durationDays),
                 price: Number(planFormData.price),
-                originalPrice: planFormData.originalPrice && planFormData.originalPrice !== ""
-                    ? Number(planFormData.originalPrice)
-                    : undefined,
+                originalPrice:
+                    planFormData.originalPrice && planFormData.originalPrice !== ""
+                        ? Number(planFormData.originalPrice)
+                        : undefined,
                 description: planFormData.description?.trim() || "",
                 features: featuresData,
                 isActive: Boolean(planFormData.isActive),
@@ -160,7 +176,8 @@ const SubscriptionManagement = () => {
             fetchPlans();
         } catch (err) {
             console.error("Error adding plan:", err);
-            const errorMessage = err.response?.data?.message ||
+            const errorMessage =
+                err.response?.data?.message ||
                 err.response?.data?.error ||
                 err.message ||
                 "Không thể tạo gói đăng ký";
@@ -177,12 +194,20 @@ const SubscriptionManagement = () => {
             const dataToSend = {
                 name: planFormData.name,
                 price: Number(planFormData.price),
-                originalPrice: planFormData.originalPrice ? Number(planFormData.originalPrice) : undefined,
+                originalPrice: planFormData.originalPrice
+                    ? Number(planFormData.originalPrice)
+                    : undefined,
                 features: {
-                    maxReservations: planFormData.features.maxReservations ? Number(planFormData.features.maxReservations) : -1,
-                    maxVehicles: planFormData.features.maxVehicles ? Number(planFormData.features.maxVehicles) : -1,
+                    maxReservations: planFormData.features.maxReservations
+                        ? Number(planFormData.features.maxReservations)
+                        : -1,
+                    maxVehicles: planFormData.features.maxVehicles
+                        ? Number(planFormData.features.maxVehicles)
+                        : -1,
                     prioritySupport: planFormData.features.prioritySupport,
-                    discount: planFormData.features.discount ? Number(planFormData.features.discount) : undefined,
+                    discount: planFormData.features.discount
+                        ? Number(planFormData.features.discount)
+                        : undefined,
                 },
                 description: planFormData.description,
                 isActive: planFormData.isActive,
@@ -248,8 +273,14 @@ const SubscriptionManagement = () => {
             originalPrice: plan.originalPrice || "",
             description: plan.description || "",
             features: {
-                maxReservations: plan.features?.maxReservations === -1 ? "" : (plan.features?.maxReservations || ""),
-                maxVehicles: plan.features?.maxVehicles === -1 ? "" : (plan.features?.maxVehicles || ""),
+                maxReservations:
+                    plan.features?.maxReservations === -1
+                        ? ""
+                        : plan.features?.maxReservations || "",
+                maxVehicles:
+                    plan.features?.maxVehicles === -1
+                        ? ""
+                        : plan.features?.maxVehicles || "",
                 prioritySupport: plan.features?.prioritySupport || false,
                 discount: plan.features?.discount || "",
             },
@@ -310,7 +341,9 @@ const SubscriptionManagement = () => {
                 userId: subscriptionFormData.userId,
                 planId: subscriptionFormData.planId,
                 autoRenew: subscriptionFormData.autoRenew,
-                customPrice: subscriptionFormData.customPrice ? Number(subscriptionFormData.customPrice) : undefined,
+                customPrice: subscriptionFormData.customPrice
+                    ? Number(subscriptionFormData.customPrice)
+                    : undefined,
             };
 
             await api.post("/subscriptions", dataToSend);
@@ -383,21 +416,23 @@ const SubscriptionManagement = () => {
             autoRenew: subscription.autoRenew || false,
             customPrice: subscription.customPrice || "",
             status: subscription.status || "pending",
-            endDate: subscription.endDate ? new Date(subscription.endDate).toISOString().split('T')[0] : "",
+            endDate: subscription.endDate
+                ? new Date(subscription.endDate).toISOString().split("T")[0]
+                : "",
         });
         setShowEditSubscriptionModal(true);
     };
 
     // Format helper functions
     const formatPrice = (price) => {
-        return new Intl.NumberFormat('vi-VN').format(price) + ' VNĐ';
+        return new Intl.NumberFormat("vi-VN").format(price) + " VNĐ";
     };
 
     const formatDuration = (duration) => {
         const durationMap = {
-            '1_month': '1 tháng',
-            '6_months': '6 tháng',
-            '12_months': '12 tháng'
+            "1_month": "1 tháng",
+            "6_months": "6 tháng",
+            "12_months": "12 tháng",
         };
         return durationMap[duration] || duration;
     };
@@ -430,7 +465,8 @@ const SubscriptionManagement = () => {
                     📦 Gói Đăng Ký (Plans)
                 </button>
                 <button
-                    className={`tab-button ${activeTab === "subscriptions" ? "active" : ""}`}
+                    className={`tab-button ${activeTab === "subscriptions" ? "active" : ""
+                        }`}
                     onClick={() => setActiveTab("subscriptions")}
                 >
                     👤 Đăng Ký Người Dùng (Subscriptions)
@@ -490,28 +526,31 @@ const SubscriptionManagement = () => {
                                                 <td>{formatDuration(plan.duration)}</td>
                                                 <td>{formatPrice(plan.price)}</td>
                                                 <td>
-                                                    {plan.originalPrice ? formatPrice(plan.originalPrice) : "-"}
+                                                    {plan.originalPrice
+                                                        ? formatPrice(plan.originalPrice)
+                                                        : "-"}
                                                 </td>
                                                 <td>
                                                     <span
-                                                        className={`badge ${plan.isActive ? "badge-active" : "badge-inactive"}`}
+                                                        className={`badge ${plan.isActive ? "badge-active" : "badge-inactive"
+                                                            }`}
                                                     >
                                                         {plan.isActive ? "Hoạt động" : "Không hoạt động"}
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <div className="action-buttons">
-                                                        <button title="Chỉnh sửa "
+                                                        <button
                                                             className="btn-edit"
                                                             onClick={() => handleEditClickPlan(plan)}
                                                         >
-                                                            ✏️
+                                                            ✏️ Sửa
                                                         </button>
-                                                        <button title="Xóa"
+                                                        <button
                                                             className="btn-delete"
                                                             onClick={() => handleDeletePlan(plan._id)}
                                                         >
-                                                            🗑️
+                                                            🗑️ Xóa
                                                         </button>
                                                     </div>
                                                 </td>
@@ -522,18 +561,20 @@ const SubscriptionManagement = () => {
                             </table>
                         </div>
                     )}
-
                 </div>
             )}
 
             {/* Add Plan Modal - New Design - Outside tab-content */}
             {showAddPlanModal && (
-                <div className="modal-overlay-new" onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                        setShowAddPlanModal(false);
-                        resetPlanForm();
-                    }
-                }}>
+                <div
+                    className="modal-overlay-new"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setShowAddPlanModal(false);
+                            resetPlanForm();
+                        }
+                    }}
+                >
                     <div className="modal-content-new">
                         <div className="modal-header-new">
                             <div className="modal-title-section">
@@ -563,14 +604,19 @@ const SubscriptionManagement = () => {
                                 </div>
                                 <div className="form-card-body">
                                     <div className="form-field-new">
-                                        <label className="field-label">Tên gói <span className="required">*</span></label>
+                                        <label className="field-label">
+                                            Tên gói <span className="required">*</span>
+                                        </label>
                                         <input
                                             type="text"
                                             required
                                             className="field-input"
                                             value={planFormData.name}
                                             onChange={(e) =>
-                                                setPlanFormData({ ...planFormData, name: e.target.value })
+                                                setPlanFormData({
+                                                    ...planFormData,
+                                                    name: e.target.value,
+                                                })
                                             }
                                             placeholder="Ví dụ: Basic - 1 tháng"
                                         />
@@ -578,25 +624,38 @@ const SubscriptionManagement = () => {
 
                                     <div className="form-grid-2">
                                         <div className="form-field-new">
-                                            <label className="field-label">Loại gói <span className="required">*</span></label>
+                                            <label className="field-label">
+                                                Loại gói <span className="required">*</span>
+                                            </label>
                                             <div className="select-wrapper">
                                                 <select
                                                     required
                                                     className="field-select"
                                                     value={planFormData.type}
                                                     onChange={(e) =>
-                                                        setPlanFormData({ ...planFormData, type: e.target.value })
+                                                        setPlanFormData({
+                                                            ...planFormData,
+                                                            type: e.target.value,
+                                                        })
                                                     }
                                                 >
-                                                    <option key="basic" value="basic">Basic</option>
-                                                    <option key="standard" value="standard">Standard</option>
-                                                    <option key="premium" value="premium">Premium</option>
+                                                    <option key="basic" value="basic">
+                                                        Basic
+                                                    </option>
+                                                    <option key="standard" value="standard">
+                                                        Standard
+                                                    </option>
+                                                    <option key="premium" value="premium">
+                                                        Premium
+                                                    </option>
                                                 </select>
                                             </div>
                                         </div>
 
                                         <div className="form-field-new">
-                                            <label className="field-label">Thời hạn <span className="required">*</span></label>
+                                            <label className="field-label">
+                                                Thời hạn <span className="required">*</span>
+                                            </label>
                                             <div className="select-wrapper">
                                                 <select
                                                     required
@@ -604,20 +663,27 @@ const SubscriptionManagement = () => {
                                                     value={planFormData.duration}
                                                     onChange={(e) => {
                                                         const durationMapping = {
-                                                            '1_month': 30,
-                                                            '6_months': 180,
-                                                            '12_months': 365
+                                                            "1_month": 30,
+                                                            "6_months": 180,
+                                                            "12_months": 365,
                                                         };
                                                         setPlanFormData({
                                                             ...planFormData,
                                                             duration: e.target.value,
-                                                            durationDays: durationMapping[e.target.value] || 30
+                                                            durationDays:
+                                                                durationMapping[e.target.value] || 30,
                                                         });
                                                     }}
                                                 >
-                                                    <option key="1_month" value="1_month">1 tháng</option>
-                                                    <option key="6_months" value="6_months">6 tháng</option>
-                                                    <option key="12_months" value="12_months">12 tháng</option>
+                                                    <option key="1_month" value="1_month">
+                                                        1 tháng
+                                                    </option>
+                                                    <option key="6_months" value="6_months">
+                                                        6 tháng
+                                                    </option>
+                                                    <option key="12_months" value="12_months">
+                                                        12 tháng
+                                                    </option>
                                                 </select>
                                             </div>
                                         </div>
@@ -625,7 +691,9 @@ const SubscriptionManagement = () => {
 
                                     <div className="form-grid-2">
                                         <div className="form-field-new">
-                                            <label className="field-label">Số ngày <span className="required">*</span></label>
+                                            <label className="field-label">
+                                                Số ngày <span className="required">*</span>
+                                            </label>
                                             <input
                                                 type="number"
                                                 required
@@ -687,7 +755,9 @@ const SubscriptionManagement = () => {
                                 <div className="form-card-body">
                                     <div className="form-grid-2">
                                         <div className="form-field-new">
-                                            <label className="field-label">Giá bán (VNĐ) <span className="required">*</span></label>
+                                            <label className="field-label">
+                                                Giá bán (VNĐ) <span className="required">*</span>
+                                            </label>
                                             <div className="input-with-icon">
                                                 <span className="input-icon">₫</span>
                                                 <input
@@ -698,7 +768,10 @@ const SubscriptionManagement = () => {
                                                     className="field-input"
                                                     value={planFormData.price}
                                                     onChange={(e) =>
-                                                        setPlanFormData({ ...planFormData, price: e.target.value })
+                                                        setPlanFormData({
+                                                            ...planFormData,
+                                                            price: e.target.value,
+                                                        })
                                                     }
                                                     placeholder="99.000"
                                                 />
@@ -751,13 +824,16 @@ const SubscriptionManagement = () => {
                                                         ...planFormData,
                                                         features: {
                                                             ...planFormData.features,
-                                                            maxReservations: e.target.value === "" ? "" : e.target.value,
+                                                            maxReservations:
+                                                                e.target.value === "" ? "" : e.target.value,
                                                         },
                                                     })
                                                 }
                                                 placeholder="-1 = không giới hạn"
                                             />
-                                            <span className="field-hint">Để trống hoặc nhập -1 = không giới hạn</span>
+                                            <span className="field-hint">
+                                                Để trống hoặc nhập -1 = không giới hạn
+                                            </span>
                                         </div>
 
                                         <div className="form-field-new">
@@ -772,19 +848,24 @@ const SubscriptionManagement = () => {
                                                         ...planFormData,
                                                         features: {
                                                             ...planFormData.features,
-                                                            maxVehicles: e.target.value === "" ? "" : e.target.value,
+                                                            maxVehicles:
+                                                                e.target.value === "" ? "" : e.target.value,
                                                         },
                                                     })
                                                 }
                                                 placeholder="-1 = không giới hạn"
                                             />
-                                            <span className="field-hint">Để trống hoặc nhập -1 = không giới hạn</span>
+                                            <span className="field-hint">
+                                                Để trống hoặc nhập -1 = không giới hạn
+                                            </span>
                                         </div>
                                     </div>
 
                                     <div className="form-grid-2">
                                         <div className="form-field-new">
-                                            <label className="field-label">Giảm giá khi gia hạn (%)</label>
+                                            <label className="field-label">
+                                                Giảm giá khi gia hạn (%)
+                                            </label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -796,7 +877,8 @@ const SubscriptionManagement = () => {
                                                         ...planFormData,
                                                         features: {
                                                             ...planFormData.features,
-                                                            discount: e.target.value === "" ? "" : e.target.value,
+                                                            discount:
+                                                                e.target.value === "" ? "" : e.target.value,
                                                         },
                                                     })
                                                 }
@@ -822,7 +904,9 @@ const SubscriptionManagement = () => {
                                                         }
                                                     />
                                                     <span className="checkmark"></span>
-                                                    <span className="checkbox-label">Hỗ trợ ưu tiên 24/7</span>
+                                                    <span className="checkbox-label">
+                                                        Hỗ trợ ưu tiên 24/7
+                                                    </span>
                                                 </label>
 
                                                 <label className="checkbox-item">
@@ -837,7 +921,9 @@ const SubscriptionManagement = () => {
                                                         }
                                                     />
                                                     <span className="checkmark"></span>
-                                                    <span className="checkbox-label">Kích hoạt gói ngay</span>
+                                                    <span className="checkbox-label">
+                                                        Kích hoạt gói ngay
+                                                    </span>
                                                 </label>
                                             </div>
                                         </div>
@@ -906,9 +992,15 @@ const SubscriptionManagement = () => {
                                             setPlanFormData({ ...planFormData, type: e.target.value })
                                         }
                                     >
-                                        <option key="basic" value="basic">Basic</option>
-                                        <option key="standard" value="standard">Standard</option>
-                                        <option key="premium" value="premium">Premium</option>
+                                        <option key="basic" value="basic">
+                                            Basic
+                                        </option>
+                                        <option key="standard" value="standard">
+                                            Standard
+                                        </option>
+                                        <option key="premium" value="premium">
+                                            Premium
+                                        </option>
                                     </select>
                                 </div>
                                 <div className="form-group">
@@ -919,20 +1011,26 @@ const SubscriptionManagement = () => {
                                         onChange={(e) => {
                                             // Auto-calculate durationDays khi chọn duration
                                             const durationMapping = {
-                                                '1_month': 30,
-                                                '6_months': 180,
-                                                '12_months': 365
+                                                "1_month": 30,
+                                                "6_months": 180,
+                                                "12_months": 365,
                                             };
                                             setPlanFormData({
                                                 ...planFormData,
                                                 duration: e.target.value,
-                                                durationDays: durationMapping[e.target.value] || 30
+                                                durationDays: durationMapping[e.target.value] || 30,
                                             });
                                         }}
                                     >
-                                        <option key="1_month" value="1_month">1 tháng</option>
-                                        <option key="6_months" value="6_months">6 tháng</option>
-                                        <option key="12_months" value="12_months">12 tháng</option>
+                                        <option key="1_month" value="1_month">
+                                            1 tháng
+                                        </option>
+                                        <option key="6_months" value="6_months">
+                                            6 tháng
+                                        </option>
+                                        <option key="12_months" value="12_months">
+                                            12 tháng
+                                        </option>
                                     </select>
                                 </div>
                             </div>
@@ -979,7 +1077,10 @@ const SubscriptionManagement = () => {
                                         step="1000"
                                         value={planFormData.price}
                                         onChange={(e) =>
-                                            setPlanFormData({ ...planFormData, price: e.target.value })
+                                            setPlanFormData({
+                                                ...planFormData,
+                                                price: e.target.value,
+                                            })
                                         }
                                         placeholder="VD: 99000"
                                     />
@@ -1029,13 +1130,16 @@ const SubscriptionManagement = () => {
                                                     ...planFormData,
                                                     features: {
                                                         ...planFormData.features,
-                                                        maxReservations: e.target.value === "" ? "" : e.target.value,
+                                                        maxReservations:
+                                                            e.target.value === "" ? "" : e.target.value,
                                                     },
                                                 })
                                             }
                                             placeholder="-1 = không giới hạn"
                                         />
-                                        <small className="form-hint">Để trống hoặc nhập -1 = không giới hạn</small>
+                                        <small className="form-hint">
+                                            Để trống hoặc nhập -1 = không giới hạn
+                                        </small>
                                     </div>
                                     <div className="form-group">
                                         <label>Số xe tối đa</label>
@@ -1048,13 +1152,16 @@ const SubscriptionManagement = () => {
                                                     ...planFormData,
                                                     features: {
                                                         ...planFormData.features,
-                                                        maxVehicles: e.target.value === "" ? "" : e.target.value,
+                                                        maxVehicles:
+                                                            e.target.value === "" ? "" : e.target.value,
                                                     },
                                                 })
                                             }
                                             placeholder="-1 = không giới hạn"
                                         />
-                                        <small className="form-hint">Để trống hoặc nhập -1 = không giới hạn</small>
+                                        <small className="form-hint">
+                                            Để trống hoặc nhập -1 = không giới hạn
+                                        </small>
                                     </div>
                                 </div>
                                 <div className="form-row">
@@ -1070,7 +1177,8 @@ const SubscriptionManagement = () => {
                                                     ...planFormData,
                                                     features: {
                                                         ...planFormData.features,
-                                                        discount: e.target.value === "" ? "" : e.target.value,
+                                                        discount:
+                                                            e.target.value === "" ? "" : e.target.value,
                                                     },
                                                 })
                                             }
@@ -1113,10 +1221,14 @@ const SubscriptionManagement = () => {
                                 </label>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn-cancel" onClick={() => {
-                                    setShowAddPlanModal(false);
-                                    resetPlanForm();
-                                }}>
+                                <button
+                                    type="button"
+                                    className="btn-cancel"
+                                    onClick={() => {
+                                        setShowAddPlanModal(false);
+                                        resetPlanForm();
+                                    }}
+                                >
                                     Hủy
                                 </button>
                                 <button type="submit" className="btn-submit">
@@ -1165,7 +1277,10 @@ const SubscriptionManagement = () => {
                                         required
                                         value={planFormData.price}
                                         onChange={(e) =>
-                                            setPlanFormData({ ...planFormData, price: e.target.value })
+                                            setPlanFormData({
+                                                ...planFormData,
+                                                price: e.target.value,
+                                            })
                                         }
                                     />
                                 </div>
@@ -1200,7 +1315,9 @@ const SubscriptionManagement = () => {
                                 <h3>Tính năng</h3>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Số lần đặt lịch tối đa/tháng (-1 = không giới hạn)</label>
+                                        <label>
+                                            Số lần đặt lịch tối đa/tháng (-1 = không giới hạn)
+                                        </label>
                                         <input
                                             type="number"
                                             value={planFormData.features.maxReservations}
@@ -1377,16 +1494,17 @@ const SubscriptionManagement = () => {
                                                 </td>
                                                 <td>
                                                     <span
-                                                        className={`badge badge-${subscription.status || "pending"}`}
+                                                        className={`badge badge-${subscription.status || "pending"
+                                                            }`}
                                                     >
                                                         {subscription.status || "pending"}
                                                     </span>
                                                 </td>
                                                 <td>
                                                     {subscription.startDate
-                                                        ? new Date(subscription.startDate).toLocaleDateString(
-                                                            "vi-VN"
-                                                        )
+                                                        ? new Date(
+                                                            subscription.startDate
+                                                        ).toLocaleDateString("vi-VN")
                                                         : "-"}
                                                 </td>
                                                 <td>
@@ -1396,14 +1514,14 @@ const SubscriptionManagement = () => {
                                                         )
                                                         : "-"}
                                                 </td>
-                                                <td>
-                                                    {subscription.autoRenew ? "✓ Có" : "✗ Không"}
-                                                </td>
+                                                <td>{subscription.autoRenew ? "✓ Có" : "✗ Không"}</td>
                                                 <td>
                                                     <div className="action-buttons">
                                                         <button
                                                             className="btn-edit"
-                                                            onClick={() => handleEditClickSubscription(subscription)}
+                                                            onClick={() =>
+                                                                handleEditClickSubscription(subscription)
+                                                            }
                                                         >
                                                             ✏️ Sửa
                                                         </button>
@@ -1454,9 +1572,14 @@ const SubscriptionManagement = () => {
                                                 })
                                             }
                                         >
-                                            <option key="select-user" value="">Chọn người dùng</option>
+                                            <option key="select-user" value="">
+                                                Chọn người dùng
+                                            </option>
                                             {usersList.map((user) => (
-                                                <option key={user._id || user.id} value={user._id || user.id}>
+                                                <option
+                                                    key={user._id || user.id}
+                                                    value={user._id || user.id}
+                                                >
                                                     {user.username} - {user.fullName || user.email}
                                                 </option>
                                             ))}
@@ -1474,7 +1597,9 @@ const SubscriptionManagement = () => {
                                                 })
                                             }
                                         >
-                                            <option key="select-plan" value="">Chọn gói</option>
+                                            <option key="select-plan" value="">
+                                                Chọn gói
+                                            </option>
                                             {plans.map((plan) => (
                                                 <option key={plan._id} value={plan._id}>
                                                     {plan.name} - {formatPrice(plan.price)}
@@ -1563,11 +1688,21 @@ const SubscriptionManagement = () => {
                                                 })
                                             }
                                         >
-                                            <option key="pending" value="pending">Pending</option>
-                                            <option key="active" value="active">Active</option>
-                                            <option key="current_active" value="current_active">Current Active</option>
-                                            <option key="expired" value="expired">Expired</option>
-                                            <option key="cancelled" value="cancelled">Cancelled</option>
+                                            <option key="pending" value="pending">
+                                                Pending
+                                            </option>
+                                            <option key="active" value="active">
+                                                Active
+                                            </option>
+                                            <option key="current_active" value="current_active">
+                                                Current Active
+                                            </option>
+                                            <option key="expired" value="expired">
+                                                Expired
+                                            </option>
+                                            <option key="cancelled" value="cancelled">
+                                                Cancelled
+                                            </option>
                                         </select>
                                     </div>
                                     <div className="form-row">
@@ -1627,5 +1762,3 @@ const SubscriptionManagement = () => {
 };
 
 export default SubscriptionManagement;
-
-

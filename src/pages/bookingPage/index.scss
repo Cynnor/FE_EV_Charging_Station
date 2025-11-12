@@ -196,6 +196,408 @@ body {
   overflow: hidden;
 }
 
+// Slot Selection
+.slot-selection {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: $spacing-md;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: $spacing-md;
+    margin-top: 0;
+  }
+
+  .selection-hint {
+    text-align: center;
+    color: $text-secondary;
+    font-size: 1rem;
+    margin-bottom: 24px;
+  }
+
+  .loading-message,
+  .error-message,
+  .no-slots-message {
+    text-align: center;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+  }
+
+  .loading-message {
+    background: rgba(25, 135, 84, 0.1);
+    color: $text-primary;
+  }
+
+  .error-message {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+  }
+
+  .no-slots-message {
+    background: rgba(170, 170, 170, 0.1);
+    color: #AAAAAA;
+  }
+
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(100vh - 400px);
+    padding-right: 8px;
+    margin-bottom: 24px;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $primary;
+      border-radius: 10px;
+
+      &:hover {
+        background: $primary-dark;
+      }
+    }
+  }
+
+  .slot-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, $primary 0%, $primary-dark 100%);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover:not(.disabled) {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(25, 135, 84, 0.15);
+      border-color: $primary;
+
+      &::before {
+        transform: scaleX(1);
+      }
+
+      .slot-icon {
+        transform: scale(1.2) rotate(10deg);
+      }
+    }
+
+    &.selected {
+      border-color: $primary;
+      background: linear-gradient(135deg, rgba(224, 247, 224, 0.5) 0%, rgba(209, 245, 209, 0.3) 100%);
+      box-shadow: 0 8px 20px rgba(25, 135, 84, 0.25);
+
+      &::before {
+        transform: scaleX(1);
+      }
+
+      .slot-number-wrapper {
+        color: $primary-dark;
+      }
+
+      .slot-icon {
+        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        transform: scale(1.1);
+      }
+    }
+
+    &.disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+
+      &:hover {
+        transform: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border-color: #e5e7eb;
+
+        &::before {
+          transform: scaleX(0);
+        }
+      }
+
+      .slot-icon {
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        opacity: 0.5;
+      }
+    }
+  }
+
+  .slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: $spacing-xs;
+    border-bottom: 2px solid $bg-gray;
+
+    .slot-status-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      border: 2px solid transparent;
+    }
+
+    .slot-status-chip.available {
+      background: rgba($success, 0.15);
+      color: $success;
+      border-color: rgba($success, 0.3);
+    }
+
+    .slot-status-chip.booked,
+    .slot-status-chip.reserved,
+    .slot-status-chip.occupied,
+    .slot-status-chip.maintenance,
+    .slot-status-chip.disabled,
+    .slot-status-chip.unavailable {
+      background: rgba($danger, 0.15);
+      color: $danger;
+      border-color: rgba($danger, 0.3);
+    }
+  }
+
+  .slot-number-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .slot-icon {
+    font-size: 32px;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(224, 247, 224, 0.8) 0%, rgba(209, 245, 209, 0.6) 100%);
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.1);
+    border: 2px solid rgba(25, 135, 84, 0.2);
+  }
+
+  .slot-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333333;
+    letter-spacing: -0.3px;
+  }
+
+  .slot-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .slot-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.5) 100%);
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+
+    .slot-card:hover:not(.disabled) & {
+      background: linear-gradient(135deg, rgba(224, 247, 224, 0.3) 0%, rgba(209, 245, 209, 0.2) 100%);
+      border-color: rgba(25, 135, 84, 0.2);
+    }
+
+    .slot-card.selected & {
+      background: linear-gradient(135deg, rgba(224, 247, 224, 0.5) 0%, rgba(209, 245, 209, 0.3) 100%);
+      border-color: rgba(25, 135, 84, 0.3);
+    }
+  }
+
+  .info-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border-radius: 8px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .info-label {
+    font-size: 12px;
+    color: #AAAAAA;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .info-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333333;
+  }
+
+  .slot-unavailable-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border-radius: 16px;
+    backdrop-filter: blur(4px);
+    padding: 20px;
+
+    .unavailable-icon {
+      font-size: 56px;
+      opacity: 0.7;
+      animation: pulse 2s infinite;
+    }
+
+    .unavailable-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      text-align: center;
+    }
+
+    .unavailable-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #EF4444;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .unavailable-subtitle {
+      font-size: 14px;
+      font-weight: 600;
+      color: #6b7280;
+    }
+  }
+
+  .next-button {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, $primary-dark 0%, darken($primary-dark, 5%) 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(25, 135, 84, 0.4);
+
+      &::before {
+        width: 300px;
+        height: 300px;
+      }
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+      box-shadow: none;
+
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+}
+
 // Search & Filters
 .search-filters {
   padding: $spacing-md;
@@ -1897,15 +2299,14 @@ body {
 
   .slots-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
     overflow-y: auto;
     overflow-x: hidden;
     max-height: calc(100vh - 400px);
     padding-right: 8px;
     margin-bottom: 24px;
 
-    /* Custom scrollbar */
     &::-webkit-scrollbar {
       width: 8px;
     }
@@ -1918,105 +2319,492 @@ body {
     &::-webkit-scrollbar-thumb {
       background: $primary;
       border-radius: 10px;
-    }
 
-    &::-webkit-scrollbar-thumb:hover {
-      background: $primary-dark;
+      &:hover {
+        background: $primary-dark;
+      }
     }
   }
 
   .slot-card {
-    background: #fff;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 16px;
+    padding: 20px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    min-height: 180px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 200px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
-    &:hover:not(.booked) {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, $primary 0%, $primary-dark 100%);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover:not(.disabled) {
       transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(25, 135, 84, 0.15);
+      box-shadow: 0 12px 24px rgba(25, 135, 84, 0.15);
       border-color: $primary;
+
+      &::before {
+        transform: scaleX(1);
+      }
+
+      .slot-icon {
+        transform: scale(1.2) rotate(10deg);
+      }
     }
 
     &.selected {
       border-color: $primary;
-      background: rgba(25, 135, 84, 0.05);
-      box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
+      background: linear-gradient(135deg, rgba(224, 247, 224, 0.5) 0%, rgba(209, 245, 209, 0.3) 100%);
+      box-shadow: 0 8px 20px rgba(25, 135, 84, 0.25);
+
+      &::before {
+        transform: scaleX(1);
+      }
+
+      .slot-number-wrapper {
+        color: $primary-dark;
+      }
+
+      .slot-icon {
+        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        transform: scale(1.1);
+      }
     }
 
-    &.booked {
-      opacity: 0.6;
+    &.disabled {
       cursor: not-allowed;
-      background: #f9fafb;
+      opacity: 0.6;
+      background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
 
       &:hover {
         transform: none;
-        box-shadow: none;
-      }
-    }
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border-color: #e5e7eb;
 
-    // Step 3 – slot card styling moved from JSX
-    &.disabled {
-      cursor: not-allowed;
-      pointer-events: none;
-      opacity: 0.55;
-    }
-
-    .slot-status-chip {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      pointer-events: none;
-
-      &.available {
-        background-color: rgba(16, 185, 129, 0.15); // emerald-500 @ 15%
-        color: #10B981;
+        &::before {
+          transform: scaleX(0);
+        }
       }
 
-      // Treat any non-available status as "booked" appearance
-      &.booked,
-      &.reserved,
-      &.occupied,
-      &.maintenance,
-      &.disabled,
-      &.unavailable {
-        background-color: rgba(239, 68, 68, 0.15); // red-500 @ 15%
-        color: #EF4444;
+      .slot-icon {
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        opacity: 0.5;
       }
     }
   }
 
-  .next-button {
-    width: 100%;
-    padding: 16px;
-    background: $primary;
-    color: #ffffff;
-    border: none;
+  .slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: $spacing-xs;
+    border-bottom: 2px solid $bg-gray;
+
+    .slot-status-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      border: 2px solid transparent;
+    }
+
+    .slot-status-chip.available {
+      background: rgba($success, 0.15);
+      color: $success;
+      border-color: rgba($success, 0.3);
+    }
+
+    .slot-status-chip.booked,
+    .slot-status-chip.reserved,
+    .slot-status-chip.occupied,
+    .slot-status-chip.maintenance,
+    .slot-status-chip.disabled,
+    .slot-status-chip.unavailable {
+      background: rgba($danger, 0.15);
+      color: $danger;
+      border-color: rgba($danger, 0.3);
+    }
+  }
+
+  .slot-number-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .slot-icon {
+    font-size: 32px;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(224, 247, 224, 0.8) 0%, rgba(209, 245, 209, 0.6) 100%);
     border-radius: 12px;
-    font-size: 1.1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.1);
+    border: 2px solid rgba(25, 135, 84, 0.2);
+  }
+
+  .slot-number {
+    font-size: 18px;
     font-weight: 700;
-    cursor: pointer;
+    color: #333333;
+    letter-spacing: -0.3px;
+  }
+
+  .slot-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .slot-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.5) 100%);
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
     transition: all 0.3s ease;
+
+    .slot-card:hover:not(.disabled) & {
+      background: linear-gradient(135deg, rgba(224, 247, 224, 0.3) 0%, rgba(209, 245, 209, 0.2) 100%);
+      border-color: rgba(25, 135, 84, 0.2);
+    }
+
+    .slot-card.selected & {
+      background: linear-gradient(135deg, rgba(224, 247, 224, 0.5) 0%, rgba(209, 245, 209, 0.3) 100%);
+      border-color: rgba(25, 135, 84, 0.3);
+    }
+  }
+
+  .info-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border-radius: 8px;
     flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
 
-    &:hover:not(:disabled) {
-      background: $primary-dark;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(20, 108, 67, 0.3);
+  .info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .info-label {
+    font-size: 12px;
+    color: #AAAAAA;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .info-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333333;
+  }
+
+  .slot-unavailable-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border-radius: 16px;
+    backdrop-filter: blur(4px);
+    padding: 20px;
+
+    .unavailable-icon {
+      font-size: 56px;
+      opacity: 0.7;
+      animation: pulse 2s infinite;
     }
 
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .unavailable-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      text-align: center;
     }
+
+    .unavailable-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #EF4444;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .unavailable-subtitle {
+      font-size: 14px;
+      font-weight: 600;
+      color: #6b7280;
+    }
+  }
+}
+
+.vehicle-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, $primary-pale 0%, rgba($primary, 0.2) 100%);
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+  position: relative;
+  border: 2px solid rgba($primary, 0.3);
+  box-shadow: $shadow-sm;
+
+  svg {
+    color: $primary;
+    transition: all $transition-base;
+  }
+
+  .default-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, $warning 0%, color.adjust($warning, $lightness: -10%) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba($warning, 0.4);
+    border: 2px solid $bg-white;
+
+    svg {
+      color: #ffffff;
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+.vehicle-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+
+  .vehicle-plate-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: $text-primary;
+    letter-spacing: 0.5px;
+    transition: color $transition-base;
+  }
+
+  .vehicle-make-model {
+    font-size: 15px;
+    font-weight: 600;
+    color: $text-secondary;
+    line-height: 1.4;
+  }
+
+  .vehicle-type-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $primary-dark;
+    font-weight: 700;
+    padding: 4px 8px;
+    background: rgba($primary, 0.1);
+    border-radius: $radius-sm;
+    width: fit-content;
+    border: 1px solid rgba($primary, 0.2);
+
+    svg {
+      color: $primary;
+      flex-shrink: 0;
+      display: none; // Hide the info icon, we use emoji instead
+    }
+  }
+
+  .vehicle-connector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $text-muted;
+    font-weight: 600;
+    margin-top: 2px;
+
+    svg {
+      color: $primary;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .booking-container {
+    grid-template-columns: 1fr;
+    gap: $spacing-md;
+    
+    &.confirmation-mode {
+      height: auto;
+    }
+  }
+
+  .right-panel {
+    position: relative;
+    top: 0;
+    height: 500px;
+  }
+
+  .confirmation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-section {
+    position: relative;
+    top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .booking-wrapper {
+    padding: $spacing-sm;
+  }
+
+  .panel-header {
+    padding: $spacing-lg $spacing-md;
+
+    h1 {
+      font-size: 22px;
+    }
+  }
+
+  .step-indicator {
+    padding: $spacing-sm;
+
+    .step {
+      .step-number {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+      }
+
+      .step-label {
+        font-size: 11px;
+      }
+    }
+
+    .step-divider {
+      flex: 0 0 20px;
+      margin-bottom: 20px;
+    }
+  }
+
+  .search-filters {
+    flex-direction: column;
+    padding: $spacing-md;
+  }
+
+  .filter-select {
+    min-width: auto;
+  }
+
+  .stations-list {
+    grid-template-columns: 1fr;
+    padding: $spacing-md;
+  }
+
+  .chargers-grid {
+    grid-template-columns: 1fr;
+    padding: $spacing-md;
+  }
+
+  .confirmation-header {
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto $spacing-md;
+      background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: $shadow-lg;
+    }
+
+    h2 {
+      font-size: 22px;
+    }
+  }
+
+  .booking-form {
+    padding: $spacing-lg;
+  }
+
+  .price-estimate {
+    .estimate-value {
+      font-size: 24px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .station-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-item {
+    padding: $spacing-xs 0;
+  }
+
+  .booking-form {
+    padding: $spacing-md;
+  }
+
+  .submit-button {
+    font-size: 15px;
+    padding: $spacing-sm $spacing-md;
   }
 }

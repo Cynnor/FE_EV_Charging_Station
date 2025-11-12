@@ -96,8 +96,8 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 /** Map 1 item API -> 1 station cho UI map/list.
@@ -141,7 +141,7 @@ function mapPortToCharger(port, idx, baseLatLng) {
   const delta = 0.00012;
   const coords = [
     (baseLatLng?.[0] || 0) +
-    (idx % 3 === 0 ? delta : idx % 3 === 1 ? -delta : 0),
+      (idx % 3 === 0 ? delta : idx % 3 === 1 ? -delta : 0),
     (baseLatLng?.[1] || 0) + (idx % 2 === 0 ? delta : -delta),
   ];
 
@@ -703,21 +703,21 @@ export default function BookingPage() {
   // Fetch slots when entering step 3
   useEffect(() => {
     async function fetchSlots() {
-      console.log("🚀 Step:", step);
-      console.log("🚀 selectedCharger:", selectedCharger); // 👈 Log xem có dữ liệu không
-      console.log("🚀 selectedCharger.id:", selectedCharger?.id); // 👈 Log ID
+      // console.log("🚀 Step:", step);
+      // console.log("🚀 selectedCharger:", selectedCharger); // 👈 Log xem có dữ liệu không
+      // console.log("🚀 selectedCharger.id:", selectedCharger?.id); // 👈 Log ID
 
       if (step === 3 && selectedCharger && selectedCharger.id) {
         const url = `/stations/ports/${encodeURIComponent(
           selectedCharger.id
         )}/slots`;
-        console.log("✅ Gọi API với URL:", url);
+        // console.log("✅ Gọi API với URL:", url);
         setSlotsLoading(true);
         setSlotsError(null);
         try {
           const { data } = await api.get(url);
-          console.log("✅ Response từ API slots:", data); // 👈 Log response
-          console.log("✅ data.items:", data?.items);
+          // console.log("✅ Response từ API slots:", data); // 👈 Log response
+          // console.log("✅ data.items:", data?.items);
           setSlots(data?.items || []);
         } catch (e) {
           console.error("❌ Lỗi khi gọi API slots:", e);
@@ -744,7 +744,9 @@ export default function BookingPage() {
         const defaultVehicleId = localStorage.getItem("defaultVehicleId");
 
         if (defaultVehicleId) {
-          const defaultVehicle = vehiclesList.find(v => v.id === defaultVehicleId);
+          const defaultVehicle = vehiclesList.find(
+            (v) => v.id === defaultVehicleId
+          );
           if (defaultVehicle) {
             setSelectedVehicle(defaultVehicle);
             setVehicleId(defaultVehicleId);
@@ -766,7 +768,9 @@ export default function BookingPage() {
 
   return (
     <div className="booking-wrapper">
-      <div className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}>
+      <div
+        className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}
+      >
         <div className="left-panel">
           <div className="panel-header">
             <h1>Đặt chỗ sạc xe</h1>
@@ -876,8 +880,9 @@ export default function BookingPage() {
                         key={station.id}
                         className={`station-card ${station.type
                           .toLowerCase()
-                          .replace(" ", "-")} ${selectedStation?.id === station.id ? "selected" : ""
-                          }`}
+                          .replace(" ", "-")} ${
+                          selectedStation?.id === station.id ? "selected" : ""
+                        }`}
                         onClick={() => {
                           setSelectedStation(station);
                           setSelectedCharger(null);
@@ -898,10 +903,11 @@ export default function BookingPage() {
                             <div
                               className="availability-fill"
                               style={{
-                                width: `${station.total
-                                  ? (station.available / station.total) * 100
-                                  : 0
-                                  }%`,
+                                width: `${
+                                  station.total
+                                    ? (station.available / station.total) * 100
+                                    : 0
+                                }%`,
                               }}
                             ></div>
                           </div>
@@ -984,11 +990,12 @@ export default function BookingPage() {
                 {chargers.map((charger) => (
                   <div
                     key={charger.id}
-                    className={`charger-card ${charger.status} ${selectedCharger?.id === charger.id ? "selected" : ""
-                      }`}
+                    className={`charger-card ${charger.status} ${
+                      selectedCharger?.id === charger.id ? "selected" : ""
+                    }`}
                     onClick={() => {
                       if (charger.status === "available") {
-                        console.log("✅ Charger được chọn:", charger);
+                        // console.log("✅ Charger được chọn:", charger);
                         if (!charger.id) {
                           console.error("❌ Charger không có id!");
                           return;
@@ -1081,32 +1088,68 @@ export default function BookingPage() {
                   )}
                   {slots.map((slot, index) => {
                     const selectable = isSlotSelectable(slot.status);
+
+                    // Map status sang label tiếng Việt
+                    const getStatusLabel = (status) => {
+                      const statusLabels = {
+                        booked: "Đã được đặt trước",
+                        reserved: "Đã được giữ chỗ",
+                        occupied: "Đang sử dụng",
+                        maintenance: "Đang bảo trì",
+                        disabled: "Tạm ngưng",
+                        unavailable: "Không khả dụng",
+                      };
+                      return statusLabels[status] || "Không khả dụng";
+                    };
+
                     return (
                       <div
                         key={slot.id}
-                        className={`slot-card ${slot.status} ${selectedSlot?.id === slot.id ? "selected" : ""
-                          } ${!selectable ? "disabled" : ""}`}
+                        className={`slot-card ${slot.status} ${
+                          selectedSlot?.id === slot.id ? "selected" : ""
+                        } ${!selectable ? "disabled" : ""}`}
                         onClick={() => {
                           if (!selectable) return;
                           setSelectedSlot(slot);
                         }}
                       >
-                        <span className={`slot-status-chip ${slot.status}`}>
-                          {selectable ? "✓ Có sẵn" : "✕ Đã đặt"}
-                        </span>
-
                         <div className="slot-header">
-                          <span className="slot-number">Slot {index + 1}</span>
-                          {/* removed old inline status in header */}
-                          {/* <span className={`slot-status-badge ${slot.status}`}>...</span> */}
-                        </div>
-
-                        <div className="slot-duration">
-                          <span className="duration-icon">⏳</span>
-                          <span className="duration-text">
-                            Thời lượng: 24 giờ
+                          <div className="slot-number-wrapper">
+                            <span className="slot-icon">
+                              {selectable ? "🔌" : "🔒"}
+                            </span>
+                            <span className="slot-number">
+                              Slot {index + 1}
+                            </span>
+                          </div>
+                          <span className={`slot-status-chip ${slot.status}`}>
+                            {selectable ? "✓ Có sẵn" : "✕ Đã đặt"}
                           </span>
                         </div>
+
+                        <div className="slot-body">
+                          <div className="slot-info-item">
+                            <span className="info-icon">⏳</span>
+                            <div className="info-content">
+                              <span className="info-label">Thời lượng</span>
+                              <span className="info-value">24 giờ</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {!selectable && (
+                          <div className="slot-unavailable-overlay">
+                            <span className="unavailable-icon">🚫</span>
+                            <div className="unavailable-content">
+                              <span className="unavailable-title">
+                                {getStatusLabel(slot.status)}
+                              </span>
+                              <span className="unavailable-subtitle">
+                                Vui lòng chọn slot khác
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1415,6 +1458,21 @@ export default function BookingPage() {
                   selectedStation={selectedCharger}
                 />
               )}
+
+              {step === 3 && selectedStation && (
+                <ChargingMap
+                  stations={chargers}
+                  center={selectedStation.coords}
+                  zoom={17}
+                  onSelect={(c) => {
+                    if (c.status === "available") {
+                      setSelectedCharger(c);
+                      setStep(3);
+                    }
+                  }}
+                  selectedStation={selectedCharger}
+                />
+              )}
             </div>
           </div>
         )}
@@ -1422,24 +1480,38 @@ export default function BookingPage() {
 
       {/* Vehicle Selection Modal */}
       {showVehicleModal && (
-        <div className="datetime-modal-overlay" onClick={() => setShowVehicleModal(false)}>
+        <div
+          className="datetime-modal-overlay"
+          onClick={() => setShowVehicleModal(false)}
+        >
           <div className="vehicle-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Chọn xe của bạn</h3>
-              <button className="modal-close" onClick={() => setShowVehicleModal(false)}>×</button>
+              <button
+                className="modal-close"
+                onClick={() => setShowVehicleModal(false)}
+              >
+                ×
+              </button>
             </div>
             <div className="modal-body">
               {vehicles.length === 0 ? (
                 <div className="no-vehicles">
-                  <p>Bạn chưa có xe nào. Vui lòng thêm xe trong trang Profile.</p>
-                  <button onClick={() => navigate('/profile')}>Đi đến Profile</button>
+                  <p>
+                    Bạn chưa có xe nào. Vui lòng thêm xe trong trang Profile.
+                  </p>
+                  <button onClick={() => navigate("/profile")}>
+                    Đi đến Profile
+                  </button>
                 </div>
               ) : (
                 <div className="vehicles-grid-modal">
                   {vehicles.map((vehicle) => (
                     <div
                       key={vehicle.id}
-                      className={`vehicle-card-modal ${selectedVehicle?.id === vehicle.id ? 'selected' : ''}`}
+                      className={`vehicle-card-modal ${
+                        selectedVehicle?.id === vehicle.id ? "selected" : ""
+                      }`}
                       onClick={() => {
                         setSelectedVehicle(vehicle);
                         setVehicleId(vehicle.id);
@@ -1447,9 +1519,14 @@ export default function BookingPage() {
                       }}
                     >
                       <div className="vehicle-plate">{vehicle.plateNumber}</div>
-                      <div className="vehicle-model">{vehicle.make} {vehicle.model}</div>
-                      <div className="vehicle-type">{vehicle.connectorType}</div>
-                      {localStorage.getItem("defaultVehicleId") === vehicle.id && (
+                      <div className="vehicle-model">
+                        {vehicle.make} {vehicle.model}
+                      </div>
+                      <div className="vehicle-type">
+                        {vehicle.connectorType}
+                      </div>
+                      {localStorage.getItem("defaultVehicleId") ===
+                        vehicle.id && (
                         <span className="default-badge-modal">Mặc định</span>
                       )}
                     </div>
@@ -1482,8 +1559,9 @@ export default function BookingPage() {
                 {dateOptions.map((d) => (
                   <button
                     key={d.iso}
-                    className={`date-card ${formData.date === d.iso ? "selected" : ""
-                      }`}
+                    className={`date-card ${
+                      formData.date === d.iso ? "selected" : ""
+                    }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, date: d.iso }));
                       setShowDateModal(false);
@@ -1521,8 +1599,9 @@ export default function BookingPage() {
                 {timeSlots.map((t) => (
                   <button
                     key={t}
-                    className={`time-slot ${formData.startTime === t ? "selected" : ""
-                      }`}
+                    className={`time-slot ${
+                      formData.startTime === t ? "selected" : ""
+                    }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, startTime: t }));
                       setShowTimeModal(false);
@@ -1560,8 +1639,9 @@ export default function BookingPage() {
                 {endTimeSlots.map((t) => (
                   <button
                     key={t}
-                    className={`time-slot ${formData.endTime === t ? "selected" : ""
-                      }`}
+                    className={`time-slot ${
+                      formData.endTime === t ? "selected" : ""
+                    }`}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, endTime: t }));
                       setShowEndTimeModal(false);
