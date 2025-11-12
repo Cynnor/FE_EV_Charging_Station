@@ -9,7 +9,6 @@ const OverviewStaff = () => {
     const [error, setError] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
     const [portSlots, setPortSlots] = useState({}); // { portId: [slots] }
-    const [slotReservations, setSlotReservations] = useState({}); // { slotId: reservation }
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [showPortModal, setShowPortModal] = useState(false);
     const [showSlotModal, setShowSlotModal] = useState(false);
@@ -123,124 +122,97 @@ const OverviewStaff = () => {
     }, []);
 
     // Lấy danh sách slots của một port và check reservations
-    const fetchPortSlots = async (portId) => {
+    // overrides: optional map { [slotId]: forcedStatus } to reflect manual updates immediately
+    const fetchPortSlots = async (portId, overrides = {}) => {
         try {
             setLoadingSlots(true);
 
-            // 1. Fetch slots
+            // 🔹 Normalize slots response
             const response = await api.get(`/stations/ports/${portId}/slots`);
 
             let raw = [];
-            if (Array.isArray(response.data)) {
-                raw = response.data;
-            } else if (Array.isArray(response.data?.items)) {
-                raw = response.data.items;
-            } else if (Array.isArray(response.data?.data)) {
-                raw = response.data.data;
-            } else if (
-                response.data?.data?.items &&
-                Array.isArray(response.data.data.items)
-            ) {
-                raw = response.data.data.items;
-            }
+            if (Array.isArray(response.data)) raw = response.data;
+            else if (Array.isArray(response.data?.items)) raw = response.data.items;
+            else if (Array.isArray(response.data?.data)) raw = response.data.data;
+            else if (Array.isArray(response.data?.data?.items)) raw = response.data.data.items;
 
-            // 2. Fetch active reservations để check slot nào đang được đặt
+            // 🔹 Normalize status values
+            raw = raw.map((slot) => {
+                const normalizedStatus = String(slot.status || "")
+                    .toLowerCase()
+                    .replace("occupied", "in_use")
+                    .replace("disabled", "unavailable");
+
+                return { ...slot, status: normalizedStatus };
+            });
+
+            // 🔹 Fetch reservations
+            let reservations = [];
             try {
                 const reservationResponse = await api.get("/reservations", {
-                    params: {
-                        status: "pending,confirmed,active", // Lấy reservations đang active
-                        limit: 1000
-                    }
+                    params: { status: "pending,confirmed,active", limit: 1000 },
                 });
 
-                let reservations = [];
-                if (Array.isArray(reservationResponse.data?.items)) {
-                    reservations = reservationResponse.data.items;
-                } else if (Array.isArray(reservationResponse.data?.data?.items)) {
+                if (Array.isArray(reservationResponse.data)) reservations = reservationResponse.data;
+                else if (Array.isArray(reservationResponse.data?.items)) reservations = reservationResponse.data.items;
+                else if (Array.isArray(reservationResponse.data?.data)) reservations = reservationResponse.data.data;
+                else if (Array.isArray(reservationResponse.data?.data?.items))
                     reservations = reservationResponse.data.data.items;
-                } else if (Array.isArray(reservationResponse.data?.data)) {
-                    reservations = reservationResponse.data.data;
-                } else if (Array.isArray(reservationResponse.data)) {
-                    reservations = reservationResponse.data;
-                }
 
-                // Map reservations by slotId
-                const reservationMap = {};
-                reservations.forEach(reservation => {
-                    if (reservation.items && Array.isArray(reservation.items)) {
-                        reservation.items.forEach(item => {
-                            if (item.slot) {
-                                const slotId = typeof item.slot === 'object' ? item.slot.id || item.slot._id : item.slot;
-                                if (slotId) {
-                                    reservationMap[slotId] = reservation;
-                                }
-                            }
-                        });
-                    }
-                });
-
-                setSlotReservations(prev => ({
-                    ...prev,
-                    ...reservationMap
-                }));
-
-                // 3. Update slot status dựa trên reservation và slot status
-                const updatedSlots = raw.map(slot => {
-                    const slotId = slot.id || slot._id;
-                    const hasReservation = reservationMap[slotId];
-                    const slotStatus = slot.status || slot.actualStatus;
-
-                    // Nếu slot có status là "in_use" hoặc "occupied", ưu tiên hiển thị "in_use"
-                    if (slotStatus === "in_use" || slotStatus === "occupied") {
-                        return {
-                            ...slot,
-                            actualStatus: "in_use",
-                            reservationInfo: hasReservation || null
-                        };
-                    }
-
-                    // Nếu có reservation, check status của reservation
-                    if (hasReservation) {
-                        // Nếu reservation đã confirmed và đang active, slot đang được sử dụng
-                        if (hasReservation.status === "confirmed" || hasReservation.status === "active") {
-                            return {
-                                ...slot,
-                                actualStatus: "in_use",
-                                reservationInfo: hasReservation
-                            };
-                        }
-                        // Nếu reservation pending, slot đã được đặt
-                        return {
-                            ...slot,
-                            actualStatus: "booked",
-                            reservationInfo: hasReservation
-                        };
-                    }
-
-                    // Nếu không có reservation, dùng status gốc của slot
-                    return {
-                        ...slot,
-                        actualStatus: slotStatus || "available",
-                        reservationInfo: null
-                    };
-                });
-
-                setPortSlots((prev) => ({
-                    ...prev,
-                    [portId]: updatedSlots || [],
-                }));
-
+                // 🔹 Filter expired reservations
+                const now = new Date();
+                reservations = reservations.filter(
+                    (r) =>
+                        Array.isArray(r.items) &&
+                        r.items.some((it) => new Date(it.endAt) > now)
+                );
             } catch (err) {
-                console.error("Error fetching reservations:", err);
-                // Nếu không lấy được reservations, vẫn hiển thị slots với status gốc
-                setPortSlots((prev) => ({
-                    ...prev,
-                    [portId]: raw.map(slot => ({ ...slot, actualStatus: slot.status })) || [],
-                }));
+                console.warn("⚠️ Không thể tải reservations:", err);
             }
 
+            // 🔹 Map reservations by slotId
+            const reservationMap = {};
+            reservations.forEach((r) => {
+                r.items?.forEach((item) => {
+                    const slotId =
+                        typeof item.slot === "object"
+                            ? item.slot?.id || item.slot?._id
+                            : item.slot;
+                    if (slotId) reservationMap[slotId] = r;
+                });
+            });
+
+            // 🔹 Combine slot + reservation info
+            const updatedSlots = raw.map((slot) => {
+                const slotId = slot.id || slot._id;
+                const reservation = reservationMap[slotId];
+                const baseStatus = slot.status || "available";
+
+                if (reservation) {
+                    if (["confirmed", "active"].includes(reservation.status))
+                        return { ...slot, actualStatus: "in_use", reservationInfo: reservation };
+                    if (reservation.status === "pending")
+                        return { ...slot, actualStatus: "booked", reservationInfo: reservation };
+                }
+
+                return { ...slot, actualStatus: baseStatus, reservationInfo: null };
+            });
+
+            // 🔹 Apply any manual overrides (e.g., right after a staff update)
+            const finalSlots = updatedSlots.map((slot) => {
+                const sid = slot.id || slot._id;
+                const forced = overrides && (overrides[sid] || overrides[String(sid)]);
+                return forced
+                    ? { ...slot, status: forced, actualStatus: forced, reservationInfo: null }
+                    : slot;
+            });
+
+            setPortSlots((prev) => ({
+                ...prev,
+                [portId]: finalSlots,
+            }));
         } catch (err) {
-            console.error(`Error fetching slots for port ${portId}:`, err);
+            console.error(`❌ Lỗi khi tải slots cho port ${portId}:`, err);
             setPortSlots((prev) => ({
                 ...prev,
                 [portId]: [],
@@ -356,13 +328,24 @@ const OverviewStaff = () => {
         }
 
         try {
+            // Đảm bảo portFormData có đầy đủ các field cần thiết
+            const updatedPortData = {
+                type: portFormData.type,
+                status: portFormData.status,
+                powerKw: portFormData.powerKw,
+                speed: portFormData.speed,
+                price: portFormData.price,
+            };
+
             // Cập nhật port trong danh sách ports của station
             const updatedPorts = (station.ports || []).map((port) => {
                 const portId = port.id || port._id;
                 const editingPortId = editingPort.id || editingPort._id;
-                return portId === editingPortId
-                    ? { ...port, ...portFormData }
-                    : port;
+                if (portId === editingPortId) {
+                    // Giữ lại id và các field khác, chỉ update các field trong form
+                    return { ...port, ...updatedPortData };
+                }
+                return port;
             });
 
             // Cập nhật station với port đã chỉnh sửa
@@ -370,6 +353,9 @@ const OverviewStaff = () => {
                 ...station,
                 ports: updatedPorts,
             };
+
+            console.log("Updating port with data:", updatedPortData);
+            console.log("Station update payload:", stationUpdate);
 
             await api.put(`/stations/${station.id}`, stationUpdate);
 
@@ -379,7 +365,8 @@ const OverviewStaff = () => {
             await refreshStationsAndSelected();
         } catch (err) {
             console.error("Error updating port:", err);
-            alert(err.response?.data?.message || "Có lỗi xảy ra khi cập nhật trụ sạc!");
+            const errorMessage = err.response?.data?.message || err.message || "Có lỗi xảy ra khi cập nhật trụ sạc!";
+            alert(errorMessage);
         }
     };
 
@@ -420,9 +407,20 @@ const OverviewStaff = () => {
         setSelectedPort(port);
         if (slot) {
             setEditingSlot(slot);
+            // Lấy status từ actualStatus hoặc status gốc
+            // API chỉ chấp nhận: available, booked, in_use
+            // Nếu có actualStatus từ reservation, ưu tiên dùng status gốc của slot
+            let slotStatus = slot.status || slot.actualStatus || "available";
+
+            // Map các status không hợp lệ về available
+            const validStatuses = ["available", "booked", "in_use"];
+            if (!validStatuses.includes(slotStatus)) {
+                slotStatus = "available";
+            }
+
             setSlotFormData({
-                slotNumber: slot.slotNumber || 1,
-                status: slot.status || "available",
+                slotNumber: slot.slotNumber || slot.order || 1,
+                status: slotStatus,
             });
         } else {
             setEditingSlot(null);
@@ -441,13 +439,27 @@ const OverviewStaff = () => {
         if (!selectedPort) return;
 
         try {
-            await api.post(`/stations/ports/${selectedPort.id}/slots`, slotFormData);
+            // API yêu cầu "order" thay vì "slotNumber"
+            const createData = {
+                order: slotFormData.slotNumber,
+                status: slotFormData.status,
+            };
+
+            // Validate status
+            const validStatuses = ["available", "booked", "in_use"];
+            if (!validStatuses.includes(createData.status)) {
+                alert(`Trạng thái "${createData.status}" không hợp lệ. Chỉ chấp nhận: available, booked, in_use`);
+                return;
+            }
+
+            await api.post(`/stations/ports/${selectedPort.id}/slots`, createData);
             alert("Thêm slot thành công!");
             setShowSlotModal(false);
             await fetchPortSlots(selectedPort.id);
         } catch (err) {
             console.error("Error adding slot:", err);
-            alert("Có lỗi xảy ra khi thêm slot!");
+            const errorMessage = err.response?.data?.message || err.message || "Có lỗi xảy ra khi thêm slot!";
+            alert(errorMessage);
         }
     };
 
@@ -457,19 +469,55 @@ const OverviewStaff = () => {
         if (!selectedPort || !editingSlot) return;
 
         try {
-            await api.put(`/stations/slots/${editingSlot.id}`, slotFormData);
+            const slotId = editingSlot.id || editingSlot._id;
+            if (!slotId) {
+                alert("Không tìm thấy ID của slot!");
+                return;
+            }
+
+            // Chuẩn bị data để gửi lên API (theo ChargingSlotUpdate schema)
+            // API yêu cầu "order" thay vì "slotNumber", và chỉ chấp nhận 3 status: available, booked, in_use
+            const updateData = {
+                order: slotFormData.slotNumber,
+                status: slotFormData.status,
+            };
+
+            // Validate status trước khi gửi
+            const validStatuses = ["available", "booked", "in_use"];
+            if (!validStatuses.includes(updateData.status)) {
+                alert(`Trạng thái "${updateData.status}" không hợp lệ. Chỉ chấp nhận: available, booked, in_use`);
+                return;
+            }
+
+            await api.put(`/stations/slots/${slotId}`, updateData);
             alert("Cập nhật slot thành công!");
             setShowSlotModal(false);
             setEditingSlot(null);
-            await fetchPortSlots(selectedPort.id);
+            // Refresh lại slots và ưu tiên hiển thị status vừa cập nhật
+            const pid = selectedPort.id || selectedPort._id;
+            await fetchPortSlots(pid, { [slotId]: updateData.status });
         } catch (err) {
             console.error("Error updating slot:", err);
-            alert("Có lỗi xảy ra khi cập nhật slot!");
+            const errorMessage = err.response?.data?.message || err.message || "Có lỗi xảy ra khi cập nhật slot!";
+            alert(errorMessage);
         }
     };
 
     // Xóa slot
     const handleDeleteSlot = async (slotId, portId) => {
+        // Không cho xóa nếu slot đang sử dụng
+        try {
+            const slotsForPort = portSlots[portId] || [];
+            const target = slotsForPort.find((s) => (s.id || s._id) === slotId);
+            const status = String(target?.actualStatus || target?.status || "").toLowerCase();
+            if (status === "in_use" || status === "occupied") {
+                alert("Slot đang sử dụng, không thể xóa.");
+                return;
+            }
+        } catch (e) {
+            console.warn("Không thể kiểm tra trạng thái slot trước khi xóa:", e);
+        }
+
         if (!window.confirm("Bạn có chắc chắn muốn xóa slot này?")) return;
 
         try {
@@ -553,43 +601,61 @@ const OverviewStaff = () => {
                                 </div>
                                 <div className="ports-grid">
                                     {station.ports && station.ports.length > 0 ? (
-                                        station.ports.map((port, portIndex) => (
-                                            <div
-                                                key={port.id || port._id || `port-${portIndex}`}
-                                                className="port-item"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handlePortClick(port, station);
-                                                }}
-                                            >
-                                                <div className="port-header">
-                                                    <h4 className="port-title">Trụ {portIndex + 1}</h4>
-                                                    <span className={`port-speed-badge ${port.speed || 'fast'}`}>
-                                                        {port.speed === 'ultra' ? 'Super Fast' :
-                                                            port.speed === 'fast' ? 'Fast' : 'Slow'}
-                                                    </span>
-                                                </div>
-                                                <div className="port-info">
-                                                    <span className="port-type">{port.type || "N/A"}</span>
-                                                    <div className="port-power-info">
-                                                        <span className="power-icon">⚡</span>
-                                                        <div className="power-details">
-                                                            <span className="power-label">CÔNG SUẤT</span>
-                                                            <span className="power-value">{port.powerKw || 0} kW</span>
+                                        station.ports.map((port, portIndex) => {
+                                            const portId = port.id || port._id;
+                                            const slotDataset = Array.isArray(port.slots)
+                                                ? port.slots
+                                                : portSlots[portId] || [];
+                                            const isFull =
+                                                slotDataset.length > 0 &&
+                                                slotDataset.every((s) =>
+                                                    ["booked", "in_use"].includes(s.actualStatus || s.status)
+                                                );
+
+                                            return (
+                                                <div
+                                                    key={port.id || port._id || `port-${portIndex}`}
+                                                    className="port-item"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handlePortClick(port, station);
+                                                    }}
+                                                >
+                                                    <div className="port-header">
+                                                        <h4 className="port-title">Trụ {portIndex + 1}</h4>
+                                                        <span className={`port-speed-badge ${port.speed || 'fast'}`}>
+                                                            {port.speed === 'ultra' ? 'Super Fast' :
+                                                                port.speed === 'fast' ? 'Fast' : 'Slow'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="port-info">
+                                                        <span className="port-type">{port.type || "N/A"}</span>
+                                                        <div className="port-power-info">
+                                                            <span className="power-icon">⚡</span>
+                                                            <div className="power-details">
+                                                                <span className="power-label">CÔNG SUẤT</span>
+                                                                <span className="power-value">{port.powerKw || 0} kW</span>
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                    <div className={`port-status ${port.status || "unknown"}`}>
+                                                        {port.status === "available"
+                                                            ? isFull
+                                                                ? "Còn trống (Hết chỗ)"
+                                                                : "Còn trống"
+                                                            : port.status === "in_use"
+                                                                ? "Đang sử dụng"
+                                                                : port.status === "inactive"
+                                                                    ? "Ngưng hoạt động"
+                                                                    : port.status === "active"
+                                                                        ? isFull
+                                                                            ? "Hoạt động (Hết chỗ)"
+                                                                            : "Hoạt động"
+                                                                        : "Không xác định"}
+                                                    </div>
                                                 </div>
-                                                <div className={`port-status ${port.status || "unknown"}`}>
-                                                    {port.status === "available"
-                                                        ? "Rỗi"
-                                                        : port.status === "in_use" || port.status === "occupied"
-                                                            ? "Đang sử dụng"
-                                                            : port.status === "maintenance"
-                                                                ? "Bảo trì"
-                                                                : "Không xác định"}
-                                                </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     ) : (
                                         <div className="no-ports">Chưa có trụ sạc</div>
                                     )}
@@ -638,25 +704,7 @@ const OverviewStaff = () => {
                                         <span className="power-value-large">{selectedPort.powerKw || 0} kW</span>
                                     </div>
                                 </div>
-                                <div className="port-actions-header">
-                                    <button
-                                        className="btn-secondary btn-small"
-                                        onClick={() => handleOpenPortModal(selectedStation, selectedPort)}
-                                    >
-                                        Sửa trụ
-                                    </button>
-                                    <button
-                                        className="btn-danger btn-small"
-                                        onClick={() => {
-                                            if (window.confirm("Bạn có chắc chắn muốn xóa trụ này?")) {
-                                                handleDeletePort(selectedPort.id || selectedPort._id);
-                                                handleClosePortDetailModal();
-                                            }
-                                        }}
-                                    >
-                                        Xóa trụ
-                                    </button>
-                                </div>
+                                {/* Port actions removed per staff request: hide Sửa trụ / Xóa trụ */}
                             </div>
 
                             <div className="slots-section">
@@ -676,11 +724,12 @@ const OverviewStaff = () => {
                                     portSlots[selectedPort.id || selectedPort._id].length > 0 ? (
                                     <div className="slots-grid">
                                         {portSlots[selectedPort.id || selectedPort._id].map((slot, slotIndex) => {
-                                            // Lấy slotNumber từ slot, nếu không có thì dùng index + 1 (giống booking page)
-                                            const slotNumber = slot.slotNumber ?? (slotIndex + 1);
-                                            // Lấy status từ actualStatus (đã được xử lý) hoặc status gốc
-                                            // Dùng trực tiếp status từ API, không normalize (giống booking page)
+                                            // Lấy slotNumber từ slot (API có thể trả về "order" hoặc "slotNumber")
+                                            const slotNumber = slot.slotNumber ?? slot.order ?? (slotIndex + 1);
+                                            // Lấy status từ actualStatus (đã được xử lý từ reservation) hoặc status gốc
+                                            // API chỉ có 3 status: available, booked, in_use
                                             const slotStatus = slot.actualStatus ?? slot.status ?? "available";
+                                            const canDelete = !(slotStatus === "in_use" || slotStatus === "occupied");
 
                                             return (
                                                 <div
@@ -693,16 +742,12 @@ const OverviewStaff = () => {
                                                             className={`slot-status ${slotStatus}`}
                                                         >
                                                             {slotStatus === "available"
-                                                                ? "Rỗi"
+                                                                ? "Còn trống"
                                                                 : slotStatus === "booked" || slotStatus === "reserved"
                                                                     ? "Đã đặt"
                                                                     : slotStatus === "in_use" || slotStatus === "occupied"
                                                                         ? "Đang sử dụng"
-                                                                        : slotStatus === "maintenance"
-                                                                            ? "Bảo trì"
-                                                                            : slotStatus === "disabled" || slotStatus === "unavailable"
-                                                                                ? "Không khả dụng"
-                                                                                : "Không xác định"}
+                                                                        : "Không xác định"}
                                                         </span>
                                                         {slot.reservationInfo && (
                                                             <span className="reservation-badge">
@@ -715,19 +760,14 @@ const OverviewStaff = () => {
                                                     <div className="slot-actions">
                                                         <button
                                                             className="btn-icon"
+                                                            disabled={!canDelete}
                                                             onClick={() =>
-                                                                handleOpenSlotModal(selectedPort, slot)
+                                                                canDelete && handleDeleteSlot(
+                                                                    slot.id || slot._id,
+                                                                    selectedPort.id || selectedPort._id
+                                                                )
                                                             }
-                                                            title="Sửa"
-                                                        >
-                                                            ✏️
-                                                        </button>
-                                                        <button
-                                                            className="btn-icon"
-                                                            onClick={() =>
-                                                                handleDeleteSlot(slot.id || slot._id, selectedPort.id || selectedPort._id)
-                                                            }
-                                                            title="Xóa"
+                                                            title={canDelete ? "Xóa" : "Slot đang sử dụng - không thể xóa"}
                                                         >
                                                             🗑️
                                                         </button>
@@ -806,9 +846,10 @@ const OverviewStaff = () => {
                                         }
                                         required
                                     >
-                                        <option value="available">Rỗi</option>
+                                        <option value="available">Còn trống</option>
                                         <option value="in_use">Đang sử dụng</option>
-                                        <option value="maintenance">Bảo trì</option>
+                                        <option value="inactive">Ngưng hoạt động</option>
+                                        <option value="active">Hoạt động</option>
                                     </select>
                                 </div>
                                 <div className="form-group">
@@ -932,7 +973,7 @@ const OverviewStaff = () => {
                                         }
                                         required
                                     >
-                                        <option value="available">Rỗi</option>
+                                        <option value="available">Còn trống</option>
                                         <option value="booked">Đã đặt</option>
                                         <option value="in_use">Đang sử dụng</option>
                                     </select>

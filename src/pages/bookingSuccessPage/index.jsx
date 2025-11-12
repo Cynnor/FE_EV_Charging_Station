@@ -1,17 +1,43 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { MapPin, Navigation, Clock, Zap, Car, Calendar, CheckCircle } from "lucide-react";
+import MapDirections from "../../components/mapDirections";
 import "./index.scss";
 
 const BookingSuccessPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { reservation, station, charger, bookingTime } = location.state || {};
+  const { reservation, station, charger, vehicle, bookingTime } = location.state || {};
+
+  const [showMap, setShowMap] = useState(true);
+  const [userLocation, setUserLocation] = useState(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     if (!reservation) {
       navigate("/", { replace: true });
+      return;
+    }
+
+    // Automatically get user location on mount
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([
+            position.coords.latitude,
+            position.coords.longitude,
+          ]);
+          setIsLoadingLocation(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setIsLoadingLocation(false);
+        }
+      );
+    } else {
+      setIsLoadingLocation(false);
     }
   }, [reservation, navigate]);
 
@@ -39,101 +65,232 @@ const BookingSuccessPage = () => {
     navigate("/", { replace: true });
   };
 
-  const handleStartCharging = () => {
+  const handleGoToChargingSession = () => {
+    // Extract port information from reservation
+    const firstItem = reservation?.items?.[0];
+    
+    // Try to get port ID from different sources:
+    // 1. If slot is an object with port property
+    const portFromSlot = typeof firstItem?.slot === 'object' 
+      ? (firstItem.slot.port?._id || firstItem.slot.port?.id || firstItem.slot.port)
+      : null;
+    
+    // 2. Use charger ID as fallback (charger is essentially the port/trụ sạc)
+    const portId = portFromSlot || charger?.id || charger?._id;
+    
+    // Debug: Log the data we're working with
+    console.log("📍 ===== NAVIGATE TO CHARGING SESSION PAGE =====");
+    console.log("This is ONLY navigation, NOT starting the charging yet!");
+    console.log("User needs to click 'Bắt đầu sạc' button on charging session page to actually start.");
+    console.log("Reservation:", reservation);
+    console.log("First Item:", firstItem);
+    console.log("Slot:", firstItem?.slot);
+    console.log("Charger:", charger);
+    console.log("Extracted Port ID:", portId);
+    
+    const navigationState = {
+      reservation: {
+        ...reservation,
+        id: reservation?.id || reservation?._id,
+        portId: portId,
+        powerKw: charger?.power || 150,
+        status: reservation?.status || "pending",
+        startAt: firstItem?.startAt,
+        endAt: firstItem?.endAt,
+        items: reservation?.items || [],
+      },
+      vehicle: {
+        id: vehicle?.id || vehicle?._id,
+        plateNumber: vehicle?.plateNumber,
+        make: vehicle?.make,
+        model: vehicle?.model,
+        batteryCapacityKwh: vehicle?.batteryCapacityKwh,
+        connectorType: vehicle?.connectorType,
+      }
+    };
+    
+    console.log("Navigation State:", navigationState);
+    
+    navigate("/chargingSession", { 
+      replace: true,
+      state: navigationState
+    });
+  };
+
+  const handleCloseMap = () => {
+    setShowMap(false);
     sessionStorage.setItem("scrollToHistory", "true");
     navigate("/profile", { replace: true });
   };
 
+  // Calculate distance and estimated time
+  const getDistanceKm = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const distance = userLocation && station?.coords
+    ? getDistanceKm(userLocation[0], userLocation[1], station.coords[0], station.coords[1])
+    : null;
+
+  const estimatedTime = distance ? Math.ceil(distance * 2) : null;
+
+  // Lấy tọa độ của trạm sạc
+  const stationLocation =
+    station?.coords &&
+    Array.isArray(station.coords) &&
+    station.coords.length === 2
+      ? [parseFloat(station.coords[0]), parseFloat(station.coords[1])]
+      : null;
+
   return (
     <div className="booking-success-page">
-      <div className="success-container">
-        <div className="success-header">
-          <div className="success-icon-wrapper">
-            <div className="success-icon">✓</div>
-            <div className="success-circle"></div>
-          </div>
-
-          <h1 className="success-title">Đặt chỗ thành công!</h1>
-          <p className="success-subtitle">
-            Mã đặt chỗ: <strong>{String(reservation.id).slice(-8)}</strong>
-          </p>
-        </div>
-
-        <div
-          className="booking-content booking-content--vertical"
-          style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-        >
-          {/* Cột trái: Thông tin trạm sạc */}
-          <div className="booking-details" style={{ width: "100%" }}>
-            <div className="detail-section">
-              <h3>Thông tin trạm sạc</h3>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="label">Trạm:</span>
-                  <span className="value">{station?.name}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Trụ:</span>
-                  <span className="value">{charger?.name}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Công suất:</span>
-                  <span className="value">{charger?.power}</span>
-                </div>
-              </div>
+      <div className="success-layout">
+        {/* Left Panel - Booking Details */}
+        <div className="success-details-panel">
+          <div className="success-header">
+            <div className="success-icon-wrapper">
+              <CheckCircle size={48} strokeWidth={2.5} />
             </div>
+            <h1 className="success-title">Đặt chỗ thành công!</h1>
+            {reservation?.status !== 'confirmed' && (
+              <p className="success-subtitle">
+                Slot sạc của bạn sẽ được giữ chỗ trong vòng 15 phút
+              </p>
+            )}
+            {reservation?.status === 'confirmed' && (
+              <p className="success-subtitle" style={{ color: '#28a745' }}>
+                ✅ Đã thanh toán - Sẵn sàng để sạc
+              </p>
+            )}
           </div>
 
-          {/* Cột phải: Thời gian sạc */}
-          <div className="booking-details" style={{ width: "100%" }}>
-            <div className="detail-section">
-              <h3>Thời gian sạc</h3>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="label">Bắt đầu:</span>
-                  <span className="value">
+          <div className="booking-details-content">
+            {/* Giờ đặt lịch */}
+            <div className="detail-card">
+              <div className="card-header">
+                <Calendar size={20} />
+                <h3>Giờ đặt lịch</h3>
+              </div>
+              <div className="card-body">
+                <div className="info-row highlight">
+                  <Clock size={16} />
+                  <span className="info-value">
                     {bookingTime?.date && bookingTime?.startTime
                       ? formatDateTime(bookingTime.date, bookingTime.startTime)
                       : "—"}
                   </span>
                 </div>
-                <div className="detail-item">
-                  <span className="label">Kết thúc:</span>
-                  <span className="value">
-                    {bookingTime?.date && bookingTime?.endTime
-                      ? formatDateTime(bookingTime.date, bookingTime.endTime)
-                      : "—"}
-                  </span>
+              </div>
+            </div>
+
+            {/* Thông tin trạm & trụ */}
+            <div className="detail-card">
+              <div className="card-header">
+                <Zap size={20} />
+                <h3>Thông tin trạm & trụ</h3>
+              </div>
+              <div className="card-body">
+                <div className="info-row">
+                  <span className="info-label">Trạm sạc</span>
+                  <span className="info-value">{station?.name || "—"}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Trụ sạc</span>
+                  <span className="info-value">{charger?.name || "—"}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Công suất</span>
+                  <span className="info-value">{charger?.power || "—"}</span>
+                </div>
+                <div className="info-row address-row">
+                  <MapPin size={16} />
+                  <span className="info-value">{station?.address || "—"}</span>
+                </div>
+                {distance && (
+                  <>
+                    <div className="info-row">
+                      <Navigation size={16} />
+                      <span className="info-label">Khoảng cách</span>
+                      <span className="info-value">{distance.toFixed(1)} km</span>
+                    </div>
+                    <div className="info-row">
+                      <Clock size={16} />
+                      <span className="info-label">Thời gian di chuyển</span>
+                      <span className="info-value">~{estimatedTime} phút</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Phương tiện */}
+            <div className="detail-card">
+              <div className="card-header">
+                <Car size={20} />
+                <h3>Phương tiện của tôi</h3>
+              </div>
+              <div className="card-body">
+                <div className="vehicle-info">
+                  <div className="vehicle-icon">🏍️</div>
+                  <div className="vehicle-details">
+                    <div className="vehicle-plate">{vehicle?.plateNumber || "—"}</div>
+                    <div className="vehicle-model">
+                      {vehicle?.make || "—"} {vehicle?.model || ""}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <div className="action-buttons">
+            <button type="button" className="btn-secondary" onClick={handleGoHome}>
+              Về trang chủ
+            </button>
+            <button type="button" className="btn-primary-custom" onClick={handleGoToChargingSession}>
+              Bạn đã tới nơi?
+            </button>
+          </div>
         </div>
 
-        <div className="action-buttons">
-          <button className="btn-home" onClick={handleGoHome}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M3 10l7-7 7 7M5 10v8h10v-8"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            Về trang chủ
-          </button>
-          <button className="btn-start-charging" onClick={handleStartCharging}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M11 3L6 10h8l-5 7"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Tiến hành sạc
-          </button>
+        {/* Right Panel - Map */}
+        <div className="success-map-panel">
+          {showMap && userLocation && stationLocation ? (
+            <MapDirections
+              userLocation={userLocation}
+              stationLocation={stationLocation}
+              stationInfo={{
+                name: station?.name,
+                address: station?.address,
+              }}
+              onClose={handleCloseMap}
+            />
+          ) : (
+            <div className="map-loading">
+              {isLoadingLocation ? (
+                <div className="loading-content">
+                  <div className="spinner"></div>
+                  <p>Đang tải bản đồ...</p>
+                </div>
+              ) : (
+                <div className="loading-content">
+                  <MapPin size={48} />
+                  <p>Không thể hiển thị bản đồ</p>
+                  <small>Vui lòng bật định vị GPS</small>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

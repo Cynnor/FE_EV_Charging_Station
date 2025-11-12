@@ -1,72 +1,46 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { Badge, Tag, Tooltip } from "antd";
+import {
+  MapPin,
+  Zap,
+  DollarSign,
+  Navigation,
+  Clock,
+  Activity,
+  CheckCircle,
+  AlertCircle
+} from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import "./index.scss";
-import { Link } from "react-router-dom";
+import ChargingMap from "../../components/chargingMap";
+import api from "../../config/api";
 
-function ChargingStationCard({
-  image,
-  title,
-  //sockets,
-  power,
-  plugTypes,
-  installTypes,
-  protection,
-  locationType,
-  chargerType,
-  price,
-}) {
-  return (
-    <div className="card">
-      <img src={image} alt={title} />
-      <h3>{title}</h3>
-      <ul>
-        <li>
-          <b>Kiểu lắp đặt:</b> {installTypes}
-        </li>
-        {/* <li>
-          <b>Số lượng cổng:</b> {sockets}
-        </li> */}
-        <li>
-          <b>Công suất:</b> {power}
-        </li>
-        <li>
-          <b>Dạng ổ cắm:</b> {plugTypes}
-        </li>
-        <li>
-          <b>Bảo vệ:</b> {protection}
-        </li>
-        <li>
-          <b>Vị trí:</b> {locationType}
-        </li>
-        <li>
-          <b>Giá:</b> {price.toLocaleString()} VNĐ
-        </li>
-      </ul>
-      <div className="card-actions">
-        {/* <button className="btn-detail">Chi tiết</button> */}
-        <Link
-          to={`/booking?type=${chargerType === "DC_SUPER" ? "DC_ULTRA" : chargerType
-            }`}
-        >
-          <button className="btn-rent">Đặt chỗ</button>
-        </Link>
-      </div>
-    </div>
-  );
-}
+// ===== Helper Function =====
+const getDistanceKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * (Math.PI / 180)) *
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) ** 2;
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+};
 
-// /* ----- Hero section ----- */
+/* ----- Hero section ----- */
 function ChargingStationHero() {
   return (
     <section className="charging-hero">
       <div className="hero-text">
-        <h2>BỘ SẠC XE ĐIỆN </h2>
+        <h2>TÌM TRẠM SẠC XE ĐIỆN GẦN BẠN</h2>
         <p className="highlight">
-          SẠC THÔNG MINH, DỄ DÀNG SỬ DỤNG, LẮP ĐẶT NHANH CHÓNG !
+          MẠNG LƯỚI TRẠM SẠC RỘNG KHẮP, DỄ DÀNG TÌM KIẾM VÀ ĐẶT CHỖ!
         </p>
-        <p>SẢN PHẨM AN TOÀN, ĐẠT TIÊU CHUẨN OCPP</p>
-        <a href="#charging-stations" className="btn">
-          Xem chi tiết sản phẩm
+        <p>HỆ THỐNG TRẠM SẠC HIỆN ĐẠI, AN TOÀN VÀ NHANH CHÓNG</p>
+        <a href="#nearby-stations" className="btn">
+          Xem trạm gần đây
         </a>
       </div>
       <div className="hero-image">
@@ -76,116 +50,271 @@ function ChargingStationHero() {
   );
 }
 
-/* ----- Title Support ----- */
-function TitleSupport() {
-  return (
-    <section className="title-support">
-      <div className="title-content">
-        {/* <span className="title-subtitle">Sản phẩm của chúng tôi</span> */}
-        <h2>Các loại trụ sạc</h2>
-        {/* <p>Giải pháp sạc điện toàn diện cho mọi nhu cầu</p> */}
-      </div>
-
-      <div className="title-deczoration">
-        <div className="decoration-circle"></div>
-        <div className="decoration-circle"></div>
-        <div className="decoration-circle"></div>
-      </div>
-    </section>
-  );
-}
-
 /* ----- Trang chính hiển thị danh sách ----- */
 function ChargingStationsPage() {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-  const stations = [
-    {
-      image: "./assets/AC4.jpg",
-      title: "Trụ sạc xe máy xoay chiều AC 7 kW",
-      power: "7 kW / cổng",
-      plugTypes: "2 chấu /3 chấu",
-      installTypes: "Trụ đứng / Treo tường",
-      protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch",
-      locationType: "Nhà riêng / Công cộng",
-      chargerType: "AC",
-      price: 5000,
-    },
-    {
-      image: "./assets/AC10.jpg",
-      title: "Trụ sạc xe máy xoay chiều AC 22 kW",
-      power: "22 kW",
-      plugTypes: "2 chấu / 3 chấu",
-      installTypes: "Tường nhà / Trụ",
-      protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống nước IP54",
-      locationType: "Công cộng / Bãi xe",
-      chargerType: "AC",
-      price: 10000,
-    },
-    {
-      image: "./assets/DC60.jpg",
-      title: "Trụ sạc nhanh DC 60 kW",
-      power: "60 kW",
-      plugTypes: "CCS / CHAdeMO",
-      installTypes: "Ngoài trời / Trong nhà",
-      protection: "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Chống sét",
-      locationType: "Bãi xe / Trạm xăng",
-      chargerType: "DC",
-      price: 15000,
-    },
-    {
-      image: "./assets/DC120.jpg",
-      title: "Trụ sạc nhanh DC 120 kW",
-      power: "120 kW",
-      plugTypes: "CCS / CHAdeMO",
-      installTypes: "Ngoài trời / Trong nhà",
-      protection:
-        "Quá nhiệt / Quá tải / Dòng rò / Ngắn mạch / Giám sát rò điện DC",
-      locationType: "Cao tốc / Bãi xe",
-      chargerType: "DC",
-      price: 20000,
-    },
-    {
-      image: "./assets/DC150.jpg",
-      title: "Trụ sạc siêu nhanh DC 150 kW",
-      power: "150 kW / cổng",
-      plugTypes: "CCS2 DC",
-      installTypes: "Tủ đứng ngoài trời",
-      protection: "Quá tải / Quá nhiệt / Ngắn mạch / IP54",
-      locationType: "Cao tốc / Lộ trình dài",
-      chargerType: "DC_SUPER",
-      price: 25000,
-    },
-    {
-      image: "./assets/DC250.jpg",
-      title: "Trụ sạc siêu nhanh DC 250 kW",
-      power: "250 kW / cổng",
-      plugTypes: "CCS2 DC",
-      installTypes: "Tủ đứng ngoài trời",
-      protection: "Quá tải / Quá nhiệt / Ngắn mạch / IP54",
-      locationType: "Cao tốc / Lộ trình dài",
-      chargerType: "DC_SUPER",
-      price: 30000,
-    },
-  ];
+  const navigate = useNavigate();
+  const mapSectionRef = useRef(null);
+  const itemRefs = useRef({});
+
+  const [selectedId, setSelectedId] = useState(null);
+  const [mapStations, setMapStations] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [nearbyStations, setNearbyStations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // ===== Fetch Station Data from API =====
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchStations = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/stations");
+
+        let stationsData = [];
+        if (Array.isArray(res.data)) {
+          stationsData = res.data;
+        } else if (Array.isArray(res.data.items)) {
+          stationsData = res.data.items;
+        } else if (res.data && typeof res.data === "object") {
+          stationsData = [res.data];
+        }
+
+        stationsData = stationsData.filter((s) => s.latitude && s.longitude);
+
+        const formatted = stationsData.map((s, index) => ({
+          id: s.id || index + 1,
+          name: s.name || "Trạm sạc không tên",
+          coords: [s.latitude, s.longitude],
+          status: s.status === "active" ? "available" : "maintenance",
+          address: s.address || "Không rõ địa chỉ",
+          speed: s.ports?.[0]?.speed || "N/A",
+          price: s.ports?.[0]?.price
+            ? `${s.ports[0].price.toLocaleString()} đ/kWh`
+            : "N/A",
+          slots: {
+            ac: s.ports?.filter((p) => p.type === "AC").length || 0,
+            dc: s.ports?.filter((p) => p.type === "DC").length || 0,
+            ultra: s.ports?.filter((p) => p.type === "Ultra").length || 0,
+          },
+        }));
+
+        if (isMounted) {
+          setMapStations(formatted);
+        }
+      } catch (err) {
+        if (isMounted) setError("Không thể tải dữ liệu trạm sạc.");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchStations();
+    const interval = setInterval(fetchStations, 300000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // ===== Get User Location =====
+  const updateLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          const coords = [latitude, longitude];
+          setUserLocation(coords);
+
+          if (mapStations.length > 0) {
+            const withDistance = mapStations.map((s) => ({
+              ...s,
+              distance: getDistanceKm(
+                latitude,
+                longitude,
+                s.coords[0],
+                s.coords[1]
+              ),
+            }));
+            setNearbyStations(
+              withDistance.sort((a, b) => a.distance - b.distance).slice(0, 10)
+            );
+          }
+        },
+        (err) => console.error("Không lấy được vị trí:", err),
+        { enableHighAccuracy: true }
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (mapStations.length > 0) updateLocation();
+  }, [mapStations]);
+
+  const handleMarkerClick = (id) => setSelectedId(id);
+
+  const handleBooking = (stationId) => {
+    const token = localStorage.getItem("token");
+    const redirectUrl = `/booking/${stationId}`;
+    if (!token) {
+      navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
+    } else {
+      navigate(redirectUrl);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="charging-stations-page">
+        <div className="loading-container">
+          <p>Đang tải dữ liệu trạm sạc...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="charging-stations-page">
+        <div className="error-container">
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="charging-stations-page">
       {/* Hero giới thiệu */}
       <ChargingStationHero />
 
-      <TitleSupport />
+      {/* Map + Station List */}
+      <section className="nearby-stations" id="nearby-stations" ref={mapSectionRef}>
+        <div className="section-header">
+          <h2>Các trạm gần đây</h2>
+          <p>Tìm trạm sạc gần bạn nhất</p>
+        </div>
+        <div className="map-container">
+          <div className="station-list">
+            <div className="station-scroll">
+              {nearbyStations.length === 0 ? (
+                <div className="empty-state">
+                  <AlertCircle size={48} color="#94a3b8" />
+                  <p>Không tìm thấy trạm sạc gần bạn</p>
+                  <span>Vui lòng bật định vị để tìm trạm gần nhất</span>
+                </div>
+              ) : (
+                nearbyStations.map((station) => (
+                  <div
+                    key={station.id}
+                    ref={(el) => (itemRefs.current[station.id] = el)}
+                    className={`station-card ${selectedId === station.id ? "selected" : ""}`}
+                    onClick={() => setSelectedId(station.id)}
+                  >
+                    <div className="card-top">
+                      <div className="station-name-status">
+                        <h4>{station.name}</h4>
+                        {station.status === "available" ? (
+                          <Tag color="success" icon={<CheckCircle size={12} />}>Sẵn sàng</Tag>
+                        ) : station.status === "busy" ? (
+                          <Tag color="warning" icon={<Clock size={12} />}>Đang bận</Tag>
+                        ) : (
+                          <Tag color="error" icon={<AlertCircle size={12} />}>Bảo trì</Tag>
+                        )}
+                      </div>
+                      {station.distance && (
+                        <div className="distance">
+                          <Navigation size={14} />
+                          <span>{station.distance.toFixed(1)} km</span>
+                        </div>
+                      )}
+                    </div>
 
-      {/* Danh sách card */}
-      <section id="charging-stations" className="charging-stations">
-        {stations.map((s, idx) => (
-          <ChargingStationCard key={idx} {...s} />
-        ))}
+                    <div className="card-info">
+                      <div className="info-grid">
+                        <div className="info-cell">
+                          <Zap size={16} color="#16a34a" />
+                          <div>
+                            <span className="label">Tốc độ</span>
+                            <span className="value">{station.speed}</span>
+                          </div>
+                        </div>
+                        <div className="info-cell">
+                          <DollarSign size={16} color="#16a34a" />
+                          <div>
+                            <span className="label">Giá</span>
+                            <span className="value price">{station.price}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="ports">
+                        {station.slots.ac > 0 && (
+                          <Tooltip title="AC - Sạc chậm">
+                            <Badge count={station.slots.ac} style={{ backgroundColor: '#3b82f6' }}>
+                              <Tag color="blue">AC</Tag>
+                            </Badge>
+                          </Tooltip>
+                        )}
+                        {station.slots.dc > 0 && (
+                          <Tooltip title="DC - Sạc nhanh">
+                            <Badge count={station.slots.dc} style={{ backgroundColor: '#16a34a' }}>
+                              <Tag color="green">DC</Tag>
+                            </Badge>
+                          </Tooltip>
+                        )}
+                        {station.slots.ultra > 0 && (
+                          <Tooltip title="Ultra - Sạc siêu nhanh">
+                            <Badge count={station.slots.ultra} style={{ backgroundColor: '#8b5cf6' }}>
+                              <Tag color="purple">Ultra</Tag>
+                            </Badge>
+                          </Tooltip>
+                        )}
+                      </div>
+
+                      <div className="address">
+                        <MapPin size={14} color="#f59e0b" />
+                        <span>{station.address}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      className="book-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBooking(station.id);
+                      }}
+                    >
+                      <Activity size={16} />
+                      Đặt chỗ ngay
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="map-view">
+            <ChargingMap
+              stations={mapStations}
+              center={userLocation}
+              zoom={12}
+              onSelect={(station) => handleMarkerClick(station.id)}
+              selectedStation={
+                selectedId
+                  ? mapStations.find((s) => s.id === selectedId)
+                  : null
+              }
+              userLocation={userLocation}
+              onUpdateLocation={updateLocation}
+            />
+          </div>
+        </div>
       </section>
     </div>
   );

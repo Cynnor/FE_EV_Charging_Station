@@ -281,20 +281,10 @@
                         text-align: center;
                         margin-top: auto;
 
+                        &.active,
                         &.available {
                             background: #d1fae5;
                             color: #059669;
-                        }
-
-                        &.in_use,
-                        &.occupied {
-                            background: #dbeafe;
-                            color: #2563eb;
-                        }
-
-                        &.booked {
-                            background: #fef3c7;
-                            color: #d97706;
                         }
 
                         &.inactive {
@@ -302,9 +292,16 @@
                             color: #6b7280;
                         }
 
-                        &.maintenance {
+                        &.maintenance,
+                        &.booked {
                             background: #fef3c7;
                             color: #d97706;
+                        }
+
+                        &.in_use,
+                        &.occupied {
+                            background: #dbeafe;
+                            color: #2563eb;
                         }
 
                         &.disabled,

@@ -1,11 +1,23 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import "./index.scss";
 import api from "../../config/api";
 import { useNavigate } from "react-router-dom";
 import CustomPopup from "../../components/customPopup";
 import ConfirmPopup from "../../components/confirmPopup/index.jsx";
 import ChangePasswordPopup from "../../components/changePasswordPopup/index.jsx";
-
+import { BrowserQRCodeReader } from "@zxing/browser";
+import {
+  MapPin,
+  X,
+  Zap,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  QrCode,
+  RefreshCcw,
+} from "lucide-react";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -25,6 +37,32 @@ const ProfilePage = () => {
   // ===== Station mapping =====
   const [stationMap, setStationMap] = useState({});
   const [portTypeMap, setPortTypeMap] = useState({});
+  const [userRole, setUserRole] = useState("");
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
+  const [qrScanError, setQrScanError] = useState("");
+  const [manualQrValue, setManualQrValue] = useState("");
+  const [isProcessingQr, setIsProcessingQr] = useState(false);
+  const [isBarcodeSupported, setIsBarcodeSupported] = useState(
+    typeof window !== "undefined" && "BarcodeDetector" in window
+  );
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const barcodeDetectorRef = useRef(null);
+  const zxingReaderRef = useRef(null);
+  const zxingControlsRef = useRef(null);
+  const processingRef = useRef(false);
+  const normalizedRole = (userRole || "").toLowerCase();
+  const canUseQrTools =
+    normalizedRole === "staff" || normalizedRole === "admin";
+  const roleDisplayLabel = userRole || normalizedRole.toUpperCase();
+  const qrStatusText = isProcessingQr
+    ? "Đang xác thực mã QR..."
+    : "Cho phép sử dụng camera và đưa mã QR vào khung hình để check-in.";
+
+  useEffect(() => {
+    processingRef.current = isProcessingQr;
+  }, [isProcessingQr]);
 
   const [reservations, setReservations] = useState([]);
   const [txLoading, setTxLoading] = useState(true);
@@ -41,6 +79,12 @@ const ProfilePage = () => {
     if (savedDefaultVehicle) {
       setDefaultVehicleId(savedDefaultVehicle);
     }
+  }, []);
+
+  useEffect(() => {
+    setIsBarcodeSupported(
+      typeof window !== "undefined" && "BarcodeDetector" in window
+    );
   }, []);
 
   // Add helper function to normalize reservations
@@ -63,43 +107,8 @@ const ProfilePage = () => {
     });
   };
 
-  // Update reservation fetch with pagination
-  useEffect(() => {
-    if (!vehicles.length) return;
-    let mounted = true;
-
-    const fetchReservations = async () => {
-      try {
-        setTxLoading(true);
-        const res = await api.get(`/reservations`);
-        // console.log("Raw reservation data:", res.data);
-
-        if (mounted) {
-          const reservationList = res.data?.data?.items || [];
-          // console.log("Processed reservations:", reservationList);
-
-          const normalized = normalizeReservations(reservationList);
-
-          setReservations(normalized);
-          setTotalPages(Math.ceil(normalized.length / itemsPerPage));
-
-          // Fetch station info for all ports
-          await fetchStationInfo(normalized);
-        }
-      } catch (err) {
-        // console.error("Error fetching reservations:", err);
-        if (mounted) setReservations([]);
-      } finally {
-        if (mounted) setTxLoading(false);
-      }
-    };
-
-    fetchReservations();
-    return () => (mounted = false);
-  }, [vehicles]);
-
   // Fetch station information from port IDs - OPTIMIZED VERSION
-  const fetchStationInfo = async (reservationList) => {
+  const fetchStationInfo = useCallback(async (reservationList = []) => {
     try {
       const portIds = new Set();
       reservationList.forEach((r) => {
@@ -159,7 +168,7 @@ const ProfilePage = () => {
         }
       });
 
-      // Map ports to stations
+      // Map ports to stations - LƯU THÊM LONGITUDE VÀ LATITUDE
       portResults.forEach(({ portId, data }) => {
         if (data?.station && stationMap[data.station]) {
           const stationInfo = stationMap[data.station];
@@ -168,6 +177,8 @@ const ProfilePage = () => {
             stationId: data.station,
             address: stationInfo.address || "N/A",
             provider: stationInfo.provider || "N/A",
+            longitude: stationInfo.longitude,
+            latitude: stationInfo.latitude,
           };
         } else {
           stationData[portId] = {
@@ -175,6 +186,8 @@ const ProfilePage = () => {
             stationId: null,
             address: "N/A",
             provider: "N/A",
+            longitude: null,
+            latitude: null,
           };
         }
       });
@@ -184,7 +197,34 @@ const ProfilePage = () => {
     } catch (error) {
       // console.error("Error fetching station info:", error);
     }
-  };
+  }, []);
+
+  const loadReservations = useCallback(async () => {
+    try {
+      setTxLoading(true);
+      const res = await api.get(`/reservations`);
+      const reservationList = res.data?.data?.items || [];
+      const normalized = normalizeReservations(reservationList);
+      const total = Math.ceil(normalized.length / itemsPerPage);
+
+      setReservations(normalized);
+      setTotalPages(total);
+      setCurrentPage((prev) => (prev > (total || 1) ? 1 : prev));
+
+      await fetchStationInfo(normalized);
+    } catch (err) {
+      // console.error("Error fetching reservations:", err);
+      setReservations([]);
+      setTotalPages(0);
+      setCurrentPage(1);
+    } finally {
+      setTxLoading(false);
+    }
+  }, [fetchStationInfo, itemsPerPage]);
+
+  useEffect(() => {
+    loadReservations();
+  }, [loadReservations]);
 
   const fetchUserData = async () => {
     try {
@@ -193,16 +233,24 @@ const ProfilePage = () => {
       // console.log("User data:", response.data.data);
 
       if (response.data.data) {
+        const profileData = response.data.data;
         const userData = {
-          fullname: response.data.data.fullName || "",
-          email: response.data.data.email || "",
-          phone: response.data.data.phone || "",
-          address: response.data.data.address.line1 || "",
-          dob: response.data.data.dob || "",
+          fullname: profileData.fullName || "",
+          email: profileData.email || "",
+          phone: profileData.phone || "",
+          address: profileData.address?.line1 || "",
+          dob: profileData.dob || "",
         };
 
         setUserInfo(userData);
         setOriginalUserInfo(userData);
+        const detectedRole =
+          profileData.role ||
+          profileData.roleName ||
+          profileData.userRole ||
+          profileData?.roleInfo ||
+          "";
+        setUserRole(detectedRole || "");
       }
     } catch (error) {
       // console.error("Error fetching user data:", error);
@@ -333,6 +381,7 @@ const ProfilePage = () => {
       onConfirm: null,
     });
   };
+
 
   const handleChangePassword = async (oldPassword, newPassword) => {
     try {
@@ -520,9 +569,10 @@ const ProfilePage = () => {
   // Helper function to get status text
   const getStatusText = (status) => {
     const statusMap = {
-      pending: "Chờ xử lý",
-      confirmed: "Thanh toán thành công",
+      pending: "Chờ thanh toán",
+      confirmed: "Đã check-in - Sẵn sàng sạc",
       cancelled: "Đã hủy",
+      "payment-success": "Thanh toán thành công",
     };
     return statusMap[status] || status;
   };
@@ -647,17 +697,7 @@ const ProfilePage = () => {
       try {
         // console.log('Cancelling reservation:', reservationId);
         await api.patch(`/reservations/${reservationId}/cancel`);
-
-        const res = await api.get(`/reservations`);
-        const reservationList = res.data?.data?.items || [];
-        const normalized = normalizeReservations(reservationList);
-
-        setReservations(normalized);
-        setTotalPages(Math.ceil(normalized.length / itemsPerPage));
-
-        if (currentPage > Math.ceil(normalized.length / itemsPerPage)) {
-          setCurrentPage(1);
-        }
+        await loadReservations();
 
         closeConfirmPopup();
         showPopup("Hủy đặt chỗ thành công!", "success");
@@ -695,6 +735,379 @@ const ProfilePage = () => {
   const handlePageClick = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+
+  // Hàm xử lý xem bản đồ
+  const handleViewMap = (stationInfo) => {
+    if (!stationInfo?.latitude || !stationInfo?.longitude) {
+      showPopup("Không có thông tin tọa độ trạm sạc", "error");
+      return;
+    }
+
+    // Lấy vị trí hiện tại
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const currentLat = position.coords.latitude;
+          const currentLng = position.coords.longitude;
+          
+          // Mở Google Maps với route từ vị trí hiện tại đến trạm
+          const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLat},${currentLng}&destination=${stationInfo.latitude},${stationInfo.longitude}&travelmode=driving`;
+          
+          window.open(googleMapsUrl, '_blank');
+        },
+        (error) => {
+          // Nếu không lấy được vị trí hiện tại, chỉ hiển thị trạm
+          console.error("Error getting location:", error);
+          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
+          window.open(googleMapsUrl, '_blank');
+        }
+      );
+    } else {
+      // Browser không hỗ trợ geolocation
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
+      window.open(googleMapsUrl, '_blank');
+    }
+  };
+
+  const stopQrScanner = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    barcodeDetectorRef.current = null;
+    if (zxingControlsRef.current) {
+      try {
+        zxingControlsRef.current.stop();
+      } catch (error) {
+        console.log("Error stopping ZXing controls:", error);
+      }
+      zxingControlsRef.current = null;
+    }
+    // ZXing reader doesn't need reset, just set to null
+    zxingReaderRef.current = null;
+    setIsProcessingQr(false);
+  }, []);
+
+  const submitQrPayload = useCallback(
+    async (payload) => {
+      try {
+        const res = await api.post("/reservations/qr-check", payload);
+        const message =
+          res.data?.message || "Check-in bằng QR thành công";
+        
+        // Stop scanner first to clean up resources
+        stopQrScanner();
+        
+        // Close the modal
+        setIsQrScannerOpen(false);
+        
+        // Show success message
+        setPopup({
+          isOpen: true,
+          message,
+          type: "success",
+        });
+        
+        // Reload reservations
+        await loadReservations();
+        
+        setIsProcessingQr(false);
+      } catch (error) {
+        const errMessage =
+          error.response?.data?.message ||
+          "Không thể xác thực mã QR. Vui lòng thử lại.";
+        setQrScanError(errMessage);
+        setIsProcessingQr(false);
+      }
+    },
+    [loadReservations, stopQrScanner]
+  );
+
+  const handleQrPayload = useCallback(
+    async (rawValue) => {
+      try {
+        const parsed =
+          typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
+        if (!parsed?.reservationId || !parsed?.hash) {
+          throw new Error("INVALID_QR_DATA");
+        }
+        await submitQrPayload(parsed);
+      } catch (error) {
+        const isInvalid = error.message === "INVALID_QR_DATA";
+        setQrScanError(
+          isInvalid
+            ? "Dữ liệu QR không hợp lệ. Vui lòng quét lại mã chính xác."
+            : "Không thể đọc mã QR. Hãy giữ chắc thiết bị và thử lại."
+        );
+        setIsProcessingQr(false);
+      }
+    },
+    [submitQrPayload]
+  );
+
+  const scanVideoFrame = useCallback(async () => {
+    if (
+      !barcodeDetectorRef.current ||
+      !videoRef.current ||
+      !isQrScannerOpen
+    ) {
+      return;
+    }
+
+    if (videoRef.current.readyState < 2) {
+      animationFrameRef.current = requestAnimationFrame(() => {
+        scanVideoFrame();
+      });
+      return;
+    }
+
+    try {
+      const bitmap = await createImageBitmap(videoRef.current);
+      const barcodes = await barcodeDetectorRef.current.detect(bitmap);
+      bitmap.close();
+
+      if (barcodes.length && !processingRef.current) {
+        setIsProcessingQr(true);
+        processingRef.current = true;
+        await handleQrPayload(barcodes[0].rawValue);
+      }
+    } catch (error) {
+      console.error("QR detect error:", error);
+    } finally {
+      if (barcodeDetectorRef.current && isQrScannerOpen) {
+        animationFrameRef.current = requestAnimationFrame(() => {
+          scanVideoFrame();
+        });
+      }
+    }
+  }, [handleQrPayload, isProcessingQr, isQrScannerOpen]);
+
+  const startBarcodeDetectorScanner = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setQrScanError("Thiết bị không hỗ trợ camera.");
+      return;
+    }
+
+    // Check if running in secure context (HTTPS or localhost)
+    if (!window.isSecureContext) {
+      setQrScanError("Camera chỉ hoạt động trên HTTPS hoặc localhost.");
+      return;
+    }
+
+    try {
+      barcodeDetectorRef.current = new window.BarcodeDetector({
+        formats: ["qr_code"],
+      });
+    } catch (error) {
+      setQrScanError(
+        "Không thể khởi tạo trình quét. Vui lòng cập nhật trình duyệt."
+      );
+      return;
+    }
+
+    try {
+      console.log("Requesting camera permission...");
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false,
+      });
+      
+      console.log("Camera permission granted, stream:", stream);
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            await videoRef.current.play();
+            console.log("Video started playing");
+            animationFrameRef.current = requestAnimationFrame(() => {
+              scanVideoFrame();
+            });
+          } catch (playError) {
+            console.error("Video play error:", playError);
+            setQrScanError("Không thể phát video từ camera.");
+          }
+        };
+      }
+    } catch (error) {
+      console.error("Camera access error:", error);
+      
+      // Handle specific error types
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        setQrScanError(
+          "Quyền truy cập camera bị từ chối. Vui lòng cho phép quyền camera trong cài đặt trình duyệt."
+        );
+      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+        setQrScanError(
+          "Không tìm thấy camera. Vui lòng kiểm tra kết nối camera của thiết bị."
+        );
+      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
+        setQrScanError(
+          "Camera đang được sử dụng bởi ứng dụng khác. Vui lòng đóng các ứng dụng khác và thử lại."
+        );
+      } else if (error.name === "OverconstrainedError" || error.name === "ConstraintNotSatisfiedError") {
+        setQrScanError(
+          "Camera không hỗ trợ các yêu cầu được chỉ định. Đang thử lại với cài đặt cơ bản..."
+        );
+        
+        // Try again with basic constraints
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+          streamRef.current = basicStream;
+          
+          if (videoRef.current) {
+            videoRef.current.srcObject = basicStream;
+            videoRef.current.onloadedmetadata = async () => {
+              try {
+                await videoRef.current.play();
+                console.log("Video started playing with basic constraints");
+                animationFrameRef.current = requestAnimationFrame(() => {
+                  scanVideoFrame();
+                });
+              } catch (playError) {
+                console.error("Video play error:", playError);
+                setQrScanError("Không thể phát video từ camera.");
+              }
+            };
+          }
+        } catch (retryError) {
+          console.error("Retry error:", retryError);
+          setQrScanError("Không thể truy cập camera ngay cả với cài đặt cơ bản.");
+        }
+      } else {
+        setQrScanError(
+          `Lỗi camera: ${error.message || "Vui lòng cho phép quyền sử dụng camera."}`
+        );
+      }
+    }
+  }, [scanVideoFrame]);
+
+  const startZxingScanner = useCallback(async () => {
+    if (!videoRef.current) {
+      setQrScanError("Không tìm thấy phần hiển thị camera để quét.");
+      return;
+    }
+    
+    // Check if running in secure context (HTTPS or localhost)
+    if (!window.isSecureContext) {
+      setQrScanError("Camera chỉ hoạt động trên HTTPS hoặc localhost.");
+      return;
+    }
+    
+    try {
+      console.log("Starting ZXing scanner...");
+      const reader = new BrowserQRCodeReader(undefined, {
+        delayBetweenScanAttempts: 300,
+        delayBetweenScanSuccess: 800,
+      });
+      zxingReaderRef.current = reader;
+      
+      const controls = await reader.decodeFromVideoDevice(
+        undefined,
+        videoRef.current,
+        (result, err, controls) => {
+          if (result && !processingRef.current) {
+            console.log("QR Code detected:", result.getText());
+            processingRef.current = true;
+            setIsProcessingQr(true);
+            handleQrPayload(result.getText());
+          }
+          if (err && err.name !== "NotFoundException") {
+            console.error("ZXing scan error:", err);
+          }
+        }
+      );
+      zxingControlsRef.current = controls;
+      console.log("ZXing scanner started successfully");
+    } catch (error) {
+      console.error("ZXing error:", error);
+      
+      // Handle specific error types
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        setQrScanError(
+          "Quyền truy cập camera bị từ chối. Vui lòng cho phép quyền camera trong cài đặt trình duyệt."
+        );
+      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+        setQrScanError(
+          "Không tìm thấy camera. Vui lòng kiểm tra kết nối camera của thiết bị."
+        );
+      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
+        setQrScanError(
+          "Camera đang được sử dụng bởi ứng dụng khác. Vui lòng đóng các ứng dụng khác và thử lại."
+        );
+      } else {
+        setQrScanError(
+          `Không thể mở camera: ${error.message || "Vui lòng kiểm tra quyền camera của trình duyệt."}`
+        );
+      }
+    }
+  }, [handleQrPayload]);
+
+  const startQrScanner = useCallback(async () => {
+    setQrScanError("");
+    setManualQrValue("");
+    setIsProcessingQr(false);
+    processingRef.current = false;
+
+    if (isBarcodeSupported) {
+      await startBarcodeDetectorScanner();
+    } else {
+      await startZxingScanner();
+    }
+  }, [
+    isBarcodeSupported,
+    startBarcodeDetectorScanner,
+    startZxingScanner,
+  ]);
+
+  const handleManualSubmit = async () => {
+    if (!manualQrValue.trim()) {
+      setQrScanError("Vui lòng nhập dữ liệu QR.");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(manualQrValue.trim());
+      setQrScanError("");
+      setIsProcessingQr(true);
+      await submitQrPayload(parsed);
+    } catch (error) {
+      setQrScanError("Dữ liệu JSON không hợp lệ. Vui lòng kiểm tra lại.");
+      setIsProcessingQr(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isQrScannerOpen) {
+      startQrScanner();
+    } else {
+      stopQrScanner();
+      setManualQrValue("");
+      setQrScanError("");
+    }
+
+    return () => {
+      stopQrScanner();
+    };
+  }, [isQrScannerOpen, startQrScanner, stopQrScanner]);
 
   useEffect(() => {
     // Kiểm tra flag scroll đến lịch sử
@@ -740,6 +1153,108 @@ const ProfilePage = () => {
         onClose={() => setIsChangePasswordOpen(false)}
         onSubmit={handleChangePassword}
       />
+
+      {canUseQrTools && isQrScannerOpen && (
+        <div className="qr-scanner-overlay">
+          <div className="qr-scanner-modal">
+            <div className="qr-scanner-header">
+              <div>
+                <h3>Quét mã QR đặt chỗ</h3>
+                <p>Hướng camera vào mã QR khách hàng cung cấp để check-in.</p>
+                {!window.isSecureContext && (
+                  <p style={{ color: '#ff6b6b', fontSize: '0.9em', marginTop: '8px' }}>
+                    ⚠️ Camera yêu cầu kết nối HTTPS hoặc localhost
+                  </p>
+                )}
+              </div>
+              <button
+                className="qr-modal-close"
+                onClick={() => setIsQrScannerOpen(false)}
+                aria-label="Đóng"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {isBarcodeSupported ? (
+              <div className="qr-video-wrapper">
+                <video 
+                  ref={videoRef} 
+                  playsInline 
+                  muted 
+                  autoPlay
+                  style={{ width: '100%', maxWidth: '100%', height: 'auto' }}
+                />
+                <div className="qr-scan-guide" />
+              </div>
+            ) : (
+              <div className="qr-video-wrapper">
+                <video 
+                  ref={videoRef} 
+                  playsInline 
+                  muted 
+                  autoPlay
+                  style={{ width: '100%', maxWidth: '100%', height: 'auto' }}
+                />
+                <div className="qr-scan-guide" />
+              </div>
+            )}
+
+            <div className="qr-status">
+              <span>{qrStatusText}</span>
+              {qrScanError && <p className="qr-error">{qrScanError}</p>}
+            </div>
+
+            <div className="qr-manual-input">
+              <label>Nhập dữ liệu QR (JSON)</label>
+              <textarea
+                rows={3}
+                value={manualQrValue}
+                onChange={(e) => setManualQrValue(e.target.value)}
+                placeholder='{"reservationId":"","hash":""}'
+              />
+              <button
+                className="qr-submit-btn"
+                onClick={handleManualSubmit}
+                disabled={isProcessingQr || !manualQrValue.trim()}
+              >
+                {isProcessingQr ? "Đang gửi..." : "Gửi thủ công"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {canUseQrTools && (
+        <div className="profile-toolbar">
+          <div className="toolbar-info">
+            <span className="role-chip">
+              {(roleDisplayLabel || "STAFF").toUpperCase()}
+            </span>
+            <div>
+              <h3>QR Check-in</h3>
+              <p>Nhân viên có thể quét mã QR của khách hàng để check-in nhanh.</p>
+            </div>
+          </div>
+          <div className="toolbar-actions">
+            <button
+              className="qr-scan-btn"
+              onClick={() => setIsQrScannerOpen(true)}
+            >
+              <QrCode size={18} />
+              Quét QR check-in
+            </button>
+            <button
+              className="qr-refresh-btn"
+              onClick={loadReservations}
+              disabled={txLoading}
+            >
+              <RefreshCcw size={16} />
+              Làm mới dữ liệu
+            </button>
+          </div>
+        </div>
+      )}
 
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
       <section className="profile-section user-info">
@@ -926,19 +1441,46 @@ const ProfilePage = () => {
                 </h3>
                 <div className="vehicle-info">
                   <p>
-                    <b>Hãng:</b> {vehicle.make || "Chưa cập nhật"}
+                    <b>Hãng:</b>
+                    <span>{vehicle.make || "Chưa cập nhật"}</span>
                   </p>
                   <p>
-                    <b>Mẫu:</b> {vehicle.model || "Chưa cập nhật"}
+                    <b>Mẫu:</b>
+                    <span>{vehicle.model || "Chưa cập nhật"}</span>
                   </p>
                   <p>
-                    <b>Năm:</b> {vehicle.year || "Chưa cập nhật"}
+                    <b>Năm sản xuất:</b>
+                    <span>{vehicle.year || "Chưa cập nhật"}</span>
                   </p>
                   <p>
-                    <b>Loại sạc:</b>{" "}
-                    {vehicle.connectorType + "-" + vehicle.batteryCapacityKwh ||
-                      "Chưa cập nhật"}{" "}
-                    kWh
+                    <b>Màu xe:</b>
+                    <span>{vehicle.color || "Chưa cập nhật"}</span>
+                  </p>
+                  <p>
+                    <b>Số khung (VIN):</b>
+                    <span>{vehicle.vin || "Chưa cập nhật"}</span>
+                  </p>
+                  <p>
+                    <b>Loại xe:</b>
+                    <span>
+                      {vehicle.type === "car"
+                        ? "Ô tô"
+                        : vehicle.type === "motorbike"
+                        ? "Xe máy"
+                        : "Chưa cập nhật"}
+                    </span>
+                  </p>
+                  <p>
+                    <b>Dung lượng pin:</b>
+                    <span>
+                      {vehicle.batteryCapacityKwh
+                        ? `${vehicle.batteryCapacityKwh} kWh`
+                        : "Chưa cập nhật"}
+                    </span>
+                  </p>
+                  <p>
+                    <b>Loại cổng sạc:</b>
+                    <span>{vehicle.connectorType || "Chưa cập nhật"}</span>
                   </p>
                 </div>
                 <div className="vehicle-actions">
@@ -1157,7 +1699,12 @@ const ProfilePage = () => {
       </section>
 
       <section className="profile-section history-section">
-        <h2>Lịch sử đặt chỗ</h2>
+        <div className="section-header">
+          <h2>
+            <Calendar size={28} style={{ marginRight: '12px', verticalAlign: 'middle' }} />
+            Lịch sử đặt chỗ
+          </h2>
+        </div>
         <div className="history-table-wrapper">
           <table className="history-table">
             <thead>
@@ -1174,8 +1721,8 @@ const ProfilePage = () => {
             <tbody>
               {txLoading ? (
                 <tr>
-                  <td colSpan={5} style={{ color: "#666" }}>
-                    Đang tải...
+                  <td colSpan={5} style={{ color: "#666", textAlign: "center", padding: "40px" }}>
+                    <div className="loading-spinner">Đang tải...</div>
                   </td>
                 </tr>
               ) : getPaginatedReservations().length > 0 ? (
@@ -1192,50 +1739,92 @@ const ProfilePage = () => {
 
                   return (
                     <tr key={reservationId}>
-                      <td>{stationInfo.stationName}</td>
                       <td>
-                        {reservation.vehicle?.plateNumber || "N/A"}
-                        <br />
-                        <small style={{ color: "#666" }}>
-                          {reservation.vehicle?.make}{" "}
-                          {reservation.vehicle?.model}
-                        </small>
+                        <div className="station-name-cell">
+                          <MapPin size={16} color="#16a34a" />
+                          <span>{stationInfo.stationName}</span>
+                        </div>
                       </td>
                       <td>
-                        <div style={{ fontSize: "0.85rem" }}>
-                          <div>
-                            Bắt đầu: {formatDateTime(firstItem?.startAt)}
+                        <div className="vehicle-info-cell">
+                          <strong>{reservation.vehicle?.plateNumber || "N/A"}</strong>
+                          <small>
+                            {reservation.vehicle?.make}{" "}
+                            {reservation.vehicle?.model}
+                          </small>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="time-info-cell">
+                          <div className="time-row">
+                            <Clock size={14} />
+                            <span>Bắt đầu: {formatDateTime(firstItem?.startAt)}</span>
                           </div>
-                          <div>
-                            Kết thúc: {formatDateTime(firstItem?.endAt)}
+                          <div className="time-row">
+                            <Clock size={14} />
+                            <span>Kết thúc: {formatDateTime(firstItem?.endAt)}</span>
                           </div>
                         </div>
                       </td>
                       <td>
                         <span className={`status-badge ${reservation.status}`}>
+                          {reservation.status === "pending" && <AlertCircle size={14} />}
+                          {reservation.status === "confirmed" && <CheckCircle size={14} />}
+                          {reservation.status === "cancelled" && <XCircle size={14} />}
+                          {reservation.status === "payment-success" && <CheckCircle size={14} />}
                           {getStatusText(reservation.status)}
                         </span>
                       </td>
-                      <td
-                        style={{ textAlign: "center", verticalAlign: "middle" }}
-                      >
-                        <div
-                          className="action-buttons"
-                          style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                          }}
-                        >
+                      <td className="action-column">
+                        {(reservation.status === "pending" ||
+                          reservation.status === "confirmed") && (
+                          <button
+                            className="row-cancel-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelReservation(reservationId);
+                            }}
+                            title="Hủy đặt chỗ"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                        <div className="action-buttons">
                           {reservation.status === "pending" && (
                             <>
                               <button
-                                className="start-charge-btn"
+                                className="action-btn map-btn"
+                                onClick={() => handleViewMap(stationInfo)}
+                                title="Xem đường đi trên bản đồ"
+                              >
+                                <MapPin size={16} />
+                                Xem bản đồ
+                              </button>
+                            </>
+                          )}
+                          {reservation.status === "confirmed" && (
+                            <>
+                              <button
+                                className="action-btn start-btn"
                                 onClick={() => {
                                   if (reservationId && vehicleId) {
                                     const firstItem = reservation.items?.[0];
                                     const portInfo = firstItem?.slot?.port;
+
+                                    console.log('📍 ===== NAVIGATE TO CHARGING SESSION PAGE (from Profile) =====');
+                                    console.log('This is ONLY navigation, NOT starting the charging yet!');
+                                    console.log('User needs to click "Bắt đầu sạc" button on charging session page to actually start.');
+                                    console.log('Reservation:', reservation);
+                                    console.log('First Item:', firstItem);
+                                    console.log('Slot:', firstItem?.slot);
+                                    console.log('Charger:', portInfo);
+                                    
+                                    // Extract port ID
+                                    let extractedPortId = null;
+                                    if (portInfo) {
+                                      extractedPortId = typeof portInfo === 'object' ? (portInfo._id || portInfo.id) : portInfo;
+                                    }
+                                    console.log('Extracted Port ID:', extractedPortId);
 
                                     localStorage.setItem(
                                       "reservationId",
@@ -1246,29 +1835,23 @@ const ProfilePage = () => {
                                       vehicleId
                                     );
 
-                                    navigate("/chargingSession", {
-                                      state: {
-                                        reservation: {
-                                          id: reservationId,
-                                          portId: portInfo?._id || portInfo,
-                                          powerKw: portInfo?.powerKw || 150,
-                                          status: reservation.status,
-                                          startAt: firstItem?.startAt,
-                                          endAt: firstItem?.endAt,
-                                        },
-                                        vehicle: {
-                                          id: vehicleId,
-                                          plateNumber:
-                                            reservation.vehicle?.plateNumber,
-                                          make: reservation.vehicle?.make,
-                                          model: reservation.vehicle?.model,
-                                          batteryCapacityKwh:
-                                            reservation.vehicle
-                                              ?.batteryCapacityKwh,
-                                          connectorType:
-                                            reservation.vehicle?.connectorType,
-                                        },
+                                    // Pass complete reservation object
+                                    const navState = {
+                                      reservation: reservation, // Pass entire reservation object with qrCheck, status, items
+                                      vehicle: {
+                                        id: vehicleId,
+                                        plateNumber: reservation.vehicle?.plateNumber,
+                                        make: reservation.vehicle?.make,
+                                        model: reservation.vehicle?.model,
+                                        batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
+                                        connectorType: reservation.vehicle?.connectorType,
                                       },
+                                    };
+                                    
+                                    console.log('Navigation State:', navState);
+
+                                    navigate("/chargingSession", {
+                                      state: navState,
                                     });
                                   } else {
                                     showPopup(
@@ -1278,22 +1861,30 @@ const ProfilePage = () => {
                                   }
                                 }}
                               >
+                                <Zap size={16} />
                                 Bắt đầu sạc
                               </button>
                               <button
-                                className="cancel-btn"
-                                onClick={() =>
-                                  handleCancelReservation(reservationId)
-                                }
+                                className="action-btn map-btn"
+                                onClick={() => handleViewMap(stationInfo)}
+                                title="Xem đường đi trên bản đồ"
                               >
-                                Hủy
+                                <MapPin size={16} />
+                                Xem bản đồ
                               </button>
                             </>
                           )}
                           {reservation.status === "cancelled" && (
-                            <span style={{ color: "#666", fontSize: "0.9rem" }}>
-                              Đã hủy
-                            </span>
+                            <div className="status-info-cell cancelled">
+                              <XCircle size={16} />
+                              <span>Đã hủy</span>
+                            </div>
+                          )}
+                          {reservation.status === "payment-success" && (
+                            <div className="status-info-cell success">
+                              <CheckCircle size={16} />
+                              <span>Đã thanh toán</span>
+                            </div>
                           )}
                         </div>
                       </td>
@@ -1354,7 +1945,12 @@ const ProfilePage = () => {
       </section>
 
       <section className="profile-section analysis-section">
-        <h2>Phân tích giao dịch</h2>
+        <div className="section-header">
+          <h2>
+            <span className="stats-icon">📊</span>
+            Thống kê giao dịch
+          </h2>
+        </div>
         <div className="analysis-cards">
           <div className="analysis-card">
             <div className="icon-box cost">
@@ -1396,3 +1992,8 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
+
+
+
+
+

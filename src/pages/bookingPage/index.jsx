@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import "./index.scss";
-import ChargingMap from "../../components/chargingMap";
 import api from "../../config/api";
 
 /** ============== MAPPERS & TYPES (JS) ============== */
@@ -446,7 +445,7 @@ export default function BookingPage() {
       return;
     }
 
-    // Build ISO in UTC
+    // Build ISO in UTC - Auto calculate endTime as startTime + 15 minutes
     const toUtcIso = (dateStr, timeStr) => {
       // dateStr: "YYYY-MM-DD", timeStr: "HH:mm" (local)
       const [h, m] = timeStr.split(":").map(Number);
@@ -454,19 +453,25 @@ export default function BookingPage() {
       dt.setHours(h, m, 0, 0); // local time
       return dt.toISOString(); // convert → UTC "Z"
     };
+    
+    // Calculate endTime as startTime + 15 minutes
+    const [startHour, startMin] = formData.startTime.split(":").map(Number);
+    const endDateTime = new Date(formData.date);
+    endDateTime.setHours(startHour, startMin + 15, 0, 0);
+    const endHour = endDateTime.getHours();
+    const endMin = endDateTime.getMinutes();
+    const calculatedEndTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
+    
     const startAtIso = toUtcIso(formData.date, formData.startTime);
-    const endAtIso = toUtcIso(formData.date, formData.endTime);
+    const endAtIso = toUtcIso(formData.date, calculatedEndTime);
 
     // Quick time validation to reduce 400 from API
+    // Allow booking time within 5 minutes in the past
     const now = new Date();
     const startDate = new Date(startAtIso);
-    const endDate = new Date(endAtIso);
-    if (endDate <= startDate) {
-      alert("❌ Giờ kết thúc phải sau giờ bắt đầu.");
-      return;
-    }
-    if (startDate < new Date(now.getTime() + 2 * 60 * 1000)) {
-      alert("❌ Giờ bắt đầu phải ở tương lai (ít nhất sau vài phút).");
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    if (startDate < fiveMinutesAgo) {
+      alert("❌ Giờ bắt đầu không được quá 5 phút trong quá khứ.");
       return;
     }
 
@@ -529,7 +534,7 @@ export default function BookingPage() {
             bookingTime: {
               date: formData.date,
               startTime: formData.startTime,
-              endTime: formData.endTime,
+              endTime: calculatedEndTime,
             },
           },
           replace: true,
@@ -593,75 +598,6 @@ export default function BookingPage() {
       .catch(() => setVehicleId(""));
   }, []);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const days = [
-      "Chủ nhật",
-      "Thứ hai",
-      "Thứ ba",
-      "Thứ tư",
-      "Thứ năm",
-      "Thứ sáu",
-      "Thứ bảy",
-    ];
-    const dayName = days[date.getDay()];
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    return `${dayName}, ${day}/${month}/${year}`;
-  };
-
-  const [showDateModal, setShowDateModal] = useState(false);
-  const [showTimeModal, setShowTimeModal] = useState(false);
-  const [showEndTimeModal, setShowEndTimeModal] = useState(false);
-
-  // Tạo 3 ngày lựa chọn: hôm nay + 2 ngày tiếp theo
-  const dateOptions = useMemo(() => {
-    const options = [];
-    for (let i = 0; i < 3; i++) {
-      const d = new Date(today.getTime() + i * 24 * 60 * 60 * 1000);
-      const iso = d.toISOString().split("T")[0];
-      options.push({
-        iso,
-        label: formatDate(iso),
-      });
-    }
-    return options;
-  }, [today]);
-
-  // Sinh các slot giờ theo bước 30 phút, không cho chọn quá khứ
-  const timeSlots = useMemo(() => {
-    const slots = [];
-    const selectedDateIso = formData.date;
-    const now = new Date();
-    const isToday = selectedDateIso === today.toISOString().split("T")[0];
-
-    let startHour = 0;
-    let startMinute = 0;
-    if (isToday) {
-      // Làm tròn lên quarter-hour tiếp theo
-      const curH = now.getHours();
-      const curM = now.getMinutes();
-      const nextQuarter = Math.ceil((curM + 1) / 15) * 15; // ví dụ 1:54 -> 2:00
-      if (nextQuarter >= 60) {
-        startHour = (curH + 1) % 24;
-        startMinute = 0;
-      } else {
-        startHour = curH;
-        startMinute = nextQuarter;
-      }
-    }
-
-    for (let h = startHour; h < 24; h++) {
-      for (let m = h === startHour ? startMinute : 0; m < 60; m += 15) {
-        const hh = String(h).padStart(2, "0");
-        const mm = String(m).padStart(2, "0");
-        slots.push(`${hh}:${mm}`);
-      }
-    }
-    return slots;
-  }, [formData.date, today]);
-
   const priceEstimate1h = useMemo(() => {
     if (!selectedCharger?.power || !selectedCharger?.price) return "-";
     const powerKw =
@@ -673,32 +609,6 @@ export default function BookingPage() {
     return `${(powerKw * priceVnd).toLocaleString("vi-VN")} đ`;
   }, [selectedCharger]);
 
-  // Tạo 3 mốc giờ kết thúc: +30m, +60m, +90m từ giờ bắt đầu (không vượt quá ngày)
-  const endTimeSlots = useMemo(() => {
-    const base = formData.startTime;
-    if (!base) return [];
-    const [h, m] = base.split(":").map((n) => Number(n));
-    const mins = h * 60 + m;
-    const candidates = [30, 60, 90, 120, 150, 180, 210, 240].map(
-      (delta) => mins + delta
-    );
-    return candidates
-      .filter((total) => total < 24 * 60)
-      .map((total) => {
-        const hh = String(Math.floor(total / 60)).padStart(2, "0");
-        const mm = String(total % 60).padStart(2, "0");
-        return `${hh}:${mm}`;
-      });
-  }, [formData.startTime]);
-
-  // Đảm bảo endTime hợp lệ khi đổi startTime
-  useEffect(() => {
-    if (!endTimeSlots.length) {
-      setFormData((prev) => ({ ...prev, endTime: "" }));
-      return;
-    }
-    setFormData((prev) => ({ ...prev, endTime: endTimeSlots[0] }));
-  }, [endTimeSlots]);
 
   // Fetch slots when entering step 3
   useEffect(() => {
@@ -769,30 +679,43 @@ export default function BookingPage() {
   return (
     <div className="booking-wrapper">
       <div
-        className={`booking-container ${step === 4 ? "confirmation-mode" : ""}`}
+        className={`booking-container full-width ${
+          step === 3 ? "confirmation-mode" : ""
+        }`}
       >
         <div className="left-panel">
           <div className="panel-header">
             <h1>Đặt chỗ sạc xe</h1>
             <div className="step-indicator">
-              <div className={`step ${step >= 1 ? "active" : ""}`}>
+              <div 
+                className={`step ${step >= 1 ? "active" : ""} ${step === 1 ? "current" : ""}`}
+                onClick={() => setStep(1)}
+                style={{ cursor: 'pointer' }}
+              >
                 <span className="step-number">1</span>
                 <span className="step-label">Chọn trạm</span>
               </div>
               <div className="step-divider"></div>
-              <div className={`step ${step >= 2 ? "active" : ""}`}>
+              <div 
+                className={`step ${step >= 2 ? "active" : ""} ${step === 2 ? "current" : ""} ${step < 2 ? "disabled" : ""}`}
+                onClick={() => {
+                  if (step >= 2) setStep(2);
+                }}
+                style={{ cursor: step >= 2 ? 'pointer' : 'not-allowed' }}
+              >
                 <span className="step-number">2</span>
                 <span className="step-label">Chọn trụ</span>
               </div>
               <div className="step-divider"></div>
-              <div className={`step ${step >= 3 ? "active" : ""}`}>
+              <div 
+                className={`step ${step >= 3 ? "active" : ""} ${step === 3 ? "current" : ""} ${step < 3 ? "disabled" : ""}`}
+                onClick={() => {
+                  if (step >= 3) setStep(3);
+                }}
+                style={{ cursor: step >= 3 ? 'pointer' : 'not-allowed' }}
+              >
                 <span className="step-number">3</span>
-                <span className="step-label">Chọn slot</span>
-              </div>
-              <div className="step-divider"></div>
-              <div className={`step ${step >= 4 ? "active" : ""}`}>
-                <span className="step-number">4</span>
-                <span className="step-label">Xác nhận</span>
+                <span className="step-label">Đặt chỗ & Xác nhận</span>
               </div>
             </div>
           </div>
@@ -840,9 +763,9 @@ export default function BookingPage() {
                   className="filter-select"
                 >
                   <option value="all">Tất cả loại trạm</option>
-                  <option value="AC">⚡ AC - Sạc chậm</option>
-                  <option value="DC">⚡⚡ DC - Sạc nhanh</option>
-                  <option value="DC ULTRA">⚡⚡⚡ DC Ultra - Siêu nhanh</option>
+                  <option value="AC">AC - Sạc chậm</option>
+                  <option value="DC">DC - Sạc nhanh</option>
+                  <option value="DC ULTRA">DC Ultra - Siêu nhanh</option>
                 </select>
 
                 <select
@@ -961,25 +884,8 @@ export default function BookingPage() {
           {step === 2 && selectedStation && (
             <div className="charger-selection">
               <div className="selected-station-info">
-                <button
-                  className="back-button"
-                  onClick={() => {
-                    setStep(1);
-                    setSelectedCharger(null);
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M12 4L6 10l6 6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  Quay lại
-                </button>
                 <h2>{selectedStation.name}</h2>
+                <p className="station-address">{selectedStation.address}</p>
               </div>
 
               <p className="selection-hint">
@@ -1007,13 +913,6 @@ export default function BookingPage() {
                   >
                     <div className="charger-header">
                       <h3>{charger.name}</h3>
-                      <div
-                        className={`speed-badge ${String(charger.speedLabel)
-                          .toLowerCase()
-                          .replace(/\s+/g, "_")}`}
-                      >
-                        {charger.speedLabel}
-                      </div>
                       <span className={`status-badge ${charger.status}`}>
                         {charger.status === "available" && "✓ Sẵn sàng"}
                         {charger.status === "in_use" && "⏱ Đang sử dụng"}
@@ -1027,11 +926,17 @@ export default function BookingPage() {
                       >
                         {charger.typeLabel}
                       </span>
+                      <div
+                        className={`speed-badge ${String(charger.speedLabel)
+                          .toLowerCase()
+                          .replace(/\s+/g, "_")}`}
+                      >
+                        {charger.speedLabel}
+                      </div>
                     </div>
 
                     <div className="charger-specs">
                       <div className="spec-item">
-                        <span className="spec-icon">⚡</span>
                         <div>
                           <div className="spec-label">Công suất</div>
                           <div className="spec-value">{charger.power}</div>
@@ -1039,19 +944,18 @@ export default function BookingPage() {
                       </div>
 
                       <div className="spec-item">
-                        <span className="spec-icon">💰</span>
                         <div>
                           <div className="spec-label">Giá</div>
                           <div className="spec-value">{charger.price}</div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="charger-connector">
-                      <span className="connector-label">Đầu cắm:</span>
-                      <span className="connector-type">
-                        {charger.connector}
-                      </span>
+                      <div className="spec-item">
+                        <div>
+                          <div className="spec-label">Đầu cắm</div>
+                          <div className="spec-value">{charger.connector}</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1059,370 +963,248 @@ export default function BookingPage() {
             </div>
           )}
 
-          {/* STEP 3: Slot selection */}
+          {/* STEP 3: Slot selection & Confirmation (Merged) */}
           {step === 3 && selectedCharger && (
-            <div className="slot-selection">
-              <button className="back-button" onClick={() => setStep(2)}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M12 4L6 10l6 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Quay lại
-              </button>
-              <h2>Chọn slot cho trụ sạc</h2>
-              {slotsLoading && <div>Đang tải slot…</div>}
-              {slotsError && (
-                <div style={{ color: "tomato" }}>Lỗi: {slotsError}</div>
-              )}
-              {!slotsLoading && !slotsError && (
-                <div className="slots-grid">
-                  {slots.length === 0 && (
-                    <div className="no-slots-message">
-                      Không có slot khả dụng cho trụ này
-                    </div>
-                  )}
-                  {slots.map((slot, index) => {
-                    const selectable = isSlotSelectable(slot.status);
-
-                    // Map status sang label tiếng Việt
-                    const getStatusLabel = (status) => {
-                      const statusLabels = {
-                        booked: "Đã được đặt trước",
-                        reserved: "Đã được giữ chỗ",
-                        occupied: "Đang sử dụng",
-                        maintenance: "Đang bảo trì",
-                        disabled: "Tạm ngưng",
-                        unavailable: "Không khả dụng",
-                      };
-                      return statusLabels[status] || "Không khả dụng";
-                    };
-
-                    return (
-                      <div
-                        key={slot.id}
-                        className={`slot-card ${slot.status} ${
-                          selectedSlot?.id === slot.id ? "selected" : ""
-                        } ${!selectable ? "disabled" : ""}`}
-                        onClick={() => {
-                          if (!selectable) return;
-                          setSelectedSlot(slot);
-                        }}
-                      >
-                        <div className="slot-header">
-                          <div className="slot-number-wrapper">
-                            <span className="slot-icon">
-                              {selectable ? "🔌" : "🔒"}
-                            </span>
-                            <span className="slot-number">
-                              Slot {index + 1}
+            <div className="booking-confirmation-merged">
+              {/* Station & Charger Details - Combined */}
+              <div className="selected-details-section">
+                <div className="detail-card combined-detail">
+                  <div className="detail-header">
+                    <h3>Trạm & Trụ đã chọn</h3>
+                  </div>
+                  <div className="detail-body-combined">
+                    <div className="station-section">
+                      <div className="section-title">Trạm sạc</div>
+                      <div className="detail-name">{selectedStation.name}</div>
+                      <div className="detail-info">
+                        <span>{selectedStation.address}</span>
+                      </div>
+                      {selectedStation.distance && (
+                        <div className="distance-time-info">
+                          <div className="info-item">
+                            <span className="info-label">Khoảng cách</span>
+                            <span className="info-value">
+                              {typeof selectedStation.distance === 'number' 
+                                ? `${selectedStation.distance.toFixed(1)} km`
+                                : selectedStation.distance
+                              }
                             </span>
                           </div>
-                          <span className={`slot-status-chip ${slot.status}`}>
-                            {selectable ? "✓ Có sẵn" : "✕ Đã đặt"}
-                          </span>
-                        </div>
-
-                        <div className="slot-body">
-                          <div className="slot-info-item">
-                            <span className="info-icon">⏳</span>
-                            <div className="info-content">
-                              <span className="info-label">Thời lượng</span>
-                              <span className="info-value">24 giờ</span>
-                            </div>
+                          <div className="info-item">
+                            <span className="info-label">Thời gian di chuyển</span>
+                            <span className="info-value">
+                              ~{typeof selectedStation.distance === 'number'
+                                ? Math.ceil(selectedStation.distance * 2)
+                                : Math.ceil(parseFloat(selectedStation.distance) * 2)
+                              } phút
+                            </span>
                           </div>
                         </div>
-
-                        {!selectable && (
-                          <div className="slot-unavailable-overlay">
-                            <span className="unavailable-icon">🚫</span>
-                            <div className="unavailable-content">
-                              <span className="unavailable-title">
-                                {getStatusLabel(slot.status)}
-                              </span>
-                              <span className="unavailable-subtitle">
-                                Vui lòng chọn slot khác
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {/* <button 
-                className="refresh-button" 
-                onClick={() => {
-                // Gọi lại API slots để cập nhật trạng thái mới nhất
-                fetchSlots(); // hoặc gọi lại useEffect
-              }}
-              >
-               🔄 Làm mới slot
-              </button> */}
-              <button
-                className="next-button"
-                disabled={
-                  !selectedSlot || !isSlotSelectable(selectedSlot?.status)
-                }
-                onClick={() => {
-                  if (selectedSlot && isSlotSelectable(selectedSlot.status))
-                    setStep(4);
-                }}
-              >
-                Tiếp tục xác nhận
-              </button>
-            </div>
-          )}
-
-          {/* STEP 4: Confirmation */}
-          {step === 4 && selectedStation && selectedCharger && selectedSlot && (
-            <div className="booking-confirmation">
-              <button className="back-button" onClick={() => setStep(2)}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M12 4L6 10l6 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Quay lại2
-              </button>
-
-              <div className="confirmation-content">
-                <div className="confirmation-header">
-                  <div className="success-icon">✓</div>
-                  <h2>Xác nhận đặt chỗ</h2>
-                  <p className="confirmation-subtitle">
-                    Vui lòng kiểm tra thông tin và xác nhận đặt chỗ của bạn
-                  </p>
-                </div>
-
-                <div className="confirmation-grid">
-                  <div className="summary-section">
-                    <div className="summary-card station-card">
-                      <h3 style={{ textAlign: "center" }}>
-                        Thông tin trạm sạc
-                      </h3>
-                      <div className="summary-item">
-                        <span className="summary-label">Tên trạm:</span>
-                        <span className="summary-value">
-                          {selectedStation.name}
-                        </span>
-                      </div>
-                      <div className="summary-item">
-                        <span className="summary-label">Địa chỉ:</span>
-                        <span className="summary-value">
-                          {selectedStation.address}
-                        </span>
-                      </div>
-                      <div className="summary-item">
-                        <span className="summary-label">Loại trạm:</span>
-                        <span className="summary-value">
-                          {selectedStation.type}
-                        </span>
-                      </div>
+                      )}
                     </div>
 
-                    <div className="summary-card charger-card">
-                      <h3 style={{ textAlign: "center" }}>Thông tin trụ sạc</h3>
-                      <div className="summary-item">
-                        <span className="summary-label">Trụ sạc:</span>
-                        <span className="summary-value">
-                          {selectedCharger.name}
-                        </span>
-                      </div>
-                      <div className="summary-item highlight-item">
-                        <span className="summary-label">Công suất:</span>
-                        <span className="summary-value highlight">
-                          ⚡ {selectedCharger.power}
-                        </span>
-                      </div>
-                      <div className="summary-item highlight-item">
-                        <span className="summary-label">Giá:</span>
-                        <span className="summary-value highlight">
-                          💰 {selectedCharger.price}
-                        </span>
-                      </div>
-                      <div className="summary-item">
-                        <span className="summary-label">Đầu cắm:</span>
-                        <span className="summary-value">
-                          {selectedCharger.connector}
-                        </span>
-                      </div>
-                      <div className="summary-item">
-                        <span className="summary-label">Trạng thái:</span>
-                        <span className="summary-value status-available">
-                          ✓ Sẵn sàng
-                        </span>
+                    <div className="divider-vertical"></div>
+
+                    <div className="charger-section">
+                      <div className="section-title">Trụ sạc</div>
+                      <div className="detail-name">{selectedCharger.name}</div>
+                      <div className="detail-specs-grid">
+                        <div className="spec-badge">
+                          <span className="spec-label">Loại</span>
+                          <span className="spec-value">{selectedCharger.typeLabel}</span>
+                        </div>
+                        <div className="spec-badge">
+                          <span className="spec-label">Công suất</span>
+                          <span className="spec-value">{selectedCharger.power}</span>
+                        </div>
+                        <div className="spec-badge">
+                          <span className="spec-label">Giá</span>
+                          <span className="spec-value">{selectedCharger.price}</span>
+                        </div>
+                        <div className="spec-badge">
+                          <span className="spec-label">Tốc độ</span>
+                          <span className="spec-value">{selectedCharger.speedLabel}</span>
+                        </div>
+                        <div className="spec-badge">
+                          <span className="spec-label">Đầu cắm</span>
+                          <span className="spec-value">{selectedCharger.connector}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  <div className="form-section">
-                    <form className="booking-form" onSubmit={handleSubmit}>
-                      <div className="form-header">
-                        <h3>Thời gian sạc</h3>
-                        <p>Chọn thời gian bạn muốn bắt đầu sạc xe</p>
-                      </div>
-
-                      <div className="form-group">
-                        <label htmlFor="date">
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                          >
-                            <rect
-                              x="3"
-                              y="4"
-                              width="14"
-                              height="14"
-                              rx="2"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            />
-                            <path
-                              d="M3 8h14M7 2v4M13 2v4"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          Ngày sạc
-                        </label>
-                        <div className="custom-datetime-picker">
-                          <div
-                            className="datetime-display"
-                            onClick={() => setShowDateModal(true)}
-                          >
-                            <div className="datetime-value">
-                              <span className="datetime-icon">📅</span>
-                              <span>{formatDate(formData.date)}</span>
-                            </div>
-                            <span className="datetime-arrow">→</span>
-                          </div>
-                          {/* <div className="datetime-helper">💡 Nhấn để chọn 1 trong 3 ngày</div> */}
+              <div className="merged-content-vertical">
+                {/* SECTION 1: Slot Selection */}
+                <div className="slot-selection-section">
+                  <h3>1. Chọn slot sạc</h3>
+                  {slotsLoading && <div className="loading-message">Đang tải slot…</div>}
+                  {slotsError && (
+                    <div className="error-message">Lỗi: {slotsError}</div>
+                  )}
+                  {!slotsLoading && !slotsError && (
+                    <div className="slots-grid-compact">
+                      {slots.length === 0 && (
+                        <div className="no-slots-message">
+                          Không có slot khả dụng cho trụ này
                         </div>
-                      </div>
+                      )}
+                      {slots.map((slot, index) => {
+                        const selectable = isSlotSelectable(slot.status);
 
-                      <div className="form-group">
-                        <label htmlFor="startTime">
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                          >
-                            <circle
-                              cx="10"
-                              cy="10"
-                              r="8"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            />
-                            <path
-                              d="M10 6v4l3 2"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          Giờ bắt đầu
-                        </label>
-                        <div className="custom-datetime-picker">
-                          <div
-                            className="datetime-display"
-                            onClick={() => setShowTimeModal(true)}
-                          >
-                            <div className="datetime-value">
-                              <span className="datetime-icon">🕐</span>
-                              <span>{formData.startTime}</span>
+                        // Map status sang label tiếng Việt
+                        const getStatusLabel = (status) => {
+                          const statusLabels = {
+                            booked: "Đã được đặt trước",
+                            reserved: "Đã được giữ chỗ",
+                            occupied: "Đang sử dụng",
+                            maintenance: "Đang bảo trì",
+                            disabled: "Tạm ngưng",
+                            unavailable: "Không khả dụng",
+                          };
+                          return statusLabels[status] || "Không khả dụng";
+                        };
+
+                         return (
+                           <div
+                             key={slot.id}
+                             className={`slot-card ${slot.status} ${
+                               selectedSlot?.id === slot.id ? "selected" : ""
+                             } ${!selectable ? "disabled" : ""}`}
+                             onClick={() => {
+                               if (!selectable) return;
+                               setSelectedSlot(slot);
+                             }}
+                           >
+                             <div className="slot-header">
+                               <div className="slot-number-wrapper">
+                                 <span className="slot-number">
+                                   Slot {index + 1}
+                                 </span>
+                               </div>
+                               <span className={`slot-status-chip ${slot.status}`}>
+                                 {selectable ? "✓ Có sẵn" : "✕ Đã đặt"}
+                               </span>
+                             </div>
+
+                             {selectable && (
+                               <div className="slot-body">
+                                 <div className="slot-info-row">
+                                   <span className="info-label">Loại slot</span>
+                                   <span className="info-value">Sạc thường</span>
+                                 </div>
+                                 <div className="slot-info-row">
+                                   <span className="info-label">Thời gian giữ chỗ</span>
+                                   <span className="info-value">15 phút</span>
+                                 </div>
+                               </div>
+                             )}
+
+                            {!selectable && (
+                              <div className="slot-unavailable-overlay">
+                                <div className="unavailable-slot-number">Slot {index + 1}</div>
+                                <span className="unavailable-icon">🚫</span>
+                                <div className="unavailable-content">
+                                  <span className="unavailable-title">
+                                    {getStatusLabel(slot.status)}
+                                  </span>
+                                  <span className="unavailable-subtitle">
+                                    Vui lòng chọn slot khác
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                           </div>
+                         );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* SECTION 2: Booking Form */}
+                <div className="booking-form-section">
+                  <h3>2. Chọn xe & Thời gian</h3>
+                  
+                  <div className="form-content-wrapper">
+                     {/* Vehicle Selection */}
+                     <div className="vehicle-selection-compact">
+                       <label className="form-label">
+                         Xe của bạn
+                       </label>
+                      {selectedVehicle ? (
+                        <div className="selected-vehicle-display" onClick={() => setShowVehicleModal(true)}>
+                          <div className="vehicle-info">
+                            <div className="vehicle-icon">🏍️</div>
+                            <div className="vehicle-details">
+                              <span className="vehicle-plate">{selectedVehicle.plateNumber}</span>
+                              <span className="vehicle-model">{selectedVehicle.make} {selectedVehicle.model}</span>
                             </div>
-                            <span className="datetime-arrow">→</span>
                           </div>
-                          {/* <div className="datetime-helper">💡 Chọn theo bước 15 phút, không chọn quá khứ</div> */}
+                          <button type="button" className="change-btn">Đổi phương tiện</button>
                         </div>
-                      </div>
+                      ) : (
+                        <button 
+                          type="button" 
+                          className="select-vehicle-btn"
+                          onClick={() => setShowVehicleModal(true)}
+                        >
+                          <span className="btn-icon">+</span>
+                          Chọn phương tiện
+                        </button>
+                      )}
+                    </div>
 
-                      <div className="form-group">
-                        <label htmlFor="endTime">
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                          >
-                            <circle
-                              cx="10"
-                              cy="10"
-                              r="8"
-                              stroke="currentColor"
-                              strokeWidth="2"
+                     {/* Time Selection - Always Show */}
+                     <div className="form-section">
+                       <form className="booking-form-compact" onSubmit={handleSubmit}>
+                         <label className="form-label">
+                           Giờ đặt lịch
+                         </label>
+                         
+                         <div className="reservation-notice">
+                           ⏱️ Slot sạc của bạn sẽ được giữ chỗ trong vòng 15 phút
+                         </div>
+
+                        <div className="form-grid-two">
+                          <div className="form-group-compact">
+                            <label className="input-label">Ngày</label>
+                            <input
+                              type="date"
+                              value={formData.date}
+                              min={defaultDate}
+                              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                              className="date-input-field"
+                              required
                             />
-                            <path
-                              d="M10 6v4l3 2"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          Giờ kết thúc
-                        </label>
-                        <div className="custom-datetime-picker">
-                          <div
-                            className="datetime-display"
-                            onClick={() => setShowEndTimeModal(true)}
-                          >
-                            <div className="datetime-value">
-                              <span className="datetime-icon">⏱️</span>
-                              <span>
-                                {formData.endTime || endTimeSlots[0] || "--:--"}
-                              </span>
-                            </div>
-                            <span className="datetime-arrow">→</span>
                           </div>
-                          {/* <div className="datetime-helper">💡 Chỉ +30m, +60m, +90m sau giờ bắt đầu</div> */}
-                        </div>
-                      </div>
 
-                      <button
-                        type="submit"
-                        className="submit-button"
-                        disabled={
-                          !selectedSlot ||
-                          !isSlotSelectable(selectedSlot.status) ||
-                          submitting
-                        }
-                      >
-                        <span>
-                          {submitting ? "Đang xác nhận..." : "Xác nhận "}
-                        </span>
-                        {!submitting && (
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                          >
-                            <path
-                              d="M4 10h12M12 6l4 4-4 4"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                          <div className="form-group-compact">
+                            <label className="input-label">Giờ</label>
+                            <input
+                              type="time"
+                              value={formData.startTime}
+                              onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                              className="time-input-field"
+                              required
                             />
-                          </svg>
-                        )}
-                      </button>
-                    </form>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="submit-button-compact"
+                          disabled={
+                            !selectedSlot ||
+                            !isSlotSelectable(selectedSlot.status) ||
+                            !vehicleId ||
+                            submitting
+                          }
+                        >
+                          {submitting ? "Đang xử lý..." : "Xác nhận đặt chỗ"}
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1430,52 +1212,15 @@ export default function BookingPage() {
           )}
         </div>
 
+        {/* ❌ Loại bỏ right-panel map */}
         {/* RIGHT PANEL: MAP */}
-        {step !== 4 && (
+        {/* {step !== 4 && (
           <div className="right-panel">
             <div className="map-container">
-              {step === 1 && (
-                <ChargingMap
-                  stations={filteredStations}
-                  center={selectedStation?.coords || defaultCenter}
-                  zoom={selectedStation ? 16 : 13}
-                  onSelect={(s) => setSelectedStation(s)}
-                  selectedStation={selectedStation}
-                />
-              )}
-
-              {step === 2 && selectedStation && (
-                <ChargingMap
-                  stations={chargers}
-                  center={selectedStation.coords}
-                  zoom={17}
-                  onSelect={(c) => {
-                    if (c.status === "available") {
-                      setSelectedCharger(c);
-                      setStep(3);
-                    }
-                  }}
-                  selectedStation={selectedCharger}
-                />
-              )}
-
-              {step === 3 && selectedStation && (
-                <ChargingMap
-                  stations={chargers}
-                  center={selectedStation.coords}
-                  zoom={17}
-                  onSelect={(c) => {
-                    if (c.status === "available") {
-                      setSelectedCharger(c);
-                      setStep(3);
-                    }
-                  }}
-                  selectedStation={selectedCharger}
-                />
-              )}
+              ...
             </div>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Vehicle Selection Modal */}
@@ -1518,12 +1263,11 @@ export default function BookingPage() {
                         setShowVehicleModal(false);
                       }}
                     >
-                      <div className="vehicle-plate">{vehicle.plateNumber}</div>
-                      <div className="vehicle-model">
-                        {vehicle.make} {vehicle.model}
-                      </div>
-                      <div className="vehicle-type">
-                        {vehicle.connectorType}
+                      <div className="vehicle-icon-large">🏍️</div>
+                      <div className="vehicle-info-modal">
+                        <div className="vehicle-name">{vehicle.make} {vehicle.model}</div>
+                        <div className="vehicle-plate-large">{vehicle.plateNumber}</div>
+                        <div className="vehicle-connector">{vehicle.connectorType}</div>
                       </div>
                       {localStorage.getItem("defaultVehicleId") ===
                         vehicle.id && (
@@ -1538,123 +1282,6 @@ export default function BookingPage() {
         </div>
       )}
 
-      {/* MODALS */}
-      {showDateModal && (
-        <div
-          className="datetime-modal-overlay"
-          onClick={() => setShowDateModal(false)}
-        >
-          <div className="datetime-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Chọn ngày sạc</h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowDateModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="date-options">
-                {dateOptions.map((d) => (
-                  <button
-                    key={d.iso}
-                    className={`date-card ${
-                      formData.date === d.iso ? "selected" : ""
-                    }`}
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, date: d.iso }));
-                      setShowDateModal(false);
-                    }}
-                  >
-                    {d.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showTimeModal && (
-        <div
-          className="datetime-modal-overlay"
-          onClick={() => setShowTimeModal(false)}
-        >
-          <div className="datetime-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Chọn giờ bắt đầu</h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowTimeModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="time-grid">
-                {timeSlots.length === 0 && (
-                  <div className="no-time">Hết khung giờ trong hôm nay</div>
-                )}
-                {timeSlots.map((t) => (
-                  <button
-                    key={t}
-                    className={`time-slot ${
-                      formData.startTime === t ? "selected" : ""
-                    }`}
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, startTime: t }));
-                      setShowTimeModal(false);
-                    }}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showEndTimeModal && (
-        <div
-          className="datetime-modal-overlay"
-          onClick={() => setShowEndTimeModal(false)}
-        >
-          <div className="datetime-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Chọn giờ kết thúc</h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowEndTimeModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="time-grid">
-                {endTimeSlots.length === 0 && (
-                  <div className="no-time">Không còn khung giờ phù hợp</div>
-                )}
-                {endTimeSlots.map((t) => (
-                  <button
-                    key={t}
-                    className={`time-slot ${
-                      formData.endTime === t ? "selected" : ""
-                    }`}
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, endTime: t }));
-                      setShowEndTimeModal(false);
-                    }}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

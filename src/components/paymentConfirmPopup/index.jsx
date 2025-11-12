@@ -1,5 +1,17 @@
 import "./index.scss";
 
+// Format time elapsed to display nicely
+const formatTimeElapsed = (minutes) => {
+  if (!minutes || minutes === 0) return '0 phút';
+  
+  if (minutes < 60) {
+    return `${Math.round(minutes)} phút`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  return mins > 0 ? `${hours}h ${mins}p` : `${hours}h`;
+};
+
 const PaymentConfirmPopup = ({
   isOpen,
   currentCharge,
@@ -22,12 +34,12 @@ const PaymentConfirmPopup = ({
         <div className="payment-details">
           <div className="detail-row">
             <span className="detail-label">Pin hiện tại:</span>
-            <span className="detail-value battery">{currentCharge}%</span>
+            <span className="detail-value battery">{currentCharge || 0}%</span>
           </div>
 
           <div className="detail-row">
             <span className="detail-label">Thời gian đã sạc:</span>
-            <span className="detail-value time">{timeElapsed} phút</span>
+            <span className="detail-value time">{formatTimeElapsed(timeElapsed)}</span>
           </div>
 
           <div className="detail-separator"></div>
@@ -35,7 +47,7 @@ const PaymentConfirmPopup = ({
           <div className="detail-row total">
             <span className="detail-label">Tổng chi phí:</span>
             <span className="detail-value cost">
-              {totalCost.toLocaleString("vi-VN")} VNĐ
+              {(totalCost || 0).toLocaleString("vi-VN")} VNĐ
             </span>
           </div>
         </div>
