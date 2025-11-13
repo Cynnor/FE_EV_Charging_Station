@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import "./index.scss";
 import api from "../../../config/api";
 
@@ -42,6 +42,9 @@ const SubscriptionManagement = () => {
     const [showEditSubscriptionModal, setShowEditSubscriptionModal] =
         useState(false);
     const [editingSubscription, setEditingSubscription] = useState(null);
+    const [showSubscriptionDetailModal, setShowSubscriptionDetailModal] =
+        useState(false);
+    const [selectedSubscription, setSelectedSubscription] = useState(null);
     const [subscriptionFormData, setSubscriptionFormData] = useState({
         userId: "",
         planId: "",
@@ -56,6 +59,34 @@ const SubscriptionManagement = () => {
     const [currentPagePlans, setCurrentPagePlans] = useState(1);
     const [currentPageSubscriptions, setCurrentPageSubscriptions] = useState(1);
     const pageSize = 10;
+
+    const totalPlans = plans.length;
+    const activePlans = plans.filter((plan) => plan.isActive).length;
+    const premiumPlans = plans.filter((plan) => plan.type === "premium").length;
+    const planSummaryCards = useMemo(
+        () => [
+            { label: "Tổng gói", value: totalPlans },
+            { label: "Đang kích hoạt", value: activePlans },
+            { label: "Gói premium", value: premiumPlans },
+        ],
+        [totalPlans, activePlans, premiumPlans]
+    );
+
+    const totalSubscriptions = subscriptions.length;
+    const activeSubscriptions = subscriptions.filter(
+        (sub) => sub.status === "active"
+    ).length;
+    const pendingSubscriptions = subscriptions.filter(
+        (sub) => sub.status === "pending"
+    ).length;
+    const subscriptionSummaryCards = useMemo(
+        () => [
+            { label: "Tổng đăng ký", value: totalSubscriptions },
+            { label: "Hoạt động", value: activeSubscriptions },
+            { label: "Chờ xử lý", value: pendingSubscriptions },
+        ],
+        [totalSubscriptions, activeSubscriptions, pendingSubscriptions]
+    );
 
     // Scroll to top when component mounts
     useEffect(() => {
@@ -437,6 +468,79 @@ const SubscriptionManagement = () => {
         return durationMap[duration] || duration;
     };
 
+    const formatDateDisplay = (value) => {
+        if (!value) return "—";
+        try {
+            return new Date(value).toLocaleDateString("vi-VN");
+        } catch (error) {
+            return value;
+        }
+    };
+
+    const formatPlanTypeLabel = (type = "") => {
+        const map = {
+            basic: "Basic",
+            standard: "Standard",
+            premium: "Premium",
+        };
+        return map[type] || type || "Không rõ";
+    };
+
+    const getPlanTypeTone = (type = "basic") => {
+        if (type === "premium") return "premium";
+        if (type === "standard") return "standard";
+        return "basic";
+    };
+
+    const formatPlanStatusText = (isActive) => (isActive ? "Đang kích hoạt" : "Tạm dừng");
+
+    const getPlanStatusTone = (isActive) => (isActive ? "active" : "inactive");
+
+    const getSubscriptionStatusTone = (status = "") => {
+        const normalized = status.toLowerCase();
+        if (normalized === "active") return "success";
+        if (normalized === "pending") return "warning";
+        if (normalized === "cancelled" || normalized === "expired") return "danger";
+        return "default";
+    };
+
+    const formatSubscriptionStatus = (status = "") => {
+        const normalized = status.toLowerCase();
+        const labels = {
+            active: "Hoạt động",
+            pending: "Chờ xử lý",
+            cancelled: "Đã huỷ",
+            expired: "Hết hạn",
+        };
+        return labels[normalized] || status || "Không rõ";
+    };
+
+    const formatAutoRenewLabel = (autoRenew) => (autoRenew ? "Tự động" : "Thủ công");
+
+    const fetchSubscriptionDetail = async (subscriptionId) => {
+        try {
+            const response = await api.get(`/subscriptions/${subscriptionId}`);
+            return response.data?.data || response.data;
+        } catch (err) {
+            console.error("Error fetching subscription detail:", err);
+            alert("Không thể tải chi tiết đăng ký");
+            return null;
+        }
+    };
+
+    const openSubscriptionDetailModal = async (subscriptionId) => {
+        const detail = await fetchSubscriptionDetail(subscriptionId);
+        if (detail) {
+            setSelectedSubscription(detail);
+            setShowSubscriptionDetailModal(true);
+        }
+    };
+
+    const closeSubscriptionDetailModal = () => {
+        setSelectedSubscription(null);
+        setShowSubscriptionDetailModal(false);
+    };
+
     // Load data khi component mount hoặc tab thay đổi
     useEffect(() => {
         fetchPlans();
@@ -449,681 +553,268 @@ const SubscriptionManagement = () => {
         }
     }, [activeTab]);
 
-    return (
-        <div className="subscription-management">
-            <div className="page-header">
-                <h1>Quản lý Gói Đăng Ký</h1>
-                <p>Quản lý subscription plans và subscriptions của người dùng</p>
-            </div>
+    const renderPlanModal = (variant) => {
+        const isEdit = variant === "edit";
+        const isVisible = isEdit ? showEditPlanModal : showAddPlanModal;
+        if (!isVisible) return null;
 
-            {/* Tabs */}
-            <div className="tabs-container">
-                <button
-                    className={`tab-button ${activeTab === "plans" ? "active" : ""}`}
-                    onClick={() => setActiveTab("plans")}
-                >
-                    📦 Gói Đăng Ký (Plans)
-                </button>
-                <button
-                    className={`tab-button ${activeTab === "subscriptions" ? "active" : ""
-                        }`}
-                    onClick={() => setActiveTab("subscriptions")}
-                >
-                    👤 Đăng Ký Người Dùng (Subscriptions)
-                </button>
-            </div>
+        const title = isEdit ? "Chỉnh sửa gói đăng ký" : "Thêm gói đăng ký mới";
+        const description = isEdit
+            ? "Cập nhật thông tin gói hiện tại."
+            : "Tạo gói đăng ký mới cho hệ thống.";
+        const primaryLabel = isEdit ? "Cập nhật gói" : "Thêm gói mới";
+        const primaryIcon = isEdit ? "✓" : "➕";
+        const modalIcon = isEdit ? "✏️" : "📦";
+        const handleSubmit = isEdit ? handleEditPlan : handleAddPlan;
+        const handleClose = () => {
+            if (isEdit) {
+                setShowEditPlanModal(false);
+                setEditingPlan(null);
+            } else {
+                setShowAddPlanModal(false);
+            }
+            resetPlanForm();
+        };
 
-            {/* SUBSCRIPTION PLANS TAB */}
-            {activeTab === "plans" && (
-                <div className="tab-content">
-                    <div className="table-header">
-                        <h2>Danh sách Gói Đăng Ký</h2>
-                        <button
-                            className="btn-add"
-                            onClick={() => {
-                                resetPlanForm();
-                                setShowAddPlanModal(true);
-                            }}
-                        >
-                            + Thêm gói mới
+        return (
+            <div
+                className="modal-overlay-new"
+                onClick={(e) => {
+                    if (e.target === e.currentTarget) handleClose();
+                }}
+            >
+                <div className="modal-content-new">
+                    <div className="modal-header-new">
+                        <div className="modal-title-section">
+                            <div className="modal-icon">{modalIcon}</div>
+                            <div>
+                                <h2>{title}</h2>
+                                <p>{description}</p>
+                            </div>
+                        </div>
+                        <button className="modal-close-new" onClick={handleClose}>
+                            ✕
                         </button>
                     </div>
 
-                    {loadingPlans ? (
-                        <div className="loading">Đang tải...</div>
-                    ) : errorPlans ? (
-                        <div className="error">{errorPlans}</div>
-                    ) : (
-                        <div className="table-container">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Tên gói</th>
-                                        <th>Loại</th>
-                                        <th>Thời hạn</th>
-                                        <th>Giá</th>
-                                        <th>Giá gốc</th>
-                                        <th>Trạng thái</th>
-                                        <th>Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {plans.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="7" className="no-data">
-                                                Không có dữ liệu
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        plans.map((plan) => (
-                                            <tr key={plan._id}>
-                                                <td>{plan.name}</td>
-                                                <td>
-                                                    <span className={`badge badge-${plan.type}`}>
-                                                        {plan.type}
-                                                    </span>
-                                                </td>
-                                                <td>{formatDuration(plan.duration)}</td>
-                                                <td>{formatPrice(plan.price)}</td>
-                                                <td>
-                                                    {plan.originalPrice
-                                                        ? formatPrice(plan.originalPrice)
-                                                        : "-"}
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        className={`badge ${plan.isActive ? "badge-active" : "badge-inactive"
-                                                            }`}
-                                                    >
-                                                        {plan.isActive ? "Hoạt động" : "Không hoạt động"}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div className="action-buttons">
-                                                        <button title="Chỉnh sửa"
-                                                            className="btn-edit"
-                                                            onClick={() => handleEditClickPlan(plan)}
-                                                        >
-                                                            ✏️
-                                                        </button>
-                                                        <button title="Xóa"
-                                                            className="btn-delete"
-                                                            onClick={() => handleDeletePlan(plan._id)}
-                                                        >
-                                                            🗑️
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Add Plan Modal - New Design - Outside tab-content */}
-            {showAddPlanModal && (
-                <div
-                    className="modal-overlay-new"
-                    onClick={(e) => {
-                        if (e.target === e.currentTarget) {
-                            setShowAddPlanModal(false);
-                            resetPlanForm();
-                        }
-                    }}
-                >
-                    <div className="modal-content-new">
-                        <div className="modal-header-new">
-                            <div className="modal-title-section">
-                                <div className="modal-icon">📦</div>
-                                <div>
-                                    <h2>Thêm Gói Đăng Ký Mới</h2>
-                                    <p>Tạo gói đăng ký mới cho hệ thống</p>
-                                </div>
+                    <form onSubmit={handleSubmit} className="form-new">
+                        <div className="form-card">
+                            <div className="form-card-header">
+                                <span className="card-icon">ℹ️</span>
+                                <h3>Thông tin cơ bản</h3>
                             </div>
-                            <button
-                                className="modal-close-new"
-                                onClick={() => {
-                                    setShowAddPlanModal(false);
-                                    resetPlanForm();
-                                }}
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleAddPlan} className="form-new">
-                            {/* Basic Information Card */}
-                            <div className="form-card">
-                                <div className="form-card-header">
-                                    <span className="card-icon">ℹ️</span>
-                                    <h3>Thông tin cơ bản</h3>
+                            <div className="form-card-body">
+                                <div className="form-field-new">
+                                    <label className="field-label">
+                                        Tên gói <span className="required">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="field-input"
+                                        value={planFormData.name}
+                                        onChange={(e) =>
+                                            setPlanFormData({
+                                                ...planFormData,
+                                                name: e.target.value,
+                                            })
+                                        }
+                                        placeholder="Ví dụ: Basic - 1 tháng"
+                                    />
                                 </div>
-                                <div className="form-card-body">
+
+                                <div className="form-grid-2">
                                     <div className="form-field-new">
                                         <label className="field-label">
-                                            Tên gói <span className="required">*</span>
+                                            Loại gói <span className="required">*</span>
                                         </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            className="field-input"
-                                            value={planFormData.name}
-                                            onChange={(e) =>
-                                                setPlanFormData({
-                                                    ...planFormData,
-                                                    name: e.target.value,
-                                                })
-                                            }
-                                            placeholder="Ví dụ: Basic - 1 tháng"
-                                        />
-                                    </div>
-
-                                    <div className="form-grid-2">
-                                        <div className="form-field-new">
-                                            <label className="field-label">
-                                                Loại gói <span className="required">*</span>
-                                            </label>
-                                            <div className="select-wrapper">
-                                                <select
-                                                    required
-                                                    className="field-select"
-                                                    value={planFormData.type}
-                                                    onChange={(e) =>
-                                                        setPlanFormData({
-                                                            ...planFormData,
-                                                            type: e.target.value,
-                                                        })
-                                                    }
-                                                >
-                                                    <option key="basic" value="basic">
-                                                        Basic
-                                                    </option>
-                                                    <option key="standard" value="standard">
-                                                        Standard
-                                                    </option>
-                                                    <option key="premium" value="premium">
-                                                        Premium
-                                                    </option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div className="form-field-new">
-                                            <label className="field-label">
-                                                Thời hạn <span className="required">*</span>
-                                            </label>
-                                            <div className="select-wrapper">
-                                                <select
-                                                    required
-                                                    className="field-select except"
-                                                    value={planFormData.duration}
-                                                    onChange={(e) => {
-                                                        const durationMapping = {
-                                                            "1_month": 30,
-                                                            "6_months": 180,
-                                                            "12_months": 365,
-                                                        };
-                                                        setPlanFormData({
-                                                            ...planFormData,
-                                                            duration: e.target.value,
-                                                            durationDays:
-                                                                durationMapping[e.target.value] || 30,
-                                                        });
-                                                    }}
-                                                >
-                                                    <option key="1_month" value="1_month">
-                                                        1 tháng
-                                                    </option>
-                                                    <option key="6_months" value="6_months">
-                                                        6 tháng
-                                                    </option>
-                                                    <option key="12_months" value="12_months">
-                                                        12 tháng
-                                                    </option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="form-grid-2">
-                                        <div className="form-field-new">
-                                            <label className="field-label">
-                                                Số ngày <span className="required">*</span>
-                                            </label>
-                                            <input
-                                                type="number"
+                                        <div className="select-wrapper">
+                                            <select
                                                 required
-                                                min="1"
-                                                className="field-input"
-                                                value={planFormData.durationDays}
+                                                className="field-select"
+                                                value={planFormData.type}
                                                 onChange={(e) =>
                                                     setPlanFormData({
                                                         ...planFormData,
-                                                        durationDays: e.target.value,
+                                                        type: e.target.value,
                                                     })
                                                 }
-                                                placeholder="30, 180, 365"
-                                            />
-                                        </div>
-
-                                        <div className="form-field-new">
-                                            <label className="field-label">Thứ tự hiển thị</label>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                className="field-input"
-                                                value={planFormData.displayOrder}
-                                                onChange={(e) =>
-                                                    setPlanFormData({
-                                                        ...planFormData,
-                                                        displayOrder: e.target.value,
-                                                    })
-                                                }
-                                                placeholder="0"
-                                            />
+                                            >
+                                                <option value="basic">Basic</option>
+                                                <option value="standard">Standard</option>
+                                                <option value="premium">Premium</option>
+                                            </select>
                                         </div>
                                     </div>
 
                                     <div className="form-field-new">
-                                        <label className="field-label">Mô tả</label>
-                                        <textarea
-                                            className="field-textarea"
-                                            value={planFormData.description}
+                                        <label className="field-label">
+                                            Thời hạn <span className="required">*</span>
+                                        </label>
+                                        <div className="select-wrapper">
+                                            <select
+                                                required
+                                                className="field-select"
+                                                value={planFormData.duration}
+                                                onChange={(e) =>
+                                                    setPlanFormData({
+                                                        ...planFormData,
+                                                        duration: e.target.value,
+                                                    })
+                                                }
+                                            >
+                                                <option value="1_month">1 tháng</option>
+                                                <option value="6_months">6 tháng</option>
+                                                <option value="12_months">12 tháng</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="form-grid-2">
+                                    <div className="form-field-new">
+                                        <label className="field-label">
+                                            Số ngày <span className="required">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            required
+                                            className="field-input"
+                                            value={planFormData.durationDays}
                                             onChange={(e) =>
                                                 setPlanFormData({
                                                     ...planFormData,
-                                                    description: e.target.value,
+                                                    durationDays: e.target.value,
                                                 })
                                             }
-                                            rows="3"
-                                            placeholder="Mô tả chi tiết về gói đăng ký..."
+                                            placeholder="30, 180, 365"
+                                        />
+                                    </div>
+                                    <div className="form-field-new">
+                                        <label className="field-label">Thứ tự hiển thị</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            className="field-input"
+                                            value={planFormData.displayOrder}
+                                            onChange={(e) =>
+                                                setPlanFormData({
+                                                    ...planFormData,
+                                                    displayOrder: e.target.value,
+                                                })
+                                            }
+                                            placeholder="0"
                                         />
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Pricing Card */}
-                            <div className="form-card">
-                                <div className="form-card-header">
-                                    <span className="card-icon">💰</span>
-                                    <h3>Giá cả</h3>
-                                </div>
-                                <div className="form-card-body">
-                                    <div className="form-grid-2">
-                                        <div className="form-field-new">
-                                            <label className="field-label">
-                                                Giá bán (VNĐ) <span className="required">*</span>
-                                            </label>
-                                            <div className="input-with-icon">
-                                                <span className="input-icon">₫</span>
-                                                <input
-                                                    type="number"
-                                                    required
-                                                    min="0"
-                                                    step="1000"
-                                                    className="field-input"
-                                                    value={planFormData.price}
-                                                    onChange={(e) =>
-                                                        setPlanFormData({
-                                                            ...planFormData,
-                                                            price: e.target.value,
-                                                        })
-                                                    }
-                                                    placeholder="99.000"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="form-field-new">
-                                            <label className="field-label">Giá gốc (VNĐ)</label>
-                                            <div className="input-with-icon">
-                                                <span className="input-icon">₫</span>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="1000"
-                                                    className="field-input"
-                                                    value={planFormData.originalPrice}
-                                                    onChange={(e) =>
-                                                        setPlanFormData({
-                                                            ...planFormData,
-                                                            originalPrice: e.target.value,
-                                                        })
-                                                    }
-                                                    placeholder="Để trống nếu không có"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className="form-field-new">
+                                    <label className="field-label">Mô tả</label>
+                                    <textarea
+                                        className="field-textarea"
+                                        value={planFormData.description}
+                                        onChange={(e) =>
+                                            setPlanFormData({
+                                                ...planFormData,
+                                                description: e.target.value,
+                                            })
+                                        }
+                                        rows="3"
+                                        placeholder="Mô tả chi tiết về gói đăng ký..."
+                                    />
                                 </div>
                             </div>
-
-                            {/* Features Card */}
-                            <div className="form-card">
-                                <div className="form-card-header">
-                                    <span className="card-icon">✨</span>
-                                    <h3>Tính năng</h3>
-                                </div>
-                                <div className="form-card-body">
-                                    <div className="form-grid-2">
-                                        <div className="form-field-new">
-                                            <label className="field-label">
-                                                Số lần đặt lịch tối đa/tháng
-                                            </label>
-                                            <input
-                                                type="number"
-                                                min="-1"
-                                                className="field-input"
-                                                value={planFormData.features.maxReservations}
-                                                onChange={(e) =>
-                                                    setPlanFormData({
-                                                        ...planFormData,
-                                                        features: {
-                                                            ...planFormData.features,
-                                                            maxReservations:
-                                                                e.target.value === "" ? "" : e.target.value,
-                                                        },
-                                                    })
-                                                }
-                                                placeholder="-1 = không giới hạn"
-                                            />
-                                            <span className="field-hint">
-                                                Để trống hoặc nhập -1 = không giới hạn
-                                            </span>
-                                        </div>
-
-                                        <div className="form-field-new">
-                                            <label className="field-label">Số xe tối đa</label>
-                                            <input
-                                                type="number"
-                                                min="-1"
-                                                className="field-input"
-                                                value={planFormData.features.maxVehicles}
-                                                onChange={(e) =>
-                                                    setPlanFormData({
-                                                        ...planFormData,
-                                                        features: {
-                                                            ...planFormData.features,
-                                                            maxVehicles:
-                                                                e.target.value === "" ? "" : e.target.value,
-                                                        },
-                                                    })
-                                                }
-                                                placeholder="-1 = không giới hạn"
-                                            />
-                                            <span className="field-hint">
-                                                Để trống hoặc nhập -1 = không giới hạn
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="form-grid-2">
-                                        <div className="form-field-new">
-                                            <label className="field-label">
-                                                Giảm giá khi gia hạn (%)
-                                            </label>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                className="field-input"
-                                                value={planFormData.features.discount}
-                                                onChange={(e) =>
-                                                    setPlanFormData({
-                                                        ...planFormData,
-                                                        features: {
-                                                            ...planFormData.features,
-                                                            discount:
-                                                                e.target.value === "" ? "" : e.target.value,
-                                                        },
-                                                    })
-                                                }
-                                                placeholder="VD: 10"
-                                            />
-                                        </div>
-
-                                        <div className="form-field-new">
-                                            <label className="field-label">Tùy chọn</label>
-                                            <div className="checkbox-list">
-                                                <label className="checkbox-item">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={planFormData.features.prioritySupport}
-                                                        onChange={(e) =>
-                                                            setPlanFormData({
-                                                                ...planFormData,
-                                                                features: {
-                                                                    ...planFormData.features,
-                                                                    prioritySupport: e.target.checked,
-                                                                },
-                                                            })
-                                                        }
-                                                    />
-                                                    <span className="checkmark"></span>
-                                                    <span className="checkbox-label">
-                                                        Hỗ trợ ưu tiên 24/7
-                                                    </span>
-                                                </label>
-
-                                                <label className="checkbox-item">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={planFormData.isActive}
-                                                        onChange={(e) =>
-                                                            setPlanFormData({
-                                                                ...planFormData,
-                                                                isActive: e.target.checked,
-                                                            })
-                                                        }
-                                                    />
-                                                    <span className="checkmark"></span>
-                                                    <span className="checkbox-label">
-                                                        Kích hoạt gói ngay
-                                                    </span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Footer Actions */}
-                            <div className="form-footer-new">
-                                <button
-                                    type="button"
-                                    className="btn-cancel-new"
-                                    onClick={() => {
-                                        setShowAddPlanModal(false);
-                                        resetPlanForm();
-                                    }}
-                                >
-                                    Hủy
-                                </button>
-                                <button type="submit" className="btn-submit-new">
-                                    <span>➕</span>
-                                    Thêm gói mới
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Edit Plan Modal */}
-            {showEditPlanModal && editingPlan && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h2>Sửa Gói Đăng Ký</h2>
-                            <button
-                                className="modal-close"
-                                onClick={() => {
-                                    setShowEditPlanModal(false);
-                                    setEditingPlan(null);
-                                    resetPlanForm();
-                                }}
-                            >
-                                ✕
-                            </button>
                         </div>
-                        <form onSubmit={handleEditPlan} className="modal-body">
-                            <div className="form-group">
-                                <label>Tên gói *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={planFormData.name}
-                                    onChange={(e) =>
-                                        setPlanFormData({ ...planFormData, name: e.target.value })
-                                    }
-                                />
+
+                        <div className="form-card">
+                            <div className="form-card-header">
+                                <span className="card-icon">💰</span>
+                                <h3>Giá cả</h3>
                             </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Loại *</label>
-                                    <select
-                                        required
-                                        value={planFormData.type}
-                                        onChange={(e) =>
-                                            setPlanFormData({ ...planFormData, type: e.target.value })
-                                        }
-                                    >
-                                        <option key="basic" value="basic">
-                                            Basic
-                                        </option>
-                                        <option key="standard" value="standard">
-                                            Standard
-                                        </option>
-                                        <option key="premium" value="premium">
-                                            Premium
-                                        </option>
-                                    </select>
+                            <div className="form-card-body">
+                                <div className="form-grid-2">
+                                    <div className="form-field-new">
+                                        <label className="field-label">
+                                            Giá bán (VNĐ) <span className="required">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            required
+                                            className="field-input"
+                                            value={planFormData.price}
+                                            onChange={(e) =>
+                                                setPlanFormData({
+                                                    ...planFormData,
+                                                    price: e.target.value,
+                                                })
+                                            }
+                                            placeholder="VD: 99000"
+                                        />
+                                    </div>
+                                    <div className="form-field-new">
+                                        <label className="field-label">Giá gốc (VNĐ)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            className="field-input"
+                                            value={planFormData.originalPrice}
+                                            onChange={(e) =>
+                                                setPlanFormData({
+                                                    ...planFormData,
+                                                    originalPrice: e.target.value,
+                                                })
+                                            }
+                                            placeholder="Để trống nếu không có"
+                                        />
+                                    </div>
                                 </div>
-                                <div className="form-group">
-                                    <label>Thời hạn *</label>
-                                    <select
-                                        required
-                                        value={planFormData.duration}
-                                        onChange={(e) => {
-                                            // Auto-calculate durationDays khi chọn duration
-                                            const durationMapping = {
-                                                "1_month": 30,
-                                                "6_months": 180,
-                                                "12_months": 365,
-                                            };
-                                            setPlanFormData({
-                                                ...planFormData,
-                                                duration: e.target.value,
-                                                durationDays: durationMapping[e.target.value] || 30,
-                                            });
-                                        }}
-                                    >
-                                        <option key="1_month" value="1_month">
-                                            1 tháng
-                                        </option>
-                                        <option key="6_months" value="6_months">
-                                            6 tháng
-                                        </option>
-                                        <option key="12_months" value="12_months">
-                                            12 tháng
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Số ngày *</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="1"
-                                        value={planFormData.durationDays}
-                                        onChange={(e) =>
-                                            setPlanFormData({
-                                                ...planFormData,
-                                                durationDays: e.target.value,
-                                            })
-                                        }
-                                        placeholder="VD: 30, 180, 365"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Thứ tự hiển thị</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={planFormData.displayOrder}
-                                        onChange={(e) =>
-                                            setPlanFormData({
-                                                ...planFormData,
-                                                displayOrder: e.target.value,
-                                            })
-                                        }
-                                        placeholder="0"
-                                    />
+                                <div className="pricing-highlights">
+                                    <div className="price-highlight">
+                                        <span className="label">Tiết kiệm / tháng</span>
+                                        <span className="highlight-value">
+                                            {planFormData.originalPrice
+                                                ? formatPrice(
+                                                      Math.max(
+                                                          0,
+                                                          Number(planFormData.originalPrice || 0) -
+                                                              Number(planFormData.price || 0)
+                                                      )
+                                                  )
+                                                : "—"}
+                                        </span>
+                                    </div>
+                                    <div className="price-highlight">
+                                        <span className="label">Chi phí ngày</span>
+                                        <span className="highlight-value">
+                                            {planFormData.price && planFormData.durationDays
+                                                ? formatPrice(
+                                                      Number(planFormData.price || 0) /
+                                                          Number(planFormData.durationDays || 1)
+                                                  )
+                                                : "—"}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Giá (VNĐ) *</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="0"
-                                        step="1000"
-                                        value={planFormData.price}
-                                        onChange={(e) =>
-                                            setPlanFormData({
-                                                ...planFormData,
-                                                price: e.target.value,
-                                            })
-                                        }
-                                        placeholder="VD: 99000"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Giá gốc (VNĐ)</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="1000"
-                                        value={planFormData.originalPrice}
-                                        onChange={(e) =>
-                                            setPlanFormData({
-                                                ...planFormData,
-                                                originalPrice: e.target.value,
-                                            })
-                                        }
-                                        placeholder="Để trống nếu không có"
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Mô tả</label>
-                                <textarea
-                                    value={planFormData.description}
-                                    onChange={(e) =>
-                                        setPlanFormData({
-                                            ...planFormData,
-                                            description: e.target.value,
-                                        })
-                                    }
-                                    rows="3"
-                                    placeholder="Mô tả về gói đăng ký..."
-                                />
-                            </div>
-                            <div className="form-section">
+                        </div>
+
+                        <div className="form-card">
+                            <div className="form-card-header">
+                                <span className="card-icon">✨</span>
                                 <h3>Tính năng</h3>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Số lần đặt lịch tối đa/tháng</label>
+                            </div>
+                            <div className="form-card-body">
+                                <div className="form-grid-2">
+                                    <div className="form-field-new">
+                                        <label className="field-label">
+                                            Số lần đặt lịch tối đa/tháng
+                                        </label>
                                         <input
                                             type="number"
                                             min="-1"
+                                            className="field-input"
                                             value={planFormData.features.maxReservations}
                                             onChange={(e) =>
                                                 setPlanFormData({
@@ -1137,15 +828,16 @@ const SubscriptionManagement = () => {
                                             }
                                             placeholder="-1 = không giới hạn"
                                         />
-                                        <small className="form-hint">
+                                        <span className="field-hint">
                                             Để trống hoặc nhập -1 = không giới hạn
-                                        </small>
+                                        </span>
                                     </div>
-                                    <div className="form-group">
-                                        <label>Số xe tối đa</label>
+                                    <div className="form-field-new">
+                                        <label className="field-label">Số xe tối đa</label>
                                         <input
                                             type="number"
                                             min="-1"
+                                            className="field-input"
                                             value={planFormData.features.maxVehicles}
                                             onChange={(e) =>
                                                 setPlanFormData({
@@ -1159,18 +851,21 @@ const SubscriptionManagement = () => {
                                             }
                                             placeholder="-1 = không giới hạn"
                                         />
-                                        <small className="form-hint">
+                                        <span className="field-hint">
                                             Để trống hoặc nhập -1 = không giới hạn
-                                        </small>
+                                        </span>
                                     </div>
                                 </div>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Giảm giá khi gia hạn (%)</label>
+                                <div className="form-grid-2">
+                                    <div className="form-field-new">
+                                        <label className="field-label">
+                                            Giảm giá khi gia hạn (%)
+                                        </label>
                                         <input
                                             type="number"
                                             min="0"
                                             max="100"
+                                            className="field-input"
                                             value={planFormData.features.discount}
                                             onChange={(e) =>
                                                 setPlanFormData({
@@ -1185,223 +880,26 @@ const SubscriptionManagement = () => {
                                             placeholder="VD: 10"
                                         />
                                     </div>
-                                    <div className="form-group checkbox-group">
-                                        <label>
-                                            <input
-                                                type="checkbox"
-                                                checked={planFormData.features.prioritySupport}
-                                                onChange={(e) =>
-                                                    setPlanFormData({
-                                                        ...planFormData,
-                                                        features: {
-                                                            ...planFormData.features,
-                                                            prioritySupport: e.target.checked,
-                                                        },
-                                                    })
-                                                }
-                                            />
-                                            Hỗ trợ ưu tiên 24/7
-                                        </label>
-                                    </div>
                                 </div>
-                            </div>
-                            <div className="form-group checkbox-group">
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={planFormData.isActive}
-                                        onChange={(e) =>
-                                            setPlanFormData({
-                                                ...planFormData,
-                                                isActive: e.target.checked,
-                                            })
-                                        }
-                                    />
-                                    Kích hoạt gói
-                                </label>
-                            </div>
-                            <div className="modal-footer">
-                                <button
-                                    type="button"
-                                    className="btn-cancel"
-                                    onClick={() => {
-                                        setShowAddPlanModal(false);
-                                        resetPlanForm();
-                                    }}
-                                >
-                                    Hủy
-                                </button>
-                                <button type="submit" className="btn-submit">
-                                    Thêm
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Edit Plan Modal */}
-            {showEditPlanModal && editingPlan && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h2>Sửa Gói Đăng Ký</h2>
-                            <button
-                                className="modal-close"
-                                onClick={() => {
-                                    setShowEditPlanModal(false);
-                                    setEditingPlan(null);
-                                    resetPlanForm();
-                                }}
-                            >
-                                ✕
-                            </button>
-                        </div>
-                        <form onSubmit={handleEditPlan} className="modal-body">
-                            <div className="form-group">
-                                <label>Tên gói *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={planFormData.name}
-                                    onChange={(e) =>
-                                        setPlanFormData({ ...planFormData, name: e.target.value })
-                                    }
-                                />
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Giá (VNĐ) *</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        value={planFormData.price}
-                                        onChange={(e) =>
-                                            setPlanFormData({
-                                                ...planFormData,
-                                                price: e.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Giá gốc (VNĐ)</label>
-                                    <input
-                                        type="number"
-                                        value={planFormData.originalPrice}
-                                        onChange={(e) =>
-                                            setPlanFormData({
-                                                ...planFormData,
-                                                originalPrice: e.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Mô tả</label>
-                                <textarea
-                                    value={planFormData.description}
-                                    onChange={(e) =>
-                                        setPlanFormData({
-                                            ...planFormData,
-                                            description: e.target.value,
-                                        })
-                                    }
-                                    rows="3"
-                                />
-                            </div>
-                            <div className="form-section">
-                                <h3>Tính năng</h3>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>
-                                            Số lần đặt lịch tối đa/tháng (-1 = không giới hạn)
-                                        </label>
+                                <div className="toggle-grid">
+                                    <label className="checkbox-item">
                                         <input
-                                            type="number"
-                                            value={planFormData.features.maxReservations}
+                                            type="checkbox"
+                                            checked={planFormData.features.prioritySupport}
                                             onChange={(e) =>
                                                 setPlanFormData({
                                                     ...planFormData,
                                                     features: {
                                                         ...planFormData.features,
-                                                        maxReservations: e.target.value,
+                                                        prioritySupport: e.target.checked,
                                                     },
                                                 })
                                             }
                                         />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Số xe tối đa (-1 = không giới hạn)</label>
-                                        <input
-                                            type="number"
-                                            value={planFormData.features.maxVehicles}
-                                            onChange={(e) =>
-                                                setPlanFormData({
-                                                    ...planFormData,
-                                                    features: {
-                                                        ...planFormData.features,
-                                                        maxVehicles: e.target.value,
-                                                    },
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Giảm giá khi gia hạn (%)</label>
-                                        <input
-                                            type="number"
-                                            value={planFormData.features.discount}
-                                            onChange={(e) =>
-                                                setPlanFormData({
-                                                    ...planFormData,
-                                                    features: {
-                                                        ...planFormData.features,
-                                                        discount: e.target.value,
-                                                    },
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="form-group checkbox-group">
-                                        <label>
-                                            <input
-                                                type="checkbox"
-                                                checked={planFormData.features.prioritySupport}
-                                                onChange={(e) =>
-                                                    setPlanFormData({
-                                                        ...planFormData,
-                                                        features: {
-                                                            ...planFormData.features,
-                                                            prioritySupport: e.target.checked,
-                                                        },
-                                                    })
-                                                }
-                                            />
-                                            Hỗ trợ ưu tiên 24/7
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Thứ tự hiển thị</label>
-                                    <input
-                                        type="number"
-                                        value={planFormData.displayOrder}
-                                        onChange={(e) =>
-                                            setPlanFormData({
-                                                ...planFormData,
-                                                displayOrder: e.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <label>
+                                        <span className="checkmark"></span>
+                                        <span className="checkbox-label">Hỗ trợ ưu tiên 24/7</span>
+                                    </label>
+                                    <label className="checkbox-item">
                                         <input
                                             type="checkbox"
                                             checked={planFormData.isActive}
@@ -1412,126 +910,157 @@ const SubscriptionManagement = () => {
                                                 })
                                             }
                                         />
-                                        Kích hoạt gói
+                                        <span className="checkmark"></span>
+                                        <span className="checkbox-label">Kích hoạt gói ngay</span>
                                     </label>
                                 </div>
                             </div>
-                            <div className="modal-footer">
-                                <button
-                                    type="button"
-                                    className="btn-cancel"
-                                    onClick={() => {
-                                        setShowEditPlanModal(false);
-                                        setEditingPlan(null);
-                                        resetPlanForm();
-                                    }}
-                                >
-                                    Hủy
-                                </button>
-                                <button type="submit" className="btn-submit">
-                                    Cập nhật
-                                </button>
+                        </div>
+
+                        <div className="form-footer-new">
+                            <button
+                                type="button"
+                                className="btn-cancel-new"
+                                onClick={handleClose}
+                            >
+                                Hủy
+                            </button>
+                            <button type="submit" className="btn-submit-new">
+                                <span>{primaryIcon}</span>
+                                {primaryLabel}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="subscription-management">
+            <section className="page-hero">
+                <div className="hero-copy">
+                    <p className="eyebrow">Trung tâm sản phẩm</p>
+                    <h2>Quản lý gói đăng ký</h2>
+                    <p className="hero-lead">
+                        Theo dõi cấu trúc giá, ưu đãi và vòng đời đăng ký của khách hàng trên cùng một không gian làm việc.
+                    </p>
+                    <div className="hero-metrics">
+                        {planSummaryCards.map((item) => (
+                            <div key={item.label} className="metric">
+                                <span>{item.label}</span>
+                                <strong>{item.value}</strong>
                             </div>
-                        </form>
+                        ))}
                     </div>
                 </div>
-            )}
 
-            {/* SUBSCRIPTIONS TAB */}
-            {activeTab === "subscriptions" && (
-                <div className="tab-content">
-                    <div className="table-header">
-                        <h2>Danh sách Đăng Ký Người Dùng</h2>
+                <div className="hero-panel">
+                    <h4>Hiệu suất đăng ký</h4>
+                    <div className="hero-panel-grid">
+                        {subscriptionSummaryCards.map((item) => (
+                            <div key={item.label} className="panel-stat">
+                                <span>{item.label}</span>
+                                <strong>{item.value}</strong>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <div className="tabs-card">
+                <button
+                    className={`tab-chip ${activeTab === "plans" ? "active" : ""}`}
+                    onClick={() => setActiveTab("plans")}
+                >
+                    Gói đăng ký
+                </button>
+                <button
+                    className={`tab-chip ${activeTab === "subscriptions" ? "active" : ""}`}
+                    onClick={() => setActiveTab("subscriptions")}
+                >
+                    Đăng ký người dùng
+                </button>
+            </div>
+
+            {activeTab === "plans" ? (
+                <div className="panel-card">
+                    <div className="panel-headline">
+                        <div>
+                            <h3>Danh sách gói đăng ký</h3>
+                            <p>Thiết lập và tối ưu các tầng dịch vụ cho khách hàng.</p>
+                        </div>
                         <button
-                            className="btn-add"
+                            className="primary-btn"
                             onClick={() => {
-                                resetSubscriptionForm();
-                                setShowAddSubscriptionModal(true);
+                                resetPlanForm();
+                                setShowAddPlanModal(true);
                             }}
                         >
-                            + Thêm đăng ký mới
+                            <span>+</span> Thêm gói mới
                         </button>
                     </div>
 
-                    {loadingSubscriptions ? (
-                        <div className="loading">Đang tải...</div>
-                    ) : errorSubscriptions ? (
-                        <div className="error">{errorSubscriptions}</div>
+                    {loadingPlans ? (
+                        <div className="empty-state">Đang tải dữ liệu gói đăng ký...</div>
+                    ) : errorPlans ? (
+                        <div className="error-state">{errorPlans}</div>
                     ) : (
-                        <div className="table-container">
-                            <table className="data-table">
+                        <div className="table-wrapper">
+                            <table className="modern-table">
                                 <thead>
                                     <tr>
-                                        <th>User</th>
-                                        <th>Gói đăng ký</th>
+                                        <th>Tên gói</th>
+                                        <th>Loại</th>
+                                        <th>Thời hạn</th>
+                                        <th>Giá bán</th>
+                                        <th>Giá gốc</th>
                                         <th>Trạng thái</th>
-                                        <th>Ngày bắt đầu</th>
-                                        <th>Ngày kết thúc</th>
-                                        <th>Tự động gia hạn</th>
                                         <th>Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {subscriptions.length === 0 ? (
+                                    {plans.length === 0 ? (
                                         <tr>
                                             <td colSpan="7" className="no-data">
-                                                Không có dữ liệu
+                                                Chưa có gói nào
                                             </td>
                                         </tr>
                                     ) : (
-                                        subscriptions.map((subscription) => (
-                                            <tr key={subscription._id}>
-                                                <td>
-                                                    {subscription.user?.username ||
-                                                        subscription.user?.fullName ||
-                                                        subscription.userId ||
-                                                        "N/A"}
+                                        plans.map((plan) => (
+                                            <tr key={plan._id}>
+                                                <td className="plan-cell">
+                                                    <p>{plan.name}</p>
+                                                    <span>{plan.description || "Chưa có mô tả"}</span>
                                                 </td>
                                                 <td>
-                                                    {subscription.plan?.name ||
-                                                        subscription.planId ||
-                                                        "N/A"}
+                                                    <span className={`chip chip-${getPlanTypeTone(plan.type)}`}>
+                                                        {formatPlanTypeLabel(plan.type)}
+                                                    </span>
                                                 </td>
+                                                <td>{formatDuration(plan.duration)}</td>
+                                                <td>{formatPrice(plan.price)}</td>
+                                                <td>{plan.originalPrice ? formatPrice(plan.originalPrice) : "—"}</td>
                                                 <td>
-                                                    <span
-                                                        className={`badge badge-${subscription.status || "pending"
-                                                            }`}
-                                                    >
-                                                        {subscription.status || "pending"}
+                                                    <span className={`status-pill status-${getPlanStatusTone(plan.isActive)}`}>
+                                                        {formatPlanStatusText(plan.isActive)}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    {subscription.startDate
-                                                        ? new Date(
-                                                            subscription.startDate
-                                                        ).toLocaleDateString("vi-VN")
-                                                        : "-"}
-                                                </td>
-                                                <td>
-                                                    {subscription.endDate
-                                                        ? new Date(subscription.endDate).toLocaleDateString(
-                                                            "vi-VN"
-                                                        )
-                                                        : "-"}
-                                                </td>
-                                                <td>{subscription.autoRenew ? "✓ Có" : "✗ Không"}</td>
-                                                <td>
-                                                    <div className="action-buttons">
+                                                    <div className="action-pills">
                                                         <button
-                                                            className="btn-edit"
-                                                            onClick={() =>
-                                                                handleEditClickSubscription(subscription)
-                                                            }
+                                                            type="button"
+                                                            className="pill ghost"
+                                                            onClick={() => handleEditClickPlan(plan)}
                                                         >
-                                                            ✏️ Sửa
+                                                            Chỉnh sửa
                                                         </button>
                                                         <button
-                                                            className="btn-delete"
-                                                            onClick={() =>
-                                                                handleDeleteSubscription(subscription._id)
-                                                            }
+                                                            type="button"
+                                                            className="pill danger"
+                                                            onClick={() => handleDeletePlan(plan._id)}
                                                         >
-                                                            🗑️ Xóa
+                                                            Xoá
                                                         </button>
                                                     </div>
                                                 </td>
@@ -1542,8 +1071,182 @@ const SubscriptionManagement = () => {
                             </table>
                         </div>
                     )}
+                </div>
+            ) : (
+                <div className="panel-card">
+                    <div className="panel-headline">
+                        <div>
+                            <h3>Đăng ký người dùng</h3>
+                            <p>Theo dõi vòng đời và gia hạn các đăng ký hoạt động.</p>
+                        </div>
+                        <button
+                            className="primary-btn secondary"
+                            onClick={() => {
+                                resetSubscriptionForm();
+                                setShowAddSubscriptionModal(true);
+                            }}
+                        >
+                            <span>+</span> Tạo đăng ký
+                        </button>
+                    </div>
 
-                    {/* Add Subscription Modal */}
+                    {loadingSubscriptions ? (
+                        <div className="empty-state">Đang tải dữ liệu đăng ký...</div>
+                    ) : errorSubscriptions ? (
+                        <div className="error-state">{errorSubscriptions}</div>
+                    ) : (
+                        <div className="table-wrapper">
+                            <table className="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Khách hàng</th>
+                                        <th>Gói đăng ký</th>
+                                        <th>Trạng thái</th>
+                                        <th>Gia hạn</th>
+                                        <th>Ngày kết thúc</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {subscriptions.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="6" className="no-data">
+                                                Chưa có đăng ký nào
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        subscriptions.map((subscription) => (
+                                            <tr key={subscription._id}>
+                                                <td className="plan-cell">
+                                                    <p>{subscription.user?.fullName || "Không rõ"}</p>
+                                                    <span>{subscription.user?.email || "—"}</span>
+                                                </td>
+                                                <td className="plan-cell">
+                                                    <p>{subscription.plan?.name || "Không rõ"}</p>
+                                                    <span>
+                                                        {formatDuration(
+                                                            subscription.plan?.duration || subscription.planDuration
+                                                        )}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span className={`status-pill status-${getSubscriptionStatusTone(subscription.status)}`}>
+                                                        {formatSubscriptionStatus(subscription.status)}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span className={`chip chip-${subscription.autoRenew ? "success" : "default"}`}>
+                                                        {subscription.autoRenew ? "Tự động" : "Thủ công"}
+                                                    </span>
+                                                </td>
+                                                <td>{formatDateDisplay(subscription.endDate)}</td>
+                                                <td>
+                                                    <div className="action-pills">
+                                                        <button
+                                                            type="button"
+                                                            className="pill neutral"
+                                                            onClick={() =>
+                                                                openSubscriptionDetailModal(
+                                                                    subscription._id
+                                                                )
+                                                            }
+                                                        >
+                                                            Xem
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="pill ghost"
+                                                            onClick={() => handleEditClickSubscription(subscription)}
+                                                        >
+                                                            Chỉnh sửa
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="pill danger"
+                                                            onClick={() => handleDeleteSubscription(subscription._id)}
+                                                        >
+                                                            Xoá
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            )}
+            {renderPlanModal("add")}
+            {renderPlanModal("edit")}
+
+            {showSubscriptionDetailModal && selectedSubscription && (
+                <div className="modal-overlay-new" onClick={closeSubscriptionDetailModal}>
+                    <div
+                        className="modal-content-new detail-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="modal-header-new">
+                            <div className="modal-title-section">
+                                <div className="modal-icon">👁️</div>
+                                <div>
+                                    <h2>Chi tiết đăng ký</h2>
+                                    <p>Thông tin đầy đủ về người dùng và gói đã chọn.</p>
+                                </div>
+                            </div>
+                            <button className="modal-close-new" onClick={closeSubscriptionDetailModal}>
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="form-new detail-grid">
+                            <div className="detail-card">
+                                <span>Khách hàng</span>
+                                <strong>{selectedSubscription.user?.fullName || "Không rõ"}</strong>
+                                <p>{selectedSubscription.user?.email || "—"}</p>
+                            </div>
+                            <div className="detail-card">
+                                <span>Gói đăng ký</span>
+                                <strong>{selectedSubscription.plan?.name || selectedSubscription.planName || "Không rõ"}</strong>
+                                <p>
+                                    {selectedSubscription.plan?.duration || selectedSubscription.planDuration
+                                        ? formatDuration(
+                                              selectedSubscription.plan?.duration ||
+                                                  selectedSubscription.planDuration
+                                          )
+                                        : "—"}
+                                </p>
+                            </div>
+                            <div className="detail-card">
+                                <span>Trạng thái</span>
+                                <strong>{formatSubscriptionStatus(selectedSubscription.status)}</strong>
+                            </div>
+                            <div className="detail-card">
+                                <span>Gia hạn</span>
+                                <strong>{formatAutoRenewLabel(selectedSubscription.autoRenew)}</strong>
+                            </div>
+                            <div className="detail-card">
+                                <span>Giá tuỳ chỉnh</span>
+                                <strong>
+                                    {selectedSubscription.customPrice
+                                        ? formatPrice(Number(selectedSubscription.customPrice) || 0)
+                                        : "—"}
+                                </strong>
+                            </div>
+                            <div className="detail-card">
+                                <span>Ngày bắt đầu</span>
+                                <strong>{formatDateDisplay(selectedSubscription.startDate)}</strong>
+                            </div>
+                            <div className="detail-card">
+                                <span>Ngày kết thúc</span>
+                                <strong>{formatDateDisplay(selectedSubscription.endDate)}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Add Subscription Modal */}
                     {showAddSubscriptionModal && (
                         <div className="modal-overlay">
                             <div className="modal-content">
@@ -1755,10 +1458,8 @@ const SubscriptionManagement = () => {
                             </div>
                         </div>
                     )}
-                </div>
-            )}
-        </div>
-    );
+    </div>
+  );
 };
 
 export default SubscriptionManagement;

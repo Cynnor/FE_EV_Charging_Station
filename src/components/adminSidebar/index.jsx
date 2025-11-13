@@ -2,7 +2,6 @@ import "./index.scss";
 
 const AdminSidebar = ({ activeTab, setActiveTab }) => {
   const menuItems = [
-    { id: "overview", icon: "📊", label: "Tổng quan", path: "" },
     {
       id: "station-management",
       icon: "⚡",
@@ -22,16 +21,10 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
       path: "subscription-management",
     },
     {
-      id: "transaction-management",
-      icon: "💳",
-      label: "Quản lý giao dịch",
-      path: "transaction-management",
-    },
-    {
-      id: "revenue-management",
-      icon: "💰",
-      label: "Báo cáo doanh thu",
-      path: "revenue-management",
+      id: "stats-reports",
+      icon: "📊",
+      label: "Thống kê & báo cáo",
+      path: "analytics",
     },
   ];
 

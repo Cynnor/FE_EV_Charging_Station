@@ -1,7 +1,37 @@
 // Import các thư viện cần thiết
-import { useState, useEffect, useRef } from "react"; // React hooks để quản lý state và side effects
+import { useState, useEffect, useRef, useMemo } from "react"; // React hooks để quản lý state và side effects
 import "./index.scss"; // File CSS cho component này
 import api from "../../../config/api"; // Axios instance đã config để gọi API
+
+// Chuẩn hoá text để so sánh không phân biệt dấu/hoa thường
+const normalizeText = (value = "") =>
+  value
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+// Tính tổng số cổng sạc cho mỗi trạm dù dữ liệu trả về khác nhau
+const resolvePortCount = (station = {}) => {
+  if (!station || typeof station !== "object") return 0;
+  if (Array.isArray(station.ports)) return station.ports.length;
+  if (Array.isArray(station.chargers)) return station.chargers.length;
+  if (typeof station.ports === "number") return station.ports;
+  if (typeof station.portCount === "number") return station.portCount;
+  if (typeof station.totalPorts === "number") return station.totalPorts;
+  if (station.ports && typeof station.ports === "object") {
+    return Object.keys(station.ports).length;
+  }
+  return 0;
+};
+
+// Lấy khu vực chính từ địa chỉ (ví dụ Quận/huyện)
+const extractCoverageKey = (address = "") => {
+  if (!address) return "";
+  const [district] = address.split(",");
+  return district?.trim() || address.trim();
+};
 
 const StationManagement = () => {
   // ===== KHỞI TẠO CÁC STATE =====
@@ -26,6 +56,11 @@ const StationManagement = () => {
   // State cho phân trang
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
   const pageSize = 7; // Số lượng trạm hiển thị mỗi trang
+
+  // Reset phân trang mỗi khi bộ lọc thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, locationFilter]);
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -55,7 +90,7 @@ const StationManagement = () => {
     ],
   });
 
-  // Danh sách các quận/huyện ở TP.HCM để lọc
+  // Danh sách khu vực cố định tại TP. Hồ Chí Minh
   const hcmDistricts = [
     "Quận 1",
     "Quận 2",
@@ -65,20 +100,21 @@ const StationManagement = () => {
     "Quận 6",
     "Quận 7",
     "Quận 8",
+    "Quận 9",
     "Quận 10",
     "Quận 11",
     "Quận 12",
-    "Q. Bình Thạnh",
-    "Q. Gò Vấp",
-    "Q. Phú Nhuận",
-    "Q. Tân Bình",
-    "P. Tân Phú",
-    "Thủ Đức",
-    "H. Bình Chánh",
-    "H. Cần Giờ",
-    "H. Củ Chi",
-    "H. Hóc Môn",
-    "H. Nhà Bè",
+    "Quận Bình Thạnh",
+    "Quận Gò Vấp",
+    "Quận Phú Nhuận",
+    "Quận Tân Bình",
+    "Quận Tân Phú",
+    "Thành phố Thủ Đức",
+    "Huyện Bình Chánh",
+    "Huyện Cần Giờ",
+    "Huyện Củ Chi",
+    "Huyện Hóc Môn",
+    "Huyện Nhà Bè",
   ];
 
   // ===== HÀM GỌI API =====
@@ -299,6 +335,11 @@ const StationManagement = () => {
     setShowViewModal(true); // Hiển thị modal
   };
 
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
   /**
    * Xử lý thay đổi input trong form
    * @param {Event} e - Change event
@@ -382,11 +423,14 @@ const StationManagement = () => {
    */
   const getStatusDisplay = (status) => {
     const statusMap = {
-      active: { icon: "🟢", text: "Hoạt động" },
-      maintenance: { icon: "🔧", text: "Bảo trì" },
-      inactive: { icon: "🔴", text: "Vô hiệu hóa" },
+      active: { text: "Hoạt động", tone: "success" },
+      maintenance: { text: "Bảo trì", tone: "warning" },
+      inactive: { text: "Vô hiệu hóa", tone: "danger" },
     };
-    return statusMap[status] || { icon: "❓", text: status };
+    return statusMap[status] || {
+      text: status || "Không xác định",
+      tone: "default",
+    };
   };
 
   // ===== EFFECTS (Side effects) =====
@@ -451,23 +495,75 @@ const StationManagement = () => {
     (s) => s.status === "inactive"
   ).length; // Số trạm vô hiệu hóa
 
+  // Cổng sạc & vùng phủ
+  const totalPorts = useMemo(
+    () => safeStations.reduce((sum, station) => sum + resolvePortCount(station), 0),
+    [safeStations]
+  );
+  const averagePorts =
+    totalStations > 0 ? (totalPorts / totalStations).toFixed(1) : 0;
+
+  const coverageCount = useMemo(() => {
+    const coverage = new Set();
+    safeStations.forEach((station) => {
+      const key = extractCoverageKey(station.address);
+      if (key) coverage.add(normalizeText(key));
+    });
+    return coverage.size;
+  }, [safeStations]);
+
+  const providerLeaders = useMemo(() => {
+    const providerCounter = safeStations.reduce((acc, station) => {
+      const providerName = station.provider?.trim();
+      if (!providerName) return acc;
+      acc[providerName] = (acc[providerName] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(providerCounter)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+  }, [safeStations]);
+
+  const uptimeRate =
+    totalStations > 0 ? Math.round((activeStations / totalStations) * 100) : 0;
+  const attentionStations = maintenanceStations + inactiveStations;
+  const uptimeDegree = Math.min(100, Math.max(0, uptimeRate)) * 3.6;
+  const uptimeChartStyle = {
+    background: `conic-gradient(#12b76a ${uptimeDegree}deg, rgba(255, 255, 255, 0.08) 0)`,
+  };
+
+  const inlineStats = [
+    { icon: "⚡", label: "Tổng trạm", value: totalStations },
+    { icon: "🟢", label: "Hoạt động", value: activeStations },
+    { icon: "🔧", label: "Bảo trì", value: maintenanceStations },
+    { icon: "🔴", label: "Vô hiệu hoá", value: inactiveStations },
+  ];
+
+  const normalizedSearchTerm = normalizeText(searchTerm);
+  const normalizedLocationFilter =
+    locationFilter === "all" ? "" : normalizeText(locationFilter);
+
   /**
    * Lọc danh sách trạm theo các điều kiện
    */
   const filteredStations = safeStations.filter((station) => {
-    // Kiểm tra từ khóa tìm kiếm (tên hoặc địa chỉ)
+    const searchTarget = `${station.name || ""} ${station.address || ""} ${
+      station.provider || ""
+    } ${station.status || ""}`;
+
+    // Kiểm tra từ khóa tìm kiếm theo dạng bỏ dấu
     const matchesSearch =
-      station.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      station.address?.toLowerCase().includes(searchTerm.toLowerCase());
+      !normalizedSearchTerm ||
+      normalizeText(searchTarget).includes(normalizedSearchTerm);
 
     // Kiểm tra bộ lọc trạng thái
     const matchesStatus =
       statusFilter === "all" || station.status === statusFilter;
 
-    // Kiểm tra bộ lọc địa điểm
+    // Kiểm tra bộ lọc địa điểm (cũng bỏ dấu)
     const matchesLocation =
       locationFilter === "all" ||
-      station.address?.toLowerCase().includes(locationFilter.toLowerCase());
+      normalizeText(station.address || "").includes(normalizedLocationFilter);
 
     // Chỉ giữ lại trạm thỏa mãn TẤT CẢ điều kiện
     return matchesSearch && matchesStatus && matchesLocation;
@@ -481,6 +577,27 @@ const StationManagement = () => {
     (currentPage - 1) * pageSize, // Vị trí bắt đầu
     currentPage * pageSize // Vị trí kết thúc
   );
+
+  const paginationItems = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const items = [1];
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    if (start > 2) items.push("ellipsis-left");
+
+    for (let page = start; page <= end; page += 1) {
+      items.push(page);
+    }
+
+    if (end < totalPages - 1) items.push("ellipsis-right");
+
+    items.push(totalPages);
+    return items;
+  }, [currentPage, totalPages]);
 
   /**
    * Effect: Điều chỉnh trang hiện tại nếu vượt quá tổng số trang
@@ -520,95 +637,171 @@ const StationManagement = () => {
   // Render UI chính
   return (
     <div className="station-management">
+      <section className="page-hero">
+        <div className="hero-copy">
+          <p className="eyebrow">Trung tâm vận hành</p>
+          <h2>Quản lý trạm sạc</h2>
+          <p className="hero-description">
+            Theo dõi trạng thái mạng lưới, lập kế hoạch bảo trì và triển khai trạm
+            mới trên cùng một bảng điều khiển.
+          </p>
+
+          <div className="hero-actions">
+            <button type="button" className="cta-button" onClick={openAddModal}>
+              <span>+</span> Thêm trạm mới
+            </button>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => fetchStations()}
+            >
+              Làm mới dữ liệu
+            </button>
+          </div>
+
+          <div className="hero-metrics">
+            <div className="metric">
+              <span>Trạm hiện có</span>
+              <strong>{totalStations}</strong>
+            </div>
+            <div className="metric">
+              <span>Vùng phủ</span>
+              <strong>{coverageCount || 0}</strong>
+            </div>
+            <div className="metric">
+              <span>Cổng sạc/trạm</span>
+              <strong>{averagePorts}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-visual">
+          <div className="radial-chart" style={uptimeChartStyle}>
+            <div className="chart-center">
+              <strong>{uptimeRate}%</strong>
+              <span>Uptime</span>
+            </div>
+          </div>
+          <p className="chart-caption">
+            {attentionStations} trạm cần xử lý
+          </p>
+
+          <div className="provider-leaderboard">
+            <p>Nhà cung cấp dẫn đầu</p>
+            {providerLeaders.length > 0 ? (
+              <ul>
+                {providerLeaders.map(([provider, count]) => (
+                  <li key={provider}>
+                    <span>{provider}</span>
+                    <span>{count} trạm</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span className="empty-provider">Chưa có dữ liệu</span>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* PHẦN BỘ LỌC VÀ TÌM KIẾM */}
       <div className="filters-section">
-        {/* Ô tìm kiếm */}
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Tìm kiếm trạm sạc..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-        </div>
+        <div className="filters-top">
+          <form className="search-box" onSubmit={(e) => e.preventDefault()}>
+            <div className="search-input-wrapper">
+              <svg
+                className="search-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M11 4a7 7 0 015.61 11.19l3.1 3.1a1 1 0 01-1.42 1.42l-3.1-3.1A7 7 0 1111 4zm0 2a5 5 0 100 10 5 5 0 000-10z"
+                  fill="currentColor"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder="Tìm kiếm trạm sạc theo tên, địa chỉ hoặc nhà cung cấp..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="clear-search"
+                  onClick={handleClearSearch}
+                >
+                  Xoá
+                </button>
+              )}
+            </div>
+          </form>
 
-        {/* Nhóm các bộ lọc */}
-        <div className="filters-group">
-          {/* Lọc theo trạng thái */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="status-filter"
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="active">Hoạt động</option>
-            <option value="maintenance">Bảo trì</option>
-            <option value="inactive">Vô hiệu hóa</option>
-          </select>
-
-          {/* Lọc theo quận/huyện */}
-          <select
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-            className="location-filter"
-          >
-            <option value="all">Tất cả quận</option>
-            {hcmDistricts.map((district) => (
-              <option key={district} value={district}>
-                {district}
-              </option>
+          <div className="inline-stats">
+            {inlineStats.map((item) => (
+              <div key={item.label} className="stat-pill">
+                <span className="pill-icon">{item.icon}</span>
+                <div>
+                  <p>{item.label}</p>
+                  <strong>{item.value}</strong>
+                </div>
+              </div>
             ))}
-          </select>
-        </div>
-
-        {/* Nút thêm trạm mới */}
-        <button className="btn-primary" onClick={openAddModal}>
-          <span>➕</span> Thêm trạm sạc
-        </button>
-      </div>
-
-      {/* PHẦN THỐNG KÊ */}
-      <div className="stats-overview">
-        {/* Card tổng số trạm */}
-        <div className="stat-mini">
-          <div className="stat-icon">⚡</div>
-          <div className="stat-info">
-            <span className="stat-number">{totalStations}</span>
-            <span className="stat-label">Tổng trạm</span>
           </div>
         </div>
 
-        {/* Card trạm hoạt động */}
-        <div className="stat-mini">
-          <div className="stat-icon">🟢</div>
-          <div className="stat-info">
-            <span className="stat-number">{activeStations}</span>
-            <span className="stat-label">Hoạt động</span>
+        <div className="filters-row">
+          <div className="filter-field">
+            <label>Trạng thái</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="status-filter"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="active">Hoạt động</option>
+              <option value="maintenance">Bảo trì</option>
+              <option value="inactive">Vô hiệu hóa</option>
+            </select>
+          </div>
+
+          <div className="filter-field">
+            <label>Khu vực</label>
+            <select
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              className="location-filter"
+            >
+              <option value="all">Tất cả khu vực</option>
+              {hcmDistricts.map((district) => (
+                <option key={district} value={district}>
+                  {district}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Card trạm bảo trì */}
-        <div className="stat-mini">
-          <div className="stat-icon">🔧</div>
-          <div className="stat-info">
-            <span className="stat-number">{maintenanceStations}</span>
-            <span className="stat-label">Bảo trì</span>
-          </div>
-        </div>
-
-        {/* Card trạm vô hiệu hóa */}
-        <div className="stat-mini">
-          <div className="stat-icon">🔴</div>
-          <div className="stat-info">
-            <span className="stat-number">{inactiveStations}</span>
-            <span className="stat-label">Vô hiệu hóa</span>
-          </div>
+        <div className="filter-actions">
+          <button type="button" className="btn-primary" onClick={openAddModal}>
+            <span>+</span> Thêm trạm
+          </button>
         </div>
       </div>
 
       {/* BẢNG DANH SÁCH TRẠM */}
-      <div className="table-container">
+      <div className="table-card">
+        <div className="table-headline">
+          <div>
+            <h3>Danh sách trạm</h3>
+            <p>
+              Hiển thị {paginatedStations.length} / {filteredStations.length} trạm
+              đáp ứng tiêu chí hiện tại
+            </p>
+          </div>
+        </div>
+        <div className="table-container">
         <table className="stations-table">
           {/* Header của bảng */}
           <thead>
@@ -642,10 +835,10 @@ const StationManagement = () => {
 
                     {/* Cột trạng thái với badge màu */}
                     <td className="status-cell">
-                      <span className={`status-badge ${station.status}`}>
-                        <span className="status-icon">
-                          {statusDisplay.icon}
-                        </span>
+                      <span
+                        className={`status-badge status-${statusDisplay.tone}`}
+                      >
+                        <span className="status-dot" aria-hidden="true"></span>
                         <span className="status-text">
                           {statusDisplay.text}
                         </span>
@@ -663,31 +856,29 @@ const StationManagement = () => {
                     {/* Cột các nút thao tác */}
                     <td>
                       <div className="action-buttons">
-                        {/* Nút xem chi tiết */}
                         <button
-                          className="btn-icon view"
+                          className="btn-pill neutral"
+                          type="button"
                           title="Xem chi tiết"
                           onClick={() => openViewModal(station)}
                         >
-                          👁️
+                          Xem
                         </button>
-
-                        {/* Nút chỉnh sửa */}
                         <button
-                          className="btn-icon edit"
+                          className="btn-pill warning"
+                          type="button"
                           title="Chỉnh sửa"
                           onClick={() => openEditModal(station)}
                         >
-                          ✏️
+                          Sửa
                         </button>
-
-                        {/* Nút vô hiệu hóa */}
                         <button
-                          className="btn-icon delete"
+                          className="btn-pill danger"
+                          type="button"
                           title="Vô hiệu hóa"
                           onClick={() => handleDeleteStation(station.id)}
                         >
-                          🚫
+                          Vô hiệu
                         </button>
                       </div>
                     </td>
@@ -705,36 +896,42 @@ const StationManagement = () => {
           </tbody>
         </table>
       </div>
+      </div>
 
       {/* PHÂN TRANG */}
       <div className="pagination">
-        {/* Nút trang trước */}
         <button
-          className="page-btn"
+          className="page-btn nav"
           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           disabled={currentPage === 1}
+          aria-label="Trang trước"
         >
-          ‹ Trước
+          ‹
         </button>
 
-        {/* Các nút số trang */}
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-          <button
-            key={p}
-            className={`page-btn ${p === currentPage ? "active" : ""}`}
-            onClick={() => setCurrentPage(p)}
-          >
-            {p}
-          </button>
-        ))}
+        {paginationItems.map((item, index) =>
+          typeof item === "number" ? (
+            <button
+              key={item}
+              className={`page-btn ${item === currentPage ? "active" : ""}`}
+              onClick={() => setCurrentPage(item)}
+            >
+              {item}
+            </button>
+          ) : (
+            <span key={`${item}-${index}`} className="ellipsis">
+              ...
+            </span>
+          )
+        )}
 
-        {/* Nút trang sau */}
         <button
-          className="page-btn"
+          className="page-btn nav"
           onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages}
+          aria-label="Trang sau"
         >
-          Sau ›
+          ›
         </button>
       </div>
 
@@ -758,9 +955,11 @@ const StationManagement = () => {
                 className="station-form"
                 onSubmit={editingStation ? handleEditStation : handleAddStation}
               >
-                {/* PHẦN THÔNG TIN CƠ BẢN */}
-                <div className="basic-info-section">
-                  {/* Tên trạm */}
+                <section className="form-panel primary-panel">
+                  <div className="panel-heading">
+                    <p className="panel-eyebrow">Thông tin chung</p>
+                  </div>
+
                   <div className="form-group">
                     <label>Tên trạm sạc</label>
                     <input
@@ -773,7 +972,6 @@ const StationManagement = () => {
                     />
                   </div>
 
-                  {/* Kinh độ và vĩ độ */}
                   <div className="form-row">
                     <div className="form-group">
                       <label>Kinh độ</label>
@@ -801,7 +999,6 @@ const StationManagement = () => {
                     </div>
                   </div>
 
-                  {/* Trạng thái và nhà cung cấp */}
                   <div className="form-row">
                     <div className="form-group">
                       <label>Trạng thái</label>
@@ -829,7 +1026,6 @@ const StationManagement = () => {
                     </div>
                   </div>
 
-                  {/* Địa chỉ */}
                   <div className="form-group">
                     <label>Địa chỉ</label>
                     <input
@@ -841,36 +1037,40 @@ const StationManagement = () => {
                       required
                     />
                   </div>
-                </div>
+                </section>
 
-                {/* PHẦN DANH SÁCH TRỤ SẠC */}
-                <div className="chargers-section">
-                  <div className="section-header">
-                    <h3>Trụ sạc</h3>
+                <section className="form-panel ports-panel">
+                  <div className="panel-heading">
+                    <p className="panel-eyebrow">Trụ sạc</p>
+                    <button
+                      type="button"
+                      className="btn-add-port"
+                      onClick={addPort}
+                    >
+                      + Thêm trụ sạc
+                    </button>
                   </div>
 
-                  {/* Render từng trụ sạc */}
-                  {formData.ports.map((port, index) => (
-                    <div key={index} className="charger-item">
-                      {/* Header của trụ sạc */}
-                      <div className="charger-header">
-                        <h4>Trụ sạc {index + 1}</h4>
-                        {/* Nút xóa (chỉ hiện nếu có > 1 trụ) */}
-                        {formData.ports.length > 1 && (
-                          <button
-                            type="button"
-                            className="btn-remove-charger"
-                            onClick={() => removePort(index)}
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
+                  <div className="ports-wrapper">
+                    {formData.ports.map((port, index) => (
+                      <div key={index} className="charger-card">
+                        <div className="charger-header">
+                          <div>
+                            <p>Trụ sạc {index + 1}</p>
+                            <span>Tùy chỉnh loại và giá</span>
+                          </div>
+                          {formData.ports.length > 1 && (
+                            <button
+                              type="button"
+                              className="btn-remove-charger"
+                              onClick={() => removePort(index)}
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
 
-                      {/* Các field của trụ sạc */}
-                      <div className="charger-fields">
-                        {/* Loại và trạng thái */}
-                        <div className="form-row">
+                        <div className="port-grid">
                           <div className="form-group">
                             <label>Loại</label>
                             <select
@@ -885,16 +1085,13 @@ const StationManagement = () => {
                               <option value="Ultra">Ultra</option>
                             </select>
                           </div>
+
                           <div className="form-group">
                             <label>Trạng thái</label>
                             <select
                               value={port.status}
                               onChange={(e) =>
-                                handlePortChange(
-                                  index,
-                                  "status",
-                                  e.target.value
-                                )
+                                handlePortChange(index, "status", e.target.value)
                               }
                               required
                             >
@@ -903,27 +1100,21 @@ const StationManagement = () => {
                               <option value="inactive">Không hoạt động</option>
                             </select>
                           </div>
-                        </div>
 
-                        {/* Công suất và tốc độ */}
-                        <div className="form-row">
                           <div className="form-group">
                             <label>Công suất (kW)</label>
                             <input
                               type="number"
                               value={port.powerKw}
                               onChange={(e) =>
-                                handlePortChange(
-                                  index,
-                                  "powerKw",
-                                  e.target.value
-                                )
+                                handlePortChange(index, "powerKw", e.target.value)
                               }
                               min="1"
                               max="350"
                               required
                             />
                           </div>
+
                           <div className="form-group">
                             <label>Tốc độ</label>
                             <select
@@ -938,37 +1129,26 @@ const StationManagement = () => {
                               <option value="super_fast">Siêu nhanh</option>
                             </select>
                           </div>
-                        </div>
 
-                        {/* Giá tiền */}
-                        <div className="form-group">
-                          <label>Giá tiền (VNĐ/kWh)</label>
-                          <input
-                            type="number"
-                            value={port.price}
-                            onChange={(e) =>
-                              handlePortChange(index, "price", e.target.value)
-                            }
-                            min="1000"
-                            max="10000"
-                            required
-                          />
+                          <div className="form-group full-width">
+                            <label>Giá tiền (VNĐ/kWh)</label>
+                            <input
+                              type="number"
+                              value={port.price}
+                              onChange={(e) =>
+                                handlePortChange(index, "price", e.target.value)
+                              }
+                              min="1000"
+                              max="10000"
+                              required
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </section>
 
-                  {/* Nút thêm trụ sạc mới */}
-                  <button
-                    type="button"
-                    className="btn-add-charger"
-                    onClick={addPort}
-                  >
-                    + Thêm trụ sạc
-                  </button>
-                </div>
-
-                {/* Footer modal - nút Hủy và Submit */}
                 <div className="modal-actions">
                   <button
                     type="button"

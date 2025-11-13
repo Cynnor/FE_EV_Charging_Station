@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import "./index.scss";
 import api from "../../../config/api";
 import { formatDate } from "../../../config/yob";
@@ -66,27 +66,14 @@ const UserManagement = () => {
     }
   };
 
-  // GET - Xem thông tin user cụ thể
-  const fetchUserProfile = async (userId) => {
+  // ✅ Lấy thông tin chi tiết user theo ID
+  const fetchUserDetail = async (userId) => {
     try {
-      const response = await api.get(`/users/profile`);
-      const userData = response.data.data || response.data;
-      setSelectedUser(userData);
-      setShowViewModal(true);
-    } catch (err) {
-      console.error("Error fetching user profile:", err);
-      alert("Không thể tải thông tin người dùng!");
-    }
-  };
-
-  // ✅ GET - Lấy thông tin user theo ID để edit
-  const fetchUserById = async (userId) => {
-    try {
-      const response = await api.get(`/users/${userId}`);
+      const response = await api.get(`/users/detail/${userId}`);
       const userData = response.data.data || response.data;
       return userData;
     } catch (err) {
-      console.error("Error fetching user by ID:", err);
+      console.error("Error fetching user detail:", err);
       alert("Không thể tải thông tin người dùng!");
       return null;
     }
@@ -97,7 +84,10 @@ const UserManagement = () => {
     e.preventDefault();
     try {
       // ✅ Use userId from editingUser
-      const response = await api.put(`/users/${editingUser.userId}`, formData);
+      const response = await api.put(
+        `/users/detail/${editingUser.userId}`,
+        formData
+      );
 
       console.log("Update response:", response.data);
 
@@ -189,16 +179,16 @@ const UserManagement = () => {
     }));
   };
 
-  // ✅ Mở modal Edit - Load data from API theo userId
+  // ✅ Mở modal Edit - Load data từ API detail
   const openEditModal = async (user) => {
-    const userData = await fetchUserById(user.userId);
+    const userData = await fetchUserDetail(user.userId);
     if (userData) {
       setEditingUser(userData);
       setFormData({
         fullName: userData.fullName || "",
         email: userData.email || "",
         phoneNumber: userData.phone || userData.phoneNumber || "",
-        address: userData.address || "",
+        address: coerceAddressValue(userData.address),
         role: userData.role || "USER",
       });
       setShowEditModal(true);
@@ -214,6 +204,19 @@ const UserManagement = () => {
   const closeAddModal = () => {
     setShowAddModal(false);
     resetAddForm(); // Reset for add modal
+  };
+
+  const openViewModal = async (user) => {
+    const userData = await fetchUserDetail(user.userId);
+    if (userData) {
+      setSelectedUser(userData);
+      setShowViewModal(true);
+    }
+  };
+
+  const closeViewModal = () => {
+    setShowViewModal(false);
+    setSelectedUser(null);
   };
 
   // ✅ Scroll modal to top when opened
@@ -256,6 +259,52 @@ const UserManagement = () => {
   const activeUsers = safeUsers.filter((u) => u.status !== "disabled").length;
   const disabledUsers = safeUsers.filter((u) => u.status === "disabled").length;
 
+  const heroHighlights = [
+    { label: "Tổng người dùng", value: totalUsers },
+    { label: "Đang hoạt động", value: activeUsers },
+    { label: "Đang vô hiệu", value: disabledUsers },
+  ];
+
+  const roleBreakdown = [
+    { label: "Admin", value: adminCount },
+    { label: "Staff", value: staffCount },
+    { label: "User", value: userCount },
+  ];
+
+  const statusSummary = [
+    { label: "Tài khoản hoạt động", value: activeUsers, tone: "success" },
+    { label: "Đã vô hiệu hoá", value: disabledUsers, tone: "danger" },
+    { label: "Tổng số tài khoản", value: totalUsers, tone: "primary" },
+  ];
+
+  const formatDateDisplay = (value) => {
+    if (!value) return "—";
+    try {
+      return formatDate(value);
+    } catch (err) {
+      return value;
+    }
+  };
+
+  const formatAddressDisplay = (value) => {
+    if (!value) return "—";
+    if (typeof value === "string") return value;
+    if (Array.isArray(value)) {
+      const parts = value.filter(Boolean).map((item) => formatAddressDisplay(item));
+      return parts.length ? parts.join(", ") : "—";
+    }
+    if (typeof value === "object") {
+      const parts = Object.values(value)
+        .filter(Boolean)
+        .map((item) => (typeof item === "object" ? JSON.stringify(item) : item));
+      return parts.length ? parts.join(", ") : "—";
+    }
+    return String(value);
+  };
+
+  const coerceAddressValue = (value) =>
+    typeof value === "string" ? value : formatAddressDisplay(value).replace(/^—$/, "");
+
   // Filter users - Updated role values
   const filteredUsers = safeUsers.filter((user) => {
     const matchesSearch =
@@ -276,35 +325,57 @@ const UserManagement = () => {
     currentPage * pageSize
   );
 
+  const paginationItems = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const items = [1];
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    if (start > 2) items.push("ellipsis-left");
+
+    for (let page = start; page <= end; page += 1) {
+      items.push(page);
+    }
+
+    if (end < totalPages - 1) items.push("ellipsis-right");
+
+    items.push(totalPages);
+    return items;
+  }, [currentPage, totalPages]);
+
   // Clamp current page
   useEffect(() => {
     const newTotal = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
     if (currentPage > newTotal) setCurrentPage(newTotal);
   }, [filteredUsers.length, currentPage, pageSize]);
 
-  const getRoleBadge = (role) => {
-    switch (role) {
-      case "ADMIN":
-        return "👑 Admin";
-      case "STAFF":
-        return "👔 Staff";
-      case "USER":
-        return "👤 User";
-      default:
-        return role;
-    }
+  const getRoleBadge = (role = "") => {
+    const normalized = role?.toString().toUpperCase();
+    const roleMap = {
+      ADMIN: { label: "Admin", tone: "admin" },
+      STAFF: { label: "Staff", tone: "staff" },
+      USER: { label: "User", tone: "user" },
+    };
+    return roleMap[normalized] || {
+      label: normalized || "Khác",
+      tone: "default",
+    };
   };
 
   // ✅ Updated function to return status display
   const getStatusDisplay = (status) => {
-    switch (status) {
+    const normalized = status?.toString().toLowerCase();
+    switch (normalized) {
       case "active":
       case "enabled":
-        return { icon: "🟢", text: "Hoạt động" };
+        return { text: "Hoạt động", tone: "success" };
       case "disabled":
-        return { icon: "🔴", text: "Vô hiệu hóa" };
+        return { text: "Vô hiệu hoá", tone: "danger" };
       default:
-        return { icon: "❓", text: status || "Chưa xác định" };
+        return { text: status || "Chưa xác định", tone: "default" };
     }
   };
 
@@ -332,183 +403,295 @@ const UserManagement = () => {
 
   return (
     <div className="user-management">
-      {/* Filters - Updated role options */}
-      <div className="filters-section">
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Tìm kiếm..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
+      <section className="page-hero">
+        <div className="hero-copy">
+          <p className="eyebrow">Trung tâm khách hàng</p>
+          <h2>Quản lý người dùng</h2>
+          <p className="hero-lead">
+            Theo dõi sức khỏe hệ thống tài khoản, phân quyền và đảm bảo trải nghiệm
+            nhất quán trên toàn bộ nền tảng.
+          </p>
+
+          <div className="hero-metrics">
+            {heroHighlights.map((item) => (
+              <div key={item.label} className="metric">
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="filters-group">
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="role-filter"
-          >
-            <option value="all">Tất cả vai trò</option>
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-            <option value="staff">Staff</option>
-          </select>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="status-filter"
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="active">Hoạt động</option>
-            <option value="disabled">Vô hiệu hóa</option>
-          </select>
+
+        <div className="hero-panel">
+          <h4>Phân bổ vai trò</h4>
+          <div className="role-grid">
+            {roleBreakdown.map((role) => (
+              <div key={role.label} className="role-card">
+                <span>{role.label}</span>
+                <strong>{role.value}</strong>
+              </div>
+            ))}
+          </div>
         </div>
-        <button
-          className="btn-primary full-width"
-          onClick={() => setShowAddModal(true)}
-        >
-          <span>➕</span> Thêm người dùng
-        </button>
+      </section>
+
+      <div className="filters-card">
+        <div className="search-row">
+          <div className="search-input-wrapper">
+            <svg
+              className="search-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M11 4a7 7 0 015.61 11.19l3.1 3.1a1 1 0 01-1.42 1.42l-3.1-3.1A7 7 0 1111 4zm0 2a5 5 0 100 10 5 5 0 000-10z"
+                fill="currentColor"
+              />
+            </svg>
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="clear-search"
+                onClick={() => setSearchTerm("")}
+              >
+                Xoá
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="primary-btn"
+            onClick={() => setShowAddModal(true)}
+          >
+            <span>+</span> Thêm người dùng
+          </button>
+        </div>
+
+        <div className="filter-row">
+          <div className="filter-field">
+            <label>Vai trò</label>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+            >
+              <option value="all">Tất cả vai trò</option>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+              <option value="staff">Staff</option>
+            </select>
+          </div>
+          <div className="filter-field">
+            <label>Trạng thái</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="active">Hoạt động</option>
+              <option value="disabled">Vô hiệu hoá</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="snapshot-row">
+          {statusSummary.map((item) => (
+            <div key={item.label} className={`snapshot-pill ${item.tone}`}>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Statistics - Updated role counts */}
-      <div className="stats-overview">
-        <div className="stat-mini">
-          <div className="stat-icon">👥</div>
-          <div className="stat-info">
-            <span className="stat-number">{totalUsers}</span>
-            <span className="stat-label">Tổng người dùng</span>
+      <div className="table-card">
+        <div className="table-headline">
+          <div>
+            <h3>Danh sách người dùng</h3>
+            <p>
+              Hiển thị {paginatedUsers.length} / {filteredUsers.length} tài khoản phù hợp
+              bộ lọc hiện tại
+            </p>
           </div>
         </div>
-        <div className="stat-mini">
-          <div className="stat-icon">🟢</div>
-          <div className="stat-info">
-            <span className="stat-number">{activeUsers}</span>
-            <span className="stat-label">Hoạt động</span>
-          </div>
-        </div>
-        <div className="stat-mini">
-          <div className="stat-icon">🔴</div>
-          <div className="stat-info">
-            <span className="stat-number">{disabledUsers}</span>
-            <span className="stat-label">Vô hiệu hóa</span>
-          </div>
-        </div>
-        <div className="stat-mini">
-          <div className="stat-icon">👑</div>
-          <div className="stat-info">
-            <span className="stat-number">{adminCount}</span>
-            <span className="stat-label">Admin</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Users Table */}
-      <div className="table-container">
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Họ và tên</th>
-              <th>Email</th>
-              <th>Vai trò</th>
-              <th>Trạng thái</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user) => {
-                const statusDisplay = getStatusDisplay(user.status);
-                return (
-                  <tr key={user.userId}>
-                    <td className="user-info">
-                      <div className="user-details">
-                        <span className="user-name">{user.username}</span>
-                      </div>
-                    </td>
-                    <td>{user.fullName}</td>
-                    <td>{user.email}</td>
-                    <td>
-                      <span
-                        className={`role-badge ${user.role?.toLowerCase()}`}
-                      >
-                        {getRoleBadge(user.role)}
-                      </span>
-                    </td>
-                    <td className="status-cell">
-                      <span
-                        className={`status-badge ${
-                          user.status === "disabled" ? "disabled" : "active"
-                        }`}
-                      >
-                        <span className="status-icon">
-                          {statusDisplay.icon}
+        <div className="table-wrapper">
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Họ và tên</th>
+                <th>Email</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedUsers.length > 0 ? (
+                paginatedUsers.map((user) => {
+                  const statusDisplay = getStatusDisplay(user.status);
+                  const roleDisplay = getRoleBadge(user.role);
+                  const initials = (user.fullName || user.username || "?")
+                    .charAt(0)
+                    .toUpperCase();
+                  return (
+                    <tr key={user.userId}>
+                      <td className="user-cell">
+                        <div className="user-stack">
+                          <span className="avatar-chip">{initials}</span>
+                          <div>
+                            <p>{user.username}</p>
+                            <span>{user.phone || user.phoneNumber || "—"}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{user.fullName || "Chưa cập nhật"}</td>
+                      <td>{user.email || "—"}</td>
+                      <td>
+                        <span className={`role-chip role-${roleDisplay.tone}`}>
+                          {roleDisplay.label}
                         </span>
-                        <span className="status-text">
+                      </td>
+                      <td className="status-cell">
+                        <span className={`status-pill status-${statusDisplay.tone}`}>
                           {statusDisplay.text}
                         </span>
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn-icon edit"
-                          title="Chỉnh sửa"
-                          onClick={() => openEditModal(user)}
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          className="btn-icon delete"
-                          title="Vô hiệu hóa"
-                          onClick={() => handleDeleteUser(user.userId)}
-                        >
-                          🚫
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="8" className="no-data">
-                  Không tìm thấy người dùng nào
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                      </td>
+                      <td>
+                        <div className="action-pills">
+                          <button
+                            type="button"
+                            className="pill neutral"
+                            onClick={() => openViewModal(user)}
+                          >
+                            Xem
+                          </button>
+                          <button
+                            type="button"
+                            className="pill ghost"
+                            onClick={() => openEditModal(user)}
+                          >
+                            Chỉnh sửa
+                          </button>
+                          <button
+                            type="button"
+                            className="pill danger"
+                            onClick={() => handleDeleteUser(user.userId)}
+                          >
+                            Vô hiệu
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="6" className="no-data">
+                    Không tìm thấy người dùng nào
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Pagination */}
       <div className="pagination">
         <button
-          className="page-btn"
+          className="page-btn nav"
           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           disabled={currentPage === 1}
+          aria-label="Trang trước"
         >
-          ‹ Trước
+          ‹
         </button>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-          <button
-            key={p}
-            className={`page-btn ${p === currentPage ? "active" : ""}`}
-            onClick={() => setCurrentPage(p)}
-          >
-            {p}
-          </button>
-        ))}
+
+        {paginationItems.map((item, index) =>
+          typeof item === "number" ? (
+            <button
+              key={item}
+              className={`page-btn ${item === currentPage ? "active" : ""}`}
+              onClick={() => setCurrentPage(item)}
+            >
+              {item}
+            </button>
+          ) : (
+            <span key={`${item}-${index}`} className="ellipsis">
+              ...
+            </span>
+          )
+        )}
+
         <button
-          className="page-btn"
+          className="page-btn nav"
           onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages}
+          aria-label="Trang sau"
         >
-          Sau ›
+          ›
         </button>
       </div>
+
+      {/* View User Modal */}
+      {showViewModal && selectedUser && (
+        <div className="modal-overlay" onClick={closeViewModal}>
+          <div className="modal modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3>Thông tin người dùng</h3>
+                <p>Toàn bộ dữ liệu hồ sơ và hoạt động gần đây.</p>
+              </div>
+              <button className="close-btn" onClick={closeViewModal}>
+                ✕
+              </button>
+            </div>
+            <div className="modal-body user-detail-modal">
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <span>Họ và tên</span>
+                  <strong>{selectedUser.fullName || "Chưa cập nhật"}</strong>
+                </div>
+                <div className="detail-item">
+                  <span>Email</span>
+                  <strong>{selectedUser.email || "—"}</strong>
+                </div>
+                <div className="detail-item">
+                  <span>Số điện thoại</span>
+                  <strong>{selectedUser.phone || selectedUser.phoneNumber || "—"}</strong>
+                </div>
+                <div className="detail-item">
+                  <span>Vai trò</span>
+                  <strong>{getRoleBadge(selectedUser.role).label}</strong>
+                </div>
+                <div className="detail-item">
+                  <span>Trạng thái</span>
+                  <strong>{getStatusDisplay(selectedUser.status).text}</strong>
+                </div>
+                <div className="detail-item">
+                  <span>Ngày tạo</span>
+                  <strong>{formatDateDisplay(selectedUser.createdAt)}</strong>
+                </div>
+                <div className="detail-item full-width">
+                  <span>Địa chỉ</span>
+                  <strong>{formatAddressDisplay(selectedUser.address)}</strong>
+                </div>
+                <div className="detail-item full-width">
+                  <span>Ngày sinh</span>
+                  <strong>{formatDateDisplay(selectedUser.dob)}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit User Modal - ✅ Fixed scroll issue */}
       {showEditModal && editingUser && (
@@ -523,68 +706,83 @@ const UserManagement = () => {
             }}
           >
             <div className="modal-header">
-              <h3>Chỉnh sửa thông tin người dùng</h3>
+              <div>
+                <h3>Chỉnh sửa thông tin người dùng</h3>
+                <p>Cập nhật thông tin hồ sơ và phân quyền cho tài khoản này.</p>
+              </div>
               <button className="close-btn" onClick={closeEditModal}>
                 ✕
               </button>
             </div>
-            <div className="modal-body" style={{ overflowY: "auto", flex: 1 }}>
+            <div className="modal-body form-modal">
               <form className="user-form" onSubmit={handleUpdateUser}>
-                <div className="form-group">
-                  <label>Họ và tên *</label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    placeholder="Nhập họ và tên"
-                    required
-                  />
+                <div className="modal-section">
+                  <p className="section-eyebrow">Thông tin cơ bản</p>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Họ và tên *</label>
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleInputChange}
+                        placeholder="Nhập họ và tên"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Email *</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="Nhập email"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Số điện thoại</label>
+                      <input
+                        type="tel"
+                        name="phoneNumber"
+                        value={formData.phoneNumber}
+                        onChange={handleInputChange}
+                        placeholder="Nhập số điện thoại"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Vai trò *</label>
+                      <select
+                        name="role"
+                        value={formData.role}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                        <option value="staff">Staff</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>Email *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Nhập email"
-                    required
-                  />
+
+                <div className="modal-section">
+                  <p className="section-eyebrow">Thông tin bổ sung</p>
+                  <div className="form-group">
+                    <label>Địa chỉ</label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Nhập địa chỉ"
+                    />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>Số điện thoại</label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={handleInputChange}
-                    placeholder="Nhập số điện thoại"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Địa chỉ</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    placeholder="Nhập địa chỉ"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Vai trò *</label>
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                    <option value="staff">Staff</option>
-                  </select>
-                </div>
+
                 <div className="modal-footer">
                   <button
                     type="button"
@@ -608,112 +806,121 @@ const UserManagement = () => {
         <div className="modal-overlay">
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Thêm người dùng mới</h3>
+              <div>
+                <h3>Thêm người dùng mới</h3>
+                <p>Tạo tài khoản truy cập mới với thông tin chi tiết đầy đủ.</p>
+              </div>
               <button className="close-btn" onClick={closeAddModal}>
                 ✕
               </button>
             </div>
-            <div className="modal-body">
+            <div className="modal-body form-modal">
               <form className="user-form" onSubmit={handleAddUser}>
-                <p className="info-message">
-                  💡 Vui lòng điền đầy đủ thông tin bên dưới. Role sẽ tự động
-                  được set thành <strong>USER</strong>
-                </p>
-                <div className="form-group">
-                  <label>Username *</label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={addFormData.username}
-                    onChange={handleAddInputChange}
-                    placeholder="Nhập username"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Password *</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={addFormData.password}
-                    onChange={handleAddInputChange}
-                    placeholder="Nhập password"
-                    required
-                  />
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Email *</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={addFormData.email}
-                      onChange={handleAddInputChange}
-                      placeholder="Nhập email"
-                      required
-                    />
+                <div className="modal-section">
+                  <p className="section-eyebrow">Thông tin đăng nhập</p>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Username *</label>
+                      <input
+                        type="text"
+                        name="username"
+                        value={addFormData.username}
+                        onChange={handleAddInputChange}
+                        placeholder="Nhập username"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Password *</label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={addFormData.password}
+                        onChange={handleAddInputChange}
+                        placeholder="Nhập password"
+                        required
+                      />
+                    </div>
                   </div>
+                </div>
+
+                <div className="modal-section">
+                  <p className="section-eyebrow">Thông tin cá nhân</p>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Email *</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={addFormData.email}
+                        onChange={handleAddInputChange}
+                        placeholder="Nhập email"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Họ và tên *</label>
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={addFormData.fullName}
+                        onChange={handleAddInputChange}
+                        placeholder="Nhập họ và tên"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Ngày sinh</label>
+                      <input
+                        type="date"
+                        name="dob"
+                        value={addFormData.dob}
+                        onChange={handleAddInputChange}
+                        placeholder="YYYY-MM-DD"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Số điện thoại</label>
+                      <input
+                        type="tel"
+                        name="numberphone"
+                        value={addFormData.numberphone}
+                        onChange={handleAddInputChange}
+                        placeholder="+84901234567"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-section">
+                  <p className="section-eyebrow">Thông tin bổ sung</p>
                   <div className="form-group">
-                    <label>Họ và tên *</label>
+                    <label>Địa chỉ</label>
                     <input
                       type="text"
-                      name="fullName"
-                      value={addFormData.fullName}
+                      name="address"
+                      value={addFormData.address}
                       onChange={handleAddInputChange}
-                      placeholder="Nhập họ và tên"
-                      required
+                      placeholder="Nhập địa chỉ"
                     />
                   </div>
                 </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Ngày sinh</label>
-                    <input
-                      type="date"
-                      name="dob"
-                      value={addFormData.dob}
-                      onChange={handleAddInputChange}
-                      placeholder="YYYY-MM-DD"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Số điện thoại</label>
-                    <input
-                      type="tel"
-                      name="numberphone"
-                      value={addFormData.numberphone}
-                      onChange={handleAddInputChange}
-                      placeholder="+84901234567"
-                    />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Địa chỉ</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={addFormData.address}
-                    onChange={handleAddInputChange}
-                    placeholder="Nhập địa chỉ"
-                  />
+
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={closeAddModal}
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className="btn-primary">
+                    Tạo người dùng
+                  </button>
                 </div>
               </form>
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={closeAddModal}
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                className="btn-primary"
-                onClick={handleAddUser}
-              >
-                Tạo người dùng
-              </button>
             </div>
           </div>
         </div>

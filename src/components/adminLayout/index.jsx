@@ -9,9 +9,9 @@ const pathToTab = {
   "station-management": "station-management",
   "user-management": "user-management",
   "subscription-management": "subscription-management",
-  "transaction-management": "transaction-management",
-  "revenue-management": "revenue-management",
-  "analytics-management": "analytics-management",
+  "transaction-management": "stats-reports",
+  "revenue-management": "stats-reports",
+  "analytics": "stats-reports",
   "settings-management": "settings-management",
 };
 
@@ -20,9 +20,7 @@ const menuItems = [
   { id: "station-management", label: "Quản lý trạm sạc" },
   { id: "user-management", label: "Quản lý người dùng" },
   { id: "subscription-management", label: "Quản lý gói đăng ký" },
-  { id: "transaction-management", label: "Quản lý giao dịch" },
-  { id: "revenue-management", label: "Báo cáo doanh thu" },
-  { id: "analytics-management", label: "Phân tích" },
+  { id: "stats-reports", label: "Thống kê & báo cáo" },
   { id: "settings-management", label: "Cài đặt" },
 ];
 

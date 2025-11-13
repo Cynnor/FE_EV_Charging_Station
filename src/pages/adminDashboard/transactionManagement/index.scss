@@ -1,3 +1,5 @@
+@use "sass:color";
+
 // ===== COLOR PALETTE (synchronized with overview) =====
 $primary-green: #198754;
 $primary-green-hover: #146c43;
@@ -181,7 +183,7 @@ $shadow-md: 0 4px 16px rgba(25, 135, 84, 0.12);
                     font-family: inherit;
 
                     &:hover {
-                        border-color: lighten($primary-green, 20%);
+                        border-color: color.adjust($primary-green, $lightness: 20%);
                         background: rgba(25, 135, 84, 0.02);
                     }
 

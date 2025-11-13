@@ -1,137 +1,88 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./index.scss";
 
 const AdminHeader = ({ title, subtitle }) => {
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [adminName, setAdminName] = useState("Admin");
+  const profileRef = useRef(null);
   const navigate = useNavigate();
 
-  const notifications = [
-    {
-      id: 1,
-      type: "alert",
-      title: "Trạm sạc Landmark 81 lỗi",
-      message: "Cần kiểm tra ngay",
-      time: "2 phút trước",
-      unread: true,
-    },
-    {
-      id: 2,
-      type: "info",
-      title: "Báo cáo doanh thu tháng",
-      message: "Đã tạo báo cáo tháng 12",
-      time: "30 phút trước",
-      unread: true,
-    },
-    {
-      id: 3,
-      type: "success",
-      title: "Trạm sạc mới hoạt động",
-      message: "Vinhomes Grand Park đã online",
-      time: "1 giờ trước",
-      unread: false,
-    },
-  ];
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) return;
+      const parsedUser = JSON.parse(storedUser);
+      const resolvedName =
+        parsedUser?.fullName || parsedUser?.name || parsedUser?.email || "Admin";
+      setAdminName(resolvedName);
+    } catch (err) {
+      console.error("Không thể đọc thông tin quản trị:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showProfileMenu]);
+
+  const initials = adminName
+    .split(" ")
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase())
+    .join("")
+    .slice(0, 2) || "AD";
 
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-      // Xóa token và thông tin user
+      localStorage.setItem("token", "");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      setShowProfileMenu(false);
 
-      // Redirect về trang chủ
       navigate("/");
     }
   };
 
   return (
-    <>
-      <header className="admin-header">
-        <div className="header-left">
-          <h1>{title}</h1>
-          <p>{subtitle}</p>
-        </div>
+    <header className="admin-header">
+      <div className="header-left">
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
+      </div>
 
-        <div className="header-right">
-          <div className="header-actions">
-            <button
-              className="notification-btn"
-              onClick={() => setShowNotifications(!showNotifications)}
-            >
-              <span className="icon">🔔</span>
-              <span className="badge">3</span>
-            </button>
-
-            <div
-              className="admin-avatar"
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-            >
-              <span>H</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Notifications Dropdown */}
-      {showNotifications && (
-        <div
-          className="notifications-overlay"
-          onClick={() => setShowNotifications(false)}
-        >
-          <div
-            className="notifications-dropdown"
-            onClick={(e) => e.stopPropagation()}
+      <div className="header-right">
+        <div className="profile-cluster" ref={profileRef}>
+          <button
+            type="button"
+            className="admin-avatar"
+            aria-label="Tài khoản quản trị"
+            onClick={() => setShowProfileMenu((prev) => !prev)}
           >
-            <div className="notifications-header">
-              <h4>Thông báo</h4>
-              <button
-                className="close-btn"
-                onClick={() => setShowNotifications(false)}
-              >
-                ✕
+            <span>{initials}</span>
+          </button>
+
+          {showProfileMenu && (
+            <div className="profile-popover">
+              <div className="profile-summary">
+                <p className="profile-name">{adminName}</p>
+                <p className="profile-role">Quản trị viên</p>
+              </div>
+              <button type="button" className="menu-item logout" onClick={handleLogout}>
+                Đăng xuất
               </button>
             </div>
-            <div className="notifications-content">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`notification-item ${notification.type}`}
-                >
-                  <div className="notification-content">
-                    <h5>{notification.title}</h5>
-                    <p>{notification.message}</p>
-                    <span className="notification-time">
-                      {notification.time}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
-      )}
-
-      {/* Profile Menu Dropdown */}
-      {showProfileMenu && (
-        <div
-          className="profile-menu-overlay"
-          onClick={() => setShowProfileMenu(false)}
-        >
-          <div
-            className="profile-menu-dropdown"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="profile-menu-content">
-              <button className="menu-item logout" onClick={handleLogout}>
-                <span className="menu-icon">🚪</span>
-                <span>Đăng xuất</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      </div>
+    </header>
   );
 };
 
