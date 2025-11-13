@@ -110,6 +110,32 @@ const BookingSuccessPage = () => {
     };
     
     console.log("Navigation State:", navigationState);
+
+    // Persist identifiers for downstream payment flow (PaymentPage/PaymentSuccessPage expect these)
+    const normalizedReservationId = reservation?.id || reservation?._id;
+    const normalizedVehicleId =
+      vehicle?.id ||
+      vehicle?._id ||
+      reservation?.vehicle?.id ||
+      reservation?.vehicle?._id;
+
+    if (normalizedReservationId) {
+      localStorage.setItem("reservationId", normalizedReservationId);
+    } else {
+      console.warn(
+        "⚠️ Unable to persist reservationId before navigating to charging session",
+        reservation
+      );
+    }
+
+    if (normalizedVehicleId) {
+      localStorage.setItem("vehicleId", normalizedVehicleId);
+    } else {
+      console.warn(
+        "⚠️ Unable to persist vehicleId before navigating to charging session",
+        vehicle || reservation?.vehicle
+      );
+    }
     
     navigate("/chargingSession", { 
       replace: true,

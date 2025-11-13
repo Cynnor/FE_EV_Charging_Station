@@ -42,6 +42,8 @@ const ChargingSession = () => {
   
   // Track if check-in notification has been shown
   const hasShownCheckInNotification = useRef(false);
+  const hasCheckedIn =
+    (reservationData?.qrCheck ?? location.state?.reservation?.qrCheck) === true;
 
   // Add popup state
   const [popup, setPopup] = useState({
@@ -1222,6 +1224,14 @@ const ChargingSession = () => {
       return;
     }
 
+    if (!hasCheckedIn) {
+      showPopup(
+        "Chua check-in: nho nhan vien tram quet ma QR truoc khi bat dau sac.",
+        "error"
+      );
+      return;
+    }
+
     try {
       // Lấy thông tin từ location.state, nhưng merge với reservationData từ stream
       const baseReservation = location.state?.reservation;
@@ -1691,7 +1701,7 @@ const ChargingSession = () => {
                 <button
                   className="payment-btn start-btn"
                   onClick={handlePayment}
-                  disabled={!chargingData}
+                  disabled={!chargingData || !hasCheckedIn}
                 >
                   ⚡ Bắt đầu sạc
                 </button>
