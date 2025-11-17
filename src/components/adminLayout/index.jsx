@@ -5,23 +5,20 @@ import AdminHeader from "../adminHeader";
 import "./index.scss";
 
 const pathToTab = {
-  "": "overview",
+  "": "station-management",
   "station-management": "station-management",
   "user-management": "user-management",
   "subscription-management": "subscription-management",
   "transaction-management": "stats-reports",
   "revenue-management": "stats-reports",
   "analytics": "stats-reports",
-  "settings-management": "settings-management",
 };
 
 const menuItems = [
-  { id: "overview", label: "Tổng quan" },
   { id: "station-management", label: "Quản lý trạm sạc" },
   { id: "user-management", label: "Quản lý người dùng" },
   { id: "subscription-management", label: "Quản lý gói đăng ký" },
   { id: "stats-reports", label: "Thống kê & báo cáo" },
-  { id: "settings-management", label: "Cài đặt" },
 ];
 
 const AdminLayout = () => {
@@ -33,7 +30,7 @@ const AdminLayout = () => {
     const segments = location.pathname.split("/");
     // segments: ["", "admin", ...]
     const tab = segments[2] || "";
-    return pathToTab[tab] || "overview";
+    return pathToTab[tab] || "station-management";
   };
 
   const [activeTab, setActiveTab] = useState(getActiveTabFromPath());
@@ -59,7 +56,7 @@ const AdminLayout = () => {
       <main className="admin-main-content">
         <AdminHeader
           title={getCurrentTitle()}
-          subtitle="Chào mừng trở lại! Đây là tổng quan hệ thống của bạn."
+          subtitle="Chào mừng trở lại! Quản lý vận hành hệ thống của bạn."
         />
 
         <div className="admin-content-area">

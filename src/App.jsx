@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
@@ -14,7 +14,6 @@ import ChargingSession from "./pages/chargingSessionPage";
 import BookingSuccessPage from "./pages/bookingSuccessPage";
 import ProtectedRoute from "./config/ProtectedRoute";
 import AdminLayout from "./components/adminLayout/index";
-import Overview from "./pages/adminDashboard/overViewManagement/index";
 import StationManagement from "./pages/adminDashboard/stationManagement/index";
 import UserManagement from "./pages/adminDashboard/userManagement/index";
 import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement/index";
@@ -78,7 +77,7 @@ function App() {
         </ProtectedRoute>
       ),
       children: [
-        { path: "", element: <Overview /> },
+        { index: true, element: <Navigate to="station-management" replace /> },
         { path: "station-management", element: <StationManagement /> },
         { path: "user-management", element: <UserManagement /> },
         {
