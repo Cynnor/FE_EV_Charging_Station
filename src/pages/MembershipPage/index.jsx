@@ -533,7 +533,7 @@ function MembershipPage() {
                       }`}
                       onClick={() => handleSubscribe(currentPlan)}
                     >
-                      Bắt đầu
+                      Thanh toán
                     </button>
                   ) : (
                     <button className="unavailable-btn" disabled>

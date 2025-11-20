@@ -1,11 +1,10 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import "./index.scss";
 import api from "../../config/api";
 import { useNavigate } from "react-router-dom";
 import CustomPopup from "../../components/customPopup";
 import ConfirmPopup from "../../components/confirmPopup/index.jsx";
 import ChangePasswordPopup from "../../components/changePasswordPopup/index.jsx";
-import { BrowserQRCodeReader } from "@zxing/browser";
 import {
   MapPin,
   X,
@@ -16,8 +15,6 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  QrCode,
-  RefreshCcw,
 } from "lucide-react";
 
 const ProfilePage = () => {
@@ -39,32 +36,6 @@ const ProfilePage = () => {
   // ===== Station mapping =====
   const [stationMap, setStationMap] = useState({});
   const [portTypeMap, setPortTypeMap] = useState({});
-  const [userRole, setUserRole] = useState("");
-  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
-  const [qrScanError, setQrScanError] = useState("");
-  const [manualQrValue, setManualQrValue] = useState("");
-  const [isProcessingQr, setIsProcessingQr] = useState(false);
-  const [isBarcodeSupported, setIsBarcodeSupported] = useState(
-    typeof window !== "undefined" && "BarcodeDetector" in window
-  );
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const animationFrameRef = useRef(null);
-  const barcodeDetectorRef = useRef(null);
-  const zxingReaderRef = useRef(null);
-  const zxingControlsRef = useRef(null);
-  const processingRef = useRef(false);
-  const normalizedRole = (userRole || "").toLowerCase();
-  const canUseQrTools =
-    normalizedRole === "staff" || normalizedRole === "admin";
-  const roleDisplayLabel = userRole || normalizedRole.toUpperCase();
-  const qrStatusText = isProcessingQr
-    ? "Đang xác thực mã QR..."
-    : "Cho phép sử dụng camera và đưa mã QR vào khung hình để check-in.";
-
-  useEffect(() => {
-    processingRef.current = isProcessingQr;
-  }, [isProcessingQr]);
 
   const [reservations, setReservations] = useState([]);
   const [txLoading, setTxLoading] = useState(true);
@@ -192,12 +163,6 @@ const ProfilePage = () => {
     if (savedDefaultVehicle) {
       setDefaultVehicleId(savedDefaultVehicle);
     }
-  }, []);
-
-  useEffect(() => {
-    setIsBarcodeSupported(
-      typeof window !== "undefined" && "BarcodeDetector" in window
-    );
   }, []);
 
   useEffect(() => {
@@ -361,13 +326,6 @@ const ProfilePage = () => {
 
         setUserInfo(userData);
         setOriginalUserInfo(userData);
-        const detectedRole =
-          profileData.role ||
-          profileData.roleName ||
-          profileData.userRole ||
-          profileData?.roleInfo ||
-          "";
-        setUserRole(detectedRole || "");
       }
     } catch (error) {
       // console.error("Error fetching user data:", error);
@@ -910,346 +868,6 @@ const ProfilePage = () => {
     }
   };
 
-  const stopQrScanner = useCallback(() => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.srcObject = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    barcodeDetectorRef.current = null;
-    if (zxingControlsRef.current) {
-      try {
-        zxingControlsRef.current.stop();
-      } catch (error) {
-        console.log("Error stopping ZXing controls:", error);
-      }
-      zxingControlsRef.current = null;
-    }
-    // ZXing reader doesn't need reset, just set to null
-    zxingReaderRef.current = null;
-    setIsProcessingQr(false);
-  }, []);
-
-  const submitQrPayload = useCallback(
-    async (payload) => {
-      try {
-        const res = await api.post("/reservations/qr-check", payload);
-        const message =
-          res.data?.message || "Check-in bằng QR thành công";
-        
-        // Stop scanner first to clean up resources
-        stopQrScanner();
-        
-        // Close the modal
-        setIsQrScannerOpen(false);
-        
-        // Show success message
-        setPopup({
-          isOpen: true,
-          message,
-          type: "success",
-        });
-        
-        // Reload reservations
-        await loadReservations();
-        
-        setIsProcessingQr(false);
-      } catch (error) {
-        const errMessage =
-          error.response?.data?.message ||
-          "Không thể xác thực mã QR. Vui lòng thử lại.";
-        setQrScanError(errMessage);
-        setIsProcessingQr(false);
-      }
-    },
-    [loadReservations, stopQrScanner]
-  );
-
-  const handleQrPayload = useCallback(
-    async (rawValue) => {
-      try {
-        const parsed =
-          typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
-        if (!parsed?.reservationId || !parsed?.hash) {
-          throw new Error("INVALID_QR_DATA");
-        }
-        await submitQrPayload(parsed);
-      } catch (error) {
-        const isInvalid = error.message === "INVALID_QR_DATA";
-        setQrScanError(
-          isInvalid
-            ? "Dữ liệu QR không hợp lệ. Vui lòng quét lại mã chính xác."
-            : "Không thể đọc mã QR. Hãy giữ chắc thiết bị và thử lại."
-        );
-        setIsProcessingQr(false);
-      }
-    },
-    [submitQrPayload]
-  );
-
-  const scanVideoFrame = useCallback(async () => {
-    if (
-      !barcodeDetectorRef.current ||
-      !videoRef.current ||
-      !isQrScannerOpen
-    ) {
-      return;
-    }
-
-    if (videoRef.current.readyState < 2) {
-      animationFrameRef.current = requestAnimationFrame(() => {
-        scanVideoFrame();
-      });
-      return;
-    }
-
-    try {
-      const bitmap = await createImageBitmap(videoRef.current);
-      const barcodes = await barcodeDetectorRef.current.detect(bitmap);
-      bitmap.close();
-
-      if (barcodes.length && !processingRef.current) {
-        setIsProcessingQr(true);
-        processingRef.current = true;
-        await handleQrPayload(barcodes[0].rawValue);
-      }
-    } catch (error) {
-      console.error("QR detect error:", error);
-    } finally {
-      if (barcodeDetectorRef.current && isQrScannerOpen) {
-        animationFrameRef.current = requestAnimationFrame(() => {
-          scanVideoFrame();
-        });
-      }
-    }
-  }, [handleQrPayload, isProcessingQr, isQrScannerOpen]);
-
-  const startBarcodeDetectorScanner = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setQrScanError("Thiết bị không hỗ trợ camera.");
-      return;
-    }
-
-    // Check if running in secure context (HTTPS or localhost)
-    if (!window.isSecureContext) {
-      setQrScanError("Camera chỉ hoạt động trên HTTPS hoặc localhost.");
-      return;
-    }
-
-    try {
-      barcodeDetectorRef.current = new window.BarcodeDetector({
-        formats: ["qr_code"],
-      });
-    } catch (error) {
-      setQrScanError(
-        "Không thể khởi tạo trình quét. Vui lòng cập nhật trình duyệt."
-      );
-      return;
-    }
-
-    try {
-      console.log("Requesting camera permission...");
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false,
-      });
-      
-      console.log("Camera permission granted, stream:", stream);
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = async () => {
-          try {
-            await videoRef.current.play();
-            console.log("Video started playing");
-            animationFrameRef.current = requestAnimationFrame(() => {
-              scanVideoFrame();
-            });
-          } catch (playError) {
-            console.error("Video play error:", playError);
-            setQrScanError("Không thể phát video từ camera.");
-          }
-        };
-      }
-    } catch (error) {
-      console.error("Camera access error:", error);
-      
-      // Handle specific error types
-      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
-        setQrScanError(
-          "Quyền truy cập camera bị từ chối. Vui lòng cho phép quyền camera trong cài đặt trình duyệt."
-        );
-      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
-        setQrScanError(
-          "Không tìm thấy camera. Vui lòng kiểm tra kết nối camera của thiết bị."
-        );
-      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
-        setQrScanError(
-          "Camera đang được sử dụng bởi ứng dụng khác. Vui lòng đóng các ứng dụng khác và thử lại."
-        );
-      } else if (error.name === "OverconstrainedError" || error.name === "ConstraintNotSatisfiedError") {
-        setQrScanError(
-          "Camera không hỗ trợ các yêu cầu được chỉ định. Đang thử lại với cài đặt cơ bản..."
-        );
-        
-        // Try again with basic constraints
-        try {
-          const basicStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false,
-          });
-          streamRef.current = basicStream;
-          
-          if (videoRef.current) {
-            videoRef.current.srcObject = basicStream;
-            videoRef.current.onloadedmetadata = async () => {
-              try {
-                await videoRef.current.play();
-                console.log("Video started playing with basic constraints");
-                animationFrameRef.current = requestAnimationFrame(() => {
-                  scanVideoFrame();
-                });
-              } catch (playError) {
-                console.error("Video play error:", playError);
-                setQrScanError("Không thể phát video từ camera.");
-              }
-            };
-          }
-        } catch (retryError) {
-          console.error("Retry error:", retryError);
-          setQrScanError("Không thể truy cập camera ngay cả với cài đặt cơ bản.");
-        }
-      } else {
-        setQrScanError(
-          `Lỗi camera: ${error.message || "Vui lòng cho phép quyền sử dụng camera."}`
-        );
-      }
-    }
-  }, [scanVideoFrame]);
-
-  const startZxingScanner = useCallback(async () => {
-    if (!videoRef.current) {
-      setQrScanError("Không tìm thấy phần hiển thị camera để quét.");
-      return;
-    }
-    
-    // Check if running in secure context (HTTPS or localhost)
-    if (!window.isSecureContext) {
-      setQrScanError("Camera chỉ hoạt động trên HTTPS hoặc localhost.");
-      return;
-    }
-    
-    try {
-      console.log("Starting ZXing scanner...");
-      const reader = new BrowserQRCodeReader(undefined, {
-        delayBetweenScanAttempts: 300,
-        delayBetweenScanSuccess: 800,
-      });
-      zxingReaderRef.current = reader;
-      
-      const controls = await reader.decodeFromVideoDevice(
-        undefined,
-        videoRef.current,
-        (result, err, controls) => {
-          if (result && !processingRef.current) {
-            console.log("QR Code detected:", result.getText());
-            processingRef.current = true;
-            setIsProcessingQr(true);
-            handleQrPayload(result.getText());
-          }
-          if (err && err.name !== "NotFoundException") {
-            console.error("ZXing scan error:", err);
-          }
-        }
-      );
-      zxingControlsRef.current = controls;
-      console.log("ZXing scanner started successfully");
-    } catch (error) {
-      console.error("ZXing error:", error);
-      
-      // Handle specific error types
-      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
-        setQrScanError(
-          "Quyền truy cập camera bị từ chối. Vui lòng cho phép quyền camera trong cài đặt trình duyệt."
-        );
-      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
-        setQrScanError(
-          "Không tìm thấy camera. Vui lòng kiểm tra kết nối camera của thiết bị."
-        );
-      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
-        setQrScanError(
-          "Camera đang được sử dụng bởi ứng dụng khác. Vui lòng đóng các ứng dụng khác và thử lại."
-        );
-      } else {
-        setQrScanError(
-          `Không thể mở camera: ${error.message || "Vui lòng kiểm tra quyền camera của trình duyệt."}`
-        );
-      }
-    }
-  }, [handleQrPayload]);
-
-  const startQrScanner = useCallback(async () => {
-    setQrScanError("");
-    setManualQrValue("");
-    setIsProcessingQr(false);
-    processingRef.current = false;
-
-    if (isBarcodeSupported) {
-      await startBarcodeDetectorScanner();
-    } else {
-      await startZxingScanner();
-    }
-  }, [
-    isBarcodeSupported,
-    startBarcodeDetectorScanner,
-    startZxingScanner,
-  ]);
-
-  const handleManualSubmit = async () => {
-    if (!manualQrValue.trim()) {
-      setQrScanError("Vui lòng nhập dữ liệu QR.");
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(manualQrValue.trim());
-      setQrScanError("");
-      setIsProcessingQr(true);
-      await submitQrPayload(parsed);
-    } catch (error) {
-      setQrScanError("Dữ liệu JSON không hợp lệ. Vui lòng kiểm tra lại.");
-      setIsProcessingQr(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isQrScannerOpen) {
-      startQrScanner();
-    } else {
-      stopQrScanner();
-      setManualQrValue("");
-      setQrScanError("");
-    }
-
-    return () => {
-      stopQrScanner();
-    };
-  }, [isQrScannerOpen, startQrScanner, stopQrScanner]);
-
   useEffect(() => {
     // Kiểm tra flag scroll đến lịch sử
     const shouldScroll = sessionStorage.getItem("scrollToHistory");
@@ -1311,245 +929,7 @@ const ProfilePage = () => {
         onSubmit={handleChangePassword}
       />
 
-      {canUseQrTools && isQrScannerOpen && (
-        <div className="qr-scanner-overlay">
-          <div className="qr-scanner-modal">
-            <div className="qr-scanner-header">
-              <div>
-                <h3>Quét mã QR đặt chỗ</h3>
-                <p>Hướng camera vào mã QR khách hàng cung cấp để check-in.</p>
-                {!window.isSecureContext && (
-                  <p style={{ color: '#ff6b6b', fontSize: '0.9em', marginTop: '8px' }}>
-                    ⚠️ Camera yêu cầu kết nối HTTPS hoặc localhost
-                  </p>
-                )}
-              </div>
-              <button
-                className="qr-modal-close"
-                onClick={() => setIsQrScannerOpen(false)}
-                aria-label="Đóng"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {isBarcodeSupported ? (
-              <div className="qr-video-wrapper">
-                <video 
-                  ref={videoRef} 
-                  playsInline 
-                  muted 
-                  autoPlay
-                  style={{ width: '100%', maxWidth: '100%', height: 'auto' }}
-                />
-                <div className="qr-scan-guide" />
-              </div>
-            ) : (
-              <div className="qr-video-wrapper">
-                <video 
-                  ref={videoRef} 
-                  playsInline 
-                  muted 
-                  autoPlay
-                  style={{ width: '100%', maxWidth: '100%', height: 'auto' }}
-                />
-                <div className="qr-scan-guide" />
-              </div>
-            )}
-
-            <div className="qr-status">
-              <span>{qrStatusText}</span>
-              {qrScanError && <p className="qr-error">{qrScanError}</p>}
-            </div>
-
-            <div className="qr-manual-input">
-              <label>Nhập dữ liệu QR (JSON)</label>
-              <textarea
-                rows={3}
-                value={manualQrValue}
-                onChange={(e) => setManualQrValue(e.target.value)}
-                placeholder='{"reservationId":"","hash":""}'
-              />
-              <button
-                className="qr-submit-btn"
-                onClick={handleManualSubmit}
-                disabled={isProcessingQr || !manualQrValue.trim()}
-              >
-                {isProcessingQr ? "Đang gửi..." : "Gửi thủ công"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {canUseQrTools && (
-        <div className="profile-toolbar">
-          <div className="toolbar-info">
-            <span className="role-chip">
-              {(roleDisplayLabel || "STAFF").toUpperCase()}
-            </span>
-            <div>
-              <h3>QR Check-in</h3>
-              <p>Nhân viên có thể quét mã QR của khách hàng để check-in nhanh.</p>
-            </div>
-          </div>
-          <div className="toolbar-actions">
-            <button
-              className="qr-scan-btn"
-              onClick={() => setIsQrScannerOpen(true)}
-            >
-              <QrCode size={18} />
-              Quét QR check-in
-            </button>
-            <button
-              className="qr-refresh-btn"
-              onClick={loadReservations}
-              disabled={txLoading}
-            >
-              <RefreshCcw size={16} />
-              Làm mới dữ liệu
-            </button>
-          </div>
-        </div>
-      )}
-
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
-
-      <section className="profile-section subscription-section">
-        <div className="section-header">
-          <div>
-            <p className="micro-label">Thành viên ưu tiên</p>
-            <h2>Gói hiện tại</h2>
-          </div>
-          <div className="subscription-actions">
-            <button
-              className="link-btn"
-              onClick={() => navigate("/membership")}
-            >
-              Xem bảng giá
-            </button>
-            {currentSubscription && (
-              <button
-                className="ghost-danger"
-                onClick={handleCancelSubscription}
-                disabled={isCancellingSubscription}
-              >
-                {isCancellingSubscription ? "Đang hủy..." : "Hủy gói"}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {subscriptionLoading ? (
-          <div className="subscription-loading">
-            <div className="loading-spinner">Đang tải</div>
-            <p>Đang kiểm tra gói của bạn...</p>
-          </div>
-        ) : subscriptionError ? (
-          <div className="subscription-error">
-            <p>{subscriptionError}</p>
-            <button className="link-btn" onClick={loadSubscriptionData}>
-              Thử lại
-            </button>
-          </div>
-        ) : currentSubscription ? (
-          <div className="subscription-card">
-            <div className="subscription-card__header">
-              <span className="subscription-chip">
-                <Crown size={16} />
-                {activePlan?.name?.split(" - ")?.[0] ||
-                  activePlan?.type ||
-                  currentSubscription.type ||
-                  "Membership"}
-              </span>
-              <span className={`status-chip ${currentSubscription.status}`}>
-                {getSubscriptionStatusLabel(currentSubscription.status)}
-              </span>
-            </div>
-
-            <div className="subscription-card__body">
-              <div>
-                <p className="plan-title">
-                  {activePlan?.name || "Gói thành viên đang hiệu lực"}
-                </p>
-                <div className="price-row">
-                  <span className="price">
-                    {formatSubscriptionPrice(
-                      currentSubscription.price || activePlan?.price
-                    )}
-                  </span>
-                  <span className="price-duration">
-                    /{formatSubscriptionDuration(activePlan?.duration || currentSubscription.duration)}
-                  </span>
-                </div>
-                <p className="date-row">
-                  Hiệu lực: {formatSubscriptionDate(currentSubscription.startDate)}{" "}
-                  - {formatSubscriptionDate(currentSubscription.endDate)}
-                </p>
-              </div>
-              <div className="subscription-card__actions">
-                <button
-                  className="edit-btn"
-                  onClick={() => navigate("/membership")}
-                >
-                  Đổi gói
-                </button>
-                <button
-                  className="ghost-danger"
-                  onClick={handleCancelSubscription}
-                  disabled={isCancellingSubscription}
-                >
-                  {isCancellingSubscription ? "Đang hủy..." : "Hủy gói"}
-                </button>
-              </div>
-            </div>
-
-            <div className="subscription-facts">
-              <div className="fact">
-                <span className="fact-label">Hết hạn</span>
-                <strong>{formatSubscriptionDate(currentSubscription.endDate)}</strong>
-              </div>
-              <div className="fact">
-                <span className="fact-label">Tự động gia hạn</span>
-                <strong>{currentSubscription.autoRenew ? "Bật" : "Tắt"}</strong>
-              </div>
-              <div className="fact">
-                <span className="fact-label">Mã gói</span>
-                <strong>{(planIdentifier || "000000").slice(-6)}</strong>
-              </div>
-            </div>
-
-            <ul className="subscription-features">
-              {subscriptionFeatureTexts.length > 0 ? (
-                subscriptionFeatureTexts.map((text, idx) => (
-                  <li key={idx}>
-                    <CheckCircle size={16} /> <span>{text}</span>
-                  </li>
-                ))
-              ) : (
-                <li className="muted">Các quyền lợi sẽ hiển thị khi gói được kích hoạt.</li>
-              )}
-            </ul>
-          </div>
-        ) : (
-          <div className="subscription-empty">
-            <div>
-              <p className="micro-label">Bạn chưa có gói</p>
-              <h3>Bật chế độ ưu tiên</h3>
-              <p>
-                Giữ chỗ nhanh hơn, hỗ trợ chuyên dụng và minh bạch chi phí cho
-                mọi phiên sạc.
-              </p>
-            </div>
-            <button
-              className="edit-btn"
-              onClick={() => navigate("/membership")}
-            >
-              Chọn gói ngay
-            </button>
-          </div>
-        )}
-      </section>
 
       <section className="profile-section user-info">
         <div className="section-header">
@@ -2229,6 +1609,142 @@ const ProfilePage = () => {
               disabled={currentPage === totalPages}
             >
               Sau →
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section className="profile-section subscription-section">
+        <div className="section-header">
+          <div>
+            <p className="micro-label">Thành viên ưu tiên</p>
+            <h2>Gói hiện tại</h2>
+          </div>
+          <div className="subscription-actions">
+            <button
+              className="link-btn"
+              onClick={() => navigate("/membership")}
+            >
+              Xem bảng giá
+            </button>
+            {currentSubscription && (
+              <button
+                className="ghost-danger"
+                onClick={handleCancelSubscription}
+                disabled={isCancellingSubscription}
+              >
+                {isCancellingSubscription ? "Đang hủy..." : "Hủy gói"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {subscriptionLoading ? (
+          <div className="subscription-loading">
+            <div className="loading-spinner">Đang tải</div>
+            <p>Đang kiểm tra gói của bạn...</p>
+          </div>
+        ) : subscriptionError ? (
+          <div className="subscription-error">
+            <p>{subscriptionError}</p>
+            <button className="link-btn" onClick={loadSubscriptionData}>
+              Thử lại
+            </button>
+          </div>
+        ) : currentSubscription ? (
+          <div className="subscription-card">
+            <div className="subscription-card__header">
+              <span className="subscription-chip">
+                <Crown size={16} />
+                {activePlan?.name?.split(" - ")?.[0] ||
+                  activePlan?.type ||
+                  currentSubscription.type ||
+                  "Membership"}
+              </span>
+              <span className={`status-chip ${currentSubscription.status}`}>
+                {getSubscriptionStatusLabel(currentSubscription.status)}
+              </span>
+            </div>
+
+            <div className="subscription-card__body">
+              <div>
+                <p className="plan-title">
+                  {activePlan?.name || "Gói thành viên đang hiệu lực"}
+                </p>
+                <div className="price-row">
+                  <span className="price">
+                    {formatSubscriptionPrice(
+                      currentSubscription.price || activePlan?.price
+                    )}
+                  </span>
+                  <span className="price-duration">
+                    /{formatSubscriptionDuration(activePlan?.duration || currentSubscription.duration)}
+                  </span>
+                </div>
+                <p className="date-row">
+                  Hiệu lực: {formatSubscriptionDate(currentSubscription.startDate)}{" "}
+                  - {formatSubscriptionDate(currentSubscription.endDate)}
+                </p>
+              </div>
+              <div className="subscription-card__actions">
+                <button
+                  className="edit-btn"
+                  onClick={() => navigate("/membership")}
+                >
+                  Đổi gói
+                </button>
+                <button
+                  className="ghost-danger"
+                  onClick={handleCancelSubscription}
+                  disabled={isCancellingSubscription}
+                >
+                  {isCancellingSubscription ? "Đang hủy..." : "Hủy gói"}
+                </button>
+              </div>
+            </div>
+
+            <div className="subscription-facts">
+              <div className="fact">
+                <span className="fact-label">Hết hạn</span>
+                <strong>{formatSubscriptionDate(currentSubscription.endDate)}</strong>
+              </div>
+              <div className="fact">
+                <span className="fact-label">Tự động gia hạn</span>
+                <strong>{currentSubscription.autoRenew ? "Bật" : "Tắt"}</strong>
+              </div>
+              <div className="fact">
+                <span className="fact-label">Mã gói</span>
+                <strong>{(planIdentifier || "000000").slice(-6)}</strong>
+              </div>
+            </div>
+
+            <ul className="subscription-features">
+              {subscriptionFeatureTexts.length > 0 ? (
+                subscriptionFeatureTexts.map((text, idx) => (
+                  <li key={idx}>
+                    <CheckCircle size={16} /> <span>{text}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="muted">Các quyền lợi sẽ hiển thị khi gói được kích hoạt.</li>
+              )}
+            </ul>
+          </div>
+        ) : (
+          <div className="subscription-empty">
+            <div>
+              <p className="micro-label">Bạn chưa có gói</p>
+              <h3>Bật chế độ ưu tiên</h3>
+              <p>
+                Giữ chỗ nhanh hơn, hỗ trợ chuyên dụng và minh bạch chi phí cho
+                mọi phiên sạc.
+              </p>
+            </div>
+            <button
+              className="edit-btn"
+              onClick={() => navigate("/membership")}
+            >
+              Chọn gói ngay
             </button>
           </div>
         )}

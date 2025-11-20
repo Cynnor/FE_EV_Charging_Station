@@ -1,49 +1,65 @@
+// Modern staff theme tokens
+$page-bg: linear-gradient(135deg, #f9fbf8 0%, #f1f5f9 45%, #eefcf3 100%);
+$card-bg: #ffffff;
+$border: #e2e8f0;
+$shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+$text: #0f172a;
+$muted: #64748b;
+$accent: #16a34a;
+
 .reports-content {
+    padding: 28px;
+    background: $page-bg;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
     .reports-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 32px;
         padding: 24px;
-        background: white;
+        background: $card-bg;
         border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid #f1f5f9;
+        box-shadow: $shadow;
+        border: 1px solid $border;
 
         .header-left {
             h2 {
                 margin: 0 0 4px 0;
                 font-size: 24px;
                 font-weight: 700;
-                color: #1e293b;
+                color: $text;
             }
 
             p {
                 margin: 0;
-                color: #64748b;
+                color: $muted;
                 font-size: 14px;
             }
         }
 
         .header-right {
             .btn-primary {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 12px 24px;
-                background: linear-gradient(135deg, #7ed321, #a3e635);
-                border: none;
-                border-radius: 12px;
-                color: white;
-                font-size: 14px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, $accent, #4f46e5);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
 
-                &:hover {
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
-                }
+            &:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+            }
 
                 .icon {
                     font-size: 16px;
@@ -56,11 +72,11 @@
         display: flex;
         gap: 8px;
         margin-bottom: 24px;
-        background: white;
+        background: $card-bg;
         padding: 8px;
         border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid #f1f5f9;
+        box-shadow: $shadow;
+        border: 1px solid $border;
 
         .tab {
             flex: 1;
@@ -72,21 +88,21 @@
             background: none;
             border: none;
             border-radius: 8px;
-            color: #64748b;
+            color: $muted;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
 
             &:hover {
-                background: #f8fafc;
-                color: #475569;
+                background: #eef2ff;
+                color: $text;
             }
 
             &.active {
-                background: linear-gradient(135deg, #7ed321, #a3e635);
+                background: linear-gradient(135deg, $accent, #4f46e5);
                 color: white;
-                box-shadow: 0 2px 8px rgba(126, 211, 33, 0.3);
+                box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
             }
 
             .icon {

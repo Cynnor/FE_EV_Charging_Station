@@ -2,20 +2,19 @@
 $primary-color: #22c55e;
 $primary-dark: #15803d;
 $accent-color: #38bdf8;
-$bg-deep: #050b18;
-$card: rgba(255, 255, 255, 0.04);
-$card-strong: rgba(255, 255, 255, 0.07);
-$border-color: rgba(255, 255, 255, 0.1);
-$text-primary: #e2e8f0;
-$text-secondary: #9fb3c8;
+$bg-surface: #ffffff;
+$bg-tint: #f8fafc;
+$card: #ffffff;
+$card-strong: #f8fafc;
+$border-color: #e2e8f0;
+$text-primary: #0f172a;
+$text-secondary: #475569;
+$shadow-soft: 0 14px 40px rgba(15, 23, 42, 0.08);
 
 .membership-page {
   min-height: 100vh;
   padding: 110px 20px 120px;
-  background:
-    radial-gradient(circle at 12% 20%, rgba(56, 189, 248, 0.12), transparent 28%),
-    radial-gradient(circle at 88% 10%, rgba(34, 197, 94, 0.14), transparent 26%),
-    linear-gradient(145deg, #030712 0%, #0a1224 50%, #050b18 100%);
+  background: linear-gradient(140deg, #ffffff 0%, #f8fafc 45%, #eef2ff 100%);
   color: $text-primary;
   position: relative;
   overflow: hidden;
@@ -25,7 +24,7 @@ $text-secondary: #9fb3c8;
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 30% 80%, rgba(34, 197, 94, 0.08), transparent 35%);
+    background: radial-gradient(circle at 30% 80%, rgba(34, 197, 94, 0.06), transparent 35%);
     pointer-events: none;
   }
 
@@ -96,16 +95,15 @@ $text-secondary: #9fb3c8;
     background: $card;
     border-radius: 28px;
     border: 1px solid $border-color;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(14px);
+    box-shadow: $shadow-soft;
 
     .hero-pill {
       display: inline-flex;
       padding: 8px 14px;
       border-radius: 999px;
       background: rgba(56, 189, 248, 0.12);
-      color: $text-primary;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: $text-secondary;
+      border: 1px solid $border-color;
       font-weight: 700;
       letter-spacing: 0.5px;
     }
@@ -145,7 +143,7 @@ $text-secondary: #9fb3c8;
 
     .primary-btn {
       background: linear-gradient(120deg, $primary-color 0%, $primary-dark 100%);
-      color: #0b2414;
+      color: #ffffff;
       box-shadow: 0 10px 30px rgba(34, 197, 94, 0.35);
 
       &:hover {
@@ -157,11 +155,11 @@ $text-secondary: #9fb3c8;
     .ghost-btn {
       background: transparent;
       color: $text-primary;
-      border-color: $border-color;
+      border-color: #cbd5e1;
 
       &:hover {
-        border-color: rgba(255, 255, 255, 0.25);
-        color: #ffffff;
+        border-color: $primary-color;
+        color: $primary-dark;
         transform: translateY(-1px);
       }
     }
@@ -188,11 +186,10 @@ $text-secondary: #9fb3c8;
 
   .hero-panel {
     padding: 30px;
-    background: linear-gradient(160deg, rgba(34, 197, 94, 0.16), rgba(56, 189, 248, 0.12));
+    background: linear-gradient(160deg, rgba(34, 197, 94, 0.14), rgba(56, 189, 248, 0.1));
     border-radius: 28px;
     border: 1px solid $border-color;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(12px);
+    box-shadow: $shadow-soft;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -206,12 +203,12 @@ $text-secondary: #9fb3c8;
         width: 56px;
         height: 56px;
         border-radius: 16px;
-        background: rgba(255, 255, 255, 0.1);
+        background: #e2f7ec;
         display: grid;
         place-items: center;
         color: #facc15;
         font-size: 1.35rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid #bbf7d0;
       }
 
       .panel-label {
@@ -235,7 +232,7 @@ $text-secondary: #9fb3c8;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 
       .metric {
-        background: $card;
+        background: $bg-tint;
         border: 1px solid $border-color;
         border-radius: 16px;
         padding: 14px 16px;
@@ -260,7 +257,7 @@ $text-secondary: #9fb3c8;
     }
 
     .panel-footer {
-      background: $card;
+      background: $bg-tint;
       border-radius: 16px;
       padding: 14px 16px;
       border: 1px dashed $border-color;
@@ -274,7 +271,7 @@ $text-secondary: #9fb3c8;
         padding: 6px 10px;
         border-radius: 10px;
         background: rgba(34, 197, 94, 0.16);
-        color: $text-primary;
+        color: $primary-dark;
         font-weight: 700;
         border: 1px solid rgba(34, 197, 94, 0.25);
         margin-bottom: 6px;
@@ -304,7 +301,7 @@ $text-secondary: #9fb3c8;
     grid-template-columns: auto 1fr;
     gap: 12px;
     align-items: start;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+    box-shadow: $shadow-soft;
 
     .value-icon {
       width: 42px;
@@ -346,7 +343,7 @@ $text-secondary: #9fb3c8;
   }
 
   .plan-card {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+    background: $card;
     border: 1px solid $border-color;
     border-radius: 22px;
     padding: 26px 22px;
@@ -355,22 +352,22 @@ $text-secondary: #9fb3c8;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.25);
+    box-shadow: $shadow-soft;
     transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 
     &::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.12), transparent 40%);
+      background: radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.08), transparent 40%);
       opacity: 0;
       transition: opacity 0.3s ease;
     }
 
     &:hover {
       transform: translateY(-6px);
-      border-color: rgba(34, 197, 94, 0.3);
-      box-shadow: 0 26px 70px rgba(34, 197, 94, 0.18);
+      border-color: rgba(34, 197, 94, 0.4);
+      box-shadow: 0 24px 60px rgba(34, 197, 94, 0.12);
 
       &::after {
         opacity: 1;
@@ -379,7 +376,7 @@ $text-secondary: #9fb3c8;
 
     &.featured {
       border-color: rgba(34, 197, 94, 0.4);
-      box-shadow: 0 26px 80px rgba(34, 197, 94, 0.24);
+      box-shadow: 0 26px 70px rgba(34, 197, 94, 0.16);
     }
 
     &.current {
@@ -391,7 +388,7 @@ $text-secondary: #9fb3c8;
       top: 16px;
       right: 16px;
       background: $primary-color;
-      color: #0b2414;
+      color: #ffffff;
       padding: 6px 10px;
       border-radius: 12px;
       font-weight: 800;
@@ -443,7 +440,7 @@ $text-secondary: #9fb3c8;
       grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
       gap: 8px;
       padding: 6px;
-      background: rgba(255, 255, 255, 0.04);
+      background: $bg-tint;
       border-radius: 12px;
       border: 1px solid $border-color;
 
@@ -469,24 +466,24 @@ $text-secondary: #9fb3c8;
       transition: all 0.2s ease;
 
       &:hover {
-        border-color: rgba(255, 255, 255, 0.28);
+        border-color: $primary-color;
         transform: translateY(-1px);
       }
 
       &.active {
         background: linear-gradient(130deg, $primary-color, $primary-dark);
-        color: #0b2414;
+        color: #ffffff;
         border-color: transparent;
-        box-shadow: 0 12px 30px rgba(34, 197, 94, 0.4);
+        box-shadow: 0 12px 30px rgba(34, 197, 94, 0.35);
       }
 
       .savings-badge {
         font-size: 0.7rem;
         padding: 4px 8px;
-        background: rgba(255, 255, 255, 0.14);
+        background: $card-strong;
         border-radius: 999px;
         border: 1px solid $border-color;
-        color: inherit;
+        color: $text-secondary;
         letter-spacing: 0.6px;
       }
     }
@@ -577,24 +574,24 @@ $text-secondary: #9fb3c8;
 
   .subscribe-btn {
     background: linear-gradient(120deg, $primary-color, $primary-dark);
-    color: #0b2414;
-    box-shadow: 0 16px 40px rgba(34, 197, 94, 0.28);
+    color: #ffffff;
+    box-shadow: 0 16px 40px rgba(34, 197, 94, 0.22);
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 22px 46px rgba(34, 197, 94, 0.36);
+      box-shadow: 0 22px 46px rgba(34, 197, 94, 0.28);
     }
   }
 
   .current-btn {
-    background: rgba(34, 197, 94, 0.18);
-    border-color: $border-color;
-    color: $text-primary;
+    background: #e7f7ed;
+    border-color: #cbd5e1;
+    color: $primary-dark;
     cursor: not-allowed;
   }
 
   .unavailable-btn {
-    background: rgba(255, 255, 255, 0.04);
+    background: $bg-tint;
     color: $text-secondary;
     border-color: $border-color;
     cursor: not-allowed;
@@ -618,7 +615,7 @@ $text-secondary: #9fb3c8;
     border: 1px solid $border-color;
     border-radius: 18px;
     padding: 18px 18px 16px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+    box-shadow: $shadow-soft;
     position: relative;
     overflow: hidden;
 
@@ -644,8 +641,8 @@ $text-secondary: #9fb3c8;
       position: absolute;
       bottom: 12px;
       right: 12px;
-      color: rgba(255, 255, 255, 0.6);
-      opacity: 0.7;
+      color: $text-secondary;
+      opacity: 0.6;
     }
   }
 
@@ -664,7 +661,7 @@ $text-secondary: #9fb3c8;
     width: 54px;
     height: 54px;
     border-radius: 50%;
-    border: 4px solid rgba(255, 255, 255, 0.12);
+    border: 4px solid #e2e8f0;
     border-top-color: $primary-color;
     animation: spin 1s linear infinite;
   }
@@ -695,12 +692,12 @@ $text-secondary: #9fb3c8;
   }
 
   .payment-modal {
-    background: #0b1629;
+    background: $card;
     border-radius: 18px;
     padding: 26px;
     width: min(520px, 92%);
     border: 1px solid $border-color;
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 30px 70px rgba(15, 23, 42, 0.14);
     color: $text-primary;
 
     .modal-header {
@@ -724,7 +721,7 @@ $text-secondary: #9fb3c8;
         cursor: pointer;
 
         &:hover {
-          border-color: rgba(255, 255, 255, 0.2);
+          border-color: $primary-color;
         }
       }
     }

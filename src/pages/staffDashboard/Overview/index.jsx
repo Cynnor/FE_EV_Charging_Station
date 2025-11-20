@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import "./index.scss";
 import api from "../../../config/api";
+import StaffQrCheckin from "../../../components/staffQrCheckin";
 
 const OverviewStaff = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -553,6 +554,7 @@ const OverviewStaff = () => {
 
     return (
         <div className="staff-overview-content">
+            <StaffQrCheckin />
             {/* Search Bar */}
             <div className="search-section">
                 <div className="search-bar">

@@ -1,26 +1,44 @@
+// Modern staff theme tokens (green/white)
+$page-bg: linear-gradient(135deg, #f9fbf8 0%, #f1f5f9 50%, #eefcf3 100%);
+$card-bg: #ffffff;
+$border: #e2e8f0;
+$shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+$text: #0f172a;
+$muted: #64748b;
+$accent: #16a34a;
+$success: #16a34a;
+
 .charging-sessions-content {
+    padding: 28px;
+    background: $page-bg;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+
     .sessions-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 32px;
         padding: 24px;
-        background: white;
+        background: $card-bg;
         border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid #f1f5f9;
+        box-shadow: $shadow;
+        border: 1px solid $border;
 
         .header-left {
             h2 {
                 margin: 0 0 4px 0;
                 font-size: 24px;
                 font-weight: 700;
-                color: #1e293b;
+                color: $text;
             }
 
             p {
                 margin: 0;
-                color: #64748b;
+                color: $muted;
                 font-size: 14px;
             }
         }
@@ -31,7 +49,7 @@
                 align-items: center;
                 gap: 8px;
                 padding: 12px 24px;
-                background: linear-gradient(135deg, #7ed321, #a3e635);
+                background: linear-gradient(135deg, $accent, #4f46e5);
                 border: none;
                 border-radius: 12px;
                 color: white;
@@ -42,7 +60,7 @@
 
                 &:hover {
                     transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
+                    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
                 }
 
                 .icon {
@@ -56,11 +74,11 @@
         display: flex;
         gap: 8px;
         margin-bottom: 24px;
-        background: white;
+        background: $card-bg;
         padding: 8px;
         border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid #f1f5f9;
+        box-shadow: $shadow;
+        border: 1px solid $border;
 
         .tab {
             flex: 1;
@@ -72,21 +90,21 @@
             background: none;
             border: none;
             border-radius: 8px;
-            color: #64748b;
+            color: $muted;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
 
             &:hover {
-                background: #f8fafc;
-                color: #475569;
+                background: #eef2ff;
+                color: #1f2937;
             }
 
             &.active {
-                background: linear-gradient(135deg, #7ed321, #a3e635);
+                background: linear-gradient(135deg, $accent, #4f46e5);
                 color: white;
-                box-shadow: 0 2px 8px rgba(126, 211, 33, 0.3);
+                box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
             }
 
             .icon {
@@ -99,20 +117,21 @@
         .current-sessions {
             .sessions-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-                gap: 24px;
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: 18px;
+                width: 100%;
 
                 .session-card {
-                    background: white;
+                    background: $card-bg;
                     border-radius: 16px;
                     padding: 24px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                    border: 1px solid #f1f5f9;
+                    box-shadow: $shadow;
+                    border: 1px solid $border;
                     transition: all 0.3s ease;
 
                     &:hover {
                         transform: translateY(-2px);
-                        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+                        box-shadow: 0 16px 36px rgba(79, 70, 229, 0.14);
                     }
 
                     .card-header {
@@ -131,13 +150,13 @@
                             .station-id {
                                 font-size: 14px;
                                 font-weight: 600;
-                                color: #64748b;
+                                color: $muted;
                             }
 
                             .license-plate {
                                 font-size: 18px;
                                 font-weight: 700;
-                                color: #7ed321;
+                                color: $accent;
                             }
                         }
 
@@ -147,13 +166,13 @@
                             gap: 8px;
                             font-size: 14px;
                             font-weight: 500;
-                            color: #059669;
+                            color: $success;
 
                             .status-dot {
                                 width: 8px;
                                 height: 8px;
                                 border-radius: 50%;
-                                background: #059669;
+                                background: $success;
                                 animation: pulse 2s infinite;
                             }
                         }
@@ -170,13 +189,13 @@
 
                             .label {
                                 font-size: 13px;
-                                color: #64748b;
+                                color: $muted;
                             }
 
                             .value {
                                 font-size: 14px;
                                 font-weight: 600;
-                                color: #1e293b;
+                                color: $text;
                             }
                         }
                     }
@@ -195,18 +214,18 @@
                                 justify-content: space-between;
                                 align-items: center;
                                 padding: 8px 12px;
-                                background: #f8fafc;
+                                background: #f1f5f9;
                                 border-radius: 8px;
 
                                 .label {
                                     font-size: 12px;
-                                    color: #64748b;
+                                    color: $muted;
                                 }
 
                                 .value {
                                     font-size: 13px;
                                     font-weight: 600;
-                                    color: #1e293b;
+                                    color: $text;
                                 }
                             }
                         }
@@ -223,26 +242,26 @@
 
                             .label {
                                 font-size: 13px;
-                                color: #64748b;
+                                color: $muted;
                             }
 
                             .percentage {
                                 font-size: 14px;
                                 font-weight: 600;
-                                color: #7ed321;
+                                color: $accent;
                             }
                         }
 
                         .progress-bar {
                             width: 100%;
                             height: 8px;
-                            background: #e2e8f0;
+                            background: #e5e7eb;
                             border-radius: 4px;
                             overflow: hidden;
 
                             .progress-fill {
                                 height: 100%;
-                                background: linear-gradient(90deg, #7ed321, #a3e635);
+                                background: linear-gradient(90deg, $accent, #4f46e5);
                                 border-radius: 4px;
                                 transition: width 0.3s ease;
                             }
@@ -252,9 +271,9 @@
                     .cost-section {
                         margin-bottom: 20px;
                         padding: 16px;
-                        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+                        background: linear-gradient(135deg, #e0f2fe, #eef2ff);
                         border-radius: 12px;
-                        border: 1px solid #bbf7d0;
+                        border: 1px solid #d7e3ff;
 
                         .estimated-cost {
                             display: flex;
@@ -282,25 +301,25 @@
                         .btn-secondary {
                             flex: 1;
                             padding: 12px 16px;
-                            background: #f1f5f9;
-                            border: 1px solid #e2e8f0;
+                            background: #eef2ff;
+                            border: 1px solid $border;
                             border-radius: 8px;
-                            color: #64748b;
+                            color: $muted;
                             font-size: 14px;
                             font-weight: 500;
                             cursor: pointer;
                             transition: all 0.2s;
 
                             &:hover {
-                                background: #e2e8f0;
-                                color: #475569;
+                                background: #e0e7ff;
+                                color: $text;
                             }
                         }
 
                         .btn-primary {
                             flex: 1;
                             padding: 12px 16px;
-                            background: linear-gradient(135deg, #7ed321, #a3e635);
+                            background: linear-gradient(135deg, $accent, #4f46e5);
                             border: none;
                             border-radius: 8px;
                             color: white;
@@ -311,7 +330,7 @@
 
                             &:hover {
                                 transform: translateY(-1px);
-                                box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
+                                box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25);
                             }
                         }
                     }
@@ -323,20 +342,21 @@
             .sessions-table {
                 background: white;
                 border-radius: 16px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                border: 1px solid #f1f5f9;
+                box-shadow: $shadow;
+                border: 1px solid $border;
                 overflow: hidden;
+                width: 100%;
 
                 .table-header {
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1.5fr 1.5fr 1fr 1fr 1fr 1fr;
+                    grid-template-columns: 1.2fr 1fr 1.2fr 1.2fr 1fr;
                     gap: 16px;
                     padding: 20px 24px;
-                    background: #f8fafc;
-                    border-bottom: 1px solid #e2e8f0;
+                    background: #f7fbf7;
+                    border-bottom: 1px solid $border;
                     font-size: 13px;
                     font-weight: 600;
-                    color: #475569;
+                    color: $muted;
 
                     .col {
                         text-align: left;
@@ -346,14 +366,14 @@
                 .table-body {
                     .table-row {
                         display: grid;
-                        grid-template-columns: 1fr 1fr 1.5fr 1.5fr 1fr 1fr 1fr 1fr;
+                        grid-template-columns: 1.2fr 1fr 1.2fr 1.2fr 1fr;
                         gap: 16px;
                         padding: 20px 24px;
-                        border-bottom: 1px solid #f1f5f9;
+                        border-bottom: 1px solid $border;
                         transition: background 0.2s;
 
                         &:hover {
-                            background: #f8fafc;
+                            background: #f7fbf7;
                         }
 
                         &:last-child {
@@ -367,12 +387,12 @@
 
                             .station-id {
                                 font-weight: 600;
-                                color: #64748b;
+                                color: $muted;
                             }
 
                             .license-plate {
                                 font-weight: 700;
-                                color: #7ed321;
+                                color: $accent;
                             }
 
                             .customer-info {
@@ -399,12 +419,12 @@
                                 .start,
                                 .end {
                                     font-weight: 500;
-                                    color: #1e293b;
+                                    color: $text;
                                 }
 
                                 .duration {
                                     font-size: 12px;
-                                    color: #64748b;
+                                    color: $muted;
                                 }
                             }
 
@@ -415,7 +435,7 @@
 
                             .cost {
                                 font-weight: 700;
-                                color: #7ed321;
+                                color: $accent;
                             }
 
                             .payment-method {
@@ -441,13 +461,13 @@
                                 gap: 6px;
                                 font-size: 12px;
                                 font-weight: 500;
-                                color: #059669;
+                                color: $success;
 
                                 .status-dot {
                                     width: 6px;
                                     height: 6px;
                                     border-radius: 50%;
-                                    background: #059669;
+                                    background: $success;
                                 }
                             }
                         }
