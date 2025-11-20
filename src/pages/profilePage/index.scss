@@ -1517,12 +1517,93 @@ $shadow-lg: rgba(0, 0, 0, 0.15);
 }
 
 // Form Grid for Vehicle Section
+
 .vehicle-section {
   .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
-    margin-bottom: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .vehicle-edit-form {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 24px;
+    padding: 22px;
+    box-shadow:
+      0 15px 35px rgba(15, 118, 110, 0.15),
+      0 10px 25px rgba(59, 130, 246, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    .form-group {
+      background: $light-bg;
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+
+      .form-label-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        span {
+          font-weight: 700;
+          color: $text-primary;
+        }
+
+        small {
+          color: $text-muted;
+          font-size: 0.8rem;
+        }
+      }
+
+      input,
+      select {
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        color: $text-primary;
+        background: white;
+        box-shadow: 0 1px 3px rgba(15, 118, 110, 0.08);
+        transition: all 0.25s ease;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-green;
+          box-shadow:
+            0 0 0 3px rgba(16, 185, 129, 0.15),
+            0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        &::placeholder {
+          color: $text-muted;
+        }
+
+        &.error {
+          border-color: $error;
+          background: #fef2f2;
+        }
+      }
+
+      .error-message {
+        color: $error;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+    }
+
+    .edit-actions {
+      justify-content: flex-end;
+      margin-top: 0;
+    }
   }
 }
 

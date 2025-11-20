@@ -33,6 +33,7 @@ const ProfilePage = () => {
   const [isEditingVehicle, setIsEditingVehicle] = useState(false);
   const [vehicleErrors, setVehicleErrors] = useState({});
   const [defaultVehicleId, setDefaultVehicleId] = useState(null);
+  const [editingVehicleId, setEditingVehicleId] = useState(null);
 
   // ===== Station mapping =====
   const [stationMap, setStationMap] = useState({});
@@ -602,7 +603,8 @@ const ProfilePage = () => {
   const handleVehicleSave = async () => {
     if (!validateVehicle()) return;
     try {
-      const vehicleId = selectedVehicle?.id || selectedVehicle?._id;
+      const vehicleId =
+        editingVehicleId || selectedVehicle?.id || selectedVehicle?._id;
       const endpoint = vehicleId ? `/vehicles/${vehicleId}` : "/vehicles";
       const method = vehicleId ? api.put : api.post;
       const payload = {
@@ -641,6 +643,7 @@ const ProfilePage = () => {
       showPopup("Lưu thông tin xe thành công!", "success");
       setIsEditingVehicle(false);
       setSelectedVehicle(null);
+      setEditingVehicleId(null);
     } catch (error) {
       // console.error("Error saving vehicle:", error);
       showPopup("Không thể lưu thông tin xe, vui lòng thử lại!", "error");
@@ -1397,6 +1400,7 @@ const ProfilePage = () => {
               className="edit-btn"
               onClick={() => {
                 setSelectedVehicle({});
+                setEditingVehicleId(null);
                 setIsEditingVehicle(true);
               }}
             >
@@ -1411,14 +1415,20 @@ const ProfilePage = () => {
           </p>
         ) : !isEditingVehicle ? (
           <div className="vehicles-grid">
-            {vehicles.map((vehicle) => (
+            {vehicles.map((vehicle, index) => (
               <div
-                key={vehicle.id}
+                key={
+                  vehicle.id ||
+                  vehicle._id ||
+                  vehicle.plateNumber ||
+                  `vehicle-${index}`
+                }
                 className={`vehicle-card ${
                   defaultVehicleId === vehicle.id ? "default-vehicle" : ""
                 }`}
                 onClick={() => {
-                  setSelectedVehicle(vehicle);
+                  setSelectedVehicle({ ...vehicle });
+                  setEditingVehicleId(vehicle.id || vehicle._id || null);
                   localStorage.setItem("vehicleId", vehicle.id);
                 }}
               >
@@ -1455,10 +1465,6 @@ const ProfilePage = () => {
                   <p>
                     <b>Màu xe:</b>
                     <span>{vehicle.color || "Chưa cập nhật"}</span>
-                  </p>
-                  <p>
-                    <b>Số khung (VIN):</b>
-                    <span>{vehicle.vin || "Chưa cập nhật"}</span>
                   </p>
                   <p>
                     <b>Loại xe:</b>
@@ -1501,7 +1507,8 @@ const ProfilePage = () => {
                     className="edit-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedVehicle(vehicle);
+                      setSelectedVehicle({ ...vehicle });
+                      setEditingVehicleId(vehicle.id || vehicle._id || null);
                       localStorage.setItem("vehicleId", vehicle.id);
                       setIsEditingVehicle(true);
                     }}
@@ -1516,9 +1523,10 @@ const ProfilePage = () => {
           <div className="edit-form vehicle-edit-form">
             <div className="form-grid">
               <div className="form-group">
-                <label>
-                  <b>Biển số xe:</b>
-                </label>
+                <div className="form-label-block">
+                  <span>Biển số xe</span>
+                  <small>VD: 51H-123.45</small>
+                </div>
                 <input
                   type="text"
                   value={selectedVehicle?.plateNumber || ""}
@@ -1529,7 +1537,7 @@ const ProfilePage = () => {
                     }))
                   }
                   className={vehicleErrors.plateNumber ? "error" : ""}
-                  placeholder="VD: 51H-123.45"
+                  placeholder="51H-123.45"
                 />
                 {vehicleErrors.plateNumber && (
                   <span className="error-message">
@@ -1539,9 +1547,10 @@ const ProfilePage = () => {
               </div>
 
               <div className="form-group">
-                <label>
-                  <b>Hãng xe:</b>
-                </label>
+                <div className="form-label-block">
+                  <span>Hãng xe</span>
+                  <small>VD: VinFast</small>
+                </div>
                 <input
                   type="text"
                   value={selectedVehicle?.make || ""}
@@ -1551,14 +1560,15 @@ const ProfilePage = () => {
                       make: e.target.value,
                     }))
                   }
-                  placeholder="VD: VinFast"
+                  placeholder="VinFast"
                 />
               </div>
 
               <div className="form-group">
-                <label>
-                  <b>Mẫu xe:</b>
-                </label>
+                <div className="form-label-block">
+                  <span>Mẫu xe</span>
+                  <small>VD: VF8</small>
+                </div>
                 <input
                   type="text"
                   value={selectedVehicle?.model || ""}
@@ -1568,14 +1578,15 @@ const ProfilePage = () => {
                       model: e.target.value,
                     }))
                   }
-                  placeholder="VD: VF8"
+                  placeholder="VF8"
                 />
               </div>
 
               <div className="form-group">
-                <label>
-                  <b>Năm sản xuất:</b>
-                </label>
+                <div className="form-label-block">
+                  <span>Năm sản xuất</span>
+                  <small>VD: 2023</small>
+                </div>
                 <input
                   type="number"
                   value={selectedVehicle?.year || ""}
@@ -1585,14 +1596,15 @@ const ProfilePage = () => {
                       year: e.target.value,
                     }))
                   }
-                  placeholder="VD: 2023"
+                  placeholder="2023"
                 />
               </div>
 
               <div className="form-group">
-                <label>
-                  <b>Màu xe:</b>
-                </label>
+                <div className="form-label-block">
+                  <span>Màu xe</span>
+                  <small>VD: White</small>
+                </div>
                 <input
                   type="text"
                   value={selectedVehicle?.color || ""}
@@ -1602,31 +1614,15 @@ const ProfilePage = () => {
                       color: e.target.value,
                     }))
                   }
-                  placeholder="VD: White"
+                  placeholder="White"
                 />
               </div>
 
               <div className="form-group">
-                <label>
-                  <b>Số khung (VIN):</b>
-                </label>
-                <input
-                  type="text"
-                  value={selectedVehicle?.vin || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      vin: e.target.value,
-                    }))
-                  }
-                  placeholder="VD: WVWAA71K08W201030"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <b>Loại xe:</b>
-                </label>
+                <div className="form-label-block">
+                  <span>Loại xe</span>
+                  <small>Chọn loại xe</small>
+                </div>
                 <select
                   value={selectedVehicle?.type || ""}
                   onChange={(e) =>
@@ -1643,9 +1639,10 @@ const ProfilePage = () => {
               </div>
 
               <div className="form-group">
-                <label>
-                  <b>Dung lượng pin (kWh):</b>
-                </label>
+                <div className="form-label-block">
+                  <span>Dung lượng pin (kWh)</span>
+                  <small>VD: 82</small>
+                </div>
                 <input
                   type="number"
                   value={selectedVehicle?.batteryCapacityKwh || ""}
@@ -1655,14 +1652,15 @@ const ProfilePage = () => {
                       batteryCapacityKwh: e.target.value,
                     }))
                   }
-                  placeholder="VD: 82"
+                  placeholder="82"
                 />
               </div>
 
               <div className="form-group">
-                <label>
-                  <b>Loại cổng sạc:</b>
-                </label>
+                <div className="form-label-block">
+                  <span>Loại cổng sạc</span>
+                  <small>Chọn loại cổng sạc</small>
+                </div>
                 <select
                   value={selectedVehicle?.connectorType || ""}
                   onChange={(e) =>
@@ -1688,6 +1686,7 @@ const ProfilePage = () => {
                 onClick={() => {
                   setIsEditingVehicle(false);
                   setSelectedVehicle(null);
+                  setEditingVehicleId(null);
                   setVehicleErrors({});
                 }}
               >
