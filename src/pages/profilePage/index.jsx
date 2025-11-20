@@ -10,6 +10,7 @@ import {
   MapPin,
   X,
   Zap,
+  Crown,
   Calendar,
   Clock,
   CheckCircle,
@@ -70,6 +71,117 @@ const ProfilePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 5;
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [subscriptionPlanMap, setSubscriptionPlanMap] = useState({});
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [subscriptionError, setSubscriptionError] = useState("");
+  const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
+
+  const formatSubscriptionPrice = (value) => {
+    if (value === undefined || value === null) return "0 VNĐ";
+    return new Intl.NumberFormat("vi-VN").format(value) + " VNĐ";
+  };
+
+  const formatSubscriptionDuration = (duration) => {
+    const map = {
+      "1_month": "1 tháng",
+      "6_months": "6 tháng",
+      "12_months": "12 tháng",
+    };
+    return map[duration] || duration || "";
+  };
+
+  const formatSubscriptionDate = (date) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("vi-VN");
+  };
+
+  const getSubscriptionStatusLabel = (status) => {
+    const map = {
+      current_active: "Đang hiệu lực",
+      active: "Có hiệu lực",
+      pending: "Chờ thanh toán",
+      expired: "Đã hết hạn",
+      cancelled: "Đã hủy",
+    };
+    return map[status] || status;
+  };
+
+  const loadSubscriptionData = useCallback(async () => {
+    try {
+      setSubscriptionLoading(true);
+      setSubscriptionError("");
+
+      const [currentRes, plansRes] = await Promise.allSettled([
+        api.get("/subscriptions/current-active"),
+        api.get("/subscription-plans"),
+      ]);
+
+      if (plansRes.status === "fulfilled" && plansRes.value.data?.success) {
+        const plans = plansRes.value.data.data || [];
+        const planMap = plans.reduce((acc, plan) => {
+          if (plan?._id) acc[plan._id] = plan;
+          return acc;
+        }, {});
+        setSubscriptionPlanMap(planMap);
+      }
+
+      if (
+        currentRes.status === "fulfilled" &&
+        currentRes.value.data?.success
+      ) {
+        setCurrentSubscription(currentRes.value.data.data);
+      } else if (
+        currentRes.status === "rejected" &&
+        currentRes.reason?.response?.status === 404
+      ) {
+        setCurrentSubscription(null);
+      } else if (currentRes.status === "rejected") {
+        const message =
+          currentRes.reason?.response?.data?.message ||
+          "Không thể tải gói thành viên.";
+        setSubscriptionError(message);
+        setCurrentSubscription(null);
+      } else {
+        setCurrentSubscription(null);
+      }
+    } catch (error) {
+      const message =
+        error?.response?.data?.message || "Không thể tải gói thành viên.";
+      setSubscriptionError(message);
+      setCurrentSubscription(null);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  }, []);
+
+  const handleCancelSubscription = () => {
+    if (!currentSubscription) return;
+
+    showConfirmPopup(
+      "Bạn chắc chắn muốn hủy gói hiện tại? Bạn vẫn có thể sử dụng đến ngày hết hạn đã thanh toán.",
+      async () => {
+        try {
+          setIsCancellingSubscription(true);
+          const id = currentSubscription._id || currentSubscription.id;
+          await api.post(`/subscriptions/${id}/cancel`);
+          showPopup(
+            "Đã hủy gói thành viên. Bạn vẫn sử dụng được đến hết ngày hiệu lực.",
+            "success"
+          );
+          await loadSubscriptionData();
+        } catch (error) {
+          const message =
+            error?.response?.data?.message ||
+            "Không thể hủy gói thành viên. Vui lòng thử lại.";
+          showPopup(message, "error");
+        } finally {
+          setIsCancellingSubscription(false);
+          closeConfirmPopup();
+        }
+      }
+    );
+  };
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -87,6 +199,10 @@ const ProfilePage = () => {
       typeof window !== "undefined" && "BarcodeDetector" in window
     );
   }, []);
+
+  useEffect(() => {
+    loadSubscriptionData();
+  }, [loadSubscriptionData]);
 
   // Add helper function to normalize reservations
   const normalizeReservations = (reservationList) => {
@@ -576,6 +692,28 @@ const ProfilePage = () => {
       "payment-success": "Thanh toán thành công",
     };
     return statusMap[status] || status;
+  };
+
+  const buildSubscriptionFeatures = (features = {}) => {
+    return Object.entries(features)
+      .map(([key, value]) => {
+        if (key === "maxReservations" && value !== undefined && value !== null) {
+          if (value === -1) return "Đặt lịch không giới hạn";
+          if (value > 0) return `Tối đa ${value} lần đặt lịch/tháng`;
+        }
+        if (key === "maxVehicles" && value !== undefined && value !== null) {
+          if (value === -1) return "Quản lý xe không giới hạn";
+          if (value > 0) return `Tối đa ${value} xe đã lưu`;
+        }
+        if (key === "prioritySupport" && value === true) {
+          return "Hỗ trợ ưu tiên 24/7";
+        }
+        if (key === "discount" && value) {
+          return `Giảm giá ${value}% khi gia hạn`;
+        }
+        return null;
+      })
+      .filter(Boolean);
   };
 
   //   const handleVehicleChange = (field, value) => {
@@ -1135,6 +1273,22 @@ const ProfilePage = () => {
     }
   }, []);
 
+  const rawPlanReference =
+    currentSubscription?.planId ||
+    currentSubscription?.plan?._id ||
+    currentSubscription?.plan;
+  const planIdentifier =
+    typeof rawPlanReference === "string"
+      ? rawPlanReference
+      : rawPlanReference?._id || "";
+  const activePlan = planIdentifier ? subscriptionPlanMap[planIdentifier] : null;
+  const subscriptionFeatures = activePlan?.features
+    || currentSubscription?.features
+    || {};
+  const subscriptionFeatureTexts = buildSubscriptionFeatures(
+    subscriptionFeatures
+  );
+
   return (
     <div className="profile-page dark-theme">
       <CustomPopup
@@ -1260,6 +1414,143 @@ const ProfilePage = () => {
       )}
 
       <h1 className="profile-title">Hồ sơ cá nhân</h1>
+
+      <section className="profile-section subscription-section">
+        <div className="section-header">
+          <div>
+            <p className="micro-label">Thành viên ưu tiên</p>
+            <h2>Gói hiện tại</h2>
+          </div>
+          <div className="subscription-actions">
+            <button
+              className="link-btn"
+              onClick={() => navigate("/membership")}
+            >
+              Xem bảng giá
+            </button>
+            {currentSubscription && (
+              <button
+                className="ghost-danger"
+                onClick={handleCancelSubscription}
+                disabled={isCancellingSubscription}
+              >
+                {isCancellingSubscription ? "Đang hủy..." : "Hủy gói"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {subscriptionLoading ? (
+          <div className="subscription-loading">
+            <div className="loading-spinner">Đang tải</div>
+            <p>Đang kiểm tra gói của bạn...</p>
+          </div>
+        ) : subscriptionError ? (
+          <div className="subscription-error">
+            <p>{subscriptionError}</p>
+            <button className="link-btn" onClick={loadSubscriptionData}>
+              Thử lại
+            </button>
+          </div>
+        ) : currentSubscription ? (
+          <div className="subscription-card">
+            <div className="subscription-card__header">
+              <span className="subscription-chip">
+                <Crown size={16} />
+                {activePlan?.name?.split(" - ")?.[0] ||
+                  activePlan?.type ||
+                  currentSubscription.type ||
+                  "Membership"}
+              </span>
+              <span className={`status-chip ${currentSubscription.status}`}>
+                {getSubscriptionStatusLabel(currentSubscription.status)}
+              </span>
+            </div>
+
+            <div className="subscription-card__body">
+              <div>
+                <p className="plan-title">
+                  {activePlan?.name || "Gói thành viên đang hiệu lực"}
+                </p>
+                <div className="price-row">
+                  <span className="price">
+                    {formatSubscriptionPrice(
+                      currentSubscription.price || activePlan?.price
+                    )}
+                  </span>
+                  <span className="price-duration">
+                    /{formatSubscriptionDuration(activePlan?.duration || currentSubscription.duration)}
+                  </span>
+                </div>
+                <p className="date-row">
+                  Hiệu lực: {formatSubscriptionDate(currentSubscription.startDate)}{" "}
+                  - {formatSubscriptionDate(currentSubscription.endDate)}
+                </p>
+              </div>
+              <div className="subscription-card__actions">
+                <button
+                  className="edit-btn"
+                  onClick={() => navigate("/membership")}
+                >
+                  Đổi gói
+                </button>
+                <button
+                  className="ghost-danger"
+                  onClick={handleCancelSubscription}
+                  disabled={isCancellingSubscription}
+                >
+                  {isCancellingSubscription ? "Đang hủy..." : "Hủy gói"}
+                </button>
+              </div>
+            </div>
+
+            <div className="subscription-facts">
+              <div className="fact">
+                <span className="fact-label">Hết hạn</span>
+                <strong>{formatSubscriptionDate(currentSubscription.endDate)}</strong>
+              </div>
+              <div className="fact">
+                <span className="fact-label">Tự động gia hạn</span>
+                <strong>{currentSubscription.autoRenew ? "Bật" : "Tắt"}</strong>
+              </div>
+              <div className="fact">
+                <span className="fact-label">Mã gói</span>
+                <strong>{(planIdentifier || "000000").slice(-6)}</strong>
+              </div>
+            </div>
+
+            <ul className="subscription-features">
+              {subscriptionFeatureTexts.length > 0 ? (
+                subscriptionFeatureTexts.map((text, idx) => (
+                  <li key={idx}>
+                    <CheckCircle size={16} /> <span>{text}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="muted">Các quyền lợi sẽ hiển thị khi gói được kích hoạt.</li>
+              )}
+            </ul>
+          </div>
+        ) : (
+          <div className="subscription-empty">
+            <div>
+              <p className="micro-label">Bạn chưa có gói</p>
+              <h3>Bật chế độ ưu tiên</h3>
+              <p>
+                Giữ chỗ nhanh hơn, hỗ trợ chuyên dụng và minh bạch chi phí cho
+                mọi phiên sạc.
+              </p>
+            </div>
+            <button
+              className="edit-btn"
+              onClick={() => navigate("/membership")}
+            >
+              Chọn gói ngay
+            </button>
+          </div>
+        )}
+      </section>
+
       <section className="profile-section user-info">
         <div className="section-header">
           <h2>Thông tin người dùng</h2>

@@ -436,6 +436,263 @@ $shadow-lg: rgba(0, 0, 0, 0.15);
   }
 }
 
+.micro-label {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: $text-muted;
+  font-size: 0.75rem;
+  margin: 0 0 6px;
+}
+
+.subscription-section {
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 40%, rgba(16, 185, 129, 0.12), transparent 40%);
+    opacity: 0.8;
+    pointer-events: none;
+  }
+}
+
+.subscription-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.link-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  color: $primary-green-dark;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    background: rgba(16, 185, 129, 0.15);
+  }
+}
+
+.ghost-danger {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.06);
+  color: $error;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(239, 68, 68, 0.12);
+  }
+}
+
+.subscription-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.08));
+  border: 1px solid rgba(16, 185, 129, 0.16);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow:
+    0 18px 40px rgba(16, 185, 129, 0.12),
+    0 8px 18px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.subscription-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.subscription-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: white;
+  color: $primary-green-dark;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+}
+
+.status-chip {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  border: 1px solid $border-strong;
+  background: #fff;
+  color: $text-secondary;
+
+  &.current_active,
+  &.active {
+    border-color: rgba(16, 185, 129, 0.4);
+    color: $primary-green-dark;
+    background: #ecfdf3;
+  }
+
+  &.pending {
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #b45309;
+    background: #fffbeb;
+  }
+
+  &.cancelled,
+  &.expired {
+    border-color: rgba(239, 68, 68, 0.4);
+    color: $error;
+    background: #fef2f2;
+  }
+}
+
+.subscription-card__body {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+
+  .plan-title {
+    margin: 0 0 6px;
+    font-size: 1.35rem;
+    color: $text-primary;
+  }
+
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .price {
+      font-size: 2rem;
+      font-weight: 800;
+      color: $primary-green-dark;
+    }
+
+    .price-duration {
+      color: $text-muted;
+      font-weight: 600;
+    }
+  }
+
+  .date-row {
+    margin: 0;
+    color: $text-muted;
+  }
+}
+
+.subscription-card__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.subscription-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.fact {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px solid $border-strong;
+
+  .fact-label {
+    display: block;
+    color: $text-muted;
+    margin-bottom: 4px;
+  }
+
+  strong {
+    color: $text-primary;
+    font-size: 1.1rem;
+  }
+}
+
+.subscription-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+
+  li {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    background: white;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid $border-strong;
+    color: $text-secondary;
+
+    svg {
+      color: $primary-green-dark;
+      position: relative;
+      top: 1px;
+      flex-shrink: 0;
+    }
+
+    &.muted {
+      color: $text-muted;
+      border-style: dashed;
+    }
+  }
+}
+
+.subscription-loading,
+.subscription-error,
+.subscription-empty {
+  background: #f9fafb;
+  border: 1px dashed $border-strong;
+  border-radius: 16px;
+  padding: 20px;
+  color: $text-secondary;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+
+  p {
+    margin: 0;
+    color: inherit;
+  }
+}
+
+.subscription-empty {
+  align-items: center;
+}
+
 // Modern Button Styles
 .edit-btn,
 .save-btn,

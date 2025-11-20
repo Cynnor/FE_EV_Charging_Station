@@ -4,6 +4,12 @@ import {
   FaCheckCircle,
   FaBolt,
   FaCrown,
+  FaShieldAlt,
+  FaMapMarkerAlt,
+  FaCreditCard,
+  FaLeaf,
+  FaHeadset,
+  FaArrowRight,
   FaStar,
   FaTimes,
 } from "react-icons/fa";
@@ -127,42 +133,6 @@ function MembershipPage() {
     }
   };
 
-  // Implement upgrade/cancel subscription functionality
-  const handleUpgrade = async (plan) => {
-    try {
-      const response = await api.post("/subscriptions/upgrade", {
-        planId: plan._id,
-      });
-
-      if (response.data?.success) {
-        // Redirect đến payment
-        handleSubscribe(plan);
-      }
-    } catch (err) {
-      console.error("Error upgrading subscription:", err);
-      setError("Không thể nâng cấp gói. Vui lòng thử lại.");
-    }
-  };
-
-  const handleCancelSubscription = async () => {
-    if (!currentSubscription) return;
-
-    try {
-      const response = await api.post(
-        `/subscriptions/${currentSubscription._id}/cancel`
-      );
-      if (response.data?.success) {
-        alert(
-          "Đã hủy gói đăng ký thành công. Bạn vẫn có thể sử dụng đến hết thời hạn."
-        );
-        loadSubscriptionData(); // Reload data
-      }
-    } catch (err) {
-      console.error("Error cancelling subscription:", err);
-      setError("Không thể hủy gói đăng ký. Vui lòng thử lại.");
-    }
-  };
-
   // Helper function để format giá tiền
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN").format(price) + " VNĐ";
@@ -239,6 +209,54 @@ function MembershipPage() {
     });
   };
 
+  const valueHighlights = [
+    {
+      icon: <FaShieldAlt />,
+      title: "Ổn định & minh bạch",
+      description: "Không phí ẩn, hoàn phí khi có gián đoạn do hệ thống.",
+    },
+    {
+      icon: <FaLeaf />,
+      title: "Năng lượng xanh",
+      description: "Ưu tiên trạm đạt chuẩn, tối ưu hiệu suất và tuổi thọ pin.",
+    },
+    {
+      icon: <FaCreditCard />,
+      title: "Thanh toán bảo mật",
+      description: "VNPay bảo chứng, tự động lưu trạng thái giao dịch.",
+    },
+    {
+      icon: <FaHeadset />,
+      title: "Hỗ trợ 24/7",
+      description: "Đội ngũ sẵn sàng đồng hành trong mọi hành trình.",
+    },
+  ];
+
+  const journeySteps = [
+    {
+      title: "Chọn gói & thời hạn",
+      description:
+        "So sánh ưu đãi theo tháng, 6 tháng hoặc 12 tháng để tối ưu chi phí.",
+    },
+    {
+      title: "Thanh toán bảo mật",
+      description:
+        "Chuyển hướng VNPay, lưu trạng thái tự động để kiểm tra dễ dàng.",
+    },
+    {
+      title: "Kích hoạt tức thì",
+      description:
+        "Gói hiệu lực ngay sau khi thanh toán. Theo dõi ở trang Hồ sơ cá nhân.",
+    },
+  ];
+
+  const scrollToPlans = () => {
+    const target = document.getElementById("plans-section");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -269,44 +287,110 @@ function MembershipPage() {
 
   return (
     <div className="membership-page">
-      {/* Spotify-style Hero Section */}
-      <div className="hero-section">
-        <div className="hero-content">
-          <h1 className="hero-title">Chọn gói đăng ký của bạn</h1>
-          <p className="hero-subtitle">
-            Trải nghiệm dịch vụ sạc xe điện chất lượng cao với các gói linh hoạt
-          </p>
-        </div>
-      </div>
-
-      {/* Current Subscription Banner */}
-      {currentSubscription && (
-        <div className="current-subscription-banner">
-          <div className="banner-content">
-            <div className="banner-icon">
-              <FaCheckCircle />
+      <section className="hero-section">
+        <div className="hero-grid">
+          <div className="hero-copy">
+            <span className="hero-pill">EV Membership</span>
+            <h1>Chọn gói sạc được thiết kế cho hành trình của bạn</h1>
+            <p className="hero-lead">
+              Bảo vệ giao dịch, ưu tiên sạc nhanh và hỗ trợ 24/7. Những gì bạn cần
+              để di chuyển an tâm mỗi ngày.
+            </p>
+            <div className="hero-actions">
+              <button className="primary-btn" onClick={scrollToPlans}>
+                Khám phá gói
+              </button>
+              <button
+                className="ghost-btn"
+                onClick={() => navigate("/profile")}
+              >
+                Quản lý gói trong Hồ sơ
+              </button>
             </div>
-            <div className="banner-info">
-              <h3>Gói hiện tại</h3>
+            <div className="hero-meta">
+              <span className="meta-chip">
+                <FaCheckCircle /> Hoàn phí khi gián đoạn
+              </span>
+              <span className="meta-chip">
+                <FaBolt /> Ưu tiên sạc nhanh
+              </span>
+              <span className="meta-chip">
+                <FaMapMarkerAlt /> 300+ trạm đối tác
+              </span>
+            </div>
+          </div>
+
+          <div className="hero-panel">
+            <div className="panel-header">
+              <div className="panel-icon">
+                <FaCrown />
+              </div>
+              <div>
+                <p className="panel-label">Trải nghiệm cao cấp</p>
+                <h3>Luôn sẵn sàng cho chuyến đi tiếp theo</h3>
+              </div>
+            </div>
+            <div className="panel-body">
+              <div className="metric">
+                <span className="metric-label">Ưu tiên giờ cao điểm</span>
+                <strong>+2</strong>
+                <small>lượt giữ chỗ/tuần</small>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Tiết kiệm</span>
+                <strong>20%</strong>
+                <small>chọn gói 12 tháng</small>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Độ phủ</span>
+                <strong>300+</strong>
+                <small>trạm đạt chuẩn</small>
+              </div>
+            </div>
+            <div className="panel-footer">
+              <div className="footer-tag">
+                <FaShieldAlt /> VNPay bảo chứng
+              </div>
               <p>
-                {currentSubscription.plan?.name} • Hết hạn:{" "}
-                {new Date(currentSubscription.endDate).toLocaleDateString(
-                  "vi-VN"
-                )}
+                Gói hiện tại và thao tác hủy được chuyển sang trang Hồ sơ cá
+                nhân để bạn kiểm soát thuận tiện hơn.
               </p>
             </div>
-            <button
-              className="banner-cancel-btn"
-              onClick={handleCancelSubscription}
-            >
-              Hủy gói
-            </button>
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Spotify-style Plans Section */}
-      <div className="plans-section">
+      <section className="value-section">
+        <div className="section-heading">
+          <p className="eyebrow">Giá trị hội viên</p>
+          <h2>Thiết kế cho hành trình bền vững & chuyên nghiệp</h2>
+          <p>
+            Chúng tôi ưu tiên chất lượng trạm sạc, tốc độ xử lý giao dịch và trải
+            nghiệm xuyên suốt để bạn chỉ cần tập trung lái xe.
+          </p>
+        </div>
+        <div className="value-grid">
+          {valueHighlights.map((item, index) => (
+            <div className="value-card" key={index}>
+              <div className="value-icon">{item.icon}</div>
+              <div>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="plans-section" id="plans-section">
+        <div className="section-heading plans-heading">
+          <p className="eyebrow">Bảng giá</p>
+          <h2>Chọn lộ trình sạc phù hợp</h2>
+          <p className="section-note">
+            Quản lý gói hiện tại và thao tác hủy được chuyển sang trang Hồ sơ cá
+            nhân. Chọn gói mới bên dưới để thanh toán ngay.
+          </p>
+        </div>
         <div className="plans-container">
           {Object.entries(groupedPlans).map(([type, typePlans]) => {
             const currentPlan = getCurrentPlan(type);
@@ -461,7 +545,25 @@ function MembershipPage() {
             );
           })}
         </div>
-      </div>
+      </section>
+
+      <section className="steps-section">
+        <div className="section-heading">
+          <p className="eyebrow">Trải nghiệm liền mạch</p>
+          <h2>Bắt đầu chỉ với vài bước</h2>
+          <p>Thiết kế tối giản, minh bạch và tự động hóa tối đa.</p>
+        </div>
+        <div className="steps-grid">
+          {journeySteps.map((step, index) => (
+            <div className="step-card" key={step.title}>
+              <div className="step-number">0{index + 1}</div>
+              <h4>{step.title}</h4>
+              <p>{step.description}</p>
+              <FaArrowRight className="step-arrow" />
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Payment Modal */}
       {showPaymentModal && selectedPlan && (

@@ -1,237 +1,424 @@
-/* ===== Brand Colors - đồng bộ với HomePage ===== */
-$primary-color: #16a34a;
-$primary-hover: #15803d;
-$primary-light: #dcfce7;
-$primary-dark: #14532d;
+/* Modern Membership Styling */
+$primary-color: #22c55e;
+$primary-dark: #15803d;
+$accent-color: #38bdf8;
+$bg-deep: #050b18;
+$card: rgba(255, 255, 255, 0.04);
+$card-strong: rgba(255, 255, 255, 0.07);
+$border-color: rgba(255, 255, 255, 0.1);
+$text-primary: #e2e8f0;
+$text-secondary: #9fb3c8;
 
-$text-primary: #0f172a;
-$text-secondary: #475569;
-$text-muted: #94a3b8;
-$text-white: #ffffff;
-
-$bg-primary: #ffffff;
-$bg-secondary: #f8fafc;
-$bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-
-$border-color: #e2e8f0;
-
-// Spotify-style Membership Page
 .membership-page {
   min-height: 100vh;
-  background: $bg-gradient;
+  padding: 110px 20px 120px;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(56, 189, 248, 0.12), transparent 28%),
+    radial-gradient(circle at 88% 10%, rgba(34, 197, 94, 0.14), transparent 26%),
+    linear-gradient(145deg, #030712 0%, #0a1224 50%, #050b18 100%);
   color: $text-primary;
-  font-family: "Circular", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
-  // Hero Section - Spotify style
-  .hero-section {
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-    padding: 80px 20px 60px;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 80%, rgba(34, 197, 94, 0.08), transparent 35%);
+    pointer-events: none;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .section-heading {
+    max-width: 860px;
+    margin: 0 auto 32px;
     text-align: center;
-    position: relative;
 
-    &::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.1);
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.14);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: $text-primary;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
     }
 
-    .hero-content {
-      max-width: 800px;
+    h2 {
+      font-size: clamp(2rem, 3vw, 2.5rem);
+      margin: 16px 0 8px;
+      color: $text-primary;
+      letter-spacing: -0.5px;
+    }
+
+    p {
       margin: 0 auto;
+      color: $text-secondary;
+      line-height: 1.6;
     }
 
-    .hero-title {
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      font-weight: 900;
-      margin: 0 0 20px;
-      margin-top: 50px;
-      letter-spacing: -0.02em;
-      line-height: 1.1;
-      color: $primary-color;
+    .section-note {
+      color: $text-secondary;
+      margin-top: 6px;
     }
 
-    .hero-subtitle {
-      font-size: clamp(1rem, 2vw, 1.25rem);
-      color: $primary-color;
-      margin: 0;
-      font-weight: 400;
+    &.plans-heading {
+      margin-bottom: 10px;
     }
   }
 
-  // Current Subscription Banner
-  .current-subscription-banner {
-    background: rgba(22, 163, 74, 0.1);
-    border-bottom: 1px solid rgba(22, 163, 74, 0.2);
-    padding: 20px;
-    margin: 0;
+  .hero-section {
+    position: relative;
+    margin-bottom: 48px;
+  }
 
-    .banner-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
+  .hero-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    gap: 28px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    align-items: stretch;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-copy {
+    padding: 32px;
+    background: $card;
+    border-radius: 28px;
+    border: 1px solid $border-color;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(14px);
+
+    .hero-pill {
+      display: inline-flex;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.12);
+      color: $text-primary;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 4vw, 3.4rem);
+      margin: 18px 0 12px;
+      letter-spacing: -1px;
+      color: $text-primary;
+      line-height: 1.15;
+    }
+
+    .hero-lead {
+      color: $text-secondary;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      margin: 0 0 22px;
+    }
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+
+    .primary-btn,
+    .ghost-btn {
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: 1px solid transparent;
+    }
+
+    .primary-btn {
+      background: linear-gradient(120deg, $primary-color 0%, $primary-dark 100%);
+      color: #0b2414;
+      box-shadow: 0 10px 30px rgba(34, 197, 94, 0.35);
+
+      &:hover {
+        transform: translateY(-1px) scale(1.01);
+        box-shadow: 0 16px 36px rgba(34, 197, 94, 0.45);
+      }
+    }
+
+    .ghost-btn {
+      background: transparent;
+      color: $text-primary;
+      border-color: $border-color;
+
+      &:hover {
+        border-color: rgba(255, 255, 255, 0.25);
+        color: #ffffff;
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .meta-chip {
+      display: inline-flex;
       align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: $card-strong;
+      border: 1px solid $border-color;
+      color: $text-primary;
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+  }
 
-      .banner-icon {
-        color: $primary-color;
-        font-size: 24px;
+  .hero-panel {
+    padding: 30px;
+    background: linear-gradient(160deg, rgba(34, 197, 94, 0.16), rgba(56, 189, 248, 0.12));
+    border-radius: 28px;
+    border: 1px solid $border-color;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .panel-header {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+
+      .panel-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        display: grid;
+        place-items: center;
+        color: #facc15;
+        font-size: 1.35rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      .banner-info {
-        flex: 1;
-        min-width: 200px;
+      .panel-label {
+        margin: 0;
+        color: $text-secondary;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        font-size: 0.8rem;
+      }
 
-        h3 {
-          margin: 0 0 4px;
-          font-size: 16px;
-          font-weight: 700;
-          color: $text-primary;
+      h3 {
+        margin: 4px 0 0;
+        color: $text-primary;
+        letter-spacing: -0.3px;
+      }
+    }
+
+    .panel-body {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+
+      .metric {
+        background: $card;
+        border: 1px solid $border-color;
+        border-radius: 16px;
+        padding: 14px 16px;
+        display: grid;
+        gap: 4px;
+
+        .metric-label {
+          color: $text-secondary;
+          font-size: 0.9rem;
         }
 
-        p {
-          margin: 0;
-          font-size: 14px;
+        strong {
+          font-size: 1.6rem;
+          color: $text-primary;
+          letter-spacing: -0.3px;
+        }
+
+        small {
           color: $text-secondary;
         }
       }
+    }
 
-      .banner-cancel-btn {
-        padding: 10px 20px;
-        background: transparent;
-        border: 1px solid rgba(22, 163, 74, 0.3);
-        color: $primary-color;
-        border-radius: 500px;
+    .panel-footer {
+      background: $card;
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 1px dashed $border-color;
+      color: $text-secondary;
+      line-height: 1.5;
+
+      .footer-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: rgba(34, 197, 94, 0.16);
+        color: $text-primary;
         font-weight: 700;
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-
-        &:hover {
-          border-color: $primary-color;
-          transform: scale(1.05);
-        }
+        border: 1px solid rgba(34, 197, 94, 0.25);
+        margin-bottom: 6px;
       }
     }
   }
 
-  // Plans Section - Spotify style
-  .plans-section {
-    padding: 60px 20px;
+  .value-section {
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 0 auto 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .value-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+  }
+
+  .value-card {
+    background: $card;
+    border: 1px solid $border-color;
+    border-radius: 18px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: start;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+
+    .value-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: rgba(34, 197, 94, 0.14);
+      display: grid;
+      place-items: center;
+      color: $primary-color;
+      border: 1px solid $border-color;
+      font-size: 1.2rem;
+    }
+
+    h3 {
+      margin: 0 0 6px;
+      color: $text-primary;
+      font-size: 1.05rem;
+    }
+
+    p {
+      margin: 0;
+      color: $text-secondary;
+      line-height: 1.5;
+    }
+  }
+
+  .plans-section {
+    max-width: 1200px;
+    margin: 10px auto 40px;
+    position: relative;
+    z-index: 1;
   }
 
   .plans-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
-    margin-top: 40px;
-    align-items: stretch;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-top: 16px;
   }
 
   .plan-card {
-    background: rgba(245, 242, 242, 0.8);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
     border: 1px solid $border-color;
-    border-radius: 16px;
-    padding: 32px 24px;
-    transition: all 0.3s ease;
+    border-radius: 22px;
+    padding: 26px 22px;
     position: relative;
     overflow: hidden;
-    backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 
-    &::before {
+    &::after {
       content: "";
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, $primary-color, #22c55e);
+      inset: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.12), transparent 40%);
       opacity: 0;
       transition: opacity 0.3s ease;
     }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.95);
-      border-color: rgba(22, 163, 74, 0.4);
-      transform: translateY(-4px);
+      transform: translateY(-6px);
+      border-color: rgba(34, 197, 94, 0.3);
+      box-shadow: 0 26px 70px rgba(34, 197, 94, 0.18);
 
-      &::before {
+      &::after {
         opacity: 1;
       }
     }
 
     &.featured {
-      background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.95) 0%,
-        rgba(255, 255, 255, 0.8) 100%
-      );
-      border-color: rgba(22, 163, 74, 0.3);
-      box-shadow: 0 4px 16px rgba(22, 163, 74, 0.1);
-
-      &::before {
-        opacity: 1;
-        height: 4px;
-      }
-
-      &:hover {
-        border-color: rgba(22, 163, 74, 0.5);
-        box-shadow: 0 8px 24px rgba(22, 163, 74, 0.2);
-      }
-
-      .popular-badge {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: $primary-color;
-        color: $text-white;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
+      border-color: rgba(34, 197, 94, 0.4);
+      box-shadow: 0 26px 80px rgba(34, 197, 94, 0.24);
     }
 
     &.current {
       border-color: $primary-color;
-      background: rgba(22, 163, 74, 0.15);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: $primary-color;
+      color: #0b2414;
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      z-index: 2;
     }
   }
 
   .plan-header {
-    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
 
     .plan-icon-wrapper {
-      width: 60px;
-      height: 60px;
-      border-radius: 12px;
-      background: rgba(22, 163, 74, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      margin-bottom: 16px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: rgba(34, 197, 94, 0.18);
+      display: grid;
+      place-items: center;
       color: $primary-color;
+      font-size: 1.4rem;
+      margin-bottom: 10px;
     }
 
     .plan-name {
-      font-size: 24px;
-      font-weight: 900;
-      margin: 0 0 12px;
-      letter-spacing: -0.02em;
+      margin: 0;
+      font-size: 1.6rem;
       color: $text-primary;
     }
 
@@ -239,658 +426,342 @@ $border-color: #e2e8f0;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 12px;
-      background: rgba(22, 163, 74, 0.2);
-      color: $primary-color;
-      border-radius: 20px;
-      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(34, 197, 94, 0.2);
+      color: $text-primary;
       font-weight: 700;
-      margin-top: 8px;
+      margin-top: 6px;
     }
   }
 
-  // Duration Selector - Improved contrast
   .duration-selector {
-    margin-bottom: 24px;
+    z-index: 1;
 
     .duration-tabs {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
       gap: 8px;
-      background: #f0f0f0;
       padding: 6px;
+      background: rgba(255, 255, 255, 0.04);
       border-radius: 12px;
-      min-height: 52px;
-      border: 1px solid rgba(22, 163, 74, 0.1);
+      border: 1px solid $border-color;
 
       .no-duration-message {
-        padding: 10px;
+        grid-column: 1 / -1;
         text-align: center;
         color: $text-secondary;
-        font-size: 14px;
-        width: 100%;
+        padding: 10px 0;
       }
     }
 
     .duration-tab {
-      flex: 1;
-      padding: 12px 8px;
-      background: $bg-primary;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
+      padding: 12px 10px;
+      background: transparent;
+      border: 1px solid $border-color;
+      border-radius: 12px;
       color: $text-primary;
-      font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: grid;
       gap: 6px;
-      min-height: 52px;
-      justify-content: center;
+      justify-items: center;
+      transition: all 0.2s ease;
 
       &:hover {
-        border-color: $primary-color;
-        background: rgba(22, 163, 74, 0.05);
-        color: $primary-color;
+        border-color: rgba(255, 255, 255, 0.28);
         transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
       }
 
       &.active {
-        background: $primary-color;
-        border-color: $primary-color;
-        color: $text-white;
-        font-weight: 700;
-        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
-        transform: translateY(-2px);
-
-        .savings-badge {
-          background: rgba(22, 163, 74, 0.3);
-          color: $text-white;
-          border: 1px solid rgba(255, 255, 255, 0.4);
-        }
-      }
-
-      .duration-text {
-        font-size: 14px;
-        font-weight: inherit;
+        background: linear-gradient(130deg, $primary-color, $primary-dark);
+        color: #0b2414;
+        border-color: transparent;
+        box-shadow: 0 12px 30px rgba(34, 197, 94, 0.4);
       }
 
       .savings-badge {
-        font-size: 10px;
-        padding: 3px 8px;
-        border-radius: 6px;
-        background: rgba(22, 163, 74, 0.15);
-        color: $primary-color;
-        font-weight: 700;
-        text-transform: uppercase;
-        border: 1px solid rgba(22, 163, 84, 0.2);
-        white-space: nowrap;
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        background: rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        border: 1px solid $border-color;
+        color: inherit;
+        letter-spacing: 0.6px;
       }
     }
   }
 
-  // Price Section
   .price-section {
-    margin-bottom: 24px;
+    z-index: 1;
 
     .price-wrapper {
       display: flex;
       align-items: baseline;
-      gap: 12px;
-      margin-bottom: 8px;
+      gap: 10px;
     }
 
     .price-amount {
-      font-size: 48px;
-      font-weight: 900;
-      line-height: 1;
-      letter-spacing: -0.02em;
+      font-size: 2.6rem;
+      font-weight: 800;
       color: $text-primary;
     }
 
     .original-price {
-      font-size: 20px;
-      color: $text-muted;
-      text-decoration: line-through;
-    }
-
-    .price-period {
-      font-size: 14px;
       color: $text-secondary;
-      margin: 0;
+      text-decoration: line-through;
     }
   }
 
   .plan-description {
-    font-size: 14px;
     color: $text-secondary;
-    margin: 0 0 24px;
-    line-height: 1.6;
+    margin: 0;
+    line-height: 1.5;
+    z-index: 1;
   }
 
   .divider {
     height: 1px;
-    background: rgba(22, 163, 74, 0.2);
-    margin: 24px 0;
+    background: $border-color;
+    margin: 14px 0;
+    z-index: 1;
   }
 
-  // Features List
   .features-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 32px;
-    min-height: 200px;
+    margin: 0;
+    z-index: 1;
 
     .feature-item {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
-      padding: 10px 0;
-      font-size: 15px;
-      line-height: 1.6;
-      transition: all 0.2s ease;
-
-      &:hover {
-        transform: translateX(4px);
-      }
+      gap: 10px;
+      padding: 8px 0;
+      color: $text-primary;
 
       .check-icon {
         color: $primary-color;
-        font-size: 16px;
-        flex-shrink: 0;
-        margin-top: 3px;
+        margin-top: 2px;
       }
 
-      span {
-        color: $text-primary;
-        font-weight: 400;
-      }
+      span { color: $text-primary; }
     }
 
-    // Empty state - không hiển thị gì nếu không có features
     &:empty::after {
       content: "Không có tính năng";
       display: block;
-      color: $text-muted;
-      font-size: 14px;
+      color: $text-secondary;
+      padding: 8px 0;
       text-align: center;
-      padding: 20px 0;
     }
   }
 
-  // Plan Footer
   .plan-footer {
     margin-top: auto;
-    padding-top: 24px;
+    z-index: 1;
   }
 
   .subscribe-btn,
   .current-btn,
   .unavailable-btn {
     width: 100%;
-    min-height: 52px;
-    padding: 16px 32px;
-    border: none;
-    border-radius: 500px;
-    font-size: 16px;
-    font-weight: 700;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    font-weight: 800;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   }
 
   .subscribe-btn {
-    background: $primary-color;
-    color: $text-white;
+    background: linear-gradient(120deg, $primary-color, $primary-dark);
+    color: #0b2414;
+    box-shadow: 0 16px 40px rgba(34, 197, 94, 0.28);
 
     &:hover {
-      background: $primary-hover;
-      transform: scale(1.05);
-    }
-
-    &.premium {
-      background: $primary-color;
-      box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
-
-      &:hover {
-        background: $primary-hover;
-        box-shadow: 0 6px 20px rgba(22, 163, 74, 0.5);
-      }
+      transform: translateY(-2px);
+      box-shadow: 0 22px 46px rgba(34, 197, 94, 0.36);
     }
   }
 
   .current-btn {
-    background: rgba(22, 163, 74, 0.2);
-    color: $primary-color;
-    border: 1px solid $primary-color;
+    background: rgba(34, 197, 94, 0.18);
+    border-color: $border-color;
+    color: $text-primary;
     cursor: not-allowed;
-    gap: 8px;
   }
 
   .unavailable-btn {
-    background: rgba(255, 255, 255, 0.5);
-    color: $text-muted;
-    border: 1px solid rgba(170, 170, 170, 0.3);
+    background: rgba(255, 255, 255, 0.04);
+    color: $text-secondary;
+    border-color: $border-color;
     cursor: not-allowed;
   }
 
-  // Loading & Error States
+  .steps-section {
+    max-width: 1200px;
+    margin: 50px auto 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .step-card {
+    background: $card;
+    border: 1px solid $border-color;
+    border-radius: 18px;
+    padding: 18px 18px 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+    position: relative;
+    overflow: hidden;
+
+    .step-number {
+      font-weight: 800;
+      color: $primary-color;
+      margin-bottom: 8px;
+      letter-spacing: 0.4px;
+    }
+
+    h4 {
+      margin: 0 0 6px;
+      color: $text-primary;
+    }
+
+    p {
+      margin: 0;
+      color: $text-secondary;
+      line-height: 1.5;
+    }
+
+    .step-arrow {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      opacity: 0.7;
+    }
+  }
+
   .loading-container,
   .error-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 400px;
-    gap: 20px;
+    gap: 12px;
+    min-height: 320px;
+    color: $text-primary;
   }
 
   .spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top: 4px solid $primary-color;
+    width: 54px;
+    height: 54px;
     border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.12);
+    border-top-color: $primary-color;
     animation: spin 1s linear infinite;
   }
 
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
-  .error-container {
-    color: $text-primary;
-
-    .error-icon {
-      font-size: 3rem;
-      color: $primary-color;
-    }
+  .error-icon {
+    font-size: 2.6rem;
+    color: $primary-color;
   }
 
   .retry-button {
-    background: $primary-color;
-    color: $text-white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: linear-gradient(120deg, $primary-color, $primary-dark);
+    color: #0b2414;
     border: none;
-    padding: 12px 24px;
-    border-radius: 500px;
+    font-weight: 800;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 700;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: $primary-hover;
-      transform: scale(1.05);
-    }
   }
 
-  // Payment Modal
   .payment-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    display: grid;
+    place-items: center;
     z-index: 1000;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
   }
 
   .payment-modal {
-    background: $bg-primary;
-    border-radius: 16px;
-    padding: 32px;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(22, 163, 74, 0.2);
+    background: #0b1629;
+    border-radius: 18px;
+    padding: 26px;
+    width: min(520px, 92%);
+    border: 1px solid $border-color;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+    color: $text-primary;
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 14px;
 
       h3 {
         margin: 0;
-        font-size: 24px;
-        font-weight: 700;
-        color: $text-primary;
+        font-size: 1.4rem;
       }
 
       .close-button {
-        background: none;
-        border: none;
-        color: $text-muted;
-        font-size: 24px;
-        cursor: pointer;
-        padding: 0;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        background: transparent;
+        border: 1px solid $border-color;
+        color: $text-primary;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        transition: all 0.2s ease;
+        cursor: pointer;
 
         &:hover {
-          background: rgba(22, 163, 74, 0.1);
-          color: $primary-color;
-        }
-      }
-
-      .modal-content {
-        p {
-          margin: 12px 0;
-          color: $text-secondary;
-          font-size: 16px;
-
-          strong {
-            color: $primary-color;
-          }
+          border-color: rgba(255, 255, 255, 0.2);
         }
       }
     }
 
-    // Responsive
-    @media (max-width: 768px) {
-      .hero-section {
-        padding: 60px 20px 40px;
-      }
+    .modal-content {
+      p {
+        margin: 10px 0;
+        color: $text-secondary;
+        line-height: 1.6;
 
-      .plans-container {
-        grid-template-columns: 1fr;
-        gap: 20px;
-      }
-
-      .plan-card {
-        padding: 24px 20px;
-
-        &.featured {
-          transform: scale(1);
-        }
-      }
-
-      .duration-tabs {
-        flex-direction: column;
-        gap: 4px;
-
-        .duration-tab {
-          width: 100%;
-        }
-      }
-
-      .price-amount {
-        font-size: 36px;
+        strong { color: $text-primary; }
       }
     }
   }
 
-  // My Subscriptions Section
-  .my-subscriptions-section {
-    padding: 60px 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+  @media (max-width: 900px) {
+    padding-top: 90px;
 
-    .section-title {
-      font-size: 2rem;
-      font-weight: 700;
-      margin: 0 0 30px;
-      color: $text-primary;
-      text-align: center;
-    }
-
-    text-align: center;
-    padding: 100px;
-    background: $bg-gradient;
-    font-family: "Arial", sans-serif;
-  }
-
-  .membership-page h1 {
-    font-size: 2.5rem;
-    margin-top: 30px;
-    margin-bottom: 30px;
-    color: $text-primary;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-  }
-
-  .membership-page p {
-    font-size: 1.2rem;
-    margin-bottom: 30px;
-    color: $text-secondary;
-  }
-
-  .subscriptions-list {
-    display: grid;
-    gap: 20px;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-
-    .subscription-card {
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 12px;
+    .hero-copy,
+    .hero-panel {
       padding: 24px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
-      border: 1px solid rgba(22, 163, 74, 0.2);
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-      }
-
-      &.current_active {
-        border-color: rgba(22, 163, 74, 0.5);
-        border-width: 2px;
-        background: rgba(220, 252, 231, 0.3);
-      }
-
-      &.pending {
-        border-color: rgba(255, 193, 7, 0.5);
-        background: rgba(255, 248, 220, 0.3);
-      }
-
-      .subscription-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 16px;
-
-        .package {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border: 2px solid rgba(22, 163, 74, 0.2);
-          border-radius: 15px;
-          padding: 20px;
-          width: 300px;
-          box-shadow: 0 8px 15px rgba(22, 163, 74, 0.1);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: space-between;
-          min-height: 450px;
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-
-          &:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 12px 20px rgba(22, 163, 74, 0.25);
-            border-color: $primary-color;
-          }
-
-          h2 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            color: $text-primary;
-          }
-
-          .price {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: $text-primary;
-            margin-bottom: 10px;
-          }
-
-          p {
-            font-size: 1rem;
-            margin-bottom: 10px;
-            color: $text-secondary;
-          }
-
-          .subscription-info {
-            flex: 1;
-
-            h3 {
-              font-size: 1.25rem;
-              font-weight: 600;
-              margin: 0 0 8px;
-              color: $text-primary;
-            }
-
-            .subscription-details {
-              font-size: 0.9rem;
-              color: $text-secondary;
-              margin: 0;
-            }
-          }
-
-          .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-
-            &.current_active {
-              background: $primary-color;
-              color: $text-white;
-            }
-
-            &.active {
-              background: #3b82f6;
-              color: $text-white;
-            }
-
-            &.pending {
-              background: #ffc107;
-              color: #000000;
-            }
-
-            &.expired {
-              background: #6c757d;
-              color: $text-white;
-            }
-
-            &.cancelled {
-              background: #dc3545;
-              color: $text-white;
-            }
-          }
-        }
-      }
-
-      .subscription-dates {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-bottom: 16px;
-        padding: 16px;
-        background: rgba(0, 0, 0, 0.02);
-        border-radius: 8px;
-
-        .date-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-
-          .date-label {
-            font-size: 0.9rem;
-            color: $text-secondary;
-            font-weight: 500;
-          }
-
-          .date-value {
-            font-size: 0.9rem;
-            color: $text-primary;
-            font-weight: 600;
-          }
-        }
-      }
-
-      .subscription-pending-note {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px;
-        background: rgba(255, 193, 7, 0.1);
-        border-radius: 8px;
-        border-left: 3px solid #ffc107;
-
-        .pending-icon {
-          color: #ffc107;
-          font-size: 1rem;
-        }
-
-        span {
-          font-size: 0.85rem;
-          color: #856404;
-          line-height: 1.4;
-        }
-      }
     }
   }
 
-  .package .features li {
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    color: $text-secondary;
-  }
+  @media (max-width: 640px) {
+    .hero-actions {
+      flex-direction: column;
+    }
 
-  .package .features li::before {
-    content: "✔";
-    color: $primary-color;
-    margin-right: 10px;
-    font-size: 1.2rem;
+    .plans-container,
+    .steps-grid,
+    .value-grid {
+      grid-template-columns: 1fr;
+    }
   }
+}
 
-  .register-button {
-    background: $primary-color;
-    color: $text-white;
-    border: none;
-    border-radius: 25px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: auto;
-    width: 100%;
-    max-width: auto;
-    text-align: center;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
-  }
-
-  .register-button:hover {
-    background: $primary-hover;
-    color: $text-white;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(21, 128, 61, 0.35);
-  }
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
