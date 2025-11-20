@@ -1,879 +1,896 @@
+/* ===== Brand Colors - đồng bộ với HomePage ===== */
+$primary-color: #16a34a;
+$primary-hover: #15803d;
+$primary-light: #dcfce7;
+$primary-dark: #14532d;
+
+$text-primary: #0f172a;
+$text-secondary: #475569;
+$text-muted: #94a3b8;
+$text-white: #ffffff;
+
+$bg-primary: #ffffff;
+$bg-secondary: #f8fafc;
+$bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+
+$border-color: #e2e8f0;
+
 // Spotify-style Membership Page
 .membership-page {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
-    color: #333333;
-    font-family: 'Circular', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  background: $bg-gradient;
+  color: $text-primary;
+  font-family: "Circular", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  position: relative;
+  overflow-x: hidden;
+
+  // Hero Section - Spotify style
+  .hero-section {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    padding: 80px 20px 60px;
+    text-align: center;
     position: relative;
-    overflow-x: hidden;
 
-    // Hero Section - Spotify style
-    .hero-section {
-        background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
-        padding: 80px 20px 60px;
-        text-align: center;
-        position: relative;
-
-        &::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .hero-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .hero-title {
-            font-size: clamp(2.5rem, 5vw, 4rem);
-            font-weight: 900;
-            margin: 0 0 20px;
-            margin-top: 50px;
-            letter-spacing: -0.02em;
-            line-height: 1.1;
-            color: #333333;
-        }
-
-        .hero-subtitle {
-            font-size: clamp(1rem, 2vw, 1.25rem);
-            color: #AAAAAA;
-            margin: 0;
-            font-weight: 400;
-        }
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
     }
 
-    // Current Subscription Banner
-    .current-subscription-banner {
-        background: rgba(25, 135, 84, 0.1);
-        border-bottom: 1px solid rgba(25, 135, 84, 0.2);
-        padding: 20px;
-        margin: 0;
+    .hero-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
 
-        .banner-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
+    .hero-title {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 900;
+      margin: 0 0 20px;
+      margin-top: 50px;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: $primary-color;
+    }
 
-            .banner-icon {
-                color: #198754;
-                font-size: 24px;
-            }
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: $primary-color;
+      margin: 0;
+      font-weight: 400;
+    }
+  }
 
-            .banner-info {
-                flex: 1;
-                min-width: 200px;
+  // Current Subscription Banner
+  .current-subscription-banner {
+    background: rgba(22, 163, 74, 0.1);
+    border-bottom: 1px solid rgba(22, 163, 74, 0.2);
+    padding: 20px;
+    margin: 0;
 
-                h3 {
-                    margin: 0 0 4px;
-                    font-size: 16px;
-                    font-weight: 700;
-                    color: #333333;
-                }
+    .banner-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
 
-                p {
-                    margin: 0;
-                    font-size: 14px;
-                    color: #AAAAAA;
-                }
-            }
+      .banner-icon {
+        color: $primary-color;
+        font-size: 24px;
+      }
 
-            .banner-cancel-btn {
-                padding: 10px 20px;
-                background: transparent;
-                border: 1px solid rgba(25, 135, 84, 0.3);
-                color: #198754;
-                border-radius: 500px;
-                font-weight: 700;
-                font-size: 14px;
-                cursor: pointer;
-                transition: all 0.2s ease;
+      .banner-info {
+        flex: 1;
+        min-width: 200px;
 
-                &:hover {
-                    border-color: #198754;
-                    transform: scale(1.05);
-                }
-            }
+        h3 {
+          margin: 0 0 4px;
+          font-size: 16px;
+          font-weight: 700;
+          color: $text-primary;
         }
-    }
 
-    // Plans Section - Spotify style
-    .plans-section {
-        padding: 60px 20px;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .plans-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 24px;
-        margin-top: 40px;
-        align-items: stretch;
-    }
-
-    .plan-card {
-        background: rgba(245, 242, 242, 0.8);
-        border: 1px solid rgba(25, 135, 84, 0.2);
-        border-radius: 16px;
-        padding: 32px 24px;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-        display: flex;
-        flex-direction: column;
-
-        &::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #198754, #146c43);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        p {
+          margin: 0;
+          font-size: 14px;
+          color: $text-secondary;
         }
+      }
+
+      .banner-cancel-btn {
+        padding: 10px 20px;
+        background: transparent;
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        color: $primary-color;
+        border-radius: 500px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
 
         &:hover {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: rgba(25, 135, 84, 0.4);
-            transform: translateY(-4px);
-
-            &::before {
-                opacity: 1;
-            }
+          border-color: $primary-color;
+          transform: scale(1.05);
         }
+      }
+    }
+  }
+
+  // Plans Section - Spotify style
+  .plans-section {
+    padding: 60px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .plans-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 40px;
+    align-items: stretch;
+  }
+
+  .plan-card {
+    background: rgba(245, 242, 242, 0.8);
+    border: 1px solid $border-color;
+    border-radius: 16px;
+    padding: 32px 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, $primary-color, #22c55e);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: rgba(22, 163, 74, 0.4);
+      transform: translateY(-4px);
+
+      &::before {
+        opacity: 1;
+      }
+    }
+
+    &.featured {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 255, 0.8) 100%
+      );
+      border-color: rgba(22, 163, 74, 0.3);
+      box-shadow: 0 4px 16px rgba(22, 163, 74, 0.1);
+
+      &::before {
+        opacity: 1;
+        height: 4px;
+      }
+
+      &:hover {
+        border-color: rgba(22, 163, 74, 0.5);
+        box-shadow: 0 8px 24px rgba(22, 163, 74, 0.2);
+      }
+
+      .popular-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: $primary-color;
+        color: $text-white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+
+    &.current {
+      border-color: $primary-color;
+      background: rgba(22, 163, 74, 0.15);
+    }
+  }
+
+  .plan-header {
+    margin-bottom: 24px;
+
+    .plan-icon-wrapper {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background: rgba(22, 163, 74, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 16px;
+      color: $primary-color;
+    }
+
+    .plan-name {
+      font-size: 24px;
+      font-weight: 900;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+      color: $text-primary;
+    }
+
+    .current-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(22, 163, 74, 0.2);
+      color: $primary-color;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+  }
+
+  // Duration Selector - Improved contrast
+  .duration-selector {
+    margin-bottom: 24px;
+
+    .duration-tabs {
+      display: flex;
+      gap: 8px;
+      background: #f0f0f0;
+      padding: 6px;
+      border-radius: 12px;
+      min-height: 52px;
+      border: 1px solid rgba(22, 163, 74, 0.1);
+
+      .no-duration-message {
+        padding: 10px;
+        text-align: center;
+        color: $text-secondary;
+        font-size: 14px;
+        width: 100%;
+      }
+    }
+
+    .duration-tab {
+      flex: 1;
+      padding: 12px 8px;
+      background: $bg-primary;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      color: $text-primary;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-height: 52px;
+      justify-content: center;
+
+      &:hover {
+        border-color: $primary-color;
+        background: rgba(22, 163, 74, 0.05);
+        color: $primary-color;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
+      }
+
+      &.active {
+        background: $primary-color;
+        border-color: $primary-color;
+        color: $text-white;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+        transform: translateY(-2px);
+
+        .savings-badge {
+          background: rgba(22, 163, 74, 0.3);
+          color: $text-white;
+          border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+      }
+
+      .duration-text {
+        font-size: 14px;
+        font-weight: inherit;
+      }
+
+      .savings-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: rgba(22, 163, 74, 0.15);
+        color: $primary-color;
+        font-weight: 700;
+        text-transform: uppercase;
+        border: 1px solid rgba(22, 163, 84, 0.2);
+        white-space: nowrap;
+      }
+    }
+  }
+
+  // Price Section
+  .price-section {
+    margin-bottom: 24px;
+
+    .price-wrapper {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .price-amount {
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: $text-primary;
+    }
+
+    .original-price {
+      font-size: 20px;
+      color: $text-muted;
+      text-decoration: line-through;
+    }
+
+    .price-period {
+      font-size: 14px;
+      color: $text-secondary;
+      margin: 0;
+    }
+  }
+
+  .plan-description {
+    font-size: 14px;
+    color: $text-secondary;
+    margin: 0 0 24px;
+    line-height: 1.6;
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(22, 163, 74, 0.2);
+    margin: 24px 0;
+  }
+
+  // Features List
+  .features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 32px;
+    min-height: 200px;
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      font-size: 15px;
+      line-height: 1.6;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateX(4px);
+      }
+
+      .check-icon {
+        color: $primary-color;
+        font-size: 16px;
+        flex-shrink: 0;
+        margin-top: 3px;
+      }
+
+      span {
+        color: $text-primary;
+        font-weight: 400;
+      }
+    }
+
+    // Empty state - không hiển thị gì nếu không có features
+    &:empty::after {
+      content: "Không có tính năng";
+      display: block;
+      color: $text-muted;
+      font-size: 14px;
+      text-align: center;
+      padding: 20px 0;
+    }
+  }
+
+  // Plan Footer
+  .plan-footer {
+    margin-top: auto;
+    padding-top: 24px;
+  }
+
+  .subscribe-btn,
+  .current-btn,
+  .unavailable-btn {
+    width: 100%;
+    min-height: 52px;
+    padding: 16px 32px;
+    border: none;
+    border-radius: 500px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .subscribe-btn {
+    background: $primary-color;
+    color: $text-white;
+
+    &:hover {
+      background: $primary-hover;
+      transform: scale(1.05);
+    }
+
+    &.premium {
+      background: $primary-color;
+      box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+
+      &:hover {
+        background: $primary-hover;
+        box-shadow: 0 6px 20px rgba(22, 163, 74, 0.5);
+      }
+    }
+  }
+
+  .current-btn {
+    background: rgba(22, 163, 74, 0.2);
+    color: $primary-color;
+    border: 1px solid $primary-color;
+    cursor: not-allowed;
+    gap: 8px;
+  }
+
+  .unavailable-btn {
+    background: rgba(255, 255, 255, 0.5);
+    color: $text-muted;
+    border: 1px solid rgba(170, 170, 170, 0.3);
+    cursor: not-allowed;
+  }
+
+  // Loading & Error States
+  .loading-container,
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 20px;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top: 4px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .error-container {
+    color: $text-primary;
+
+    .error-icon {
+      font-size: 3rem;
+      color: $primary-color;
+    }
+  }
+
+  .retry-button {
+    background: $primary-color;
+    color: $text-white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 500px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: $primary-hover;
+      transform: scale(1.05);
+    }
+  }
+
+  // Payment Modal
+  .payment-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+  }
+
+  .payment-modal {
+    background: $bg-primary;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(22, 163, 74, 0.2);
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+
+      h3 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: $text-primary;
+      }
+
+      .close-button {
+        background: none;
+        border: none;
+        color: $text-muted;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(22, 163, 74, 0.1);
+          color: $primary-color;
+        }
+      }
+
+      .modal-content {
+        p {
+          margin: 12px 0;
+          color: $text-secondary;
+          font-size: 16px;
+
+          strong {
+            color: $primary-color;
+          }
+        }
+      }
+    }
+
+    // Responsive
+    @media (max-width: 768px) {
+      .hero-section {
+        padding: 60px 20px 40px;
+      }
+
+      .plans-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .plan-card {
+        padding: 24px 20px;
 
         &.featured {
-            background: linear-gradient(180deg, rgba(255,
-                        255,
-                        255,
-                        0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
-            border-color: rgba(25, 135, 84, 0.3);
-            border-width: 1px;
-            box-shadow: 0 4px 16px rgba(25, 135, 84, 0.1);
-
-            &::before {
-                opacity: 1;
-                height: 4px;
-            }
-
-            &:hover {
-                border-color: rgba(25, 135, 84, 0.5);
-                box-shadow: 0 8px 24px rgba(25, 135, 84, 0.2);
-            }
-
-            .popular-badge {
-                position: absolute;
-                top: 20px;
-                right: 20px;
-                background: #198754;
-                color: #ffffff;
-                padding: 6px 12px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
+          transform: scale(1);
         }
+      }
 
-        &.current {
-            border-color: #198754;
-            background: rgba(25, 135, 84, 0.15);
-        }
-    }
-
-    .plan-header {
-        margin-bottom: 24px;
-
-        .plan-icon-wrapper {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            background: rgba(25, 135, 84, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            margin-bottom: 16px;
-            color: #198754;
-        }
-
-        .plan-name {
-            font-size: 24px;
-            font-weight: 900;
-            margin: 0 0 12px;
-            letter-spacing: -0.02em;
-            color: #333333;
-        }
-
-        .current-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            background: rgba(25, 135, 84, 0.2);
-            color: #198754;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-top: 8px;
-        }
-    }
-
-    // Duration Selector - Improved contrast
-    .duration-selector {
-        margin-bottom: 24px;
-
-        .duration-tabs {
-            display: flex;
-            gap: 8px;
-            background: #f0f0f0;
-            padding: 6px;
-            border-radius: 12px;
-            min-height: 52px;
-            border: 1px solid rgba(25, 135, 84, 0.1);
-
-            .no-duration-message {
-                padding: 10px;
-                text-align: center;
-                color: #666666;
-                font-size: 14px;
-                width: 100%;
-            }
-        }
+      .duration-tabs {
+        flex-direction: column;
+        gap: 4px;
 
         .duration-tab {
-            flex: 1;
-            padding: 12px 8px;
-            background: #ffffff;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            color: #333333;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            min-height: 52px;
-            justify-content: center;
+          width: 100%;
+        }
+      }
 
-            &:hover {
-                border-color: #198754;
-                background: rgba(25, 135, 84, 0.05);
-                color: #198754;
-                transform: translateY(-1px);
-                box-shadow: 0 2px 8px rgba(25, 135, 84, 0.15);
+      .price-amount {
+        font-size: 36px;
+      }
+    }
+  }
+
+  // My Subscriptions Section
+  .my-subscriptions-section {
+    padding: 60px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 30px;
+      color: $text-primary;
+      text-align: center;
+    }
+
+    text-align: center;
+    padding: 100px;
+    background: $bg-gradient;
+    font-family: "Arial", sans-serif;
+  }
+
+  .membership-page h1 {
+    font-size: 2.5rem;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    color: $text-primary;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .membership-page p {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    color: $text-secondary;
+  }
+
+  .subscriptions-list {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+
+    .subscription-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid rgba(22, 163, 74, 0.2);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      &.current_active {
+        border-color: rgba(22, 163, 74, 0.5);
+        border-width: 2px;
+        background: rgba(220, 252, 231, 0.3);
+      }
+
+      &.pending {
+        border-color: rgba(255, 193, 7, 0.5);
+        background: rgba(255, 248, 220, 0.3);
+      }
+
+      .subscription-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+
+        .package {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border: 2px solid rgba(22, 163, 74, 0.2);
+          border-radius: 15px;
+          padding: 20px;
+          width: 300px;
+          box-shadow: 0 8px 15px rgba(22, 163, 74, 0.1);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          min-height: 450px;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+          &:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 20px rgba(22, 163, 74, 0.25);
+            border-color: $primary-color;
+          }
+
+          h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: $text-primary;
+          }
+
+          .price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: $text-primary;
+            margin-bottom: 10px;
+          }
+
+          p {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: $text-secondary;
+          }
+
+          .subscription-info {
+            flex: 1;
+
+            h3 {
+              font-size: 1.25rem;
+              font-weight: 600;
+              margin: 0 0 8px;
+              color: $text-primary;
+            }
+
+            .subscription-details {
+              font-size: 0.9rem;
+              color: $text-secondary;
+              margin: 0;
+            }
+          }
+
+          .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+
+            &.current_active {
+              background: $primary-color;
+              color: $text-white;
             }
 
             &.active {
-                background: #198754;
-                border-color: #198754;
-                color: #ffffff;
-                font-weight: 700;
-                box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4);
-                transform: translateY(-2px);
-
-                .savings-badge {
-                    background: rgba(255, 255, 255, 0.3);
-                    color: #ffffff;
-                    border: 1px solid rgba(255, 255, 255, 0.4);
-                }
-            }
-
-            .duration-text {
-                font-size: 14px;
-                font-weight: inherit;
-            }
-
-            .savings-badge {
-                font-size: 10px;
-                padding: 3px 8px;
-                border-radius: 6px;
-                background: rgba(25, 135, 84, 0.15);
-                color: #198754;
-                font-weight: 700;
-                text-transform: uppercase;
-                border: 1px solid rgba(25, 135, 84, 0.2);
-                white-space: nowrap;
-            }
-        }
-    }
-
-    // Price Section
-    .price-section {
-        margin-bottom: 24px;
-
-        .price-wrapper {
-            display: flex;
-            align-items: baseline;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-
-        .price-amount {
-            font-size: 48px;
-            font-weight: 900;
-            line-height: 1;
-            letter-spacing: -0.02em;
-            color: #333333;
-        }
-
-        .original-price {
-            font-size: 20px;
-            color: #AAAAAA;
-            text-decoration: line-through;
-        }
-
-        .price-period {
-            font-size: 14px;
-            color: #AAAAAA;
-            margin: 0;
-        }
-    }
-
-    .plan-description {
-        font-size: 14px;
-        color: #AAAAAA;
-        margin: 0 0 24px;
-        line-height: 1.6;
-    }
-
-    .divider {
-        height: 1px;
-        background: rgba(25, 135, 84, 0.2);
-        margin: 24px 0;
-    }
-
-    // Features List
-    .features-list {
-        list-style: none;
-        padding: 0;
-        margin: 0 0 32px;
-        min-height: 200px;
-
-        .feature-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 10px 0;
-            font-size: 15px;
-            line-height: 1.6;
-            transition: all 0.2s ease;
-
-            &:hover {
-                transform: translateX(4px);
-            }
-
-            .check-icon {
-                color: #198754;
-                font-size: 16px;
-                flex-shrink: 0;
-                margin-top: 3px;
-            }
-
-            span {
-                color: #333333;
-                font-weight: 400;
-            }
-        }
-
-        // Empty state - không hiển thị gì nếu không có features
-        &:empty::after {
-            content: 'Không có tính năng';
-            display: block;
-            color: #AAAAAA;
-            font-size: 14px;
-            text-align: center;
-            padding: 20px 0;
-        }
-    }
-
-    // Plan Footer
-    .plan-footer {
-        margin-top: auto;
-        padding-top: 24px;
-    }
-
-    .subscribe-btn,
-    .current-btn,
-    .unavailable-btn {
-        width: 100%;
-        min-height: 52px;
-        padding: 16px 32px;
-        border: none;
-        border-radius: 500px;
-        font-size: 16px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-    }
-
-    .subscribe-btn {
-        background: #198754;
-        color: #ffffff;
-
-        &:hover {
-            background: #146c43;
-            transform: scale(1.05);
-        }
-
-        &.premium {
-            background: #198754;
-            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);
-
-            &:hover {
-                background: #146c43;
-                box-shadow: 0 6px 20px rgba(25, 135, 84, 0.5);
-            }
-        }
-    }
-
-    .current-btn {
-        background: rgba(25, 135, 84, 0.2);
-        color: #198754;
-        border: 1px solid #198754;
-        cursor: not-allowed;
-        gap: 8px;
-    }
-
-    .unavailable-btn {
-        background: rgba(255, 255, 255, 0.5);
-        color: #AAAAAA;
-        border: 1px solid rgba(170, 170, 170, 0.3);
-        cursor: not-allowed;
-    }
-
-    // Loading & Error States
-    .loading-container,
-    .error-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 400px;
-        gap: 20px;
-    }
-
-    .spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid rgba(255, 255, 255, 0.1);
-        border-top: 4px solid #198754;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
-    .error-container {
-        color: #333333;
-
-        .error-icon {
-            font-size: 3rem;
-            color: #198754;
-        }
-    }
-
-    .retry-button {
-        background: #198754;
-        color: #ffffff;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 500px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 700;
-        transition: all 0.2s ease;
-
-        &:hover {
-            background: #146c43;
-            transform: scale(1.05);
-        }
-    }
-
-    // Payment Modal
-    .payment-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        backdrop-filter: blur(5px);
-    }
-
-    .payment-modal {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 32px;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(25, 135, 84, 0.2);
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-
-            h3 {
-                margin: 0;
-                font-size: 24px;
-                font-weight: 700;
-                color: #333333;
-            }
-
-            .close-button {
-                background: none;
-                border: none;
-                color: #AAAAAA;
-                font-size: 24px;
-                cursor: pointer;
-                padding: 0;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                transition: all 0.2s ease;
-
-                &:hover {
-                    background: rgba(25, 135, 84, 0.1);
-                    color: #198754;
-                }
-            }
-
-            .modal-content {
-                p {
-                    margin: 12px 0;
-                    color: #AAAAAA;
-                    font-size: 16px;
-
-                    strong {
-                        color: #198754;
-                    }
-                }
-            }
-        }
-
-        // Responsive
-        @media (max-width: 768px) {
-            .hero-section {
-                padding: 60px 20px 40px;
-            }
-
-            .plans-container {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .plan-card {
-                padding: 24px 20px;
-
-                &.featured {
-                    transform: scale(1);
-                }
-            }
-
-            .duration-tabs {
-                flex-direction: column;
-                gap: 4px;
-
-                .duration-tab {
-                    width: 100%;
-                }
-            }
-
-            .price-amount {
-                font-size: 36px;
-            }
-        }
-    }
-
-    // My Subscriptions Section
-    .my-subscriptions-section {
-        padding: 60px 20px;
-        max-width: 1200px;
-        margin: 0 auto;
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0 0 30px;
-            color: #333333;
-            text-align: center;
-        }
-
-        text-align: center;
-        padding: 100px;
-        background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
-        font-family: 'Arial',
-        sans-serif;
-    }
-
-    .membership-page h1 {
-        font-size: 2.5rem;
-        margin-top: 30px;
-        margin-bottom: 30px;
-        color: #333333;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-
-    .membership-page p {
-        font-size: 1.2rem;
-        margin-bottom: 30px;
-        color: #AAAAAA;
-    }
-
-    .subscriptions-list {
-        display: grid;
-        gap: 20px;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-
-        .subscription-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid rgba(25, 135, 84, 0.2);
-
-            &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            }
-
-            &.current_active {
-                border-color: rgba(25, 135, 84, 0.5);
-                border-width: 2px;
-                background: rgba(224, 247, 224, 0.3);
+              background: #3b82f6;
+              color: $text-white;
             }
 
             &.pending {
-                border-color: rgba(255, 193, 7, 0.5);
-                background: rgba(255, 248, 220, 0.3);
+              background: #ffc107;
+              color: #000000;
             }
 
-            .subscription-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 16px;
-
-                .package {
-                    background: rgba(255, 255, 255, 0.95);
-                    backdrop-filter: blur(20px);
-                    border: 2px solid rgba(25, 135, 84, 0.2);
-                    border-radius: 15px;
-                    padding: 20px;
-                    width: 300px;
-                    box-shadow: 0 8px 15px rgba(25, 135, 84, 0.1);
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: space-between;
-                    min-height: 450px;
-                    transition: transform 0.3s ease, box-shadow 0.3s ease;
-                }
-
-                .package:hover {
-                    transform: translateY(-10px);
-                    box-shadow: 0 12px 20px rgba(25, 135, 84, 0.25);
-                    border-color: #198754;
-                }
-
-                .package h2 {
-                    font-size: 1.8rem;
-                    margin-bottom: 10px;
-                    color: #333333;
-                }
-
-                .package .price {
-                    font-size: 1.5rem;
-                    font-weight: bold;
-                    color: #333333;
-                    margin-bottom: 10px;
-                }
-
-                .package p {
-                    font-size: 1rem;
-                    margin-bottom: 10px;
-                    color: #AAAAAA;
-                }
-
-                .subscription-info {
-                    flex: 1;
-
-                    h3 {
-                        font-size: 1.25rem;
-                        font-weight: 600;
-                        margin: 0 0 8px;
-                        color: #333333;
-                    }
-
-                    .subscription-details {
-                        font-size: 0.9rem;
-                        color: #AAAAAA;
-                        margin: 0;
-                    }
-                }
-
-                .status-badge {
-                    padding: 6px 12px;
-                    border-radius: 20px;
-                    font-size: 0.85rem;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-
-                    &.current_active {
-                        background: #198754;
-                        color: #ffffff;
-                    }
-
-                    &.active {
-                        background: #0d6efd;
-                        color: #ffffff;
-                    }
-
-                    &.pending {
-                        background: #ffc107;
-                        color: #000000;
-                    }
-
-                    &.expired {
-                        background: #6c757d;
-                        color: #ffffff;
-                    }
-
-                    &.cancelled {
-                        background: #dc3545;
-                        color: #ffffff;
-                    }
-                }
+            &.expired {
+              background: #6c757d;
+              color: $text-white;
             }
 
-            .subscription-dates {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                margin-bottom: 16px;
-                padding: 16px;
-                background: rgba(0, 0, 0, 0.02);
-                border-radius: 8px;
-
-                .date-item {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-
-                    .date-label {
-                        font-size: 0.9rem;
-                        color: #AAAAAA;
-                        font-weight: 500;
-                    }
-
-                    .date-value {
-                        font-size: 0.9rem;
-                        color: #333333;
-                        font-weight: 600;
-                    }
-                }
+            &.cancelled {
+              background: #dc3545;
+              color: $text-white;
             }
-
-            .subscription-pending-note {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 12px;
-                background: rgba(255, 193, 7, 0.1);
-                border-radius: 8px;
-                border-left: 3px solid #ffc107;
-
-                .pending-icon {
-                    color: #ffc107;
-                    font-size: 1rem;
-                }
-
-                span {
-                    font-size: 0.85rem;
-                    color: #856404;
-                    line-height: 1.4;
-                }
-            }
+          }
         }
-    }
+      }
 
-    .package .features li {
-        margin-bottom: 5px;
+      .subscription-dates {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 8px;
+
+        .date-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .date-label {
+            font-size: 0.9rem;
+            color: $text-secondary;
+            font-weight: 500;
+          }
+
+          .date-value {
+            font-size: 0.9rem;
+            color: $text-primary;
+            font-weight: 600;
+          }
+        }
+      }
+
+      .subscription-pending-note {
         display: flex;
         align-items: center;
-        color: #AAAAAA;
-    }
+        gap: 8px;
+        padding: 12px;
+        background: rgba(255, 193, 7, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid #ffc107;
 
-    .package .features li::before {
-        content: '✔';
-        color: #198754;
-        margin-right: 10px;
-        font-size: 1.2rem;
-    }
-
-    .register-button {
-        background: #198754;
-        color: #ffffff;
-        border: none;
-        border-radius: 25px;
-        padding: 10px 20px;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        margin-top: auto;
-        width: 100%;
-        max-width: auto;
-        text-align: center;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.25);
-    }
-
-    .register-button:hover {
-        background: #146c43;
-        color: #ffffff;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(20, 108, 67, 0.35);
-    }
+        .pending-icon {
+          color: #ffc107;
+          font-size: 1rem;
         }
+
+        span {
+          font-size: 0.85rem;
+          color: #856404;
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+
+  .package .features li {
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    color: $text-secondary;
+  }
+
+  .package .features li::before {
+    content: "✔";
+    color: $primary-color;
+    margin-right: 10px;
+    font-size: 1.2rem;
+  }
+
+  .register-button {
+    background: $primary-color;
+    color: $text-white;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: auto;
+    width: 100%;
+    max-width: auto;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+  }
+
+  .register-button:hover {
+    background: $primary-hover;
+    color: $text-white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(21, 128, 61, 0.35);
+  }
+}

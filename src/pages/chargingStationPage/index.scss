@@ -1,13 +1,46 @@
 /* ===== RESET & FONT ===== */
-// Add button color tokens to match design
-$btn-primary-bg: #198754;
-$btn-primary-hover: #146c43;
-$btn-outline-color: #198754;
-$btn-text-on-primary: #ffffff;
+// ===== Brand Colors =====
+$primary-color: #16a34a;
+$primary-hover: #15803d;
+$primary-light: #dcfce7;
+$primary-dark: #14532d;
+
+$secondary-color: #3b82f6;
+$secondary-hover: #2563eb;
+$secondary-light: #dbeafe;
+
+$accent-color: #f59e0b;
+$accent-hover: #d97706;
+$accent-light: #fef3c7;
+
+// ===== Text Colors =====
+$text-primary: #0f172a;
+$text-secondary: #475569;
+$text-muted: #94a3b8;
+$text-white: #ffffff;
+
+// ===== Background Colors =====
+$bg-primary: #ffffff;
+$bg-secondary: #f8fafc;
+$bg-card: #ffffff;
+$bg-hover: #f1f5f9;
+$bg-selected: #dcfce7;
+
+// ===== Border Colors =====
+$border-color: #e2e8f0;
+$border-light: #f1f5f9;
+$border-hover: #cbd5e1;
+
+// ===== Shadow =====
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
 
 .charging-stations-page {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #E0F7E0 0%, #D1F5D1 100%);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -21,19 +54,18 @@ $btn-text-on-primary: #ffffff;
   max-width: 1200px;
   margin: 0 auto;
   padding: 4rem 2rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+  background: linear-gradient(135deg, $bg-primary 0%, #f8fffe 100%);
   border-radius: 24px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   margin-top: 2rem;
   margin-bottom: 3rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  
 
   .hero-text {
     max-width: 50%;
 
     h2 {
-      color: #333333;
+      color: $text-primary;
       background: none;
       -webkit-background-clip: initial;
       -webkit-text-fill-color: initial;
@@ -42,7 +74,7 @@ $btn-text-on-primary: #ffffff;
     }
 
     .highlight {
-      color: #AAAAAA;
+      color: $text-secondary;
       font-weight: 700;
       margin-bottom: 0.75rem;
       font-size: 1.1rem;
@@ -50,7 +82,7 @@ $btn-text-on-primary: #ffffff;
 
     p {
       margin-bottom: 1.5rem;
-      color: #AAAAAA;
+      color: $text-secondary;
       font-size: 1rem;
       line-height: 1.6;
     }
@@ -58,18 +90,18 @@ $btn-text-on-primary: #ffffff;
     .btn {
       display: inline-block;
       padding: 1rem 2rem;
-      background: $btn-primary-bg;          // solid primary
-      color: $btn-text-on-primary;
+      background: $primary-color; // solid primary
+      color: $text-white;
       border-radius: 50px;
       text-decoration: none;
       font-weight: 600;
       font-size: 1rem;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(25, 135, 84, 0.30);
+      box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
 
       &:hover {
-        background: $btn-primary-hover;     // darker on hover
-        box-shadow: 0 8px 25px rgba(20, 108, 67, 0.40);
+        background: $primary-hover; // darker on hover
+        box-shadow: 0 8px 25px rgba(21, 128, 61, 0.4);
         transform: translateY(-2px);
       }
     }
@@ -110,28 +142,28 @@ $btn-text-on-primary: #ffffff;
   padding: 60px 40px;
   max-width: 1200px;
   margin: 0 auto;
-  
+
   .section-header {
     text-align: center;
     margin-bottom: 32px;
-    
+
     h2 {
       font-size: 2.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, #16a34a, #4ade80);
+      background: linear-gradient(135deg, $primary-color, #4ade80);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       margin-bottom: 12px;
     }
-    
+
     p {
       font-size: 1.1rem;
-      color: #6b7280;
+      color: $text-secondary;
       font-weight: 400;
     }
   }
-  
+
   .map-container {
     display: flex;
     gap: 24px;
@@ -140,7 +172,7 @@ $btn-text-on-primary: #ffffff;
     backdrop-filter: blur(10px);
     border-radius: 24px;
     padding: 24px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    box-shadow: $shadow-xl;
   }
 
   .station-list {
@@ -150,35 +182,32 @@ $btn-text-on-primary: #ffffff;
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 2px solid rgba(16, 185, 129, 0.2);
+    box-shadow: $shadow-lg;
+    border: 2px solid rgba(22, 163, 74, 0.2);
 
     .station-scroll {
       flex: 1;
       overflow-y: auto;
       padding: 20px;
       background: transparent;
-      
+
       &::-webkit-scrollbar {
         width: 6px;
       }
-      
+
       &::-webkit-scrollbar-track {
         background: transparent;
       }
-      
+
       &::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
+        background: $border-hover;
         border-radius: 10px;
-        
+
         &:hover {
-          background: #94a3b8;
+          background: $text-muted;
         }
       }
-      
+
       .empty-state {
         display: flex;
         flex-direction: column;
@@ -186,28 +215,28 @@ $btn-text-on-primary: #ffffff;
         justify-content: center;
         padding: 60px 20px;
         text-align: center;
-        
+
         svg {
           margin-bottom: 16px;
         }
-        
+
         p {
           font-size: 16px;
           font-weight: 600;
-          color: #64748b;
+          color: $text-secondary;
           margin: 0 0 8px 0;
         }
-        
+
         span {
           font-size: 14px;
-          color: #94a3b8;
+          color: $text-muted;
         }
       }
     }
 
     .station-card {
-      background: #fff;
-      border: 2px solid #e2e8f0;
+      background: $bg-card;
+      border: 2px solid $border-color;
       border-radius: 16px;
       margin-bottom: 16px;
       padding: 16px;
@@ -217,30 +246,30 @@ $btn-text-on-primary: #ffffff;
       &:hover {
         border-color: #4ade80;
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+        box-shadow: 0 8px 24px rgba(22, 163, 74, 0.15);
       }
 
       &.selected {
-        border-color: #16a34a;
-        background: linear-gradient(to bottom, #f0fdf4, #fff);
-        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.2);
+        border-color: $primary-color;
+        background: linear-gradient(to bottom, $primary-light, $bg-card);
+        box-shadow: 0 8px 32px rgba(22, 163, 74, 0.2);
         transform: translateY(-2px);
       }
-      
+
       .card-top {
         margin-bottom: 14px;
-        
+
         .station-name-status {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 8px;
           margin-bottom: 10px;
-          
+
           h4 {
             font-size: 16px;
             font-weight: 700;
-            color: #1e293b;
+            color: $text-primary;
             margin: 0;
             flex: 1;
             overflow: hidden;
@@ -248,95 +277,95 @@ $btn-text-on-primary: #ffffff;
             white-space: nowrap;
           }
         }
-        
+
         .distance {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
-          background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+          background: linear-gradient(135deg, $secondary-light, #bfdbfe);
           border-radius: 20px;
           font-size: 13px;
           font-weight: 600;
           color: #1e40af;
-          
+
           svg {
-            color: #3b82f6;
+            color: $secondary-color;
           }
         }
       }
-      
+
       .card-info {
         margin-bottom: 14px;
-        
+
         .info-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 10px;
           margin-bottom: 12px;
-          
+
           .info-cell {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 10px;
-            background: #f8fafc;
+            background: $bg-secondary;
+            border: 1px solid $border-color;
             border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            
+
             svg {
               flex-shrink: 0;
             }
-            
+
             div {
               display: flex;
               flex-direction: column;
               gap: 2px;
               min-width: 0;
-              
+
               .label {
                 font-size: 11px;
-                color: #64748b;
+                color: $text-secondary;
                 font-weight: 500;
               }
-              
+
               .value {
                 font-size: 13px;
                 font-weight: 700;
-                color: #1e293b;
+                color: $text-primary;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                
+
                 &.price {
-                  color: #16a34a;
+                  color: $primary-color;
                 }
               }
             }
           }
         }
-        
+
         .ports {
           display: flex;
           gap: 8px;
           flex-wrap: wrap;
           margin-bottom: 12px;
         }
-        
+
         .address {
           display: flex;
           align-items: flex-start;
           gap: 8px;
           padding: 10px 12px;
-          background: #fef3c7;
+          background: $accent-light;
           border-radius: 10px;
-          border-left: 3px solid #f59e0b;
-          
+          border-left: 3px solid $accent-color;
+
           svg {
             flex-shrink: 0;
             margin-top: 2px;
           }
-          
+
           span {
             font-size: 13px;
             color: #92400e;
@@ -350,7 +379,7 @@ $btn-text-on-primary: #ffffff;
           }
         }
       }
-      
+
       .book-btn {
         width: 100%;
         display: flex;
@@ -358,33 +387,34 @@ $btn-text-on-primary: #ffffff;
         justify-content: center;
         gap: 8px;
         padding: 12px;
-        background: linear-gradient(135deg, #16a34a, #059669);
-        color: #fff;
+        background: linear-gradient(135deg, $primary-color, #059669);
+        color: $text-white;
         border: none;
         border-radius: 10px;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
         transition: all 0.3s ease;
-        
+
         svg {
           animation: pulse-icon 2s ease-in-out infinite;
         }
-        
+
         &:hover {
           background: linear-gradient(135deg, #059669, #047857);
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+          box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
         }
-        
+
         &:active {
           transform: translateY(0);
         }
       }
     }
-    
+
     @keyframes pulse-icon {
-      0%, 100% {
+      0%,
+      100% {
         opacity: 1;
         transform: scale(1);
       }
@@ -399,8 +429,8 @@ $btn-text-on-primary: #ffffff;
     flex: 2;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    border: 1px solid rgba(16, 185, 129, 0.1);
+    box-shadow: $shadow-md;
+    border: 1px solid rgba(22, 163, 74, 0.1);
   }
 }
 
@@ -411,13 +441,13 @@ $btn-text-on-primary: #ffffff;
   margin: 100px auto;
   padding: 60px 40px;
   text-align: center;
-  background: white;
+  background: $bg-card;
   border-radius: 20px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
-  
+  box-shadow: $shadow-xl;
+
   p {
     font-size: 1.2rem;
-    color: #6b7280;
+    color: $text-secondary;
   }
 }
 
@@ -437,10 +467,10 @@ $btn-text-on-primary: #ffffff;
 
 /* ===== CARD ===== */
 .card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+  background: linear-gradient(135deg, $bg-primary 0%, #f8fffe 100%);
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: $shadow-lg;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -450,20 +480,20 @@ $btn-text-on-primary: #ffffff;
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 4px;
 
-    background: linear-gradient(90deg, #16a34a, #22c55e);
+    background: linear-gradient(90deg, $primary-color, #22c55e);
   }
 }
 
 .card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: $shadow-xl;
 }
 
 .card img {
@@ -474,14 +504,14 @@ $btn-text-on-primary: #ffffff;
   /* ảnh được cắt nếu cần, không méo */
   border-radius: 16px;
   margin-bottom: 1.5rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: $shadow-md;
   transition: transform 0.3s ease;
 }
 
 .card h3 {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #333333;
+  color: $text-primary;
   margin-bottom: 1rem;
   line-height: 1.3;
 }
@@ -490,7 +520,7 @@ $btn-text-on-primary: #ffffff;
   list-style: none;
   padding: 0;
   margin: 0 0 2rem 0;
-  color: #AAAAAA;
+  color: $text-secondary;
   font-size: 0.95rem;
   line-height: 1.6;
 }
@@ -501,15 +531,15 @@ $btn-text-on-primary: #ffffff;
   position: relative;
 
   &::before {
-    content: '✓';
+    content: "✓";
     position: absolute;
     left: 0;
-    color: #16a34a;
+    color: $primary-color;
     font-weight: bold;
   }
 
   b {
-    color: #333333;
+    color: $text-primary;
     font-weight: 600;
   }
 }
@@ -529,8 +559,8 @@ $btn-text-on-primary: #ffffff;
   font-size: 0.85rem;
   font-weight: 600;
   border: none;
-  background: $btn-primary-bg;
-  color: $btn-text-on-primary;
+  background: $primary-color;
+  color: $text-white;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
@@ -538,8 +568,8 @@ $btn-text-on-primary: #ffffff;
   text-align: center;
 
   &:hover {
-    background: $btn-primary-hover;
-    color: $btn-text-on-primary;
+    background: $primary-hover;
+    color: $text-white;
   }
 }
 
@@ -551,8 +581,8 @@ $btn-text-on-primary: #ffffff;
   font-weight: 600;
   width: 100%;
   border: none;
-  background: $btn-primary-bg;
-  color: $btn-text-on-primary;
+  background: $primary-color;
+  color: $text-white;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
@@ -560,12 +590,12 @@ $btn-text-on-primary: #ffffff;
   text-align: center;
 
   &:hover {
-    background: $btn-primary-hover;
+    background: $primary-hover;
   }
 }
 
 .title-support {
-  background: #198754;
+  background: $primary-color;
   padding: 3rem 0;
   text-align: center;
   margin: 3rem 0;
@@ -575,7 +605,7 @@ $btn-text-on-primary: #ffffff;
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -588,7 +618,7 @@ $btn-text-on-primary: #ffffff;
   h2 {
     font-size: 2.5rem;
     font-weight: 800;
-    color: #fff;
+    color: $text-white;
     margin: 0;
     position: relative;
     z-index: 1;
@@ -604,27 +634,27 @@ html {
 @media (max-width: 1024px) {
   .nearby-stations {
     padding: 40px 20px;
-    
+
     .map-container {
       flex-direction: column;
       height: auto;
     }
-    
+
     .station-list {
       max-width: 100%;
       min-width: 100%;
       height: 500px;
     }
-    
+
     .map-view {
       height: 500px;
     }
   }
-  
+
   .charging-hero {
     flex-direction: column;
     padding: 3rem 1.5rem;
-    
+
     .hero-text,
     .hero-image {
       max-width: 100%;
@@ -635,43 +665,43 @@ html {
 @media (max-width: 768px) {
   .nearby-stations {
     padding: 30px 16px;
-    
+
     .section-header {
       h2 {
         font-size: 2rem;
       }
-      
+
       p {
         font-size: 1rem;
       }
     }
-    
+
     .map-container {
       padding: 16px;
       border-radius: 16px;
     }
-    
+
     .station-list {
       height: 400px;
     }
-    
+
     .map-view {
       height: 400px;
     }
   }
-  
+
   .charging-hero {
     padding: 2rem 1rem;
-    
+
     .hero-text {
       h2 {
         font-size: 1.8rem;
       }
-      
+
       .highlight {
         font-size: 1rem;
       }
-      
+
       p {
         font-size: 0.9rem;
       }

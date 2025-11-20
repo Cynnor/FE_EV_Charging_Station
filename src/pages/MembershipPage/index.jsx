@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { FaBatteryFull, FaCheckCircle, FaBolt, FaCrown, FaStar, FaTimes } from "react-icons/fa";
+import {
+  FaBatteryFull,
+  FaCheckCircle,
+  FaBolt,
+  FaCrown,
+  FaStar,
+  FaTimes,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import api from "../../config/api";
 import "./index.scss";
@@ -18,9 +25,9 @@ function MembershipPage() {
   // State cho UI tối ưu - group plans theo type và duration
   const [groupedPlans, setGroupedPlans] = useState({});
   const [selectedDurations, setSelectedDurations] = useState({
-    basic: '1_month',
-    standard: '1_month',
-    premium: '1_month'
+    basic: "1_month",
+    standard: "1_month",
+    premium: "1_month",
   });
 
   useEffect(() => {
@@ -36,7 +43,7 @@ function MembershipPage() {
       setError(null);
 
       // Gọi API để lấy danh sách subscription plans
-      const plansResponse = await api.get('/subscription-plans');
+      const plansResponse = await api.get("/subscription-plans");
       if (plansResponse.data?.success) {
         const plans = plansResponse.data.data || [];
         setSubscriptionPlans(plans);
@@ -48,18 +55,17 @@ function MembershipPage() {
 
       // Gọi API để lấy current active subscription
       try {
-        const currentResponse = await api.get('/subscriptions/current-active');
+        const currentResponse = await api.get("/subscriptions/current-active");
         if (currentResponse.data?.success) {
           setCurrentSubscription(currentResponse.data.data);
         }
       } catch (currentError) {
         // Không có current subscription là bình thường
-        console.log('No active subscription found');
+        console.log("No active subscription found");
       }
-
     } catch (err) {
-      console.error('Error loading subscription data:', err);
-      setError('Không thể tải dữ liệu gói đăng ký. Vui lòng thử lại.');
+      console.error("Error loading subscription data:", err);
+      setError("Không thể tải dữ liệu gói đăng ký. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
@@ -70,10 +76,10 @@ function MembershipPage() {
     const grouped = {
       basic: {},
       standard: {},
-      premium: {}
+      premium: {},
     };
 
-    plans.forEach(plan => {
+    plans.forEach((plan) => {
       if (grouped[plan.type]) {
         grouped[plan.type][plan.duration] = plan;
       }
@@ -83,7 +89,7 @@ function MembershipPage() {
   };
 
   // ===== SUBSCRIPTION PAYMENT FLOW =====
-  // Flow: 
+  // Flow:
   // 1. User xem danh sách plans (GET /subscription-plans) - đã load trong loadSubscriptionData()
   // 2. User chọn plan và gọi API này với planId
   // 3. API tự động tạo subscription pending cho user
@@ -97,9 +103,9 @@ function MembershipPage() {
 
       // Gọi API để tạo payment URL cho subscription
       // API sẽ tự động tạo subscription (status: pending) và trả về paymentUrl + subscriptionId
-      const response = await api.post('/subscriptions/payment', {
+      const response = await api.post("/subscriptions/payment", {
         planId: plan._id,
-        locale: 'vn'
+        locale: "vn",
       });
 
       if (response.data?.success) {
@@ -109,23 +115,23 @@ function MembershipPage() {
         // Lưu subscriptionId vào localStorage để verify khi VNPay redirect về
         // BE đã set vnp_TxnRef = subscriptionId, nên khi VNPay redirect về,
         // FE sẽ lấy vnp_TxnRef từ URL làm subscriptionId để check payment
-        localStorage.setItem('pendingSubscriptionId', subscriptionId);
+        localStorage.setItem("pendingSubscriptionId", subscriptionId);
 
         // Redirect đến VNPay để thanh toán
         // VNPay sẽ redirect về với vnp_TxnRef = subscriptionId
         window.location.href = paymentUrl;
       }
     } catch (err) {
-      console.error('Error creating payment:', err);
-      setError('Không thể tạo thanh toán. Vui lòng thử lại.');
+      console.error("Error creating payment:", err);
+      setError("Không thể tạo thanh toán. Vui lòng thử lại.");
     }
   };
 
   // Implement upgrade/cancel subscription functionality
   const handleUpgrade = async (plan) => {
     try {
-      const response = await api.post('/subscriptions/upgrade', {
-        planId: plan._id
+      const response = await api.post("/subscriptions/upgrade", {
+        planId: plan._id,
       });
 
       if (response.data?.success) {
@@ -133,8 +139,8 @@ function MembershipPage() {
         handleSubscribe(plan);
       }
     } catch (err) {
-      console.error('Error upgrading subscription:', err);
-      setError('Không thể nâng cấp gói. Vui lòng thử lại.');
+      console.error("Error upgrading subscription:", err);
+      setError("Không thể nâng cấp gói. Vui lòng thử lại.");
     }
   };
 
@@ -142,28 +148,32 @@ function MembershipPage() {
     if (!currentSubscription) return;
 
     try {
-      const response = await api.post(`/subscriptions/${currentSubscription._id}/cancel`);
+      const response = await api.post(
+        `/subscriptions/${currentSubscription._id}/cancel`
+      );
       if (response.data?.success) {
-        alert('Đã hủy gói đăng ký thành công. Bạn vẫn có thể sử dụng đến hết thời hạn.');
+        alert(
+          "Đã hủy gói đăng ký thành công. Bạn vẫn có thể sử dụng đến hết thời hạn."
+        );
         loadSubscriptionData(); // Reload data
       }
     } catch (err) {
-      console.error('Error cancelling subscription:', err);
-      setError('Không thể hủy gói đăng ký. Vui lòng thử lại.');
+      console.error("Error cancelling subscription:", err);
+      setError("Không thể hủy gói đăng ký. Vui lòng thử lại.");
     }
   };
 
   // Helper function để format giá tiền
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN').format(price) + ' VNĐ';
+    return new Intl.NumberFormat("vi-VN").format(price) + " VNĐ";
   };
 
   // Helper function để format duration
   const formatDuration = (duration) => {
     const durationMap = {
-      '1_month': '1 tháng',
-      '6_months': '6 tháng',
-      '12_months': '12 tháng'
+      "1_month": "1 tháng",
+      "6_months": "6 tháng",
+      "12_months": "12 tháng",
     };
     return durationMap[duration] || duration;
   };
@@ -171,11 +181,11 @@ function MembershipPage() {
   // Helper function để get plan icon
   const getPlanIcon = (type) => {
     switch (type) {
-      case 'basic':
+      case "basic":
         return <FaBatteryFull />;
-      case 'standard':
+      case "standard":
         return <FaBolt />;
-      case 'premium':
+      case "premium":
         return <FaCrown />;
       default:
         return <FaStar />;
@@ -191,22 +201,26 @@ function MembershipPage() {
   const canUpgradeTo = (plan) => {
     if (!currentSubscription) return true;
 
-    const currentPlan = subscriptionPlans.find(p => p._id === currentSubscription.planId);
+    const currentPlan = subscriptionPlans.find(
+      (p) => p._id === currentSubscription.planId
+    );
     if (!currentPlan) return true;
 
     // Check type hierarchy: basic < standard < premium
     const typeOrder = { basic: 1, standard: 2, premium: 3 };
-    const durationOrder = { '1_month': 1, '6_months': 2, '12_months': 3 };
+    const durationOrder = { "1_month": 1, "6_months": 2, "12_months": 3 };
 
-    return typeOrder[plan.type] > typeOrder[currentPlan.type] ||
-      durationOrder[plan.duration] > durationOrder[currentPlan.duration];
+    return (
+      typeOrder[plan.type] > typeOrder[currentPlan.type] ||
+      durationOrder[plan.duration] > durationOrder[currentPlan.duration]
+    );
   };
 
   // Thêm dropdown chọn thời hạn cho mỗi loại membership
   const handleDurationChange = (type, duration) => {
-    setSelectedDurations(prev => ({
+    setSelectedDurations((prev) => ({
       ...prev,
-      [type]: duration
+      [type]: duration,
     }));
   };
 
@@ -220,7 +234,7 @@ function MembershipPage() {
   const getAvailableDurations = (type) => {
     const typePlans = groupedPlans[type] || {};
     return Object.keys(typePlans).sort((a, b) => {
-      const order = { '1_month': 1, '6_months': 2, '12_months': 3 };
+      const order = { "1_month": 1, "6_months": 2, "12_months": 3 };
       return order[a] - order[b];
     });
   };
@@ -274,7 +288,12 @@ function MembershipPage() {
             </div>
             <div className="banner-info">
               <h3>Gói hiện tại</h3>
-              <p>{currentSubscription.plan?.name} • Hết hạn: {new Date(currentSubscription.endDate).toLocaleDateString('vi-VN')}</p>
+              <p>
+                {currentSubscription.plan?.name} • Hết hạn:{" "}
+                {new Date(currentSubscription.endDate).toLocaleDateString(
+                  "vi-VN"
+                )}
+              </p>
             </div>
             <button
               className="banner-cancel-btn"
@@ -298,15 +317,19 @@ function MembershipPage() {
             return (
               <div
                 key={type}
-                className={`plan-card ${isCurrentPlan(currentPlan) ? 'current' : ''} ${type === 'premium' ? 'featured' : ''} ${type}`}
+                className={`plan-card ${
+                  isCurrentPlan(currentPlan) ? "current" : ""
+                } ${type === "premium" ? "featured" : ""} ${type}`}
               >
-                {type === 'premium' && <div className="popular-badge">Phổ biến nhất</div>}
+                {type === "premium" && (
+                  <div className="popular-badge">Phổ biến nhất</div>
+                )}
 
                 <div className="plan-header">
-                  <div className="plan-icon-wrapper">
-                    {getPlanIcon(type)}
-                  </div>
-                  <h2 className="plan-name">{currentPlan.name.split(' - ')[0]}</h2>
+                  <div className="plan-icon-wrapper">{getPlanIcon(type)}</div>
+                  <h2 className="plan-name">
+                    {currentPlan.name.split(" - ")[0]}
+                  </h2>
                   {isCurrentPlan(currentPlan) && (
                     <span className="current-badge">
                       <FaCheckCircle /> Gói hiện tại
@@ -318,30 +341,41 @@ function MembershipPage() {
                 <div className="duration-selector">
                   <div className="duration-tabs">
                     {availableDurations.length > 0 ? (
-                      availableDurations.map(duration => (
+                      availableDurations.map((duration) => (
                         <button
                           key={duration}
-                          className={`duration-tab ${selectedDurations[type] === duration ? 'active' : ''}`}
+                          className={`duration-tab ${
+                            selectedDurations[type] === duration ? "active" : ""
+                          }`}
                           onClick={() => handleDurationChange(type, duration)}
                         >
-                          <span className="duration-text">{formatDuration(duration)}</span>
-                          {duration === '12_months' && (
+                          <span className="duration-text">
+                            {formatDuration(duration)}
+                          </span>
+                          {duration === "12_months" && (
                             <span className="savings-badge">TIẾT KIỆM</span>
                           )}
                         </button>
                       ))
                     ) : (
-                      <div className="no-duration-message">Chưa có gói đăng ký</div>
+                      <div className="no-duration-message">
+                        Chưa có gói đăng ký
+                      </div>
                     )}
                   </div>
                 </div>
 
                 <div className="price-section">
                   <div className="price-wrapper">
-                    <span className="price-amount">{formatPrice(currentPlan.price)}</span>
-                    {currentPlan.originalPrice && currentPlan.originalPrice > currentPlan.price && (
-                      <span className="original-price">{formatPrice(currentPlan.originalPrice)}</span>
-                    )}
+                    <span className="price-amount">
+                      {formatPrice(currentPlan.price)}
+                    </span>
+                    {currentPlan.originalPrice &&
+                      currentPlan.originalPrice > currentPlan.price && (
+                        <span className="original-price">
+                          {formatPrice(currentPlan.originalPrice)}
+                        </span>
+                      )}
                   </div>
                   {/* <p className="price-period">{formatDuration(currentPlan.duration)}</p> */}
                 </div>
@@ -351,37 +385,56 @@ function MembershipPage() {
                 <div className="divider"></div>
 
                 <ul className="features-list">
-                  {currentPlan.features && Object.entries(currentPlan.features).map(([key, value], i) => {
-                    // Chỉ hiển thị feature nếu có giá trị hợp lệ
-                    let featureText = '';
-                    if (key === 'maxReservations' && value !== undefined && value !== null) {
-                      if (value === -1) {
-                        featureText = 'Đặt lịch không giới hạn';
-                      } else if (value > 0) {
-                        featureText = `Tối đa ${value} lần đặt lịch/tháng`;
-                      }
-                    } else if (key === 'maxVehicles' && value !== undefined && value !== null) {
-                      if (value === -1) {
-                        featureText = 'Quản lý xe không giới hạn';
-                      } else if (value > 0) {
-                        featureText = `Tối đa ${value} xe`;
-                      }
-                    } else if (key === 'prioritySupport' && value === true) {
-                      featureText = 'Hỗ trợ ưu tiên 24/7';
-                    } else if (key === 'discount' && value !== undefined && value !== null && value > 0) {
-                      featureText = `Giảm giá ${value}% khi gia hạn`;
-                    }
+                  {currentPlan.features &&
+                    Object.entries(currentPlan.features).map(
+                      ([key, value], i) => {
+                        // Chỉ hiển thị feature nếu có giá trị hợp lệ
+                        let featureText = "";
+                        if (
+                          key === "maxReservations" &&
+                          value !== undefined &&
+                          value !== null
+                        ) {
+                          if (value === -1) {
+                            featureText = "Đặt lịch không giới hạn";
+                          } else if (value > 0) {
+                            featureText = `Tối đa ${value} lần đặt lịch/tháng`;
+                          }
+                        } else if (
+                          key === "maxVehicles" &&
+                          value !== undefined &&
+                          value !== null
+                        ) {
+                          if (value === -1) {
+                            featureText = "Quản lý xe không giới hạn";
+                          } else if (value > 0) {
+                            featureText = `Tối đa ${value} xe`;
+                          }
+                        } else if (
+                          key === "prioritySupport" &&
+                          value === true
+                        ) {
+                          featureText = "Hỗ trợ ưu tiên 24/7";
+                        } else if (
+                          key === "discount" &&
+                          value !== undefined &&
+                          value !== null &&
+                          value > 0
+                        ) {
+                          featureText = `Giảm giá ${value}% khi gia hạn`;
+                        }
 
-                    // Chỉ render nếu có feature text
-                    if (!featureText) return null;
+                        // Chỉ render nếu có feature text
+                        if (!featureText) return null;
 
-                    return (
-                      <li key={i} className="feature-item">
-                        <FaCheckCircle className="check-icon" />
-                        <span>{featureText}</span>
-                      </li>
-                    );
-                  })}
+                        return (
+                          <li key={i} className="feature-item">
+                            <FaCheckCircle className="check-icon" />
+                            <span>{featureText}</span>
+                          </li>
+                        );
+                      }
+                    )}
                 </ul>
 
                 <div className="plan-footer">
@@ -391,7 +444,9 @@ function MembershipPage() {
                     </button>
                   ) : canUpgradeTo(currentPlan) ? (
                     <button
-                      className={`subscribe-btn ${type === 'premium' ? 'premium' : ''}`}
+                      className={`subscribe-btn ${
+                        type === "premium" ? "premium" : ""
+                      }`}
                       onClick={() => handleSubscribe(currentPlan)}
                     >
                       Bắt đầu
@@ -422,9 +477,16 @@ function MembershipPage() {
               </button>
             </div>
             <div className="modal-content">
-              <p>Bạn đang đăng ký gói: <strong>{selectedPlan.name}</strong></p>
-              <p>Giá: <strong>{formatPrice(selectedPlan.price)}</strong></p>
-              <p>Thời hạn: <strong>{formatDuration(selectedPlan.duration)}</strong></p>
+              <p>
+                Bạn đang đăng ký gói: <strong>{selectedPlan.name}</strong>
+              </p>
+              <p>
+                Giá: <strong>{formatPrice(selectedPlan.price)}</strong>
+              </p>
+              <p>
+                Thời hạn:{" "}
+                <strong>{formatDuration(selectedPlan.duration)}</strong>
+              </p>
               <p>Sẽ được chuyển hướng đến VNPay để thanh toán...</p>
             </div>
           </div>
