@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./index.scss";
 
-const StaffHeader = ({ title, subtitle }) => {
+const StaffHeader = ({ title, subtitle, onToggleSidebar, isSidebarOpen }) => {
     const [showNotifications, setShowNotifications] = useState(false);
+    const navigate = useNavigate();
 
     const notifications = [
         {
@@ -31,6 +33,12 @@ const StaffHeader = ({ title, subtitle }) => {
         },
     ];
 
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+    };
+
     return (
         <>
             <header className="staff-header">
@@ -47,6 +55,14 @@ const StaffHeader = ({ title, subtitle }) => {
                         >
                             <span className="icon">🔔</span>
                             <span className="badge">3</span>
+                        </button>
+
+                        <button className="sidebar-toggle" onClick={onToggleSidebar}>
+                            {isSidebarOpen ? "Ẩn menu" : "Hiện menu"}
+                        </button>
+
+                        <button className="logout-btn" onClick={handleLogout}>
+                            Đăng xuất
                         </button>
 
                         <div className="staff-avatar">

@@ -37,6 +37,7 @@ const StaffLayout = () => {
     };
 
     const [activeTab, setActiveTab] = useState(getActiveTabFromPath());
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useEffect(() => {
         setActiveTab(getActiveTabFromPath());
@@ -53,13 +54,19 @@ const StaffLayout = () => {
     };
 
     return (
-        <div className="staff-layout">
-            <StaffSidebar activeTab={activeTab} setActiveTab={handleTabChange} />
+        <div className={`staff-layout ${isSidebarOpen ? "" : "sidebar-hidden"}`}>
+            <StaffSidebar
+                activeTab={activeTab}
+                setActiveTab={handleTabChange}
+                hidden={!isSidebarOpen}
+            />
 
             <main className="staff-main-content">
                 <StaffHeader
                     title={getCurrentTitle()}
                     subtitle="Chào mừng trở lại! Đây là tổng quan trạm sạc của bạn."
+                    onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+                    isSidebarOpen={isSidebarOpen}
                 />
 
                 <div className="staff-content-area">

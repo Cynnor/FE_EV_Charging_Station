@@ -1,6 +1,6 @@
 import "./index.scss";
 
-const StaffSidebar = ({ activeTab, setActiveTab }) => {
+const StaffSidebar = ({ activeTab, setActiveTab, hidden }) => {
   const menuItems = [
     { id: "overview", icon: "🧭", label: "Tổng quan", path: "" },
     {
@@ -36,7 +36,7 @@ const StaffSidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <aside className="staff-sidebar">
+    <aside className={`staff-sidebar ${hidden ? "is-hidden" : ""}`}>
       <div className="sidebar-header">
         <div className="logo">
           <span className="logo-icon">⚡</span>
