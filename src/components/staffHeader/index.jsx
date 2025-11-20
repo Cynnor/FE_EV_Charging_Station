@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./index.scss";
 
-const StaffHeader = ({ title, subtitle, onToggleSidebar, isSidebarOpen }) => {
+const StaffHeader = ({ title, subtitle }) => {
     const [showNotifications, setShowNotifications] = useState(false);
     const navigate = useNavigate();
 
@@ -55,10 +55,6 @@ const StaffHeader = ({ title, subtitle, onToggleSidebar, isSidebarOpen }) => {
                         >
                             <span className="icon">🔔</span>
                             <span className="badge">3</span>
-                        </button>
-
-                        <button className="sidebar-toggle" onClick={onToggleSidebar}>
-                            {isSidebarOpen ? "Ẩn menu" : "Hiện menu"}
                         </button>
 
                         <button className="logout-btn" onClick={handleLogout}>

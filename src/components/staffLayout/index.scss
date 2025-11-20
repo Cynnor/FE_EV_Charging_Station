@@ -25,12 +25,32 @@
     overflow-y: auto;
 }
 
+.sidebar-reveal-tab {
+    position: fixed;
+    top: 80px;
+    left: 12px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid #16a34a;
+    background: #ecfdf3;
+    color: #166534;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(22, 163, 74, 0.15);
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+}
+
 // Responsive Design
 @media (max-width: 1024px) {
     .staff-main-content {
         margin-left: 0;
     }
-
     .staff-content-area {
         padding: 16px 20px;
     }
@@ -41,6 +61,11 @@
 
     .staff-layout:not(.sidebar-hidden) .staff-sidebar {
         transform: translateX(0);
+    }
+
+    .sidebar-hidden .sidebar-reveal-tab {
+        opacity: 1;
+        pointer-events: auto;
     }
 }
 

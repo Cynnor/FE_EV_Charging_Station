@@ -59,13 +59,14 @@ const StaffLayout = () => {
                 activeTab={activeTab}
                 setActiveTab={handleTabChange}
                 hidden={!isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
             />
 
             <main className="staff-main-content">
                 <StaffHeader
                     title={getCurrentTitle()}
                     subtitle="Chào mừng trở lại! Đây là tổng quan trạm sạc của bạn."
-                    onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+                    onToggleSidebar={undefined}
                     isSidebarOpen={isSidebarOpen}
                 />
 
@@ -73,6 +74,16 @@ const StaffLayout = () => {
                     <Outlet />
                 </div>
             </main>
+
+            {!isSidebarOpen && (
+                <button
+                    className="sidebar-reveal-tab"
+                    onClick={() => setIsSidebarOpen(true)}
+                    aria-label="Mở menu"
+                >
+                    ▶
+                </button>
+            )}
         </div>
     );
 };

@@ -1,6 +1,6 @@
 import "./index.scss";
 
-const StaffSidebar = ({ activeTab, setActiveTab, hidden }) => {
+const StaffSidebar = ({ activeTab, setActiveTab, hidden, onClose }) => {
   const menuItems = [
     { id: "overview", icon: "🧭", label: "Tổng quan", path: "" },
     {
@@ -42,6 +42,9 @@ const StaffSidebar = ({ activeTab, setActiveTab, hidden }) => {
           <span className="logo-icon">⚡</span>
           <h2>EV Staff</h2>
         </div>
+        <button className="sidebar-close" onClick={onClose} aria-label="Đóng menu">
+          ✕
+        </button>
       </div>
 
       <nav className="sidebar-nav">
