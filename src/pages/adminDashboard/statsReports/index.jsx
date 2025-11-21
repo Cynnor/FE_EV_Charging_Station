@@ -270,7 +270,28 @@ const StatsReports = () => {
       } else if (Array.isArray(response.data)) {
         data = response.data;
       }
-      setTransactions(data);
+      const normalized = data.map((t) => {
+        const user = t.user || {};
+        const profileName = user.profile?.fullName;
+        const fullName =
+          user.fullName ||
+          user.fullname ||
+          profileName ||
+          user.name ||
+          user.displayName ||
+          user.username ||
+          user.email ||
+          "Không rõ";
+        return {
+          ...t,
+          user: {
+            ...user,
+            fullName,
+            email: user.email || t.email || t.payerEmail || "",
+          },
+        };
+      });
+      setTransactions(normalized);
       setCurrentPage(1);
     } catch (err) {
       setError(
@@ -284,7 +305,27 @@ const StatsReports = () => {
   const handleViewDetail = async (transactionId) => {
     try {
       const response = await api.get(`/transactions/${transactionId}`);
-      setDetail(response.data?.data || response.data || null);
+      const data = response.data?.data || response.data || null;
+      if (!data) return;
+      const user = data.user || {};
+      const profileName = user.profile?.fullName;
+      const fullName =
+        user.fullName ||
+        user.fullname ||
+        profileName ||
+        user.name ||
+        user.displayName ||
+        user.username ||
+        user.email ||
+        "Không rõ";
+      setDetail({
+        ...data,
+        user: {
+          ...user,
+          fullName,
+          email: user.email || data.email || data.payerEmail || "",
+        },
+      });
     } catch (err) {
       alert("Không thể tải chi tiết giao dịch");
     }
@@ -664,7 +705,6 @@ const StatsReports = () => {
               <thead>
                 <tr>
                   <th>Khách hàng</th>
-                  <th>Trạm</th>
                   <th>Phương thức</th>
                   <th>Số tiền</th>
                   <th>Thời gian</th>
@@ -675,7 +715,7 @@ const StatsReports = () => {
               <tbody>
                 {paginatedTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="no-data">
+                    <td colSpan="6" className="no-data">
                       Không tìm thấy giao dịch phù hợp
                     </td>
                   </tr>
@@ -685,10 +725,6 @@ const StatsReports = () => {
                       <td className="plan-cell">
                         <p>{transaction.user?.fullName || "Không rõ"}</p>
                         <span>{transaction.user?.email || "—"}</span>
-                      </td>
-                      <td className="plan-cell">
-                        <p>{transaction.station?.name || "Không rõ"}</p>
-                        <span>{transaction.station?.address || "—"}</span>
                       </td>
                       <td>
                         <span className="chip chip-default">
@@ -785,15 +821,19 @@ const StatsReports = () => {
               </button>
             </div>
             <div className="form-new detail-grid">
-              <div className="detail-card">
-                <span>Khách hàng</span>
-                <strong>{detail.user?.fullName || "Không rõ"}</strong>
-                <p>{detail.user?.email || "—"}</p>
-              </div>
-              <div className="detail-card">
-                <span>Trạm</span>
-                <strong>{detail.station?.name || "Không rõ"}</strong>
-                <p>{detail.station?.address || "—"}</p>
+              <div className="detail-card highlight">
+                <div>
+                  <p className="micro-label">Khách hàng</p>
+                  <strong>{detail.user?.fullName || "Không rõ"}</strong>
+                  <p>{detail.user?.email || "—"}</p>
+                </div>
+                <div className="amount-stack">
+                  <p className="micro-label">Số tiền</p>
+                  <strong>{formatCurrency(detail.amount)}</strong>
+                  <span className={`status-pill status-${formatStatus(detail.status).tone}`}>
+                    {formatStatus(detail.status).label}
+                  </span>
+                </div>
               </div>
               <div className="detail-card">
                 <span>Phương thức</span>
@@ -804,23 +844,31 @@ const StatsReports = () => {
                     ? "Tiền mặt"
                     : "Khác"}
                 </strong>
-              </div>
-              <div className="detail-card">
-                <span>Số tiền</span>
-                <strong>{formatCurrency(detail.amount)}</strong>
-              </div>
-              <div className="detail-card">
-                <span>Trạng thái</span>
-                <strong>{formatStatus(detail.status).label}</strong>
+                <p className="muted">
+                  Loại thanh toán: {detail.metadata?.paymentType === "subscription" ? "Gói thành viên" : "Đặt chỗ/phiên sạc"}
+                </p>
               </div>
               <div className="detail-card">
                 <span>Thời gian</span>
                 <strong>{formatDateTime(detail.createdAt)}</strong>
               </div>
+              {detail.vnpayDetails?.vnp_TransactionNo && (
+                <div className="detail-card">
+                  <span>Mã VNPay</span>
+                  <strong>{detail.vnpayDetails.vnp_TransactionNo}</strong>
+                </div>
+              )}
               <div className="detail-card">
                 <span>Mã giao dịch</span>
                 <strong>{detail.transactionCode || detail._id || "—"}</strong>
               </div>
+              {detail.vnpayDetails?.vnp_BankCode && (
+                <div className="detail-card">
+                  <span>Ngân hàng</span>
+                  <strong>{detail.vnpayDetails.vnp_BankCode}</strong>
+                  <p>Loại thẻ: {detail.vnpayDetails.vnp_CardType || "—"}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

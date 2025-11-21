@@ -1769,12 +1769,6 @@ const ProfilePage = ({ initialView }) => {
               <h2>Gói hiện tại</h2>
             </div>
             <div className="subscription-actions">
-              <button
-                className="link-btn"
-                onClick={() => navigate("/membership")}
-              >
-                Xem bảng giá
-              </button>
               {currentSubscription && (
                 <button
                   className="ghost-danger"
@@ -1838,21 +1832,11 @@ const ProfilePage = ({ initialView }) => {
                     {formatSubscriptionDate(currentSubscription.endDate)}
                   </p>
                 </div>
-                <div className="subscription-card__actions">
-                  <button
-                    className="edit-btn"
-                    onClick={() => navigate("/membership")}
-                  >
-                    Upgrade
-                  </button>
-                  <button
-                    className="ghost-danger"
-                    onClick={handleCancelSubscription}
-                    disabled={isCancellingSubscription}
-                  >
-                    {isCancellingSubscription ? "Đang hủy..." : "Hủy gói"}
-                  </button>
-                </div>
+              <div className="subscription-card__actions">
+                <button className="edit-btn" onClick={() => navigate("/membership")}>
+                  Upgrade
+                </button>
+              </div>
               </div>
 
               <div className="subscription-facts">

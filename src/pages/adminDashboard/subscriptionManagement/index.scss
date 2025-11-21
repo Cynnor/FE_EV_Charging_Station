@@ -6,6 +6,7 @@ $bg: #f6f9fb;
 $border: #e2e8f0;
 $muted: #94a3b8;
 $slate-900: #0f172a;
+$slate-700: #334155;
 $slate-600: #475569;
 $danger: #ef4444;
 $warning: #f59e0b;
@@ -485,6 +486,116 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
       cursor: pointer;
       font-size: 18px;
       color: $slate-600;
+    }
+  }
+
+  .edit-modal {
+    max-width: 640px;
+
+    .edit-grid {
+      padding: 22px 28px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      background: linear-gradient(180deg, #f9fbff 0%, #ffffff 90%);
+
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        label {
+          font-weight: 700;
+          color: $slate-900;
+          font-size: 14px;
+        }
+
+        select,
+        input[type="date"] {
+          padding: 10px 12px;
+          border-radius: 12px;
+          border: 1px solid $border;
+          background: #fff;
+          font-size: 14px;
+          transition: all 0.2s ease;
+
+          &:focus {
+            outline: none;
+            border-color: $primary;
+            box-shadow: 0 0 0 3px rgba($primary, 0.12);
+          }
+        }
+      }
+
+      .checkbox-group {
+        margin-top: 8px;
+
+        label {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          color: $slate-600;
+
+          input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: $primary;
+            cursor: pointer;
+          }
+        }
+      }
+
+      .form-footer-new {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+
+        .btn-cancel-new {
+          padding: 10px 16px;
+          border-radius: 12px;
+          border: 1px solid $border;
+          background: #fff;
+          font-weight: 700;
+          color: $slate-700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            border-color: $slate-600;
+          }
+        }
+
+        .btn-submit-new {
+          padding: 10px 18px;
+          border-radius: 12px;
+          border: none;
+          background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+          color: #fff;
+          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          box-shadow: 0 12px 24px rgba($primary, 0.25);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+          span {
+            font-size: 16px;
+          }
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba($primary, 0.3);
+          }
+        }
+      }
     }
   }
 
