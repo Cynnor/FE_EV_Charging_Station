@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../../../config/api";
 import "./index.scss";
+import "./modal-styles.scss";
 import StaffQrCheckin from "../../../components/staffQrCheckin";
 
 const ChargingSessions = () => {
@@ -12,6 +13,10 @@ const ChargingSessions = () => {
     const [reservationDetail, setReservationDetail] = useState(null);
     const [reservationLoading, setReservationLoading] = useState(false);
     const [reservationError, setReservationError] = useState("");
+    const [sessionDetailModal, setSessionDetailModal] = useState(false);
+    const [sessionDetailData, setSessionDetailData] = useState(null);
+    const [sessionDetailLoading, setSessionDetailLoading] = useState(false);
+    const [sessionDetailError, setSessionDetailError] = useState("");
 
     const loadSessions = async () => {
         try {
@@ -159,6 +164,29 @@ const ChargingSessions = () => {
         setReservationLoading(false);
     };
 
+    const loadSessionDetail = async (sessionId) => {
+        try {
+            setSessionDetailLoading(true);
+            setSessionDetailError("");
+            const res = await api.get(`/charging/sessions/${sessionId}`);
+            const data = res.data?.data || res.data;
+            setSessionDetailData(data);
+            setSessionDetailModal(true);
+        } catch (err) {
+            const msg = err?.response?.data?.message || "Không thể tải chi tiết phiên sạc.";
+            setSessionDetailError(msg);
+            alert(msg);
+        } finally {
+            setSessionDetailLoading(false);
+        }
+    };
+
+    const closeSessionDetailModal = () => {
+        setSessionDetailModal(false);
+        setSessionDetailData(null);
+        setSessionDetailError("");
+    };
+
     const renderStatusText = (status) => {
         const map = {
             pending: "Đang chờ",
@@ -183,235 +211,402 @@ const ChargingSessions = () => {
 
     return (
         <>
-        <div className="charging-sessions-content">
-            <StaffQrCheckin />
-            {/* Header */}
-            <div className="sessions-header">
-                <div className="header-left">
-                    <h2>Quản lý phiên sạc</h2>
-                    <p>Quản lý các phiên sạc đang diễn ra và lịch sử</p>
+            <div className="charging-sessions-content">
+                <StaffQrCheckin />
+                {/* Header */}
+                <div className="sessions-header">
+                    <div className="header-left">
+                        <h2>Quản lý phiên sạc</h2>
+                        <p>Quản lý các phiên sạc đang diễn ra và lịch sử</p>
+                    </div>
+                    <div className="header-right">
+                        <button className="btn-primary" onClick={loadSessions}>
+                            <span className="icon">🔄</span>
+                            Làm mới
+                        </button>
+                    </div>
                 </div>
-                <div className="header-right">
-                    <button className="btn-primary" onClick={loadSessions}>
-                        <span className="icon">🔄</span>
-                        Làm mới
+
+                {error && (
+                    <div className="sessions-error">
+                        <p>{error}</p>
+                    </div>
+                )}
+
+                {/* Tabs */}
+                <div className="sessions-tabs">
+                    <button
+                        className={`tab ${activeTab === "current" ? "active" : ""}`}
+                        onClick={() => setActiveTab("current")}
+                    >
+                        <span className="icon">🔌</span>
+                        Đang sạc ({currentSessions.length})
+                    </button>
+                    <button
+                        className={`tab ${activeTab === "completed" ? "active" : ""}`}
+                        onClick={() => setActiveTab("completed")}
+                    >
+                        <span className="icon">✅</span>
+                        Đã hoàn thành ({completedSessions.length})
                     </button>
                 </div>
-            </div>
 
-            {error && (
-                <div className="sessions-error">
-                    <p>{error}</p>
-                </div>
-            )}
+                {/* Content */}
+                <div className="sessions-content">
+                    {activeTab === "current" && (
+                        <div className="current-sessions">
+                            {loading ? (
+                                <p className="muted">Đang tải dữ liệu...</p>
+                            ) : currentSessions.length === 0 ? (
+                                <p className="muted">Chưa có phiên sạc đang hoạt động.</p>
+                            ) : (
+                                <div className="sessions-grid">
+                                    {currentSessions.map((session) => {
+                                        const progress = Math.round(calcProgress(session));
+                                        return (
+                                            <div key={session._id || session.id} className="session-card">
+                                                <div className="card-header">
+                                                    <div className="station-info">
+                                                        <span className="station-id">
+                                                            {(session.slot?.port?.station?.name) || "N/A"}
+                                                        </span>
+                                                        <span className="license-plate">
+                                                            {session.vehicle?.plateNumber || "Ẩn biển số"}
+                                                        </span>
+                                                    </div>
+                                                    <div className={`session-status ${session.status}`}>
+                                                        <span className="status-dot"></span>
+                                                        Đang sạc
+                                                    </div>
+                                                </div>
 
-            {/* Tabs */}
-            <div className="sessions-tabs">
-                <button
-                    className={`tab ${activeTab === "current" ? "active" : ""}`}
-                    onClick={() => setActiveTab("current")}
-                >
-                    <span className="icon">🔌</span>
-                    Đang sạc ({currentSessions.length})
-                </button>
-                <button
-                    className={`tab ${activeTab === "completed" ? "active" : ""}`}
-                    onClick={() => setActiveTab("completed")}
-                >
-                    <span className="icon">✅</span>
-                    Đã hoàn thành ({completedSessions.length})
-                </button>
-            </div>
+                                                <div className="customer-info">
+                                                    <div className="info-item">
+                                                        <span className="label">Xe:</span>
+                                                        <span className="value">
+                                                            {session.vehicle?.make} {session.vehicle?.model}
+                                                        </span>
+                                                    </div>
+                                                    <div className="info-item">
+                                                        <span className="label">Trạm:</span>
+                                                        <span className="value">
+                                                            {session.slot?.port?.station?.address || "Không rõ"}
+                                                        </span>
+                                                    </div>
+                                                </div>
 
-            {/* Content */}
-            <div className="sessions-content">
-                {activeTab === "current" && (
-                    <div className="current-sessions">
-                        {loading ? (
-                            <p className="muted">Đang tải dữ liệu...</p>
-                        ) : currentSessions.length === 0 ? (
-                            <p className="muted">Chưa có phiên sạc đang hoạt động.</p>
-                        ) : (
-                            <div className="sessions-grid">
-                                {currentSessions.map((session) => {
-                                    const progress = Math.round(calcProgress(session));
-                                    return (
-                                        <div key={session._id || session.id} className="session-card">
-                                            <div className="card-header">
-                                                <div className="station-info">
+                                                <div className="session-details">
+                                                    <div className="detail-row">
+                                                        <div className="detail-item">
+                                                            <span className="label">Bắt đầu:</span>
+                                                            <span className="value">{formatTime(session.startedAt)}</span>
+                                                        </div>
+                                                        <div className="detail-item">
+                                                            <span className="label">Công suất:</span>
+                                                            <span className="value">
+                                                                {session.slot?.port?.powerKw
+                                                                    ? `${session.slot.port.powerKw} kW`
+                                                                    : "—"}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+
+                                                {session.vehicle?.pin !== undefined && (
+                                                    <div className="session-details" style={{ marginTop: '12px' }}>
+                                                        <div className="detail-row">
+                                                            <div className="detail-item">
+                                                                <span className="label">Pin hiện tại:</span>
+                                                                <span className="value">{session.vehicle.pin}%</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="session-actions" style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                                                    <button
+                                                        className="btn-detail"
+                                                        onClick={() => loadSessionDetail(session._id || session.id)}
+                                                        disabled={sessionDetailLoading}
+                                                    >
+                                                        Xem chi tiết
+                                                    </button>
+                                                </div>
+
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === "completed" && (
+                        <div className="completed-sessions">
+                            {loading ? (
+                                <p className="muted">Đang tải dữ liệu...</p>
+                            ) : completedSessions.length === 0 ? (
+                                <p className="muted">Chưa có phiên sạc đã hoàn tất.</p>
+                            ) : (
+                                <div className="sessions-table">
+                                    <div className="table-header">
+                                        <div className="col">Trụ sạc</div>
+                                        <div className="col">Biển số</div>
+                                        <div className="col">Thời gian</div>
+                                        <div className="col">Trạng thái</div>
+                                        <div className="col">Hành động</div>
+                                    </div>
+                                    <div className="table-body">
+                                        {completedSessions.map((session) => (
+                                            <div key={session._id || session.id} className="table-row">
+                                                <div className="col">
                                                     <span className="station-id">
-                                                        {(session.slot?.port?.station?.name) || "N/A"}
+                                                        {session.slot?.port?.station?.name || "N/A"}
                                                     </span>
+                                                </div>
+                                                <div className="col">
                                                     <span className="license-plate">
                                                         {session.vehicle?.plateNumber || "Ẩn biển số"}
                                                     </span>
                                                 </div>
-                                                <div className={`session-status ${session.status}`}>
-                                                    <span className="status-dot"></span>
-                                                    Đang sạc
-                                                </div>
-                                            </div>
-
-                                            <div className="customer-info">
-                                                <div className="info-item">
-                                                    <span className="label">Xe:</span>
-                                                    <span className="value">
-                                                        {session.vehicle?.make} {session.vehicle?.model}
-                                                    </span>
-                                                </div>
-                                                <div className="info-item">
-                                                    <span className="label">Trạm:</span>
-                                                    <span className="value">
-                                                        {session.slot?.port?.station?.address || "Không rõ"}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="session-details">
-                                                <div className="detail-row">
-                                                    <div className="detail-item">
-                                                        <span className="label">Bắt đầu:</span>
-                                                        <span className="value">{formatTime(session.startedAt)}</span>
-                                                    </div>
-                                                    <div className="detail-item">
-                                                        <span className="label">Công suất:</span>
-                                                        <span className="value">
-                                                            {session.slot?.port?.powerKw
-                                                                ? `${session.slot.port.powerKw} kW`
-                                                                : "—"}
+                                                <div className="col">
+                                                    <div className="time-info">
+                                                        <span className="start">{formatTime(session.startedAt)}</span>
+                                                        <span className="end">{formatTime(session.endedAt)}</span>
+                                                        <span className="duration">
+                                                            ({calcDuration(session.startedAt, session.endedAt)})
                                                         </span>
                                                     </div>
                                                 </div>
-                                            </div>
-
-                                            <div className="progress-section">
-                                                <div className="progress-header">
-                                                    <span className="label">Tiến độ dự kiến</span>
-                                                    <span className="percentage">
-                                                        {isNaN(progress) ? "—" : `${progress}%`}
+                                                <div className="col">
+                                                    <span className={`status-chip ${getStatusTone(session.status)}`}>
+                                                        <span className="status-dot"></span>
+                                                        {renderStatusText(session.status)}
                                                     </span>
                                                 </div>
-                                                <div className="progress-bar">
-                                                    <div
-                                                        className="progress-fill"
-                                                        style={{ width: `${Math.min(100, Math.max(0, progress || 0))}%` }}
-                                                    ></div>
+                                                <div className="col">
+                                                    <button
+                                                        className="btn-detail-small"
+                                                        onClick={() => loadSessionDetail(session._id || session.id)}
+                                                        disabled={sessionDetailLoading}
+                                                    >
+                                                        Chi tiết
+                                                    </button>
                                                 </div>
                                             </div>
-
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {activeTab === "completed" && (
-                    <div className="completed-sessions">
-                        {loading ? (
-                            <p className="muted">Đang tải dữ liệu...</p>
-                        ) : completedSessions.length === 0 ? (
-                            <p className="muted">Chưa có phiên sạc đã hoàn tất.</p>
-                        ) : (
-                            <div className="sessions-table">
-                                <div className="table-header">
-                                    <div className="col">Trụ sạc</div>
-                                    <div className="col">Biển số</div>
-                                    <div className="col">Thời gian</div>
-                                    <div className="col">Trạng thái</div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="table-body">
-                                    {completedSessions.map((session) => (
-                                        <div key={session._id || session.id} className="table-row">
-                                            <div className="col">
-                                                <span className="station-id">
-                                                    {session.slot?.port?.station?.name || "N/A"}
-                                                </span>
-                                            </div>
-                                            <div className="col">
-                                                <span className="license-plate">
-                                                    {session.vehicle?.plateNumber || "Ẩn biển số"}
-                                                </span>
-                                            </div>
-                                            <div className="col">
-                                                <div className="time-info">
-                                                    <span className="start">{formatTime(session.startedAt)}</span>
-                                                    <span className="end">{formatTime(session.endedAt)}</span>
-                                                    <span className="duration">
-                                                        ({calcDuration(session.startedAt, session.endedAt)})
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="col">
-                                                <span className={`status-chip ${getStatusTone(session.status)}`}>
-                                                    <span className="status-dot"></span>
-                                                    {renderStatusText(session.status)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-        </div>
-
-        {reservationDetail && (
-            <div className="reservation-modal-overlay" onClick={closeReservationModal}>
-                <div className="reservation-modal" onClick={(e) => e.stopPropagation()}>
-                    <div className="modal-header">
-                        <div>
-                            <p className="micro-label">Chi tiết đặt chỗ</p>
-                            <h3>{reservationDetail.station.name}</h3>
-                            <p className="muted">{reservationDetail.station.address}</p>
-                        </div>
-                        <button className="close-button" onClick={closeReservationModal}>
-                            ✕
-                        </button>
-                    </div>
-
-                    {reservationLoading ? (
-                        <p className="muted">Đang tải...</p>
-                    ) : reservationError ? (
-                        <p className="error-text">{reservationError}</p>
-                    ) : (
-                        <div className="reservation-detail-grid">
-                            <div className="detail-card">
-                                <span className="label">Khách</span>
-                                <strong>{reservationDetail.vehicle.plate}</strong>
-                                <p className="muted">
-                                    {reservationDetail.vehicle.make} {reservationDetail.vehicle.model}{" "}
-                                    {reservationDetail.vehicle.color}
-                                </p>
-                            </div>
-                            <div className="detail-card">
-                                <span className="label">Trạng thái</span>
-                                <strong>{renderStatusText(reservationDetail.status)}</strong>
-                                <p className="muted">QR: {reservationDetail.qrCheck ? "Đã kiểm tra" : "Chưa kiểm"}</p>
-                            </div>
-                            <div className="detail-card">
-                                <span className="label">Thời gian</span>
-                                <p className="muted">Bắt đầu: {formatTime(reservationDetail.startAt)}</p>
-                                <p className="muted">Kết thúc: {formatTime(reservationDetail.endAt)}</p>
-                            </div>
-                            <div className="detail-card">
-                                <span className="label">Cổng</span>
-                                <strong>{reservationDetail.port.type}</strong>
-                                <p className="muted">
-                                    Công suất: {reservationDetail.port.power}
-                                    {reservationDetail.port.price
-                                        ? ` • Giá: ${new Intl.NumberFormat("vi-VN").format(reservationDetail.port.price)} đ/kWh`
-                                        : ""}
-                                </p>
-                            </div>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
-        )}
+
+            {reservationDetail && (
+                <div className="reservation-modal-overlay" onClick={closeReservationModal}>
+                    <div className="reservation-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div>
+                                <p className="micro-label">Chi tiết đặt chỗ</p>
+                                <h3>{reservationDetail.station.name}</h3>
+                                <p className="muted">{reservationDetail.station.address}</p>
+                            </div>
+                            <button className="close-button" onClick={closeReservationModal}>
+                                ✕
+                            </button>
+                        </div>
+
+                        {reservationLoading ? (
+                            <p className="muted">Đang tải...</p>
+                        ) : reservationError ? (
+                            <p className="error-text">{reservationError}</p>
+                        ) : (
+                            <div className="reservation-detail-grid">
+                                <div className="detail-card">
+                                    <span className="label">Khách</span>
+                                    <strong>{reservationDetail.vehicle.plate}</strong>
+                                    <p className="muted">
+                                        {reservationDetail.vehicle.make} {reservationDetail.vehicle.model}{" "}
+                                        {reservationDetail.vehicle.color}
+                                    </p>
+                                </div>
+                                <div className="detail-card">
+                                    <span className="label">Trạng thái</span>
+                                    <strong>{renderStatusText(reservationDetail.status)}</strong>
+                                    <p className="muted">QR: {reservationDetail.qrCheck ? "Đã kiểm tra" : "Chưa kiểm"}</p>
+                                </div>
+                                <div className="detail-card">
+                                    <span className="label">Thời gian</span>
+                                    <p className="muted">Bắt đầu: {formatTime(reservationDetail.startAt)}</p>
+                                    <p className="muted">Kết thúc: {formatTime(reservationDetail.endAt)}</p>
+                                </div>
+                                <div className="detail-card">
+                                    <span className="label">Cổng</span>
+                                    <strong>{reservationDetail.port.type}</strong>
+                                    <p className="muted">
+                                        Công suất: {reservationDetail.port.power}
+                                        {reservationDetail.port.price
+                                            ? ` • Giá: ${new Intl.NumberFormat("vi-VN").format(reservationDetail.port.price)} đ/kWh`
+                                            : ""}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {sessionDetailModal && sessionDetailData && (
+                <div className="modal-backdrop" onClick={closeSessionDetailModal}>
+                    <div className="modal-session-detail" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Chi tiết phiên sạc</h3>
+                            <button className="modal-close" onClick={closeSessionDetailModal}>✕</button>
+                        </div>
+
+                        <div className="modal-body">
+                            {sessionDetailLoading ? (
+                                <p>Đang tải...</p>
+                            ) : sessionDetailError ? (
+                                <p className="error-text">{sessionDetailError}</p>
+                            ) : (
+                                <>
+                                    <div className="detail-section">
+                                        <h4>Thông tin xe</h4>
+                                        <div className="detail-grid">
+                                            <div className="detail-item">
+                                                <span className="label">Biển số:</span>
+                                                <span className="value">{sessionDetailData.vehicle?.plateNumber || "Ẩn"}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Hãng xe:</span>
+                                                <span className="value">{sessionDetailData.vehicle?.make || "N/A"}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Mẫu xe:</span>
+                                                <span className="value">{sessionDetailData.vehicle?.model || "N/A"}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Màu sắc:</span>
+                                                <span className="value">{sessionDetailData.vehicle?.color || "N/A"}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Dung lượng pin:</span>
+                                                <span className="value">
+                                                    {sessionDetailData.vehicle?.batteryCapacity ? `${sessionDetailData.vehicle.batteryCapacity} kWh` : "N/A"}
+                                                </span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Loại kết nối:</span>
+                                                <span className="value">{sessionDetailData.vehicle?.connectorType || "N/A"}</span>
+                                            </div>
+                                            {sessionDetailData.vehicle?.pin !== undefined && (
+                                                <div className="detail-item">
+                                                    <span className="label">Pin hiện tại:</span>
+                                                    <span className="value strong">{sessionDetailData.vehicle.pin}%</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="detail-section">
+                                        <h4>Thông tin trạm</h4>
+                                        <div className="detail-grid">
+                                            <div className="detail-item">
+                                                <span className="label">Tên trạm:</span>
+                                                <span className="value">{sessionDetailData.slot?.port?.station?.name || "N/A"}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Địa chỉ:</span>
+                                                <span className="value">{sessionDetailData.slot?.port?.station?.address || "N/A"}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Nhà cung cấp:</span>
+                                                <span className="value">{sessionDetailData.slot?.port?.station?.provider || "N/A"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="detail-section">
+                                        <h4>Thông tin cổng sạc</h4>
+                                        <div className="detail-grid">
+                                            <div className="detail-item">
+                                                <span className="label">Loại:</span>
+                                                <span className="value">{sessionDetailData.slot?.port?.type || "N/A"}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Công suất:</span>
+                                                <span className="value">
+                                                    {sessionDetailData.slot?.port?.powerKw ? `${sessionDetailData.slot.port.powerKw} kW` : "N/A"}
+                                                </span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Giá:</span>
+                                                <span className="value">
+                                                    {sessionDetailData.slot?.port?.price ? `${sessionDetailData.slot.port.price.toLocaleString('vi-VN')} VNĐ/kWh` : "N/A"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="detail-section">
+                                        <h4>Chi tiết phiên sạc</h4>
+                                        <div className="detail-grid">
+                                            <div className="detail-item">
+                                                <span className="label">Trạng thái:</span>
+                                                <span className={`value status-chip ${getStatusTone(sessionDetailData.status)}`}>
+                                                    <span className="status-dot"></span>
+                                                    {renderStatusText(sessionDetailData.status)}
+                                                </span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Bắt đầu:</span>
+                                                <span className="value">{formatTime(sessionDetailData.startedAt)}</span>
+                                            </div>
+                                            {sessionDetailData.endedAt && (
+                                                <div className="detail-item">
+                                                    <span className="label">Kết thúc:</span>
+                                                    <span className="value">{formatTime(sessionDetailData.endedAt)}</span>
+                                                </div>
+                                            )}
+                                            {sessionDetailData.endedAt && (
+                                                <div className="detail-item">
+                                                    <span className="label">Thời lượng:</span>
+                                                    <span className="value">
+                                                        {calcDuration(sessionDetailData.startedAt, sessionDetailData.endedAt)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="detail-item">
+                                                <span className="label">Pin ban đầu:</span>
+                                                <span className="value">{sessionDetailData.initialPercent || 0}%</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Pin mục tiêu:</span>
+                                                <span className="value">{sessionDetailData.targetPercent || 100}%</span>
+                                            </div>
+                                            {sessionDetailData.chargeRatePercentPerMinute && (
+                                                <div className="detail-item">
+                                                    <span className="label">Tốc độ sạc:</span>
+                                                    <span className="value">{sessionDetailData.chargeRatePercentPerMinute}%/phút</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="modal-footer">
+                            <button className="btn-secondary" onClick={closeSessionDetailModal}>
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

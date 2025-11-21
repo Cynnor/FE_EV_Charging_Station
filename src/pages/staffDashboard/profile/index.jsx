@@ -198,20 +198,6 @@ const Profile = () => {
                     <span className="icon">👤</span>
                     Thông tin cá nhân
                 </button>
-                <button
-                    className={`tab ${activeTab === "security" ? "active" : ""}`}
-                    onClick={() => setActiveTab("security")}
-                >
-                    <span className="icon">🔒</span>
-                    Bảo mật
-                </button>
-                <button
-                    className={`tab ${activeTab === "activity" ? "active" : ""}`}
-                    onClick={() => setActiveTab("activity")}
-                >
-                    <span className="icon">📊</span>
-                    Hoạt động
-                </button>
             </div>
 
             {/* Content */}
@@ -352,102 +338,6 @@ const Profile = () => {
                                         </button>
                                     </div>
                                 )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === "security" && (
-                    <div className="profile-security">
-                        <div className="security-card">
-                            <div className="card-header">
-                                <h3>Bảo mật tài khoản</h3>
-                            </div>
-                            <div className="card-content">
-                                <div className="security-section">
-                                    <div className="section-header">
-                                        <h4>Đổi mật khẩu</h4>
-                                        <p>Thay đổi mật khẩu để bảo mật tài khoản</p>
-                                    </div>
-                                    <button
-                                        className="btn-primary"
-                                        onClick={() => setShowChangePassword(true)}
-                                    >
-                                        Đổi mật khẩu
-                                    </button>
-                                </div>
-
-                                <div className="security-section">
-                                    <div className="section-header">
-                                        <h4>Xác thực hai yếu tố</h4>
-                                        <p>Thêm lớp bảo mật cho tài khoản</p>
-                                    </div>
-                                    <div className="toggle-section">
-                                        <span className="toggle-label">Bật xác thực 2FA</span>
-                                        <label className="toggle-switch">
-                                            <input type="checkbox" />
-                                            <span className="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="security-section">
-                                    <div className="section-header">
-                                        <h4>Phiên đăng nhập</h4>
-                                        <p>Quản lý các phiên đăng nhập hiện tại</p>
-                                    </div>
-                                    <div className="session-list">
-                                        <div className="session-item">
-                                            <div className="session-info">
-                                                <span className="device">Chrome - Windows</span>
-                                                <span className="location">TP.HCM, Việt Nam</span>
-                                                <span className="time">Hiện tại</span>
-                                            </div>
-                                            <span className="session-status current">Phiên hiện tại</span>
-                                        </div>
-                                        <div className="session-item">
-                                            <div className="session-info">
-                                                <span className="device">Safari - iPhone</span>
-                                                <span className="location">TP.HCM, Việt Nam</span>
-                                                <span className="time">2 giờ trước</span>
-                                            </div>
-                                            <button className="btn-small">Đăng xuất</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === "activity" && (
-                    <div className="profile-activity">
-                        <div className="activity-card">
-                            <div className="card-header">
-                                <h3>Hoạt động gần đây</h3>
-                                <button className="btn-link">Xem tất cả</button>
-                            </div>
-                            <div className="card-content">
-                                <div className="activity-list">
-                                    {recentActivities.map((activity) => (
-                                        <div key={activity.id} className="activity-item">
-                                            <div className="activity-icon">
-                                                {activity.type === "session" && "🔌"}
-                                                {activity.type === "payment" && "💳"}
-                                                {activity.type === "report" && "📝"}
-                                                {activity.type === "maintenance" && "🔧"}
-                                            </div>
-                                            <div className="activity-content">
-                                                <h4>{activity.title}</h4>
-                                                <p>{activity.description}</p>
-                                                <span className="activity-time">{activity.time}</span>
-                                            </div>
-                                            <div className={`activity-status ${activity.status}`}>
-                                                {activity.status === "completed" ? "✅" : "⏳"}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
                         </div>
                     </div>

@@ -74,7 +74,7 @@ const StationStatus = () => {
     const getAvailabilityText = (availability) => {
         switch (availability) {
             case "available":
-                return "Rỗi";
+                return "Trống";
             case "charging":
                 return "Đang sạc";
             case "booked":
@@ -119,10 +119,6 @@ const StationStatus = () => {
 
     const handleStationClick = (station) => {
         setSelectedStation(station);
-    };
-
-    const handleMaintenance = (stationId) => {
-        console.log("Bắt đầu bảo trì trụ:", stationId);
     };
 
     return (
@@ -186,7 +182,7 @@ const StationStatus = () => {
                         className={`filter-tab ${filterStatus === "available" ? "active" : ""}`}
                         onClick={() => setFilterStatus("available")}
                     >
-                        Rỗi ({countAvailability("available")})
+                        Trống ({countAvailability("available")})
                     </button>
                 </div>
             </div>
@@ -228,7 +224,7 @@ const StationStatus = () => {
 
                                     <div className="slot-summary">
                                         <div className="summary-chip green">
-                                            Rỗi: {slotSummary.available || 0}
+                                            Trống: {slotSummary.available || 0}
                                         </div>
                                         <div className="summary-chip blue">
                                             Đang sạc: {slotSummary.in_use || 0}
@@ -246,36 +242,84 @@ const StationStatus = () => {
 
             {/* Station Detail Modal */}
             {selectedStation && !loading && (
-                <div className="station-modal">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <div className="modal-title">
-                                <h3>{selectedStation.name || selectedStation.id}</h3>
-                                <div className={`status-badge ${getStatusColor(selectedStation.status)}`}>
-                                    <span className="status-dot"></span>
-                                    {selectedStation.status}
+                <div className="station-modal-overlay" onClick={() => setSelectedStation(null)}>
+                    <div className="station-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <div className="modal-title">
+                                    <h3>{selectedStation.name || selectedStation.id}</h3>
+                                    <div className={`status-badge ${getStatusColor(selectedStation.status)}`}>
+                                        <span className="status-dot"></span>
+                                        {selectedStation.status === 'active' ? 'Online' : 'Offline'}
+                                    </div>
+                                </div>
+                                <button className="close-btn" onClick={() => setSelectedStation(null)}>×</button>
+                            </div>
+
+                            <div className="modal-body">
+                                <div className="detail-section">
+                                    <h4>Thông tin chung</h4>
+                                    <div className="detail-grid">
+                                        <div className="detail-item">
+                                            <span className="label">Địa chỉ:</span>
+                                            <span className="value">{selectedStation.address || "N/A"}</span>
+                                        </div>
+                                        <div className="detail-item">
+                                            <span className="label">Nhà cung cấp:</span>
+                                            <span className="value">{selectedStation.provider || "N/A"}</span>
+                                        </div>
+                                        <div className="detail-item">
+                                            <span className="label">Tọa độ:</span>
+                                            <span className="value">
+                                                {selectedStation.latitude?.toFixed(6)}, {selectedStation.longitude?.toFixed(6)}
+                                            </span>
+                                        </div>
+                                        <div className="detail-item">
+                                            <span className="label">Số cổng sạc:</span>
+                                            <span className="value">{selectedStation.ports?.length || 0}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="detail-section">
+                                    <h4>Trạng thái cổng sạc</h4>
+                                    <div className="ports-list">
+                                        {selectedStation.ports && selectedStation.ports.length > 0 ? (
+                                            selectedStation.ports.map((port, idx) => (
+                                                <div key={idx} className="port-item">
+                                                    <div className="port-header">
+                                                        <span className="port-type">{port.type} - {port.powerKw}kW</span>
+                                                        <span className={`port-status ${port.status === 'available' ? 'green' : 'red'}`}>
+                                                            {port.status === 'available' ? 'Hoạt động' : 'Bảo trì'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="port-slots">
+                                                        {port.slots && port.slots.map((slot, sIdx) => (
+                                                            <span key={sIdx} className={`slot-badge ${slot.status}`}>
+                                                                Slot {slot.slotNumber || sIdx + 1}: {
+                                                                    slot.status === 'available' ? 'Trống' :
+                                                                        slot.status === 'in_use' ? 'Đang sạc' : 'Đã đặt'
+                                                                }
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="muted">Chưa có thông tin cổng sạc</p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            <button className="close-btn" onClick={() => setSelectedStation(null)}>×</button>
-                        </div>
-                        <div className="modal-body">
-                            <p><strong>Địa chỉ:</strong> {selectedStation.address || "N/A"}</p>
-                            <p><strong>Nhà cung cấp:</strong> {selectedStation.provider || "N/A"}</p>
-                            <p><strong>Số cổng:</strong> {selectedStation.ports?.length || 0}</p>
-                        </div>
-                        <div className="modal-actions">
-                            <button
-                                className="btn-secondary"
-                                onClick={() => setSelectedStation(null)}
-                            >
-                                Đóng
-                            </button>
-                            <button
-                                className="btn-primary"
-                                onClick={() => handleMaintenance(selectedStation.id)}
-                            >
-                                Bảo trì
-                            </button>
+
+                            <div className="modal-actions">
+                                <button
+                                    className="btn-secondary"
+                                    onClick={() => setSelectedStation(null)}
+                                >
+                                    Đóng
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
