@@ -11,9 +11,14 @@ const ComboChart = ({ data = [], height = 420 }) => {
   const innerHeight = height - padding.top - padding.bottom;
   const slot = 68;
   const barWidth = 26;
-  const width = Math.max(data.length * slot + padding.left + padding.right, 520);
-  const maxOrders = data.reduce((max, item) => Math.max(max, item.orders), 0) || 1;
-  const maxRevenue = data.reduce((max, item) => Math.max(max, item.revenue), 0) || 1;
+  const width = Math.max(
+    data.length * slot + padding.left + padding.right,
+    520
+  );
+  const maxOrders =
+    data.reduce((max, item) => Math.max(max, item.orders), 0) || 1;
+  const maxRevenue =
+    data.reduce((max, item) => Math.max(max, item.revenue), 0) || 1;
   const tickCount = 4;
   const ticks = Array.from({ length: tickCount + 1 }, (_, index) => index);
 
@@ -43,9 +48,9 @@ const ComboChart = ({ data = [], height = 420 }) => {
   }, "");
   const areaPath =
     points.length > 1
-      ? `${linePath} L ${points[points.length - 1].x} ${height - padding.bottom} L ${
-          points[0].x
-        } ${height - padding.bottom} Z`
+      ? `${linePath} L ${points[points.length - 1].x} ${
+          height - padding.bottom
+        } L ${points[0].x} ${height - padding.bottom} Z`
       : "";
 
   return (
@@ -65,10 +70,20 @@ const ComboChart = ({ data = [], height = 420 }) => {
             <stop offset="100%" stopColor="rgba(15,139,92,0)" />
           </linearGradient>
           <filter id="dotShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="rgba(15,23,42,0.25)" />
+            <feDropShadow
+              dx="0"
+              dy="4"
+              stdDeviation="4"
+              floodColor="rgba(15,23,42,0.25)"
+            />
           </filter>
           <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="10" stdDeviation="16" floodColor="rgba(34,197,94,0.35)" />
+            <feDropShadow
+              dx="0"
+              dy="10"
+              stdDeviation="16"
+              floodColor="rgba(34,197,94,0.35)"
+            />
           </filter>
         </defs>
 
@@ -141,7 +156,14 @@ const ComboChart = ({ data = [], height = 420 }) => {
                 rx={8}
                 fill="url(#barGradient)"
               />
-              <circle className="line-dot" cx={getX(index)} cy={revenueY} r={6} fill="#0f8b5c" filter="url(#dotShadow)" />
+              <circle
+                className="line-dot"
+                cx={getX(index)}
+                cy={revenueY}
+                r={6}
+                fill="#0f8b5c"
+                filter="url(#dotShadow)"
+              />
               <text className="axis-label" x={getX(index)} y={labelY}>
                 {point.label}
               </text>
@@ -160,10 +182,12 @@ const ComboChart = ({ data = [], height = 420 }) => {
 
       <div className="chart-legend">
         <div>
-          <span className="dot bar" />Đơn hàng
+          <span className="dot bar" />
+          Đơn hàng
         </div>
         <div>
-          <span className="dot line" />Doanh thu
+          <span className="dot line" />
+          Doanh thu
         </div>
       </div>
     </div>
@@ -184,20 +208,29 @@ const monthOptions = Array.from({ length: 12 }, (_, index) => ({
 }));
 
 const currentYear = new Date().getFullYear();
-const yearPreset = Array.from({ length: Math.max(currentYear + 2 - 2021, 5) }, (_, index) => 2021 + index);
+const yearPreset = Array.from(
+  { length: Math.max(currentYear + 2 - 2021, 5) },
+  (_, index) => 2021 + index
+);
 
 const StatsReports = () => {
   const [timeFilter, setTimeFilter] = useState("30days");
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ status: "all", payment: "all", search: "" });
+  const [filters, setFilters] = useState({
+    status: "all",
+    payment: "all",
+    search: "",
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const [detail, setDetail] = useState(null);
   const [selectedYearMonthly, setSelectedYearMonthly] = useState(currentYear);
   const [selectedYearDaily, setSelectedYearDaily] = useState(currentYear);
-  const [selectedMonthDaily, setSelectedMonthDaily] = useState(new Date().getMonth() + 1);
+  const [selectedMonthDaily, setSelectedMonthDaily] = useState(
+    new Date().getMonth() + 1
+  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -231,7 +264,8 @@ const StatsReports = () => {
       const response = await api.get("/transactions", { params });
       let data = [];
       if (response.data?.success) {
-        if (Array.isArray(response.data?.data?.items)) data = response.data.data.items;
+        if (Array.isArray(response.data?.data?.items))
+          data = response.data.data.items;
         else if (Array.isArray(response.data?.data)) data = response.data.data;
       } else if (Array.isArray(response.data)) {
         data = response.data;
@@ -260,7 +294,9 @@ const StatsReports = () => {
       setTransactions(normalized);
       setCurrentPage(1);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Không thể tải dữ liệu");
+      setError(
+        err.response?.data?.message || err.message || "Không thể tải dữ liệu"
+      );
     } finally {
       setLoading(false);
     }
@@ -298,7 +334,10 @@ const StatsReports = () => {
   const formatCurrency = (amount) =>
     amount === undefined || amount === null
       ? "—"
-      : new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
+      : new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(amount);
 
   const formatDateTime = (value) =>
     value ? new Date(value).toLocaleString("vi-VN", { hour12: false }) : "—";
@@ -327,22 +366,32 @@ const StatsReports = () => {
 
   useEffect(() => {
     if (!availableYears.includes(selectedYearMonthly)) {
-      setSelectedYearMonthly(availableYears[availableYears.length - 1] || currentYear);
+      setSelectedYearMonthly(
+        availableYears[availableYears.length - 1] || currentYear
+      );
     }
     if (!availableYears.includes(selectedYearDaily)) {
-      setSelectedYearDaily(availableYears[availableYears.length - 1] || currentYear);
+      setSelectedYearDaily(
+        availableYears[availableYears.length - 1] || currentYear
+      );
     }
   }, [availableYears, selectedYearMonthly, selectedYearDaily]);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
-      const matchStatus = filters.status === "all" || transaction.status === filters.status;
+      const matchStatus =
+        filters.status === "all" || transaction.status === filters.status;
       const matchPayment =
-        filters.payment === "all" || transaction.paymentMethod === filters.payment;
+        filters.payment === "all" ||
+        transaction.paymentMethod === filters.payment;
       const keyword = filters.search.trim().toLowerCase();
       const matchSearch =
         !keyword ||
-        [transaction.user?.fullName, transaction.user?.email, transaction.station?.name]
+        [
+          transaction.user?.fullName,
+          transaction.user?.email,
+          transaction.station?.name,
+        ]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(keyword));
       return matchStatus && matchPayment && matchSearch;
@@ -354,11 +403,17 @@ const StatsReports = () => {
     return filteredTransactions.slice(start, start + pageSize);
   }, [filteredTransactions, currentPage]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredTransactions.length / pageSize)
+  );
 
   const summaryCards = useMemo(() => {
     if (transactions.length === 0) return [];
-    const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const totalRevenue = transactions.reduce(
+      (sum, t) => sum + (t.amount || 0),
+      0
+    );
     const success = transactions.filter((t) => t.status === "success").length;
     const failed = transactions.filter((t) => t.status === "failed").length;
     const pending = transactions.filter((t) => t.status === "pending").length;
@@ -400,7 +455,8 @@ const StatsReports = () => {
     }, {});
     const total = transactions.length || 1;
     return Object.entries(counts).map(([method, count]) => ({
-      label: method === "vnpay" ? "VNPay" : method === "cash" ? "Tiền mặt" : "Khác",
+      label:
+        method === "vnpay" ? "VNPay" : method === "cash" ? "Tiền mặt" : "Khác",
       count,
       percent: Math.round((count / total) * 100),
     }));
@@ -426,7 +482,11 @@ const StatsReports = () => {
   }, [transactions, selectedYearMonthly]);
 
   const dailyStats = useMemo(() => {
-    const daysInMonth = new Date(selectedYearDaily, selectedMonthDaily, 0).getDate();
+    const daysInMonth = new Date(
+      selectedYearDaily,
+      selectedMonthDaily,
+      0
+    ).getDate();
     const days = Array.from({ length: daysInMonth }, (_, index) => ({
       key: `${selectedYearDaily}-${selectedMonthDaily}-${index + 1}`,
       label: `${index + 1}`,
@@ -448,7 +508,8 @@ const StatsReports = () => {
   }, [transactions, selectedYearDaily, selectedMonthDaily]);
 
   const paginationItems = useMemo(() => {
-    if (totalPages <= 6) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (totalPages <= 6)
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
     const items = [1];
     const start = Math.max(2, currentPage - 1);
     const end = Math.min(totalPages - 1, currentPage + 1);
@@ -485,7 +546,9 @@ const StatsReports = () => {
               <button
                 key={range.id}
                 type="button"
-                className={`time-chip ${timeFilter === range.id ? "active" : ""}`}
+                className={`time-chip ${
+                  timeFilter === range.id ? "active" : ""
+                }`}
                 onClick={() => setTimeFilter(range.id)}
               >
                 {range.label}
@@ -563,7 +626,9 @@ const StatsReports = () => {
                   <span>Năm</span>
                   <select
                     value={selectedYearMonthly}
-                    onChange={(e) => setSelectedYearMonthly(Number(e.target.value))}
+                    onChange={(e) =>
+                      setSelectedYearMonthly(Number(e.target.value))
+                    }
                   >
                     {availableYears.map((year) => (
                       <option key={`monthly-year-${year}`} value={year}>
@@ -580,16 +645,16 @@ const StatsReports = () => {
             <div className="chart-header">
               <div>
                 <h4>Doanh thu theo ngày trong tháng</h4>
-                <p>
-                  {`Tháng ${selectedMonthDaily} / ${selectedYearDaily}`}
-                </p>
+                <p>{`Tháng ${selectedMonthDaily} / ${selectedYearDaily}`}</p>
               </div>
               <div className="chart-controls">
                 <div className="control">
                   <span>Năm</span>
                   <select
                     value={selectedYearDaily}
-                    onChange={(e) => setSelectedYearDaily(Number(e.target.value))}
+                    onChange={(e) =>
+                      setSelectedYearDaily(Number(e.target.value))
+                    }
                   >
                     {availableYears.map((year) => (
                       <option key={`daily-year-${year}`} value={year}>
@@ -602,10 +667,15 @@ const StatsReports = () => {
                   <span>Tháng</span>
                   <select
                     value={selectedMonthDaily}
-                    onChange={(e) => setSelectedMonthDaily(Number(e.target.value))}
+                    onChange={(e) =>
+                      setSelectedMonthDaily(Number(e.target.value))
+                    }
                   >
                     {monthOptions.map((option) => (
-                      <option key={`daily-month-${option.value}`} value={option.value}>
+                      <option
+                        key={`daily-month-${option.value}`}
+                        value={option.value}
+                      >
                         {option.label}
                       </option>
                     ))}
@@ -669,7 +739,9 @@ const StatsReports = () => {
                       <td>{formatDateTime(transaction.createdAt)}</td>
                       <td>
                         <span
-                          className={`status-pill status-${formatStatus(transaction.status).tone}`}
+                          className={`status-pill status-${
+                            formatStatus(transaction.status).tone
+                          }`}
                         >
                           {formatStatus(transaction.status).label}
                         </span>
@@ -717,7 +789,9 @@ const StatsReports = () => {
           )}
           <button
             className="page-btn nav"
-            onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+            onClick={() =>
+              setCurrentPage((page) => Math.min(totalPages, page + 1))
+            }
             disabled={currentPage === totalPages}
           >
             ›
@@ -727,7 +801,10 @@ const StatsReports = () => {
 
       {detail && (
         <div className="modal-overlay-new" onClick={() => setDetail(null)}>
-          <div className="modal-content-new detail-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-content-new detail-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header-new">
               <div className="modal-title-section">
                 <div className="modal-icon">🔍</div>
@@ -736,7 +813,10 @@ const StatsReports = () => {
                   <p>Thông tin đầy đủ về giao dịch đã chọn.</p>
                 </div>
               </div>
-              <button className="modal-close-new" onClick={() => setDetail(null)}>
+              <button
+                className="modal-close-new"
+                onClick={() => setDetail(null)}
+              >
                 ✕
               </button>
             </div>

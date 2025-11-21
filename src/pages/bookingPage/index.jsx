@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams, useParams } from "react-router-dom";
-import "./index.scss";
-import api from "../../config/api";
+import { useState, useEffect, useMemo } from "react"; // Import React hooks để quản lý state và side effects
+import { useNavigate, useSearchParams, useParams } from "react-router-dom"; // Import hooks để điều hướng và lấy params từ URL
+import "./index.scss"; // Import file SCSS cho styling
+import api from "../../config/api"; // Import instance axios đã cấu hình để gọi API
 
 /** ============== MAPPERS & TYPES (JS) ============== */
 // Danh sách quận cố định theo yêu cầu (đã loại bỏ trùng lặp)
 const FIXED_DISTRICTS = [
+  // Mảng các quận/huyện tại TP.HCM để filter
   "Quận 1",
   "Quận 2",
   "Quận 3",
@@ -32,32 +33,36 @@ const FIXED_DISTRICTS = [
 
 // Chuyển danh sách cổng sạc (ports) → kiểu trạm hiển thị
 function chooseStationType(ports = []) {
-  if (!ports.length) return "AC";
-  const maxPower = Math.max(...ports.map((p) => p?.powerKw || 0), 0);
-  const hasDC = ports.some((p) => p?.type === "DC");
-  if (hasDC && maxPower >= 120) return "DC ULTRA";
-  if (hasDC) return "DC";
-  return "AC";
+  // Hàm xác định loại trạm dựa trên cổng sạc
+  if (!ports.length) return "AC"; // Nếu không có cổng nào thì mặc định AC
+  const maxPower = Math.max(...ports.map((p) => p?.powerKw || 0), 0); // Tìm công suất lớn nhất trong các cổng
+  const hasDC = ports.some((p) => p?.type === "DC"); // Kiểm tra có cổng DC không
+  if (hasDC && maxPower >= 120) return "DC ULTRA"; // Nếu có DC và công suất >= 120kW thì là DC ULTRA
+  if (hasDC) return "DC"; // Nếu có DC nhưng công suất thấp hơn thì là DC thường
+  return "AC"; // Ngược lại là AC
 }
+
 function toPriceVND(num) {
-  if (!num && num !== 0) return "-";
+  // Hàm format giá tiền sang định dạng VND
+  if (!num && num !== 0) return "-"; // Nếu không có giá thì trả về dấu gạch ngang
   try {
-    return `${Number(num).toLocaleString("vi-VN")} đ/kWh`;
+    return `${Number(num).toLocaleString("vi-VN")} đ/kWh`; // Format số theo chuẩn VN và thêm đơn vị
   } catch {
-    return `${num} đ/kWh`;
+    return `${num} đ/kWh`; // Nếu lỗi thì trả về số gốc
   }
 }
 
-// Trích xuất tên quận từ địa chỉ để phục vụ filter (bị xóa trước đó)
+// Trích xuất tên quận từ địa chỉ để phục vụ filter
 function extractDistrictFromAddress(address) {
-  if (!address || typeof address !== "string") return null;
-  const raw = address.trim();
+  // Hàm trích xuất tên quận/huyện từ chuỗi địa chỉ
+  if (!address || typeof address !== "string") return null; // Kiểm tra tính hợp lệ của địa chỉ
+  const raw = address.trim(); // Loại bỏ khoảng trắng thừa
 
   // Các pattern phổ biến: "Quận 1", "Q1", "Q. 1", "District 1"
   const patterns = [
-    { re: /quận\s*(\d{1,2})\b/i, format: (m) => `Quận ${m[1]}` },
-    { re: /\bq\.?\s*(\d{1,2})\b/i, format: (m) => `Quận ${m[1]}` },
-    { re: /district\s*(\d{1,2})\b/i, format: (m) => `Quận ${m[1]}` },
+    { re: /quận\s*(\d{1,2})\b/i, format: (m) => `Quận ${m[1]}` }, // Match "Quận 1", "Quận 10"
+    { re: /\bq\.?\s*(\d{1,2})\b/i, format: (m) => `Quận ${m[1]}` }, // Match "Q1", "Q. 1"
+    { re: /district\s*(\d{1,2})\b/i, format: (m) => `Quận ${m[1]}` }, // Match "District 1"
     // Ví dụ: "Huyện Củ Chi", "Huyện Nhà Bè"
     {
       re: /huyện\s*([^,\-\n]+)\b/i,
@@ -68,74 +73,78 @@ function extractDistrictFromAddress(address) {
   ];
 
   for (const p of patterns) {
-    const m = raw.match(p.re);
-    if (m) return p.format(m);
+    // Duyệt qua từng pattern
+    const m = raw.match(p.re); // Thử match với pattern
+    if (m) return p.format(m); // Nếu match thì format và trả về
   }
 
   // Trường hợp "Quận" tên chữ: "Quận Bình Thạnh" (lấy đến dấu phẩy)
   const namedDistrict = raw.match(/quận\s*([^,\-\n]+)\b/i);
   if (namedDistrict) {
-    const name = namedDistrict[1].trim().replace(/\s+/g, " ");
-    return `Quận ${name}`;
+    const name = namedDistrict[1].trim().replace(/\s+/g, " "); // Chuẩn hóa tên
+    return `Quận ${name}`; // Trả về tên quận đã format
   }
 
-  return null;
+  return null; // Không match được thì trả về null
 }
 
 // Escape string for use in RegExp
 function escapeRegex(str) {
-  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Hàm escape các ký tự đặc biệt trong regex
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // Thêm backslash trước ký tự đặc biệt
 }
 
 // ✅ Thêm hàm tính khoảng cách ở đây
 const getDistanceKm = (lat1, lon1, lat2, lon2) => {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
+  // Hàm tính khoảng cách giữa 2 điểm GPS (công thức Haversine)
+  const R = 6371; // Bán kính Trái Đất tính bằng km
+  const dLat = (lat2 - lat1) * (Math.PI / 180); // Chênh lệch vĩ độ chuyển sang radian
+  const dLon = (lon2 - lon1) * (Math.PI / 180); // Chênh lệch kinh độ chuyển sang radian
+  const a = // Công thức Haversine
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1 * (Math.PI / 180)) *
       Math.cos(lat2 * (Math.PI / 180)) *
       Math.sin(dLon / 2) ** 2;
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))); // Trả về khoảng cách tính bằng km
 };
 /** Map 1 item API -> 1 station cho UI map/list.
  *  Lưu thêm rawPorts để bước 2 dùng làm "chargers".
  */
 function mapApiStation(s) {
-  const total = s?.ports?.length || 0;
+  // Hàm chuyển đổi dữ liệu trạm từ API sang format hiển thị UI
+  const total = s?.ports?.length || 0; // Tổng số cổng sạc
   const available =
-    s?.ports?.filter((p) => p?.status === "available").length || 0;
-  const maxPower = total ? Math.max(...s.ports.map((p) => p?.powerKw || 0)) : 0;
-  const minPrice = total ? Math.min(...s.ports.map((p) => p?.price || 0)) : 0;
+    s?.ports?.filter((p) => p?.status === "available").length || 0; // Số cổng đang khả dụng
+  const maxPower = total ? Math.max(...s.ports.map((p) => p?.powerKw || 0)) : 0; // Công suất lớn nhất
+  const minPrice = total ? Math.min(...s.ports.map((p) => p?.price || 0)) : 0; // Giá thấp nhất
 
   return {
-    id: s.id,
-    name: s.name,
-    address: s.address,
-    // Chuẩn hoá quận/huyện/TP để phục vụ filter chính xác
-    district: extractDistrictFromAddress(s.address) || null,
-    coords: [s.latitude, s.longitude], // API trả longitude/latitude → đổi về [lat, lng]
-    type: chooseStationType(s.ports || []), // "AC" | "DC" | "DC ULTRA"
-    speed: maxPower ? `${maxPower} kW` : "-",
-    price: minPrice ? toPriceVND(minPrice) : "-",
-    available,
-    total,
-    distance: "", // có thể tính theo vị trí user nếu cần
-    rating: undefined,
-    rawPorts: s.ports || [], // giữ lại để vẽ chargers ở Step 2
-    status: s.status || "active", // "active" | "inactive" | "maintenance"
+    id: s.id, // ID trạm
+    name: s.name, // Tên trạm
+    address: s.address, // Địa chỉ
+    district: extractDistrictFromAddress(s.address) || null, // Quận/huyện đã chuẩn hóa
+    coords: [s.latitude, s.longitude], // Tọa độ [lat, lng]
+    type: chooseStationType(s.ports || []), // Loại trạm: AC, DC, DC ULTRA
+    speed: maxPower ? `${maxPower} kW` : "-", // Tốc độ sạc (công suất)
+    price: minPrice ? toPriceVND(minPrice) : "-", // Giá format VND
+    available, // Số cổng khả dụng
+    total, // Tổng số cổng
+    distance: "", // Khoảng cách sẽ tính sau
+    rating: undefined, // Rating (chưa có)
+    rawPorts: s.ports || [], // Giữ nguyên dữ liệu ports để dùng ở step 2
+    status: s.status || "active", // Trạng thái trạm
   };
 }
 
 /** Map port -> charger card */
 function mapPortToCharger(port, idx, baseLatLng) {
+  // Hàm chuyển đổi port thành charger card
   // 👇 Kiểm tra port có hợp lệ không
   if (!port || typeof port !== "object") {
     console.warn("⚠️ Port không hợp lệ:", port);
     return null; // hoặc throw error
   }
-  const connector = port.type === "DC" ? "CCS2" : "Type 2";
+  const connector = port.type === "DC" ? "CCS2" : "Type 2"; // Xác định loại đầu cắm
   // Tạo toạ độ lệch nhẹ để render nhiều marker (nếu map cần)
   const delta = 0.00012;
   const coords = [
@@ -184,75 +193,80 @@ const isSlotSelectable = (status) => status === SELECTABLE_SLOT_STATUS;
 
 /** =================== COMPONENT =================== */
 export default function BookingPage() {
-  const [vehicleId, setVehicleId] = useState("");
-  const [vehicles, setVehicles] = useState([]);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [showVehicleModal, setShowVehicleModal] = useState(false);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { stationId } = useParams();
+  // Component chính của trang booking
+  const [vehicleId, setVehicleId] = useState(""); // State lưu ID xe đã chọn
+  const [vehicles, setVehicles] = useState([]); // State lưu danh sách xe của user
+  const [selectedVehicle, setSelectedVehicle] = useState(null); // State lưu xe đang được chọn
+  const [showVehicleModal, setShowVehicleModal] = useState(false); // State hiển thị modal chọn xe
+  const navigate = useNavigate(); // Hook để điều hướng trang
+  const [searchParams] = useSearchParams(); // Hook lấy query params từ URL
+  const { stationId } = useParams(); // Hook lấy stationId từ URL params
 
-  const today = new Date();
-  const defaultDate = today.toISOString().split("T")[0];
-  const defaultTime = today.toTimeString().slice(0, 5);
-  const minDate = defaultDate;
+  const today = new Date(); // Ngày hiện tại
+  const defaultDate = today.toISOString().split("T")[0]; // Ngày mặc định (YYYY-MM-DD)
+  const defaultTime = today.toTimeString().slice(0, 5); // Giờ mặc định (HH:mm)
+  const minDate = defaultDate; // Ngày tối thiểu (hôm nay)
   const maxDate = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000)
     .toISOString()
-    .split("T")[0];
+    .split("T")[0]; // Ngày tối đa (2 ngày sau)
 
-  const [step, setStep] = useState(1);
-  const [stations, setStations] = useState([]); // dữ liệu thật
-  const [districts, setDistricts] = useState(FIXED_DISTRICTS); // danh sách quận cố định
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [step, setStep] = useState(1); // State lưu bước hiện tại (1: chọn trạm, 2: chọn trụ, 3: đặt chỗ)
+  const [stations, setStations] = useState([]); // State lưu danh sách trạm
+  const [districts, setDistricts] = useState(FIXED_DISTRICTS); // State lưu danh sách quận
+  const [loading, setLoading] = useState(false); // State hiển thị loading
+  const [error, setError] = useState(null); // State lưu thông báo lỗi
 
-  const [selectedStation, setSelectedStation] = useState(null);
-  const [selectedCharger, setSelectedCharger] = useState(null);
+  const [selectedStation, setSelectedStation] = useState(null); // State lưu trạm đã chọn
+  const [selectedCharger, setSelectedCharger] = useState(null); // State lưu trụ đã chọn
 
   // Step 3: slots
-  const [slots, setSlots] = useState([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
-  const [slotsError, setSlotsError] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [submitting, setSubmitting] = useState(false); // prevent double submit + show loading
+  const [slots, setSlots] = useState([]); // State lưu danh sách slot
+  const [slotsLoading, setSlotsLoading] = useState(false); // State loading khi fetch slots
+  const [slotsError, setSlotsError] = useState(null); // State lỗi khi fetch slots
+  const [selectedSlot, setSelectedSlot] = useState(null); // State lưu slot đã chọn
+  const [submitting, setSubmitting] = useState(false); // State ngăn submit nhiều lần
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all"); // giữ state nhưng không áp dụng lọc loại trạm
-  const [districtFilter, setDistrictFilter] = useState("all"); // "all" | <districtName>
+  const [searchTerm, setSearchTerm] = useState(""); // State lưu từ khóa tìm kiếm
+  const [filterType, setFilterType] = useState("all"); // State lưu bộ lọc loại trạm
+  const [districtFilter, setDistrictFilter] = useState("all"); // State lưu bộ lọc quận
 
-  const [userLocation, setUserLocation] = useState(null);
+  const [userLocation, setUserLocation] = useState(null); // State lưu vị trí GPS của user
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Hook chạy khi component mount
+    window.scrollTo(0, 0); // Cuộn về đầu trang
   }, []);
 
   // Lấy filter từ URL (?type=AC|DC|DC_ULTRA)
   useEffect(() => {
-    const typeFromUrl = searchParams.get("type");
+    // Hook lấy filter từ URL
+    const typeFromUrl = searchParams.get("type"); // Lấy param ?type=...
     if (typeFromUrl) {
-      const normalized = typeFromUrl === "DC_ULTRA" ? "DC ULTRA" : typeFromUrl;
+      const normalized = typeFromUrl === "DC_ULTRA" ? "DC ULTRA" : typeFromUrl; // Chuẩn hóa tên
       if (["AC", "DC", "DC ULTRA"].includes(normalized))
-        setFilterType(normalized);
+        setFilterType(normalized); // Set filter nếu hợp lệ
     }
   }, [searchParams]);
 
   // Gọi API /stations
   useEffect(() => {
-    let cancelled = false;
+    // Hook fetch danh sách trạm từ API
+    let cancelled = false; // Flag để cancel request khi unmount
     async function load() {
       try {
-        setLoading(true);
-        setError(null);
+        setLoading(true); // Bật loading
+        setError(null); // Reset lỗi
         const { data } = await api.get("/stations", {
+          // Gọi API lấy trạm
           params: {
-            page: 1,
-            limit: 120,
-            includePorts: true,
+            page: 1, // Trang 1
+            limit: 120, // Lấy tối đa 120 trạm
+            includePorts: true, // Kèm thông tin ports
             // name: searchTerm || undefined, // bật nếu muốn filter server-side
           },
         });
-        if (cancelled) return;
-        const mapped = (data?.items || []).map(mapApiStation);
-        setStations(mapped);
+        if (cancelled) return; // Nếu đã unmount thì dừng
+        const mapped = (data?.items || []).map(mapApiStation); // Map dữ liệu
+        setStations(mapped); // Lưu vào state
         // Hiển thị danh sách quận cố định
         setDistricts(FIXED_DISTRICTS);
 
@@ -279,22 +293,23 @@ export default function BookingPage() {
   }, []); // chỉ load 1 lần. Nếu muốn search theo từ khoá, thêm [searchTerm]
 
   useEffect(() => {
+    // Hook lấy vị trí GPS của user
     if (navigator.geolocation) {
+      // Kiểm tra trình duyệt có hỗ trợ GPS không
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const { latitude, longitude } = pos.coords;
-          setUserLocation([latitude, longitude]);
+          const { latitude, longitude } = pos.coords; // Lấy tọa độ
+          setUserLocation([latitude, longitude]); // Lưu vào state
         },
         (err) => {
-          console.warn("Không thể lấy vị trí người dùng:", err);
-          // Không cần setError vì không phải lỗi nghiêm trọng
+          console.warn("Không thể lấy vị trí người dùng:", err); // Log lỗi
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 10000 } // Cấu hình GPS
       );
     }
   }, []);
 
-  const defaultCenter = [10.850268581807446, 106.76508926692969];
+  const defaultCenter = [10.850268581807446, 106.76508926692969]; // Tọa độ mặc định (trung tâm TP.HCM)
 
   // // Lọc client-side theo ô tìm kiếm và filterType
   // const filteredStations = useMemo(() => {
@@ -453,15 +468,17 @@ export default function BookingPage() {
       dt.setHours(h, m, 0, 0); // local time
       return dt.toISOString(); // convert → UTC "Z"
     };
-    
+
     // Calculate endTime as startTime + 15 minutes
     const [startHour, startMin] = formData.startTime.split(":").map(Number);
     const endDateTime = new Date(formData.date);
     endDateTime.setHours(startHour, startMin + 15, 0, 0);
     const endHour = endDateTime.getHours();
     const endMin = endDateTime.getMinutes();
-    const calculatedEndTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
-    
+    const calculatedEndTime = `${String(endHour).padStart(2, "0")}:${String(
+      endMin
+    ).padStart(2, "0")}`;
+
     const startAtIso = toUtcIso(formData.date, formData.startTime);
     const endAtIso = toUtcIso(formData.date, calculatedEndTime);
 
@@ -609,7 +626,6 @@ export default function BookingPage() {
     return `${(powerKw * priceVnd).toLocaleString("vi-VN")} đ`;
   }, [selectedCharger]);
 
-
   // Fetch slots when entering step 3
   useEffect(() => {
     async function fetchSlots() {
@@ -678,49 +694,64 @@ export default function BookingPage() {
 
   return (
     <div className="booking-wrapper">
+      {" "}
+      {/* Container ngoài cùng */}
       <div
         className={`booking-container full-width ${
           step === 3 ? "confirmation-mode" : ""
         }`}
       >
+        {" "}
+        {/* Container chính với class động theo step */}
         <div className="left-panel">
+          {" "}
+          {/* Panel bên trái chứa nội dung chính */}
           <div className="panel-header">
-            <h1>Đặt chỗ sạc xe</h1>
+            {" "}
+            {/* Header panel */}
+            <h1>Đặt chỗ sạc xe</h1> {/* Tiêu đề */}
             <div className="step-indicator">
-              <div 
-                className={`step ${step >= 1 ? "active" : ""} ${step === 1 ? "current" : ""}`}
-                onClick={() => setStep(1)}
-                style={{ cursor: 'pointer' }}
+              {" "}
+              {/* Indicator hiển thị các bước */}
+              <div
+                className={`step ${step >= 1 ? "active" : ""} ${
+                  step === 1 ? "current" : ""
+                }`} // Class động theo step hiện tại
+                onClick={() => setStep(1)} // Click để quay lại step 1
+                style={{ cursor: "pointer" }}
               >
-                <span className="step-number">1</span>
-                <span className="step-label">Chọn trạm</span>
+                <span className="step-number">1</span> {/* Số bước */}
+                <span className="step-label">Chọn trạm</span> {/* Nhãn bước */}
               </div>
-              <div className="step-divider"></div>
-              <div 
-                className={`step ${step >= 2 ? "active" : ""} ${step === 2 ? "current" : ""} ${step < 2 ? "disabled" : ""}`}
+              <div className="step-divider"></div> {/* Đường kẻ ngăn cách */}
+              <div
+                className={`step ${step >= 2 ? "active" : ""} ${
+                  step === 2 ? "current" : ""
+                } ${step < 2 ? "disabled" : ""}`} // Disabled nếu chưa đến step
                 onClick={() => {
                   if (step >= 2) setStep(2);
-                }}
-                style={{ cursor: step >= 2 ? 'pointer' : 'not-allowed' }}
+                }} // Chỉ cho click nếu đã qua step
+                style={{ cursor: step >= 2 ? "pointer" : "not-allowed" }}
               >
                 <span className="step-number">2</span>
                 <span className="step-label">Chọn trụ</span>
               </div>
               <div className="step-divider"></div>
-              <div 
-                className={`step ${step >= 3 ? "active" : ""} ${step === 3 ? "current" : ""} ${step < 3 ? "disabled" : ""}`}
+              <div
+                className={`step ${step >= 3 ? "active" : ""} ${
+                  step === 3 ? "current" : ""
+                } ${step < 3 ? "disabled" : ""}`}
                 onClick={() => {
                   if (step >= 3) setStep(3);
                 }}
-                style={{ cursor: step >= 3 ? 'pointer' : 'not-allowed' }}
+                style={{ cursor: step >= 3 ? "pointer" : "not-allowed" }}
               >
                 <span className="step-number">3</span>
                 <span className="step-label">Đặt chỗ & Xác nhận</span>
               </div>
             </div>
           </div>
-
-          {/* STEP 1 */}
+          {/* STEP 1: Chọn trạm */}
           {step === 1 && (
             <div className="station-selection">
               <div className="search-filters">
@@ -879,8 +910,7 @@ export default function BookingPage() {
               )}
             </div>
           )}
-
-          {/* STEP 2 */}
+          {/* STEP 2: Chọn trụ sạc */}
           {step === 2 && selectedStation && (
             <div className="charger-selection">
               <div className="selected-station-info">
@@ -962,8 +992,7 @@ export default function BookingPage() {
               </div>
             </div>
           )}
-
-          {/* STEP 3: Slot selection & Confirmation (Merged) */}
+          {/* STEP 3: Chọn slot & xác nhận */}
           {step === 3 && selectedCharger && (
             <div className="booking-confirmation-merged">
               {/* Station & Charger Details - Combined */}
@@ -984,19 +1013,23 @@ export default function BookingPage() {
                           <div className="info-item">
                             <span className="info-label">Khoảng cách</span>
                             <span className="info-value">
-                              {typeof selectedStation.distance === 'number' 
+                              {typeof selectedStation.distance === "number"
                                 ? `${selectedStation.distance.toFixed(1)} km`
-                                : selectedStation.distance
-                              }
+                                : selectedStation.distance}
                             </span>
                           </div>
                           <div className="info-item">
-                            <span className="info-label">Thời gian di chuyển</span>
+                            <span className="info-label">
+                              Thời gian di chuyển
+                            </span>
                             <span className="info-value">
-                              ~{typeof selectedStation.distance === 'number'
+                              ~
+                              {typeof selectedStation.distance === "number"
                                 ? Math.ceil(selectedStation.distance * 2)
-                                : Math.ceil(parseFloat(selectedStation.distance) * 2)
-                              } phút
+                                : Math.ceil(
+                                    parseFloat(selectedStation.distance) * 2
+                                  )}{" "}
+                              phút
                             </span>
                           </div>
                         </div>
@@ -1011,23 +1044,33 @@ export default function BookingPage() {
                       <div className="detail-specs-grid">
                         <div className="spec-badge">
                           <span className="spec-label">Loại</span>
-                          <span className="spec-value">{selectedCharger.typeLabel}</span>
+                          <span className="spec-value">
+                            {selectedCharger.typeLabel}
+                          </span>
                         </div>
                         <div className="spec-badge">
                           <span className="spec-label">Công suất</span>
-                          <span className="spec-value">{selectedCharger.power}</span>
+                          <span className="spec-value">
+                            {selectedCharger.power}
+                          </span>
                         </div>
                         <div className="spec-badge">
                           <span className="spec-label">Giá</span>
-                          <span className="spec-value">{selectedCharger.price}</span>
+                          <span className="spec-value">
+                            {selectedCharger.price}
+                          </span>
                         </div>
                         <div className="spec-badge">
                           <span className="spec-label">Tốc độ</span>
-                          <span className="spec-value">{selectedCharger.speedLabel}</span>
+                          <span className="spec-value">
+                            {selectedCharger.speedLabel}
+                          </span>
                         </div>
                         <div className="spec-badge">
                           <span className="spec-label">Đầu cắm</span>
-                          <span className="spec-value">{selectedCharger.connector}</span>
+                          <span className="spec-value">
+                            {selectedCharger.connector}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1038,23 +1081,28 @@ export default function BookingPage() {
               <div className="merged-content-vertical">
                 {/* SECTION 1: Slot Selection */}
                 <div className="slot-selection-section">
-                  <h3>1. Chọn slot sạc</h3>
-                  {slotsLoading && <div className="loading-message">Đang tải slot…</div>}
+                  <h3>1. Chọn slot sạc</h3> {/* Tiêu đề section */}
+                  {slotsLoading && (
+                    <div className="loading-message">Đang tải slot…</div>
+                  )}
                   {slotsError && (
                     <div className="error-message">Lỗi: {slotsError}</div>
                   )}
                   {!slotsLoading && !slotsError && (
                     <div className="slots-grid-compact">
+                      {" "}
+                      {/* Grid hiển thị các slot */}
                       {slots.length === 0 && (
                         <div className="no-slots-message">
                           Không có slot khả dụng cho trụ này
                         </div>
                       )}
                       {slots.map((slot, index) => {
-                        const selectable = isSlotSelectable(slot.status);
+                        // Render từng slot
+                        const selectable = isSlotSelectable(slot.status); // Kiểm tra slot có thể chọn không
 
-                        // Map status sang label tiếng Việt
                         const getStatusLabel = (status) => {
+                          // Hàm map status sang nhãn tiếng Việt
                           const statusLabels = {
                             booked: "Đã được đặt trước",
                             reserved: "Đã được giữ chỗ",
@@ -1066,57 +1114,77 @@ export default function BookingPage() {
                           return statusLabels[status] || "Không khả dụng";
                         };
 
-                         return (
-                           <div
-                             key={slot.id}
-                             className={`slot-card ${slot.status} ${
-                               selectedSlot?.id === slot.id ? "selected" : ""
-                             } ${!selectable ? "disabled" : ""}`}
-                             onClick={() => {
-                               if (!selectable) return;
-                               setSelectedSlot(slot);
-                             }}
-                           >
-                             <div className="slot-header">
-                               <div className="slot-number-wrapper">
-                                 <span className="slot-number">
-                                   Slot {index + 1}
-                                 </span>
-                               </div>
-                               <span className={`slot-status-chip ${slot.status}`}>
-                                 {selectable ? "✓ Có sẵn" : "✕ Đã đặt"}
-                               </span>
-                             </div>
+                        return (
+                          <div
+                            key={slot.id} // Key unique
+                            className={`slot-card ${slot.status} ${
+                              selectedSlot?.id === slot.id ? "selected" : ""
+                            } ${!selectable ? "disabled" : ""}`} // Class động theo trạng thái
+                            onClick={() => {
+                              if (!selectable) return;
+                              setSelectedSlot(slot);
+                            }} // Chỉ cho click nếu selectable
+                          >
+                            <div className="slot-header">
+                              {" "}
+                              {/* Header slot card */}
+                              <div className="slot-number-wrapper">
+                                <span className="slot-number">
+                                  Slot {index + 1}
+                                </span>
+                              </div>
+                              <span
+                                className={`slot-status-chip ${slot.status}`}
+                              >
+                                {" "}
+                                {/* Chip trạng thái */}
+                                {selectable ? "✓ Có sẵn" : "✕ Đã đặt"}
+                              </span>
+                            </div>
 
-                             {selectable && (
-                               <div className="slot-body">
-                                 <div className="slot-info-row">
-                                   <span className="info-label">Loại slot</span>
-                                   <span className="info-value">Sạc thường</span>
-                                 </div>
-                                 <div className="slot-info-row">
-                                   <span className="info-label">Thời gian giữ chỗ</span>
-                                   <span className="info-value">15 phút</span>
-                                 </div>
-                               </div>
-                             )}
+                            {selectable && ( // Chỉ hiển thị thông tin nếu slot có thể chọn
+                              <div className="slot-body">
+                                <div className="slot-info-row">
+                                  {" "}
+                                  {/* Dòng thông tin */}
+                                  <span className="info-label">
+                                    Loại slot
+                                  </span>{" "}
+                                  {/* Nhãn */}
+                                  <span className="info-value">
+                                    Sạc thường
+                                  </span>{" "}
+                                  {/* Giá trị */}
+                                </div>
+                                <div className="slot-info-row">
+                                  <span className="info-label">
+                                    Thời gian giữ chỗ
+                                  </span>
+                                  <span className="info-value">15 phút</span>{" "}
+                                  {/* Thời gian giữ chỗ mặc định */}
+                                </div>
+                              </div>
+                            )}
 
-                            {!selectable && (
+                            {!selectable && ( // Overlay khi slot không thể chọn
                               <div className="slot-unavailable-overlay">
-                                <div className="unavailable-slot-number">Slot {index + 1}</div>
+                                <div className="unavailable-slot-number">
+                                  Slot {index + 1}
+                                </div>
                                 <span className="unavailable-icon">🚫</span>
                                 <div className="unavailable-content">
                                   <span className="unavailable-title">
                                     {getStatusLabel(slot.status)}
-                                  </span>
+                                  </span>{" "}
+                                  {/* Lý do không thể chọn */}
                                   <span className="unavailable-subtitle">
                                     Vui lòng chọn slot khác
                                   </span>
                                 </div>
                               </div>
                             )}
-                           </div>
-                         );
+                          </div>
+                        );
                       })}
                     </div>
                   )}
@@ -1125,27 +1193,34 @@ export default function BookingPage() {
                 {/* SECTION 2: Booking Form */}
                 <div className="booking-form-section">
                   <h3>2. Chọn xe & Thời gian</h3>
-                  
+
                   <div className="form-content-wrapper">
-                     {/* Vehicle Selection */}
-                     <div className="vehicle-selection-compact">
-                       <label className="form-label">
-                         Xe của bạn
-                       </label>
+                    {/* Vehicle Selection */}
+                    <div className="vehicle-selection-compact">
+                      <label className="form-label">Xe của bạn</label>
                       {selectedVehicle ? (
-                        <div className="selected-vehicle-display" onClick={() => setShowVehicleModal(true)}>
+                        <div
+                          className="selected-vehicle-display"
+                          onClick={() => setShowVehicleModal(true)}
+                        >
                           <div className="vehicle-info">
                             <div className="vehicle-icon">🏍️</div>
                             <div className="vehicle-details">
-                              <span className="vehicle-plate">{selectedVehicle.plateNumber}</span>
-                              <span className="vehicle-model">{selectedVehicle.make} {selectedVehicle.model}</span>
+                              <span className="vehicle-plate">
+                                {selectedVehicle.plateNumber}
+                              </span>
+                              <span className="vehicle-model">
+                                {selectedVehicle.make} {selectedVehicle.model}
+                              </span>
                             </div>
                           </div>
-                          <button type="button" className="change-btn">Đổi phương tiện</button>
+                          <button type="button" className="change-btn">
+                            Đổi phương tiện
+                          </button>
                         </div>
                       ) : (
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="select-vehicle-btn"
                           onClick={() => setShowVehicleModal(true)}
                         >
@@ -1155,16 +1230,17 @@ export default function BookingPage() {
                       )}
                     </div>
 
-                     {/* Time Selection - Always Show */}
-                     <div className="form-section">
-                       <form className="booking-form-compact" onSubmit={handleSubmit}>
-                         <label className="form-label">
-                           Giờ đặt lịch
-                         </label>
-                         
-                         <div className="reservation-notice">
-                           ⏱️ Slot sạc của bạn sẽ được giữ chỗ trong vòng 15 phút
-                         </div>
+                    {/* Time Selection - Always Show */}
+                    <div className="form-section">
+                      <form
+                        className="booking-form-compact"
+                        onSubmit={handleSubmit}
+                      >
+                        <label className="form-label">Giờ đặt lịch</label>
+
+                        <div className="reservation-notice">
+                          ⏱️ Slot sạc của bạn sẽ được giữ chỗ trong vòng 15 phút
+                        </div>
 
                         <div className="form-grid-two">
                           <div className="form-group-compact">
@@ -1173,7 +1249,12 @@ export default function BookingPage() {
                               type="date"
                               value={formData.date}
                               min={defaultDate}
-                              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  date: e.target.value,
+                                }))
+                              }
                               className="date-input-field"
                               required
                             />
@@ -1184,7 +1265,12 @@ export default function BookingPage() {
                             <input
                               type="time"
                               value={formData.startTime}
-                              onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  startTime: e.target.value,
+                                }))
+                              }
                               className="time-input-field"
                               required
                             />
@@ -1211,7 +1297,6 @@ export default function BookingPage() {
             </div>
           )}
         </div>
-
         {/* ❌ Loại bỏ right-panel map */}
         {/* RIGHT PANEL: MAP */}
         {/* {step !== 4 && (
@@ -1222,14 +1307,17 @@ export default function BookingPage() {
           </div>
         )} */}
       </div>
-
       {/* Vehicle Selection Modal */}
-      {showVehicleModal && (
+      {showVehicleModal && ( // Modal hiển thị khi showVehicleModal = true
         <div
           className="datetime-modal-overlay"
           onClick={() => setShowVehicleModal(false)}
         >
+          {" "}
+          {/* Overlay đóng modal khi click ra ngoài */}
           <div className="vehicle-modal" onClick={(e) => e.stopPropagation()}>
+            {" "}
+            {/* Ngăn close khi click vào modal */}
             <div className="modal-header">
               <h3>Chọn xe của bạn</h3>
               <button
@@ -1265,9 +1353,15 @@ export default function BookingPage() {
                     >
                       <div className="vehicle-icon-large">🏍️</div>
                       <div className="vehicle-info-modal">
-                        <div className="vehicle-name">{vehicle.make} {vehicle.model}</div>
-                        <div className="vehicle-plate-large">{vehicle.plateNumber}</div>
-                        <div className="vehicle-connector">{vehicle.connectorType}</div>
+                        <div className="vehicle-name">
+                          {vehicle.make} {vehicle.model}
+                        </div>
+                        <div className="vehicle-plate-large">
+                          {vehicle.plateNumber}
+                        </div>
+                        <div className="vehicle-connector">
+                          {vehicle.connectorType}
+                        </div>
                       </div>
                       {localStorage.getItem("defaultVehicleId") ===
                         vehicle.id && (
@@ -1281,7 +1375,6 @@ export default function BookingPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
