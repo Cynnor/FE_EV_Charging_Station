@@ -91,7 +91,30 @@ const TransactionManagement = () => {
                 transactionsData = response.data.data;
             }
 
-            setTransactions(transactionsData);
+            const normalized = transactionsData.map((t) => {
+                const user = t.user || {};
+                const profileName = user.profile?.fullName;
+                const fullName =
+                    user.fullName ||
+                    user.fullname ||
+                    profileName ||
+                    user.name ||
+                    user.displayName ||
+                    user.username ||
+                    user.email ||
+                    "Không rõ";
+                return {
+                    ...t,
+                    user: {
+                        ...user,
+                        fullName: fullName,
+                        email: user.email || t.email || t.payerEmail || "",
+                    },
+                    paymentType: t.metadata?.paymentType || t.paymentType || "reservation",
+                };
+            });
+
+            setTransactions(normalized);
 
             // Update pagination
             if (paginationInfo.totalPages) {
@@ -167,14 +190,43 @@ const TransactionManagement = () => {
         try {
             const response = await api.get(`/transactions/${transactionId}`);
             if (response.data?.success || response.data) {
-                const transaction = response.data.data || response.data;
-                setSelectedTransaction(transaction);
+                const data = response.data.data || response.data;
+                const user = data.user || {};
+                const profileName = user.profile?.fullName;
+                const fullName =
+                    user.fullName ||
+                    user.fullname ||
+                    profileName ||
+                    user.name ||
+                    user.displayName ||
+                    user.username ||
+                    user.email ||
+                    "Không rõ";
+                const normalized = {
+                    ...data,
+                    user: {
+                        ...user,
+                        fullName: fullName,
+                        email: user.email || data.email || data.payerEmail || "",
+                    },
+                    paymentType: data.metadata?.paymentType || data.paymentType || "reservation",
+                };
+                setSelectedTransaction(normalized);
                 setShowDetailModal(true);
             }
         } catch (err) {
             console.error("Error fetching transaction detail:", err);
             alert("Không thể tải chi tiết giao dịch");
         }
+    };
+
+    const formatPaymentType = (paymentType = "") => {
+        const map = {
+            subscription: "Gói thành viên",
+            reservation: "Đặt chỗ/ phiên sạc",
+            charging: "Phiên sạc",
+        };
+        return map[paymentType] || paymentType || "Khác";
     };
 
 
@@ -233,7 +285,7 @@ const TransactionManagement = () => {
             cash: "💵 Tiền mặt",
             other: "🔷 Khác",
         };
-        return methodMap[method] || method;
+        return methodMap[method] || method || "—";
     };
 
     // Get readable user name from transaction
@@ -427,11 +479,12 @@ const TransactionManagement = () => {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Người dùng</th>
+                                        <th>Khách hàng</th>
+                                        <th>Loại thanh toán</th>
                                         <th>Số tiền</th>
                                         <th>Phương thức</th>
-                                        <th>Trạng thái</th>
                                         <th>Thời gian</th>
+                                        <th>Trạng thái</th>
                                         <th>Thao tác</th>
                                     </tr>
                                 </thead>
@@ -443,10 +496,15 @@ const TransactionManagement = () => {
                                                     <span className="user-name">
                                                         {getUserDisplayName(transaction)}
                                                     </span>
-                                                    {/* {(transaction.user?.email || transaction.email || transaction.payerEmail) && (
+                                                    {(transaction.user?.email || transaction.email || transaction.payerEmail) && (
                                                         <span className="user-email">{transaction.user?.email || transaction.email || transaction.payerEmail}</span>
-                                                    )} */}
+                                                    )}
                                                 </div>
+                                            </td>
+                                            <td>
+                                                <span className="pill subtle">
+                                                    {formatPaymentType(transaction.paymentType || transaction.metadata?.paymentType)}
+                                                </span>
                                             </td>
                                             <td>
                                                 <span className="amount">{formatCurrency(transaction.amount)}</span>
@@ -457,12 +515,12 @@ const TransactionManagement = () => {
                                                 </span>
                                             </td>
                                             <td>
+                                                <span className="date">{formatDate(transaction.createdAt)}</span>
+                                            </td>
+                                            <td>
                                                 <span className={`status-badge ${getStatusBadgeClass(transaction.status)}`}>
                                                     {getStatusText(transaction.status)}
                                                 </span>
-                                            </td>
-                                            <td>
-                                                <span className="date">{formatDate(transaction.createdAt)}</span>
                                             </td>
                                             <td>
                                                 <button title="Chi tiết"
@@ -514,34 +572,35 @@ const TransactionManagement = () => {
                         </div>
                         <div className="modal-body">
                             <div className="detail-grid">
-                                <div className="detail-item">
-                                    <label>ID Giao dịch:</label>
-                                    <span>{selectedTransaction._id || selectedTransaction.id}</span>
+                                <div className="detail-item full-width highlight">
+                                    <div>
+                                        <p className="micro-label">Loại thanh toán</p>
+                                        <strong>{formatPaymentType(selectedTransaction.paymentType)}</strong>
+                                        <span className="pill subtle">
+                                            {getPaymentMethodText(selectedTransaction.paymentMethod)}
+                                        </span>
+                                    </div>
+                                    <div className="amount-stack">
+                                        <p className="micro-label">Số tiền</p>
+                                        <span className="amount-large">{formatCurrency(selectedTransaction.amount)}</span>
+                                        <span className={`status-badge ${getStatusBadgeClass(selectedTransaction.status)}`}>
+                                            {getStatusText(selectedTransaction.status)}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className="detail-item">
                                     <label>Người dùng:</label>
                                     <span>
                                         {getUserDisplayName(selectedTransaction)}
                                     </span>
+                                    {selectedTransaction.user?.email && (
+                                        <small className="muted">{selectedTransaction.user.email}</small>
+                                    )}
                                 </div>
                                 {/* <div className="detail-item">
                                     <label>Email:</label>
                                     <span>{selectedTransaction.user?.email || selectedTransaction.email || selectedTransaction.payerEmail || "N/A"}</span>
                                 </div> */}
-                                <div className="detail-item">
-                                    <label>Số tiền:</label>
-                                    <span className="amount-large">{formatCurrency(selectedTransaction.amount)}</span>
-                                </div>
-                                <div className="detail-item">
-                                    <label>Phương thức:</label>
-                                    <span>{getPaymentMethodText(selectedTransaction.paymentMethod)}</span>
-                                </div>
-                                <div className="detail-item">
-                                    <label>Trạng thái:</label>
-                                    <span className={`status-badge ${getStatusBadgeClass(selectedTransaction.status)}`}>
-                                        {getStatusText(selectedTransaction.status)}
-                                    </span>
-                                </div>
                                 <div className="detail-item">
                                     <label>Thời gian:</label>
                                     <span>{formatDate(selectedTransaction.createdAt)}</span>
@@ -558,28 +617,32 @@ const TransactionManagement = () => {
                                         <span className="error-text">{selectedTransaction.failureReason}</span>
                                     </div>
                                 )}
-                                {selectedTransaction.vnpayTransactionNo && (
+                                {selectedTransaction.vnpayDetails?.vnp_TransactionNo && (
                                     <div className="detail-item">
                                         <label>Mã VNPay:</label>
-                                        <span>{selectedTransaction.vnpayTransactionNo}</span>
+                                        <span>{selectedTransaction.vnpayDetails.vnp_TransactionNo}</span>
                                     </div>
                                 )}
-                                {selectedTransaction.bankCode && (
+                                {selectedTransaction.vnpayDetails?.vnp_BankCode && (
                                     <div className="detail-item">
                                         <label>Ngân hàng:</label>
-                                        <span>{selectedTransaction.bankCode}</span>
+                                        <span>{selectedTransaction.vnpayDetails.vnp_BankCode}</span>
                                     </div>
                                 )}
-                                {selectedTransaction.cardType && (
+                                {selectedTransaction.vnpayDetails?.vnp_CardType && (
                                     <div className="detail-item">
                                         <label>Loại thẻ:</label>
-                                        <span>{selectedTransaction.cardType}</span>
+                                        <span>{selectedTransaction.vnpayDetails.vnp_CardType}</span>
                                     </div>
                                 )}
-                                {selectedTransaction.reservationId && (
+                                {selectedTransaction.metadata?.paymentType && (
                                     <div className="detail-item">
-                                        <label>Reservation ID:</label>
-                                        <span>{selectedTransaction.reservationId}</span>
+                                        <label>Thông tin thêm:</label>
+                                        <span>
+                                            {selectedTransaction.metadata.paymentType === "subscription"
+                                                ? `Subscription: ${selectedTransaction.metadata.subscriptionId || "N/A"}`
+                                                : `Reservation: ${selectedTransaction.metadata.reservationId || "N/A"}`}
+                                        </span>
                                     </div>
                                 )}
                             </div>
