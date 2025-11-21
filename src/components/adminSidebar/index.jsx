@@ -23,10 +23,16 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
       path: "subscription-management", // Đường dẫn
     },
     {
-      id: "stats-reports", // ID định danh cho menu thống kê & báo cáo
+      id: "stats-reports", // ID định danh cho menu thống kê
       icon: "📊", // Icon hiển thị
-      label: "Thống kê & báo cáo", // Nhãn hiển thị
-      path: "analytics", // Đường dẫn (chú ý: path khác với ID)
+      label: "Thống kê", // Nhãn hiển thị
+      path: "analytics", // Đường dẫn
+    },
+    {
+      id: "report-management", // ID định danh cho menu quản lý báo cáo
+      icon: "📝", // Icon hiển thị
+      label: "Quản lý báo cáo", // Nhãn hiển thị
+      path: "report", // Đường dẫn
     },
   ];
 

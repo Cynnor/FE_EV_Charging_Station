@@ -18,6 +18,7 @@ import StationManagement from "./pages/adminDashboard/stationManagement/index";
 import UserManagement from "./pages/adminDashboard/userManagement/index";
 import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement/index";
 import StatsReports from "./pages/adminDashboard/statsReports/index.jsx";
+import AdminReports from "./pages/adminDashboard/reports/index.jsx";
 import StaffLayout from "./components/staffLayout/index";
 import ChargingSessions from "./pages/staffDashboard/chargingSessions/index";
 import StationStatus from "./pages/staffDashboard/stationStatus/index";
@@ -89,6 +90,7 @@ function App() {
         { path: "transaction-management", element: <StatsReports /> },
         { path: "revenue-management", element: <StatsReports /> },
         { path: "analytics", element: <StatsReports /> },
+        { path: "report", element: <AdminReports /> },
       ],
     },
     {
