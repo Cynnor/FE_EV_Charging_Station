@@ -4,33 +4,38 @@ import "./index.scss"; // File CSS cho component này
 import api from "../../../config/api"; // Axios instance đã config để gọi API
 
 // Chuẩn hoá text để so sánh không phân biệt dấu/hoa thường
-const normalizeText = (value = "") =>
-  value
-    .toString()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
+const normalizeText = (
+  value = "" // Hàm chuẩn hóa text để so sánh không phân biệt dấu tiếng Việt và hoa thường
+) =>
+  value // Nhận vào value (mặc định "" nếu null/undefined)
+    .toString() // Chuyển sang string (đảm bảo không bị lỗi nếu là number/object)
+    .normalize("NFD") // Chuẩn hóa Unicode sang dạng NFD (tách ký tự có dấu thành ký tự gốc + dấu riêng)
+    .replace(/[\u0300-\u036f]/g, "") // Regex loại bỏ tất cả dấu thanh tiếng Việt (các ký tự combining diacritical marks từ U+0300 đến U+036F)
+    .toLowerCase() // Chuyển toàn bộ về chữ thường
+    .trim(); // Loại bỏ khoảng trắng đầu cuối
 
 // Tính tổng số cổng sạc cho mỗi trạm dù dữ liệu trả về khác nhau
 const resolvePortCount = (station = {}) => {
-  if (!station || typeof station !== "object") return 0;
-  if (Array.isArray(station.ports)) return station.ports.length;
-  if (Array.isArray(station.chargers)) return station.chargers.length;
-  if (typeof station.ports === "number") return station.ports;
-  if (typeof station.portCount === "number") return station.portCount;
-  if (typeof station.totalPorts === "number") return station.totalPorts;
+  // Hàm tính tổng số cổng sạc (ports) từ station object (xử lý nhiều format khác nhau)
+  if (!station || typeof station !== "object") return 0; // Validate station phải là object hợp lệ, return 0 nếu không
+  if (Array.isArray(station.ports)) return station.ports.length; // Nếu ports là array thì return length (số lượng phần tử)
+  if (Array.isArray(station.chargers)) return station.chargers.length; // Fallback: nếu có field chargers (tên khác) thì dùng length của nó
+  if (typeof station.ports === "number") return station.ports; // Nếu ports là number trực tiếp thì return luôn
+  if (typeof station.portCount === "number") return station.portCount; // Fallback: field portCount
+  if (typeof station.totalPorts === "number") return station.totalPorts; // Fallback: field totalPorts
   if (station.ports && typeof station.ports === "object") {
-    return Object.keys(station.ports).length;
+    // Nếu ports là object (không phải array)
+    return Object.keys(station.ports).length; // Return số lượng keys (coi như mỗi key là 1 port)
   }
-  return 0;
+  return 0; // Trường hợp không match format nào thì return 0
 };
 
 // Lấy khu vực chính từ địa chỉ (ví dụ Quận/huyện)
 const extractCoverageKey = (address = "") => {
-  if (!address) return "";
-  const [district] = address.split(",");
-  return district?.trim() || address.trim();
+  // Hàm trích xuất khu vực chính (quận/huyện) từ địa chỉ
+  if (!address) return ""; // Nếu address rỗng thì return ""
+  const [district] = address.split(","); // Split địa chỉ theo dấu phẩy, lấy phần tử đầu tiên (thường là quận/huyện)
+  return district?.trim() || address.trim(); // Trim khoảng trắng, nếu không có district thì fallback về toàn bộ address đã trim
 };
 
 const StationManagement = () => {
@@ -124,26 +129,32 @@ const StationManagement = () => {
    * Được gọi khi component mount và sau khi thêm/sửa/xóa
    */
   const fetchStations = async () => {
+    // Hàm async fetch danh sách trạm sạc từ API
     try {
-      setLoading(true); // Bật trạng thái loading
-      const response = await api.get("/stations"); // Gọi API GET /stations
+      setLoading(true); // Bật loading state trước khi gọi API
+      const response = await api.get("/stations"); // Gọi API GET /stations, await để đợi response
 
       // Xử lý response từ API (có thể có nhiều format khác nhau)
-      let stationsData = [];
+      let stationsData = []; // Khởi tạo biến lưu data
       if (response.data.items && Array.isArray(response.data.items)) {
-        stationsData = response.data.items; // Format: { items: [...] }
+        // Nếu response có format { items: [...] }
+        stationsData = response.data.items; // Lấy array items
       } else if (Array.isArray(response.data.data)) {
-        stationsData = response.data.data; // Format: { data: [...] }
+        // Nếu response có format { data: [...] }
+        stationsData = response.data.data; // Lấy array data
       } else if (Array.isArray(response.data)) {
-        stationsData = response.data; // Format: [...]
+        // Nếu response là array trực tiếp
+        stationsData = response.data; // Lấy response.data
       }
 
-      setStations(stationsData); // Lưu data vào state
-      setError(null); // Clear error nếu thành công
+      setStations(stationsData); // Lưu data vào state stations
+      setError(null); // Clear error nếu fetch thành công
     } catch (err) {
-      setError(err.message); // Lưu error message nếu fail
+      // Bắt lỗi nếu API call thất bại
+      setError(err.message); // Lưu error message vào state
     } finally {
-      setLoading(false); // Tắt loading dù thành công hay thất bại
+      // Block finally luôn chạy dù có lỗi hay không
+      setLoading(false); // Tắt loading state
     }
   };
 
@@ -152,14 +163,17 @@ const StationManagement = () => {
    * @param {Array} ports - Mảng các trụ sạc từ form
    * @returns {Array} - Mảng ports đã format đúng
    */
-  const buildPortsPayload = (ports) =>
+  const buildPortsPayload = (
+    ports // Hàm chuẩn bị payload ports để gửi lên API (format đúng với backend yêu cầu)
+  ) =>
     ports.map((p) => ({
-      ...(p?.id ? { id: p.id } : {}), // Giữ lại ID nếu đang edit (có ID)
-      type: p.type, // Loại sạc
-      status: p.status, // Trạng thái
-      powerKw: Number(p.powerKw) || 0, // Convert sang number
-      speed: p.speed, // Tốc độ
-      price: Number(p.price) || 0, // Convert sang number
+      // Map qua từng port
+      ...(p?.id ? { id: p.id } : {}), // Spread operator: nếu port có id (đang edit) thì giữ lại id, không thì bỏ qua (object rỗng)
+      type: p.type, // Copy trường type
+      status: p.status, // Copy trường status
+      powerKw: Number(p.powerKw) || 0, // Convert powerKw sang number (dùng Number constructor), fallback 0 nếu NaN
+      speed: p.speed, // Copy trường speed
+      price: Number(p.price) || 0, // Convert price sang number, fallback 0
     }));
 
   /**
@@ -167,26 +181,27 @@ const StationManagement = () => {
    * @param {Event} e - Submit event
    */
   const handleAddStation = async (e) => {
-    e.preventDefault(); // Ngăn form reload trang
+    // Hàm xử lý submit form thêm trạm mới
+    e.preventDefault(); // Ngăn form submit mặc định (tránh reload trang)
     try {
       // Chuẩn bị payload với ports đã format
-      const payload = { ...formData, ports: buildPortsPayload(formData.ports) };
+      const payload = { ...formData, ports: buildPortsPayload(formData.ports) }; // Chuẩn bị payload: spread formData và override ports với ports đã format
 
       // Gọi API POST để tạo trạm mới
-      const response = await api.post("/stations", payload);
-      const newStation = response.data.data || response.data; // Lấy data trạm mới
+      const response = await api.post("/stations", payload); // Gọi API POST /stations với payload, await response
+      const newStation = response.data.data || response.data; // Lấy data trạm mới từ response (có thể nằm trong data.data hoặc data)
 
       // Thêm trạm mới vào danh sách hiện tại (optimistic update)
-      setStations((prev) => [...prev, newStation]);
+      setStations((prev) => [...prev, newStation]); // Optimistic update: thêm trạm mới vào state (spread prev và concat newStation)
 
       setShowAddModal(false); // Đóng modal
       resetForm(); // Reset form về trạng thái ban đầu
-      alert("Thêm trạm sạc thành công!"); // Thông báo thành công
-      await fetchStations(); // Fetch lại để sync với server
+      alert("Thêm trạm sạc thành công!"); // Thông báo thành công cho user
+      await fetchStations(); // Fetch lại danh sách từ server để sync (đảm bảo data đúng với DB)
     } catch (err) {
-      // Xử lý lỗi
-      const errorMsg = err.response?.data?.message || "Có lỗi xảy ra!";
-      alert(`Lỗi: ${errorMsg}`);
+      // Bắt lỗi nếu API call fail
+      const errorMsg = err.response?.data?.message || "Có lỗi xảy ra!"; // Lấy error message từ response hoặc message mặc định
+      alert(`Lỗi: ${errorMsg}`); // Hiển thị alert cho user
     }
   };
 
@@ -195,27 +210,30 @@ const StationManagement = () => {
    * @param {Event} e - Submit event
    */
   const handleEditStation = async (e) => {
-    e.preventDefault(); // Ngăn form reload trang
+    // Hàm xử lý submit form chỉnh sửa trạm
+    e.preventDefault(); // Ngăn form submit mặc định
     try {
       // Chuẩn bị payload
-      const payload = { ...formData, ports: buildPortsPayload(formData.ports) };
+      const payload = { ...formData, ports: buildPortsPayload(formData.ports) }; // Chuẩn bị payload tương tự handleAddStation
 
       // Gọi API PUT để update trạm
-      const response = await api.put(`/stations/${editingStation.id}`, payload);
-      const updatedStation = response.data.data || response.data;
+      const response = await api.put(`/stations/${editingStation.id}`, payload); // Gọi API PUT /stations/:id để update trạm, truyền id của trạm đang edit
+      const updatedStation = response.data.data || response.data; // Lấy data trạm đã update từ response
 
       // Update trạm trong danh sách (optimistic update)
-      setStations((prev) =>
-        prev.map((s) => (s.id === editingStation.id ? updatedStation : s))
+      setStations(
+        (prev) =>
+          prev.map((s) => (s.id === editingStation.id ? updatedStation : s)) // Map qua stations: nếu id trùng thì thay bằng updatedStation, không thì giữ nguyên
       );
 
       setShowEditModal(false); // Đóng modal
       setEditingStation(null); // Clear trạm đang edit
       resetForm(); // Reset form
-      alert("Cập nhật trạm sạc thành công!");
+      alert("Cập nhật trạm sạc thành công!"); // Thông báo thành công
       await fetchStations(); // Fetch lại để sync
     } catch (err) {
-      alert("Có lỗi xảy ra khi cập nhật trạm sạc!");
+      // Bắt lỗi
+      alert("Có lỗi xảy ra khi cập nhật trạm sạc!"); // Alert thông báo lỗi
     }
   };
 
@@ -224,27 +242,33 @@ const StationManagement = () => {
    * @param {string} stationId - ID của trạm cần xóa
    */
   const handleDeleteStation = async (stationId) => {
+    // Hàm xử lý xóa trạm (soft delete - chỉ update status thành inactive)
     // Confirm trước khi xóa
     if (!window.confirm("Bạn có chắc chắn muốn vô hiệu hóa trạm sạc này?"))
+      // Hiển thị confirm dialog, nếu user click Cancel thì return sớm
       return;
 
     try {
       // Gọi API PUT để update status thành inactive (không xóa hẳn)
-      await api.put(`/stations/${stationId}`, { status: "inactive" });
+      await api.put(`/stations/${stationId}`, { status: "inactive" }); // Gọi API PUT để update status thành inactive (không xóa hẳn khỏi DB)
 
       // Update status trong danh sách
       setStations((prev) =>
-        prev.map((station) =>
-          station.id === stationId
-            ? { ...station, status: "inactive" }
-            : station
+        prev.map(
+          (
+            station // Map qua từng station
+          ) =>
+            station.id === stationId // Nếu id trùng với stationId cần xóa
+              ? { ...station, status: "inactive" } // Spread station và override status
+              : station // Ngược lại giữ nguyên
         )
       );
 
-      alert("Vô hiệu hóa trạm sạc thành công!");
+      alert("Vô hiệu hóa trạm sạc thành công!"); // Thông báo thành công
       await fetchStations(); // Fetch lại để sync
     } catch (err) {
-      alert("Có lỗi xảy ra khi vô hiệu hóa trạm sạc!");
+      // Bắt lỗi
+      alert("Có lỗi xảy ra khi vô hiệu hóa trạm sạc!"); // Alert thông báo lỗi
     }
   };
 
@@ -254,7 +278,9 @@ const StationManagement = () => {
    * Reset form về trạng thái ban đầu
    */
   const resetForm = () => {
+    // Hàm reset form về trạng thái ban đầu (clear tất cả input)
     setFormData({
+      // Set lại formData với giá trị mặc định
       name: "",
       longitude: "",
       latitude: "",
@@ -262,6 +288,7 @@ const StationManagement = () => {
       address: "",
       provider: "",
       ports: [
+        // Reset ports về 1 port mặc định
         {
           type: "DC",
           status: "available",
@@ -277,8 +304,9 @@ const StationManagement = () => {
    * Đóng modal và reset form
    */
   const closeStationModal = () => {
+    // Hàm đóng modal và reset form
     // Scroll modal về đầu trang
-    if (modalBodyRef.current) modalBodyRef.current.scrollTop = 0;
+    if (modalBodyRef.current) modalBodyRef.current.scrollTop = 0; // Scroll modal body về đầu (scrollTop = 0) nếu ref tồn tại
     resetForm(); // Reset form
     setEditingStation(null); // Clear trạm đang edit
     setShowAddModal(false); // Đóng modal thêm
@@ -289,8 +317,9 @@ const StationManagement = () => {
    * Mở modal thêm trạm mới
    */
   const openAddModal = () => {
-    resetForm(); // Reset form trước khi mở
-    setShowAddModal(true); // Hiển thị modal
+    // Hàm mở modal thêm trạm mới
+    resetForm(); // Reset form trước để đảm bảo form rỗng
+    setShowAddModal(true); // Set state để hiển thị modal
   };
 
   /**
@@ -298,20 +327,21 @@ const StationManagement = () => {
    * @param {Object} station - Trạm cần chỉnh sửa
    */
   const openEditModal = (station) => {
-    setEditingStation(station); // Lưu trạm đang edit
+    // Hàm mở modal chỉnh sửa trạm
+    setEditingStation(station); // Lưu trạm đang được edit vào state
 
     // Đổ dữ liệu trạm vào form
     setFormData({
-      name: station.name || "",
-      longitude: station.longitude ?? "",
-      latitude: station.latitude ?? "",
-      status: station.status || "active",
+      name: station.name || "", // Lấy name, fallback "" nếu null
+      longitude: station.longitude ?? "", // Dùng nullish coalescing (??) vì longitude có thể là 0 (falsy nhưng vẫn hợp lệ)
+      latitude: station.latitude ?? "", // Tương tự với latitude
+      status: station.status || "active", // Status fallback "active"
       address: station.address || "",
       provider: station.provider || "",
       // Copy ports nếu có, nếu không thì tạo 1 port mặc định
       ports:
-        Array.isArray(station.ports) && station.ports.length > 0
-          ? station.ports.map(({ ...port }) => port) // Clone ports
+        Array.isArray(station.ports) && station.ports.length > 0 // Kiểm tra ports có phải array và có phần tử không
+          ? station.ports.map(({ ...port }) => port) // Nếu có thì clone ports (spread operator để tạo shallow copy từng port)
           : [
               {
                 type: "DC",
@@ -323,7 +353,7 @@ const StationManagement = () => {
             ],
     });
 
-    setShowEditModal(true); // Hiển thị modal
+    setShowEditModal(true); // Hiển thị modal edit
   };
 
   /**
@@ -331,13 +361,15 @@ const StationManagement = () => {
    * @param {Object} station - Trạm cần xem
    */
   const openViewModal = (station) => {
-    setViewStation(station); // Lưu trạm đang xem
-    setShowViewModal(true); // Hiển thị modal
+    // Hàm mở modal xem chi tiết trạm (read-only)
+    setViewStation(station); // Lưu station vào state viewStation
+    setShowViewModal(true); // Hiển thị modal view
   };
 
   const handleClearSearch = () => {
-    setSearchTerm("");
-    setCurrentPage(1);
+    // Hàm xử lý clear ô tìm kiếm
+    setSearchTerm(""); // Reset searchTerm về ""
+    setCurrentPage(1); // Reset về trang 1
   };
 
   /**
@@ -345,15 +377,17 @@ const StationManagement = () => {
    * @param {Event} e - Change event
    */
   const handleInputChange = (e) => {
-    const { name, value } = e.target; // Lấy name và value từ input
+    // Hàm xử lý thay đổi input trong form
+    const { name, value } = e.target; // Destructure name và value từ event target (input element)
 
     setFormData((prev) => ({
-      ...prev, // Giữ nguyên data cũ
-      // Update field tương ứng
+      // Update formData state
+      ...prev, // Spread prev để giữ nguyên các field khác
+      // Computed property name: update field có tên = name
       [name]:
-        name === "longitude" || name === "latitude"
-          ? parseFloat(value) || 0 // Convert sang number cho longitude/latitude
-          : value, // Giữ nguyên cho các field khác
+        name === "longitude" || name === "latitude" // Kiểm tra xem có phải longitude/latitude không
+          ? parseFloat(value) || 0 // Nếu có thì parse sang float (số thực), fallback 0 nếu NaN
+          : value, // Ngược lại giữ nguyên value (string)
     }));
   };
 
@@ -364,20 +398,24 @@ const StationManagement = () => {
    * @param {any} value - Giá trị mới
    */
   const handlePortChange = (index, field, value) => {
+    // Hàm xử lý thay đổi thông tin 1 port cụ thể
     setFormData((prev) => ({
-      ...prev,
+      // Update formData
+      ...prev, // Giữ nguyên các field khác
       ports: prev.ports.map(
+        // Map qua mảng ports để update port tại index
         (port, i) =>
-          i === index // Chỉ update port tại index được chọn
+          i === index // Nếu index hiện tại = index cần update
             ? {
-                ...port,
+                // Thì update port này
+                ...port, // Spread port cũ
                 // Update field tương ứng
                 [field]:
-                  field === "powerKw" || field === "price"
-                    ? parseInt(value) || 0 // Convert sang integer
-                    : value,
+                  field === "powerKw" || field === "price" // Nếu là powerKw hoặc price
+                    ? parseInt(value) || 0 // Parse sang integer, fallback 0
+                    : value, // Ngược lại giữ nguyên value
               }
-            : port // Giữ nguyên các port khác
+            : port // Nếu không phải index cần update thì giữ nguyên port
       ),
     }));
   };
@@ -386,12 +424,15 @@ const StationManagement = () => {
    * Thêm 1 port mới vào form
    */
   const addPort = () => {
+    // Hàm thêm 1 port mới vào form
     setFormData((prev) => ({
-      ...prev,
+      // Update formData
+      ...prev, // Giữ nguyên các field khác
       ports: [
-        ...prev.ports, // Giữ nguyên ports cũ
-        // Thêm port mới với giá trị mặc định
+        // Override ports với mảng mới
+        ...prev.ports, // Spread prev.ports để giữ nguyên các port cũ
         {
+          // Concat với port mới có giá trị mặc định
           type: "DC",
           status: "available",
           powerKw: 120,
@@ -407,11 +448,13 @@ const StationManagement = () => {
    * @param {number} index - Vị trí của port cần xóa
    */
   const removePort = (index) => {
+    // Hàm xóa 1 port khỏi form
     // Chỉ cho phép xóa nếu còn > 1 port (phải có ít nhất 1 port)
     if (formData.ports.length > 1) {
       setFormData((prev) => ({
-        ...prev,
-        ports: prev.ports.filter((_, i) => i !== index), // Loại bỏ port tại index
+        // Update formData
+        ...prev, // Giữ nguyên các field khác
+        ports: prev.ports.filter((_, i) => i !== index), // Filter ports: giữ lại tất cả port có index khác với index cần xóa
       }));
     }
   };
@@ -422,15 +465,20 @@ const StationManagement = () => {
    * @returns {Object} - Object chứa icon và text
    */
   const getStatusDisplay = (status) => {
+    // Hàm map status string sang object chứa text hiển thị và tone (màu sắc)
     const statusMap = {
-      active: { text: "Hoạt động", tone: "success" },
-      maintenance: { text: "Bảo trì", tone: "warning" },
-      inactive: { text: "Vô hiệu hóa", tone: "danger" },
+      // Object map status -> { text, tone }
+      active: { text: "Hoạt động", tone: "success" }, // active = xanh lá (success)
+      maintenance: { text: "Bảo trì", tone: "warning" }, // maintenance = vàng (warning)
+      inactive: { text: "Vô hiệu hóa", tone: "danger" }, // inactive = đỏ (danger)
     };
-    return statusMap[status] || {
-      text: status || "Không xác định",
-      tone: "default",
-    };
+    return (
+      statusMap[status] || {
+        // Trả về object từ map, nếu không có thì fallback
+        text: status || "Không xác định", // Text fallback
+        tone: "default", // Tone mặc định
+      }
+    );
   };
 
   // ===== EFFECTS (Side effects) =====
@@ -439,15 +487,15 @@ const StationManagement = () => {
    * Effect: Fetch danh sách trạm khi component mount
    */
   useEffect(() => {
-    fetchStations();
+    fetchStations(); // Gọi hàm fetch
   }, []); // Dependency array rỗng = chỉ chạy 1 lần khi mount
 
   /**
    * Effect: Reset về trang 1 khi thay đổi bộ lọc
    */
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, locationFilter]); // Chạy khi 1 trong 3 filter thay đổi
+    setCurrentPage(1); // Reset về trang 1
+  }, [searchTerm, statusFilter, locationFilter]); // Chạy lại khi 1 trong 3 filter thay đổi
 
   /**
    * Effect: Scroll modal về đầu trang khi mở modal
@@ -455,7 +503,7 @@ const StationManagement = () => {
   useEffect(() => {
     if (
       (showAddModal || showEditModal || showViewModal) && // Nếu có modal đang mở
-      modalBodyRef.current
+      modalBodyRef.current // Và ref tồn tại
     ) {
       setTimeout(() => {
         if (modalBodyRef.current) modalBodyRef.current.scrollTop = 0; // Scroll về đầu
@@ -497,7 +545,8 @@ const StationManagement = () => {
 
   // Cổng sạc & vùng phủ
   const totalPorts = useMemo(
-    () => safeStations.reduce((sum, station) => sum + resolvePortCount(station), 0),
+    () =>
+      safeStations.reduce((sum, station) => sum + resolvePortCount(station), 0),
     [safeStations]
   );
   const averagePorts =
@@ -642,8 +691,8 @@ const StationManagement = () => {
           <p className="eyebrow">Trung tâm vận hành</p>
           <h2>Quản lý trạm sạc</h2>
           <p className="hero-description">
-            Theo dõi trạng thái mạng lưới, lập kế hoạch bảo trì và triển khai trạm
-            mới trên cùng một bảng điều khiển.
+            Theo dõi trạng thái mạng lưới, lập kế hoạch bảo trì và triển khai
+            trạm mới trên cùng một bảng điều khiển.
           </p>
 
           <div className="hero-actions">
@@ -682,9 +731,7 @@ const StationManagement = () => {
               <span>Uptime</span>
             </div>
           </div>
-          <p className="chart-caption">
-            {attentionStations} trạm cần xử lý
-          </p>
+          <p className="chart-caption">{attentionStations} trạm cần xử lý</p>
 
           <div className="provider-leaderboard">
             <p>Nhà cung cấp dẫn đầu</p>
@@ -796,106 +843,109 @@ const StationManagement = () => {
           <div>
             <h3>Danh sách trạm</h3>
             <p>
-              Hiển thị {paginatedStations.length} / {filteredStations.length} trạm
-              đáp ứng tiêu chí hiện tại
+              Hiển thị {paginatedStations.length} / {filteredStations.length}{" "}
+              trạm đáp ứng tiêu chí hiện tại
             </p>
           </div>
         </div>
         <div className="table-container">
-        <table className="stations-table">
-          {/* Header của bảng */}
-          <thead>
-            <tr>
-              <th>Tên trạm</th>
-              <th>Địa điểm</th>
-              <th>Trạng thái</th>
-              <th>Số trụ</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-
-          {/* Body của bảng */}
-          <tbody>
-            {paginatedStations.length > 0 ? (
-              // Nếu có dữ liệu, render từng dòng
-              paginatedStations.map((station) => {
-                const statusDisplay = getStatusDisplay(station.status);
-                return (
-                  <tr key={station.id}>
-                    {/* Cột tên trạm */}
-                    <td className="station-name">
-                      <div className="name-with-icon">
-                        <span className="station-icon">⚡</span>
-                        {station.name}
-                      </div>
-                    </td>
-
-                    {/* Cột địa chỉ */}
-                    <td>{station.address}</td>
-
-                    {/* Cột trạng thái với badge màu */}
-                    <td className="status-cell">
-                      <span
-                        className={`status-badge status-${statusDisplay.tone}`}
-                      >
-                        <span className="status-dot" aria-hidden="true"></span>
-                        <span className="status-text">
-                          {statusDisplay.text}
-                        </span>
-                      </span>
-                    </td>
-
-                    {/* Cột số lượng trụ */}
-                    <td>
-                      {station.ports && Array.isArray(station.ports)
-                        ? station.ports.length
-                        : station.connectors || 0}{" "}
-                      trụ
-                    </td>
-
-                    {/* Cột các nút thao tác */}
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn-pill neutral"
-                          type="button"
-                          title="Xem chi tiết"
-                          onClick={() => openViewModal(station)}
-                        >
-                          Xem
-                        </button>
-                        <button
-                          className="btn-pill warning"
-                          type="button"
-                          title="Chỉnh sửa"
-                          onClick={() => openEditModal(station)}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          className="btn-pill danger"
-                          type="button"
-                          title="Vô hiệu hóa"
-                          onClick={() => handleDeleteStation(station.id)}
-                        >
-                          Vô hiệu
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              // Nếu không có dữ liệu, hiển thị thông báo
+          <table className="stations-table">
+            {/* Header của bảng */}
+            <thead>
               <tr>
-                <td colSpan="5" className="no-data">
-                  Không tìm thấy trạm sạc nào
-                </td>
+                <th>Tên trạm</th>
+                <th>Địa điểm</th>
+                <th>Trạng thái</th>
+                <th>Số trụ</th>
+                <th>Thao tác</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+
+            {/* Body của bảng */}
+            <tbody>
+              {paginatedStations.length > 0 ? (
+                // Nếu có dữ liệu, render từng dòng
+                paginatedStations.map((station) => {
+                  const statusDisplay = getStatusDisplay(station.status);
+                  return (
+                    <tr key={station.id}>
+                      {/* Cột tên trạm */}
+                      <td className="station-name">
+                        <div className="name-with-icon">
+                          <span className="station-icon">⚡</span>
+                          {station.name}
+                        </div>
+                      </td>
+
+                      {/* Cột địa chỉ */}
+                      <td>{station.address}</td>
+
+                      {/* Cột trạng thái với badge màu */}
+                      <td className="status-cell">
+                        <span
+                          className={`status-badge status-${statusDisplay.tone}`}
+                        >
+                          <span
+                            className="status-dot"
+                            aria-hidden="true"
+                          ></span>
+                          <span className="status-text">
+                            {statusDisplay.text}
+                          </span>
+                        </span>
+                      </td>
+
+                      {/* Cột số lượng trụ */}
+                      <td>
+                        {station.ports && Array.isArray(station.ports)
+                          ? station.ports.length
+                          : station.connectors || 0}{" "}
+                        trụ
+                      </td>
+
+                      {/* Cột các nút thao tác */}
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="btn-pill neutral"
+                            type="button"
+                            title="Xem chi tiết"
+                            onClick={() => openViewModal(station)}
+                          >
+                            Xem
+                          </button>
+                          <button
+                            className="btn-pill warning"
+                            type="button"
+                            title="Chỉnh sửa"
+                            onClick={() => openEditModal(station)}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            className="btn-pill danger"
+                            type="button"
+                            title="Vô hiệu hóa"
+                            onClick={() => handleDeleteStation(station.id)}
+                          >
+                            Vô hiệu
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                // Nếu không có dữ liệu, hiển thị thông báo
+                <tr>
+                  <td colSpan="5" className="no-data">
+                    Không tìm thấy trạm sạc nào
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* PHÂN TRANG */}
@@ -1091,7 +1141,11 @@ const StationManagement = () => {
                             <select
                               value={port.status}
                               onChange={(e) =>
-                                handlePortChange(index, "status", e.target.value)
+                                handlePortChange(
+                                  index,
+                                  "status",
+                                  e.target.value
+                                )
                               }
                               required
                             >
@@ -1107,7 +1161,11 @@ const StationManagement = () => {
                               type="number"
                               value={port.powerKw}
                               onChange={(e) =>
-                                handlePortChange(index, "powerKw", e.target.value)
+                                handlePortChange(
+                                  index,
+                                  "powerKw",
+                                  e.target.value
+                                )
                               }
                               min="1"
                               max="350"
