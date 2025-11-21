@@ -2,18 +2,11 @@ import "./index.scss";
 
 const StaffSidebar = ({ activeTab, setActiveTab, hidden, onClose }) => {
   const menuItems = [
-    { id: "overview", icon: "🧭", label: "Tổng quan", path: "" },
     {
       id: "charging-sessions",
       icon: "🔌",
       label: "Quản lý phiên sạc",
-      path: "charging-ChargingSessions",
-    },
-    {
-      id: "payment",
-      icon: "💳",
-      label: "Thanh toán tại trạm",
-      path: "payment",
+      path: "",
     },
     {
       id: "station-status",

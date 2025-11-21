@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../../../config/api";
 import "./index.scss";
+import StaffQrCheckin from "../../../components/staffQrCheckin";
 
 const ChargingSessions = () => {
     const [activeTab, setActiveTab] = useState("current");
@@ -8,6 +9,9 @@ const ChargingSessions = () => {
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [reservationDetail, setReservationDetail] = useState(null);
+    const [reservationLoading, setReservationLoading] = useState(false);
+    const [reservationError, setReservationError] = useState("");
 
     const loadSessions = async () => {
         try {
@@ -79,8 +83,108 @@ const ChargingSessions = () => {
         return Math.min(target, projected);
     };
 
+    const normalizeReservation = (data = {}) => {
+        const vehicle = data.vehicle || {};
+        const item = (data.items || [])[0] || {};
+        const slot = item.slot || data.slot || {};
+        const port = slot.port || data.port || {};
+        const station = port.station || data.station || {};
+
+        return {
+            id: data._id || data.id,
+            status: data.status,
+            qrCheck: Boolean(data.qrCheck),
+            startAt:
+                item.startAt ||
+                item.startedAt ||
+                data.startAt ||
+                data.startedAt,
+            endAt: item.endAt || item.endedAt || data.endAt || data.endedAt,
+            vehicle: {
+                plate: vehicle.plateNumber || data.plateNumber || "N/A",
+                make: vehicle.make || "",
+                model: vehicle.model || "",
+                color: vehicle.color || "",
+            },
+            station: {
+                name: station.name || "N/A",
+                address: station.address || "N/A",
+                provider: station.provider || "",
+            },
+            port: {
+                type: port.type || "N/A",
+                power: port.powerKw ? `${port.powerKw} kW` : "N/A",
+                price: port.price,
+            },
+        };
+    };
+
+    const handleViewReservation = async (session) => {
+        setReservationError("");
+        setReservationDetail(normalizeReservation(session)); // show modal while loading
+        setReservationLoading(true);
+
+        const reservationId =
+            session.reservationId ||
+            session.metadata?.reservationId ||
+            session.reservation?.id ||
+            session.reservation?._id ||
+            session.id ||
+            session._id;
+
+        if (!reservationId) {
+            setReservationError("Không tìm thấy mã đặt chỗ.");
+            setReservationLoading(false);
+            return;
+        }
+
+        try {
+            const res = await api.get(`/reservations/${reservationId}`);
+            const detail = res.data?.data || res.data || {};
+            setReservationDetail(normalizeReservation(detail));
+        } catch (err) {
+            const msg =
+                err?.response?.data?.message ||
+                err?.message ||
+                "Không thể tải chi tiết đặt chỗ.";
+            setReservationError(msg);
+        } finally {
+            setReservationLoading(false);
+        }
+    };
+
+    const closeReservationModal = () => {
+        setReservationDetail(null);
+        setReservationError("");
+        setReservationLoading(false);
+    };
+
+    const renderStatusText = (status) => {
+        const map = {
+            pending: "Đang chờ",
+            confirmed: "Đã xác nhận",
+            cancelled: "Đã hủy",
+            "payment-success": "Đã thanh toán",
+            success: "Đã thanh toán",
+            completed: "Chưa thanh toán",
+            active: "Đang sạc",
+        };
+        return map[status] || status || "N/A";
+    };
+
+    const getStatusTone = (status) => {
+        const normalized = String(status || "").toLowerCase();
+        if (["success", "payment-success"].includes(normalized)) return "paid";
+        if (normalized === "completed") return "done";
+        if (normalized === "cancelled") return "cancelled";
+        if (normalized === "active" || normalized === "confirmed") return "active";
+        return "pending";
+    };
+
     return (
+        <>
         <div className="charging-sessions-content">
+            <StaffQrCheckin />
             {/* Header */}
             <div className="sessions-header">
                 <div className="header-left">
@@ -195,14 +299,6 @@ const ChargingSessions = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="session-actions">
-                                                <button
-                                                    className="btn-secondary"
-                                                    onClick={() => setSelectedSession(session)}
-                                                >
-                                                    Xem chi tiết
-                                                </button>
-                                            </div>
                                         </div>
                                     );
                                 })}
@@ -223,7 +319,6 @@ const ChargingSessions = () => {
                                     <div className="col">Trụ sạc</div>
                                     <div className="col">Biển số</div>
                                     <div className="col">Thời gian</div>
-                                    <div className="col">Chi tiết</div>
                                     <div className="col">Trạng thái</div>
                                 </div>
                                 <div className="table-body">
@@ -249,19 +344,9 @@ const ChargingSessions = () => {
                                                 </div>
                                             </div>
                                             <div className="col">
-                                                <div className="customer-info">
-                                                    <span className="name">
-                                                        {session.vehicle?.make} {session.vehicle?.model}
-                                                    </span>
-                                                    <span className="phone">
-                                                        Slot #{session.slot?.order || "—"}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="col">
-                                                <span className={`status ${session.status}`}>
+                                                <span className={`status-chip ${getStatusTone(session.status)}`}>
                                                     <span className="status-dot"></span>
-                                                    {session.status}
+                                                    {renderStatusText(session.status)}
                                                 </span>
                                             </div>
                                         </div>
@@ -273,6 +358,61 @@ const ChargingSessions = () => {
                 )}
             </div>
         </div>
+
+        {reservationDetail && (
+            <div className="reservation-modal-overlay" onClick={closeReservationModal}>
+                <div className="reservation-modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                        <div>
+                            <p className="micro-label">Chi tiết đặt chỗ</p>
+                            <h3>{reservationDetail.station.name}</h3>
+                            <p className="muted">{reservationDetail.station.address}</p>
+                        </div>
+                        <button className="close-button" onClick={closeReservationModal}>
+                            ✕
+                        </button>
+                    </div>
+
+                    {reservationLoading ? (
+                        <p className="muted">Đang tải...</p>
+                    ) : reservationError ? (
+                        <p className="error-text">{reservationError}</p>
+                    ) : (
+                        <div className="reservation-detail-grid">
+                            <div className="detail-card">
+                                <span className="label">Khách</span>
+                                <strong>{reservationDetail.vehicle.plate}</strong>
+                                <p className="muted">
+                                    {reservationDetail.vehicle.make} {reservationDetail.vehicle.model}{" "}
+                                    {reservationDetail.vehicle.color}
+                                </p>
+                            </div>
+                            <div className="detail-card">
+                                <span className="label">Trạng thái</span>
+                                <strong>{renderStatusText(reservationDetail.status)}</strong>
+                                <p className="muted">QR: {reservationDetail.qrCheck ? "Đã kiểm tra" : "Chưa kiểm"}</p>
+                            </div>
+                            <div className="detail-card">
+                                <span className="label">Thời gian</span>
+                                <p className="muted">Bắt đầu: {formatTime(reservationDetail.startAt)}</p>
+                                <p className="muted">Kết thúc: {formatTime(reservationDetail.endAt)}</p>
+                            </div>
+                            <div className="detail-card">
+                                <span className="label">Cổng</span>
+                                <strong>{reservationDetail.port.type}</strong>
+                                <p className="muted">
+                                    Công suất: {reservationDetail.port.power}
+                                    {reservationDetail.port.price
+                                        ? ` • Giá: ${new Intl.NumberFormat("vi-VN").format(reservationDetail.port.price)} đ/kWh`
+                                        : ""}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 

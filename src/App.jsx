@@ -19,7 +19,6 @@ import UserManagement from "./pages/adminDashboard/userManagement/index";
 import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement/index";
 import StatsReports from "./pages/adminDashboard/statsReports/index.jsx";
 import StaffLayout from "./components/staffLayout/index";
-import OverviewStaff from "./pages/staffDashboard/Overview/index";
 import ChargingSessions from "./pages/staffDashboard/chargingSessions/index";
 import StationStatus from "./pages/staffDashboard/stationStatus/index";
 import Reports from "./pages/staffDashboard/reports/index";
@@ -100,9 +99,7 @@ function App() {
         </ProtectedRoute>
       ),
       children: [
-        { path: "", element: <OverviewStaff /> },
-        { path: "charging-ChargingSessions", element: <ChargingSessions /> },
-        { path: "payment", element: <Payment /> },
+        { path: "", element: <ChargingSessions /> },
         { path: "station-status", element: <StationStatus /> },
         { path: "reports", element: <Reports /> },
         { path: "profile", element: <Profile /> },

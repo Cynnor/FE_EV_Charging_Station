@@ -183,19 +183,24 @@ $success: #16a34a;
 
                         .info-item {
                             display: flex;
-                            justify-content: space-between;
-                            align-items: center;
+                            justify-content: flex-start;
+                            align-items: flex-start;
+                            gap: 12px;
                             margin-bottom: 8px;
 
                             .label {
                                 font-size: 13px;
                                 color: $muted;
+                                min-width: 64px;
+                                text-align: left;
                             }
 
                             .value {
                                 font-size: 14px;
                                 font-weight: 600;
                                 color: $text;
+                                text-align: left;
+                                line-height: 1.4;
                             }
                         }
                     }
@@ -211,8 +216,10 @@ $success: #16a34a;
                             .detail-item {
                                 flex: 1;
                                 display: flex;
-                                justify-content: space-between;
-                                align-items: center;
+                                flex-direction: column;
+                                justify-content: flex-start;
+                                align-items: flex-start;
+                                gap: 4px;
                                 padding: 8px 12px;
                                 background: #f1f5f9;
                                 border-radius: 8px;
@@ -341,39 +348,42 @@ $success: #16a34a;
         .completed-sessions {
             .sessions-table {
                 background: white;
-                border-radius: 16px;
+                border-radius: 20px;
                 box-shadow: $shadow;
                 border: 1px solid $border;
                 overflow: hidden;
                 width: 100%;
+                backdrop-filter: blur(4px);
 
                 .table-header {
                     display: grid;
-                    grid-template-columns: 1.2fr 1fr 1.2fr 1.2fr 1fr;
-                    gap: 16px;
-                    padding: 20px 24px;
-                    background: #f7fbf7;
+                    grid-template-columns: 1.4fr 0.9fr 1.4fr 0.9fr;
+                    gap: 12px;
+                    padding: 18px 24px;
+                    background: linear-gradient(90deg, #f1f5f9, #f9fbf8);
                     border-bottom: 1px solid $border;
                     font-size: 13px;
-                    font-weight: 600;
+                    font-weight: 700;
                     color: $muted;
 
                     .col {
                         text-align: left;
+                        letter-spacing: 0.1px;
                     }
                 }
 
                 .table-body {
                     .table-row {
                         display: grid;
-                        grid-template-columns: 1.2fr 1fr 1.2fr 1.2fr 1fr;
-                        gap: 16px;
-                        padding: 20px 24px;
+                        grid-template-columns: 1.4fr 0.9fr 1.4fr 0.9fr;
+                        gap: 12px;
+                        padding: 18px 24px;
                         border-bottom: 1px solid $border;
-                        transition: background 0.2s;
+                        transition: background 0.2s, box-shadow 0.2s;
 
                         &:hover {
-                            background: #f7fbf7;
+                            background: #f8fbf7;
+                            box-shadow: inset 0 1px 0 rgba(22, 163, 74, 0.06);
                         }
 
                         &:last-child {
@@ -384,15 +394,18 @@ $success: #16a34a;
                             display: flex;
                             align-items: center;
                             font-size: 13px;
+                            color: $text;
 
                             .station-id {
                                 font-weight: 600;
                                 color: $muted;
+                                line-height: 1.4;
                             }
 
                             .license-plate {
                                 font-weight: 700;
                                 color: $accent;
+                                font-size: 14px;
                             }
 
                             .customer-info {
@@ -420,11 +433,13 @@ $success: #16a34a;
                                 .end {
                                     font-weight: 500;
                                     color: $text;
+                                    line-height: 1.35;
                                 }
 
                                 .duration {
                                     font-size: 12px;
                                     color: $muted;
+                                    margin-top: 2px;
                                 }
                             }
 
@@ -455,25 +470,143 @@ $success: #16a34a;
                                 }
                             }
 
-                            .status {
-                                display: flex;
+                            .status-chip {
+                                display: inline-flex;
                                 align-items: center;
                                 gap: 6px;
+                                padding: 6px 10px;
+                                border-radius: 999px;
                                 font-size: 12px;
-                                font-weight: 500;
-                                color: $success;
+                                font-weight: 600;
+                                background: #f1f5f9;
+                                color: #0f172a;
+                                text-transform: capitalize;
 
                                 .status-dot {
-                                    width: 6px;
-                                    height: 6px;
+                                    width: 8px;
+                                    height: 8px;
                                     border-radius: 50%;
-                                    background: $success;
+                                    background: currentColor;
+                                }
+
+                                &.paid {
+                                    background: #ecfdf3;
+                                    color: #15803d;
+                                }
+
+                                &.done {
+                                    background: #eef2ff;
+                                    color: #4338ca;
+                                }
+
+                                &.cancelled {
+                                    background: #fef2f2;
+                                    color: #b91c1c;
+                                }
+
+                                &.active {
+                                    background: #e0f2fe;
+                                    color: #0ea5e9;
+                                }
+
+                                &.pending {
+                                    background: #fff7ed;
+                                    color: #c2410c;
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    // Reservation detail modal
+    .reservation-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 1200;
+    }
+
+    .reservation-modal {
+        background: #fff;
+        border-radius: 20px;
+        width: min(780px, 100%);
+        box-shadow: 0 25px 60px rgba(15, 23, 42, 0.2);
+        border: 1px solid $border;
+        padding: 18px 20px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .reservation-modal .modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+
+        h3 {
+            margin: 4px 0;
+            font-size: 18px;
+            color: $text;
+        }
+
+        .muted {
+            margin: 0;
+        }
+
+        .close-button {
+            border: 1px solid $border;
+            background: #fff;
+            border-radius: 12px;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: #f8fafc;
+            }
+        }
+    }
+
+    .reservation-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+    }
+
+    .reservation-detail-grid .detail-card {
+        background: #f8fafc;
+        border: 1px solid $border;
+        border-radius: 14px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: $muted;
+            letter-spacing: 0.5px;
+        }
+
+        strong {
+            font-size: 16px;
+            color: $text;
+        }
+
+        .muted {
+            margin: 0;
+            color: $muted;
+            font-size: 13px;
         }
     }
 }
