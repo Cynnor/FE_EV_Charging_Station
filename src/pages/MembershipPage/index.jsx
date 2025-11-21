@@ -102,7 +102,7 @@ function MembershipPage() {
   // 4. API trả về URL thanh toán VNPay + subscriptionId
   // 5. User redirect đến VNPay để thanh toán
   // 6. Sau khi VNPay return, gọi check-payment-status với subscriptionId (xử lý trong paymentSuccessPage)
-  const handleSubscribe = async (plan) => {
+  const startPayment = async (plan) => {
     try {
       setSelectedPlan(plan);
       setShowPaymentModal(true);
@@ -130,6 +130,36 @@ function MembershipPage() {
     } catch (err) {
       console.error("Error creating payment:", err);
       setError("Không thể tạo thanh toán. Vui lòng thử lại.");
+    }
+  };
+
+  const handleUpgrade = async (plan) => {
+    try {
+      setSelectedPlan(plan);
+      setShowPaymentModal(true);
+
+      const response = await api.post("/subscriptions/upgrade", {
+        planId: plan._id,
+      });
+
+      // Nếu BE sau này trả về paymentUrl, ưu tiên dùng
+      const paymentUrl =
+        response?.data?.data?.paymentUrl || response?.data?.paymentUrl;
+
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+        return;
+      }
+
+      // Nếu không có paymentUrl, fallback tạo URL thanh toán như cũ
+      await startPayment(plan);
+    } catch (err) {
+      console.error("Error upgrading subscription:", err);
+      const msg =
+        err?.response?.data?.message ||
+        "Không thể nâng cấp gói. Vui lòng thử lại.";
+      setError(msg);
+      setShowPaymentModal(false);
     }
   };
 
@@ -171,19 +201,24 @@ function MembershipPage() {
   const canUpgradeTo = (plan) => {
     if (!currentSubscription) return true;
 
-    const currentPlan = subscriptionPlans.find(
-      (p) => p._id === currentSubscription.planId
-    );
-    if (!currentPlan) return true;
+    const currentPlan =
+      subscriptionPlans.find(
+        (p) => p._id === currentSubscription.planId
+      ) || currentSubscription;
 
-    // Check type hierarchy: basic < standard < premium
     const typeOrder = { basic: 1, standard: 2, premium: 3 };
     const durationOrder = { "1_month": 1, "6_months": 2, "12_months": 3 };
 
-    return (
-      typeOrder[plan.type] > typeOrder[currentPlan.type] ||
-      durationOrder[plan.duration] > durationOrder[currentPlan.duration]
-    );
+    const isHigherType = typeOrder[plan.type] > typeOrder[currentPlan.type];
+    const isLongerDuration =
+      durationOrder[plan.duration] > durationOrder[currentPlan.duration];
+    const isPriceHigher =
+      typeof currentSubscription.price === "number" &&
+      typeof plan.price === "number"
+        ? plan.price > currentSubscription.price
+        : true;
+
+    return (isHigherType || isLongerDuration) && isPriceHigher;
   };
 
   // Thêm dropdown chọn thời hạn cho mỗi loại membership
@@ -531,9 +566,13 @@ function MembershipPage() {
                       className={`subscribe-btn ${
                         type === "premium" ? "premium" : ""
                       }`}
-                      onClick={() => handleSubscribe(currentPlan)}
+                      onClick={() =>
+                        currentSubscription
+                          ? handleUpgrade(currentPlan)
+                          : startPayment(currentPlan)
+                      }
                     >
-                      Thanh toán
+                      {currentSubscription ? "Upgrade" : "Thanh toán"}
                     </button>
                   ) : (
                     <button className="unavailable-btn" disabled>

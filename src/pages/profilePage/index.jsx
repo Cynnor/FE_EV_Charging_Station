@@ -644,12 +644,58 @@ const ProfilePage = () => {
   // Helper function to get status text
   const getStatusText = (status) => {
     const statusMap = {
-      pending: "Chờ thanh toán",
+      pending: "Chưa check-in",
       confirmed: "Đã check-in - Sẵn sàng sạc",
       cancelled: "Đã hủy",
       "payment-success": "Thanh toán thành công",
     };
     return statusMap[status] || status;
+  };
+
+  const navigateToChargingSession = (reservation) => {
+    const reservationId = reservation._id || reservation.id;
+    const vehicleId = reservation.vehicle?._id || reservation.vehicle?.id;
+    const firstItem = reservation.items?.[0];
+    const portInfo = firstItem?.slot?.port;
+
+    if (!reservationId || !vehicleId) {
+      showPopup("Không thể lấy thông tin đặt chỗ", "error");
+      return;
+    }
+
+    console.log(
+      "📍 Navigating to charging session page (reservation list action)"
+    );
+    console.log("Reservation:", reservation);
+    console.log("First Item:", firstItem);
+    console.log("Slot:", firstItem?.slot);
+    console.log("Charger:", portInfo);
+
+    let extractedPortId = null;
+    if (portInfo) {
+      extractedPortId =
+        typeof portInfo === "object" ? portInfo._id || portInfo.id : portInfo;
+    }
+    console.log("Extracted Port ID:", extractedPortId);
+
+    localStorage.setItem("reservationId", reservationId);
+    localStorage.setItem("vehicleId", vehicleId);
+
+    const navState = {
+      reservation,
+      vehicle: {
+        id: vehicleId,
+        plateNumber: reservation.vehicle?.plateNumber,
+        make: reservation.vehicle?.make,
+        model: reservation.vehicle?.model,
+        batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
+        connectorType: reservation.vehicle?.connectorType,
+      },
+    };
+
+    navigate("/chargingSession", {
+      state: navState,
+    });
   };
 
   const buildSubscriptionFeatures = (features = {}) => {
@@ -1463,6 +1509,14 @@ const ProfilePage = () => {
                           {reservation.status === "pending" && (
                             <>
                               <button
+                                className="action-btn start-btn"
+                                onClick={() => navigateToChargingSession(reservation)}
+                                title="Chuyển đến phiên sạc"
+                              >
+                                <Zap size={16} />
+                                Tới trang sạc
+                              </button>
+                              <button
                                 className="action-btn map-btn"
                                 onClick={() => handleViewMap(stationInfo)}
                                 title="Xem đường đi trên bản đồ"
@@ -1476,60 +1530,7 @@ const ProfilePage = () => {
                             <>
                               <button
                                 className="action-btn start-btn"
-                                onClick={() => {
-                                  if (reservationId && vehicleId) {
-                                    const firstItem = reservation.items?.[0];
-                                    const portInfo = firstItem?.slot?.port;
-
-                                    console.log('📍 ===== NAVIGATE TO CHARGING SESSION PAGE (from Profile) =====');
-                                    console.log('This is ONLY navigation, NOT starting the charging yet!');
-                                    console.log('User needs to click "Bắt đầu sạc" button on charging session page to actually start.');
-                                    console.log('Reservation:', reservation);
-                                    console.log('First Item:', firstItem);
-                                    console.log('Slot:', firstItem?.slot);
-                                    console.log('Charger:', portInfo);
-                                    
-                                    // Extract port ID
-                                    let extractedPortId = null;
-                                    if (portInfo) {
-                                      extractedPortId = typeof portInfo === 'object' ? (portInfo._id || portInfo.id) : portInfo;
-                                    }
-                                    console.log('Extracted Port ID:', extractedPortId);
-
-                                    localStorage.setItem(
-                                      "reservationId",
-                                      reservationId
-                                    );
-                                    localStorage.setItem(
-                                      "vehicleId",
-                                      vehicleId
-                                    );
-
-                                    // Pass complete reservation object
-                                    const navState = {
-                                      reservation: reservation, // Pass entire reservation object with qrCheck, status, items
-                                      vehicle: {
-                                        id: vehicleId,
-                                        plateNumber: reservation.vehicle?.plateNumber,
-                                        make: reservation.vehicle?.make,
-                                        model: reservation.vehicle?.model,
-                                        batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
-                                        connectorType: reservation.vehicle?.connectorType,
-                                      },
-                                    };
-                                    
-                                    console.log('Navigation State:', navState);
-
-                                    navigate("/chargingSession", {
-                                      state: navState,
-                                    });
-                                  } else {
-                                    showPopup(
-                                      "Không thể lấy thông tin đặt chỗ",
-                                      "error"
-                                    );
-                                  }
-                                }}
+                                onClick={() => navigateToChargingSession(reservation)}
                               >
                                 <Zap size={16} />
                                 Bắt đầu sạc
@@ -1691,7 +1692,7 @@ const ProfilePage = () => {
                   className="edit-btn"
                   onClick={() => navigate("/membership")}
                 >
-                  Đổi gói
+                  Upgrade
                 </button>
                 <button
                   className="ghost-danger"
