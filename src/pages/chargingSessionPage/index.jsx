@@ -39,9 +39,11 @@ const ChargingSession = () => {
   const [reservationStream, setReservationStream] = useState(null);
   const [pricingStream, setPricingStream] = useState(null);
   const [reservationData, setReservationData] = useState(null);
-  
+
   // Track if check-in notification has been shown
   const hasShownCheckInNotification = useRef(false);
+  const hasCheckedIn =
+    (reservationData?.qrCheck ?? location.state?.reservation?.qrCheck) === true;
 
   // Add popup state
   const [popup, setPopup] = useState({
@@ -79,7 +81,7 @@ const ChargingSession = () => {
     console.log('  - Total Cost:', chargingData.chargingCost, 'VNĐ');
     console.log('  - From Sessions:', chargingData.hasCompletedSession);
     console.log('  - Total Sessions:', chargingData.totalSessionsCount);
-    
+
     setPaymentPopup({
       isOpen: true,
       currentCharge: chargingData.currentCharge || 0,
@@ -100,14 +102,14 @@ const ChargingSession = () => {
     // Use reservationData from stream if available, otherwise fallback to location.state
     const reservation = reservationData || location.state?.reservation;
     if (!reservation) return { ready: false, reasons: [] };
-    
+
     const reasons = [];
     const now = new Date();
-    
+
     // Nếu đã check-in và confirmed, không cần warning nữa
     const isCheckedIn = reservation.qrCheck === true;
     const isConfirmed = reservation.status === 'confirmed';
-    
+
     if (isCheckedIn && isConfirmed) {
       // Đã sẵn sàng để sạc, không cần warning
       return {
@@ -115,7 +117,7 @@ const ChargingSession = () => {
         reasons: []
       };
     }
-    
+
     // Check qrCheck
     if (!reservation.qrCheck) {
       reasons.push({
@@ -123,7 +125,7 @@ const ChargingSession = () => {
         message: 'Chưa check-in: Vui lòng đến trạm sạc và yêu cầu nhân viên scan QR code để check-in.'
       });
     }
-    
+
     // Check status
     if (reservation.status !== 'confirmed') {
       reasons.push({
@@ -131,15 +133,15 @@ const ChargingSession = () => {
         message: `Trạng thái: ${reservation.status} (cần 'confirmed')`
       });
     }
-    
+
     // Chỉ check time nếu chưa check-in
     if (!isCheckedIn) {
       const startAt = reservation.items?.[0]?.startAt ? new Date(reservation.items[0].startAt) : null;
       const endAt = reservation.items?.[0]?.endAt ? new Date(reservation.items[0].endAt) : null;
-      
+
       if (startAt && now < startAt) {
         const minutesUntil = Math.round((startAt - now) / 1000 / 60);
-        
+
         // Format thời gian dễ đọc hơn
         let timeMessage = '';
         if (minutesUntil >= 1440) { // >= 1 ngày
@@ -153,7 +155,7 @@ const ChargingSession = () => {
         } else {
           timeMessage = `${minutesUntil} phút`;
         }
-        
+
         reasons.push({
           type: 'info',
           message: `Chưa đến thời gian đặt chỗ: Còn ${timeMessage} nữa (${startAt.toLocaleString('vi-VN', {
@@ -165,7 +167,7 @@ const ChargingSession = () => {
           })})`
         });
       }
-      
+
       if (endAt && now > endAt) {
         reasons.push({
           type: 'error',
@@ -173,7 +175,7 @@ const ChargingSession = () => {
         });
       }
     }
-    
+
     return {
       ready: reasons.length === 0,
       reasons: reasons
@@ -184,7 +186,7 @@ const ChargingSession = () => {
     console.log("🔷 ===== CHARGING SESSION PAGE LOADED =====");
     console.log("Page is loading, initializing data...");
     console.log("NO API calls yet - waiting for user to click 'Bắt đầu sạc' button");
-    
+
     // Get reservation and vehicle from location state
     const reservation = location.state?.reservation;
     const vehicle = location.state?.vehicle;
@@ -302,40 +304,34 @@ const ChargingSession = () => {
     const fetchAllCompletedSessions = async (vehicleId) => {
       try {
         console.log('📊 Fetching all completed sessions for vehicle:', vehicleId);
-        const response = await api.get(`/charging/sessions?status=completed&page=1&limit=100`);
-        const sessions = response.data?.data?.items || [];
-        
-        // Filter sessions for this specific vehicle
-        const vehicleSessions = sessions
-          .filter(session => {
-            const sessionVehicleId = typeof session.vehicle === 'object' 
-              ? (session.vehicle._id || session.vehicle.id) 
-              : session.vehicle;
-            return sessionVehicleId === vehicleId;
-          })
-          .sort((a, b) => new Date(a.startedAt) - new Date(b.startedAt));
-        
+        // Use the new renamed API endpoint for vehicle sessions
+        const response = await api.get(`/charging/sessions/vehicle/${vehicleId}?status=completed&page=1&limit=100`);
+        const vehicleSessions = response.data?.data?.items || [];
+
+        // Sort sessions by date (API might already do this, but good to ensure)
+        vehicleSessions.sort((a, b) => new Date(a.startedAt) - new Date(b.startedAt));
+
         if (vehicleSessions.length > 0) {
           // Calculate total duration from ALL completed sessions
           let totalDurationMinutes = 0;
           let totalSessionsCount = vehicleSessions.length;
-          
+
           vehicleSessions.forEach(session => {
             const startTime = new Date(session.startedAt);
             const endTime = new Date(session.endedAt);
             const duration = (endTime - startTime) / (1000 * 60); // minutes
             totalDurationMinutes += duration;
-            
+
             console.log(`  Session ${session._id}: ${duration.toFixed(2)} minutes`);
           });
-          
+
           // Get earliest session for initial pin reference
           const earliestSession = vehicleSessions[0];
-          
+
           console.log('✅ Found', totalSessionsCount, 'completed session(s)');
           console.log('✅ Total duration from all sessions:', totalDurationMinutes.toFixed(2), 'minutes');
           console.log('✅ Earliest session initial pin:', earliestSession.initialPercent + '%');
-          
+
           return {
             earliestSession: earliestSession,
             totalDurationMinutes: totalDurationMinutes,
@@ -358,23 +354,23 @@ const ChargingSession = () => {
         console.log('🚗 Fetching vehicle data for ID:', vehicle.id);
         const response = await api.get(`/vehicles/${vehicle.id}`);
         const vehicleData = response.data?.data || response.data;
-        
+
         console.log('🚗 Vehicle Data from API:', vehicleData);
         console.log('🔋 Current Pin:', vehicleData.pin);
 
         // Fetch all completed sessions for cost calculation
         const sessionsData = await fetchAllCompletedSessions(vehicle.id);
-        
+
         let initialPinFromSession = null;
         let totalDurationMinutes = null;
         let totalSessionsCount = 0;
         let pinGainPercent = null;
-        
+
         if (sessionsData) {
           initialPinFromSession = sessionsData.earliestSession.initialPercent;
           totalDurationMinutes = sessionsData.totalDurationMinutes;
           totalSessionsCount = sessionsData.totalSessionsCount;
-          
+
           console.log('📊 Completed Sessions Summary:');
           console.log('  - Total Sessions:', totalSessionsCount);
           console.log('  - Total Duration:', totalDurationMinutes.toFixed(2), 'minutes');
@@ -382,8 +378,8 @@ const ChargingSession = () => {
           console.log('  - Current Pin:', vehicleData.pin + '%');
           console.log('  - Pin Gain:', (vehicleData.pin - initialPinFromSession) + '%');
 
-          if (initialPinFromSession !== null && initialPinFromSession !== undefined && 
-              vehicleData.pin !== null && vehicleData.pin !== undefined) {
+          if (initialPinFromSession !== null && initialPinFromSession !== undefined &&
+            vehicleData.pin !== null && vehicleData.pin !== undefined) {
             pinGainPercent = vehicleData.pin - initialPinFromSession;
           }
         }
@@ -439,7 +435,7 @@ const ChargingSession = () => {
     console.log('🔄 ========== STREAMS useEffect TRIGGERED ==========');
     const reservation = location.state?.reservation;
     const vehicle = location.state?.vehicle;
-    
+
     console.log('🔄 Reservation:', reservation);
     console.log('🔄 Vehicle:', vehicle);
 
@@ -500,12 +496,12 @@ const ChargingSession = () => {
       console.log('📡 Status:', reservationData.status);
       console.log('📡 QR Check:', reservationData.qrCheck);
       console.log('📡 Updated At:', reservationData.updatedAt);
-      
+
       // Check if reservation is now ready for charging
       const isReady = reservationData.status === 'confirmed' && reservationData.qrCheck === true;
       if (isReady) {
         console.log('✅ Reservation is now READY for charging!');
-        
+
         // Only show notification once
         if (!hasShownCheckInNotification.current && !isCharging && !isPaused) {
           hasShownCheckInNotification.current = true;
@@ -557,12 +553,12 @@ const ChargingSession = () => {
 
   const initializeChargingSession = () => {
     // Use current pin from API if available, otherwise use random
-    const initialCharge = vehicleData.currentPin !== null && vehicleData.currentPin !== undefined 
-      ? vehicleData.currentPin 
+    const initialCharge = vehicleData.currentPin !== null && vehicleData.currentPin !== undefined
+      ? vehicleData.currentPin
       : Math.floor(Math.random() * 30) + 10; // Fallback: 10-40%
-    
+
     console.log('🔋 Initializing with battery percentage:', initialCharge + '%');
-    
+
     const targetCharge = 100;
     const chargeNeeded = targetCharge - initialCharge;
 
@@ -587,24 +583,24 @@ const ChargingSession = () => {
     let initialEnergyKwh = 0;
     let initialDurationHours = 0;
     let initialTimeElapsed = 0;
-    
+
     if (vehicleData.hasCompletedSession && vehicleData.sessionDurationMinutes) {
       const sessionsCount = vehicleData.totalSessionsCount || 1;
       console.log(`💰 Calculating costs based on ${sessionsCount} completed session(s)...`);
-      
+
       // Use total duration from ALL completed sessions
       initialTimeElapsed = vehicleData.sessionDurationMinutes;
       initialDurationHours = initialTimeElapsed / 60;
-      
+
       // Calculate booking cost (fixed rate per hour)
       initialBookingCost = portInfo.bookingRatePerHour;
-      
+
       // Calculate energy consumed and cost
       initialEnergyKwh = portInfo.powerKw * initialDurationHours;
       initialEnergyCost = initialDurationHours * initialEnergyKwh * ENERGY_PRICE_PER_KWH;
-      
+
       const totalCost = initialBookingCost + initialEnergyCost;
-      
+
       console.log('💰 Cost Calculation from ALL Completed Sessions:');
       console.log('  - Total Sessions:', sessionsCount);
       console.log('  - Total Duration:', initialTimeElapsed.toFixed(2), 'minutes');
@@ -634,7 +630,7 @@ const ChargingSession = () => {
       previousSessionsDuration: initialTimeElapsed,
       pinGainPercent: vehicleData.pinGainPercent ?? (
         vehicleData.currentPin !== null && vehicleData.currentPin !== undefined &&
-        vehicleData.sessionInitialPin !== null && vehicleData.sessionInitialPin !== undefined
+          vehicleData.sessionInitialPin !== null && vehicleData.sessionInitialPin !== undefined
           ? vehicleData.currentPin - vehicleData.sessionInitialPin
           : null
       ),
@@ -651,12 +647,12 @@ const ChargingSession = () => {
     // Lấy base URL và token từ api config
     const baseURL = api.defaults.baseURL;
     const token = localStorage.getItem('token');
-    
+
     // Tạo URL cho SSE endpoint
     // EventSource không hỗ trợ custom headers, nên ta sử dụng fetch với ReadableStream
     // hoặc truyền token qua query parameter
     const url = `${baseURL}/charging/sessions/${sessionId}/stream`;
-    
+
     // Sử dụng fetch API để hỗ trợ custom headers (Bearer token)
     const connectSSE = async () => {
       try {
@@ -689,7 +685,7 @@ const ChargingSession = () => {
           try {
             while (true) {
               const { done, value } = await reader.read();
-              
+
               if (done) {
                 console.log('SSE stream ended');
                 break;
@@ -705,19 +701,19 @@ const ChargingSession = () => {
                   const dataStr = line.substring(6);
                   try {
                     const data = JSON.parse(dataStr);
-                    
+
                     // Cập nhật charging data từ SSE stream
                     setChargingData((prev) => {
                       if (!prev) return prev;
 
                       const currentPercent = data.percent || prev.currentCharge;
-                      
+
                       // Tính thời gian đã sạc của SESSION HIỆN TẠI (từ startedAt đến hiện tại)
                       const startTime = new Date(data.startedAt || prev.startTime);
                       const now = new Date();
                       const timeElapsedMs = now - startTime;
                       const currentSessionMinutes = timeElapsedMs / (1000 * 60);
-                      
+
                       // CỘNG THÊM thời gian từ các sessions trước (nếu có)
                       const previousDuration = prev.previousSessionsDuration || 0;
                       const totalTimeElapsed = previousDuration + currentSessionMinutes;
@@ -725,7 +721,7 @@ const ChargingSession = () => {
                       const resolvedCurrentPin = currentPercent ?? prev.currentPin ?? null;
                       let updatedPinGainPercent = prev.pinGainPercent ?? null;
                       if (sessionInitialPercent !== null && sessionInitialPercent !== undefined &&
-                          resolvedCurrentPin !== null && resolvedCurrentPin !== undefined) {
+                        resolvedCurrentPin !== null && resolvedCurrentPin !== undefined) {
                         updatedPinGainPercent = resolvedCurrentPin - sessionInitialPercent;
                       }
 
@@ -760,12 +756,12 @@ const ChargingSession = () => {
                     if (data.finished || data.status === 'completed') {
                       reader.cancel();
                       setIsCharging(false);
-                      
+
                       // Hiện modal thanh toán (không auto redirect)
                       setTimeout(() => {
                         handleChargingComplete();
                       }, 1000);
-                      
+
                       showPopup("Sạc đầy 100%! ✅", "success");
                       break;
                     }
@@ -795,7 +791,7 @@ const ChargingSession = () => {
   // Hàm xử lý khi sạc hoàn thành (100%)
   const handleChargingComplete = () => {
     console.log('🔋 Charging completed (100%) - showing payment modal');
-    
+
     // Dừng sạc
     setIsCharging(false);
     setIsPaused(true);
@@ -852,7 +848,7 @@ const ChargingSession = () => {
         try {
           while (true) {
             const { done, value } = await reader.read();
-            
+
             if (done) {
               console.log('✅ Reservation stream ended');
               break;
@@ -873,10 +869,10 @@ const ChargingSession = () => {
                 try {
                   const data = JSON.parse(dataStr);
                   console.log('📦 Reservation data:', data);
-                  
+
                   // Update reservation data state
                   setReservationData(data);
-                  
+
                   // Update specific fields if needed
                   if (data.qrCheck !== undefined) {
                     console.log('✅ QR Check status updated:', data.qrCheck);
@@ -916,10 +912,10 @@ const ChargingSession = () => {
     try {
       const token = localStorage.getItem('token');
       console.log('💰 Token exists:', !!token);
-      
+
       const requestBody = { vehicleId };
       console.log('💰 Request body:', JSON.stringify(requestBody));
-      
+
       console.log('💰 Initiating fetch...');
       const response = await fetch(
         `${api.defaults.baseURL}/pricing/estimate-vehicle-stream`,
@@ -964,7 +960,7 @@ const ChargingSession = () => {
           let chunkCount = 0;
           while (true) {
             const { done, value } = await reader.read();
-            
+
             if (done) {
               console.log('✅ Pricing stream ended (done=true)');
               break;
@@ -981,14 +977,14 @@ const ChargingSession = () => {
 
             for (const line of lines) {
               if (!line.trim()) continue; // Skip empty lines
-              
+
               console.log('💰 Processing line:', line);
-              
+
               if (line.startsWith('event: ')) {
                 const eventType = line.substring(7).trim();
                 console.log('💰 ===== EVENT RECEIVED =====');
                 console.log('💰 Event type:', eventType);
-                
+
                 if (eventType === 'session_count_changed') {
                   console.log('🔔 🔔 🔔 New completed session detected!');
                 } else if (eventType === 'pricing_data') {
@@ -1005,20 +1001,20 @@ const ChargingSession = () => {
                   const data = JSON.parse(dataStr);
                   console.log('💰 ===== PRICING DATA RECEIVED =====');
                   console.log('💰 Full data:', JSON.stringify(data, null, 2));
-                  
+
                   // Check if this is stream_end event (has 'reason' field) or pricing data
                   if (data.reason) {
                     console.log('🏁 Stream end data received, skipping state update');
                     console.log('🏁 Reason:', data.reason);
                     continue; // Skip this data, don't update state
                   }
-                  
+
                   // Only process if we have actual pricing data (has totalSessions field)
                   if (!data.totalSessions && data.totalSessions !== 0) {
                     console.log('⚠️ Data missing totalSessions field, skipping');
                     continue;
                   }
-                  
+
                   console.log('💰 vehicleId:', data.vehicleId);
                   console.log('💰 totalSessions:', data.totalSessions);
                   console.log('💰 totalMinutes:', data.totalMinutes);
@@ -1032,7 +1028,7 @@ const ChargingSession = () => {
                   console.log('💰 total:', data.total);
                   console.log('💰 sessionDetails:', data.sessionDetails);
                   console.log('💰 ===================================');
-                  
+
                   const sessionDetails = Array.isArray(data.sessionDetails) ? data.sessionDetails : [];
                   const firstSessionDetail = sessionDetails.length > 0 ? sessionDetails[0] : null;
                   const lastSessionDetail = sessionDetails.length > 0 ? sessionDetails[sessionDetails.length - 1] : null;
@@ -1040,12 +1036,12 @@ const ChargingSession = () => {
                   const streamLastEndPercent = lastSessionDetail?.endPercent;
                   const streamLastCurrentPercent = lastSessionDetail?.currentPercent;
                   const streamCurrentPin = streamLastEndPercent ?? streamLastCurrentPercent ?? null;
-                  
+
                   // Update pricing estimate state with actual pricing data
                   console.log('💰 Setting pricingEstimate state with valid pricing data...');
                   setPricingEstimate(data);
                   console.log('💰 pricingEstimate state updated!');
-                  
+
                   // Update charging data with pricing info
                   console.log('💰 Updating chargingData state...');
                   setChargingData(prev => {
@@ -1054,12 +1050,12 @@ const ChargingSession = () => {
                       return prev;
                     }
 
-                      const toNumber = (value) => {
-                        if (value === null || value === undefined) return null;
-                        const parsed = Number(value);
-                        return Number.isNaN(parsed) ? null : parsed;
-                      };
-                    
+                    const toNumber = (value) => {
+                      if (value === null || value === undefined) return null;
+                      const parsed = Number(value);
+                      return Number.isNaN(parsed) ? null : parsed;
+                    };
+
                     const resolvedSessionInitialPinRaw = streamInitialPin ?? prev.sessionInitialPin ?? prev.initialCharge ?? null;
                     const resolvedSessionInitialPin = toNumber(resolvedSessionInitialPinRaw);
                     const streamFallbackPin = data.currentPin ?? data.currentPercent ?? null;
@@ -1191,15 +1187,15 @@ const ChargingSession = () => {
     try {
       // Get charging sessions for this vehicle with status=active
       const response = await api.get(`/charging/sessions/${vehicleId}?status=active&page=1&limit=20`);
-      
+
       // API returns { success, message, data: { items: [], pagination: {} } }
       const sessions = response.data?.data?.items || [];
-      
+
       // Filter for active sessions only
       const activeSessions = sessions.filter(session => session.status === 'active');
-      
+
       console.log(`Found ${activeSessions.length} active charging session(s) for vehicle ${vehicleId}`);
-      
+
       // Return the first active session if exists
       return activeSessions.length > 0 ? activeSessions[0] : null;
     } catch (error) {
@@ -1211,7 +1207,7 @@ const ChargingSession = () => {
   const handlePayment = async () => {
     console.log('🔵 ===== NÚT "BẮT ĐẦU SẠC" ĐƯỢC CLICK =====');
     console.log('User manually clicked the start charging button');
-    
+
     if (!chargingData) {
       showPopup("Vui lòng đợi khởi tạo thông tin sạc", "error");
       return;
@@ -1219,6 +1215,14 @@ const ChargingSession = () => {
 
     if (isCharging) {
       showPopup("Phiên sạc đang hoạt động", "error");
+      return;
+    }
+
+    if (!hasCheckedIn) {
+      showPopup(
+        "Chua check-in: nho nhan vien tram quet ma QR truoc khi bat dau sac.",
+        "error"
+      );
       return;
     }
 
@@ -1272,7 +1276,7 @@ const ChargingSession = () => {
       console.log('Vehicle:', vehicle);
       console.log('Slot ID:', slotId);
       console.log('Reservation ID:', reservationId);
-      
+
       // Kiểm tra thời gian
       const now = new Date();
       const startAt = reservation.items?.[0]?.startAt ? new Date(reservation.items[0].startAt) : null;
@@ -1287,7 +1291,7 @@ const ChargingSession = () => {
       const existingSessions = await checkExistingChargingSession(vehicle.id);
       if (existingSessions) {
         console.log('✅ Found existing active charging session - continuing with it:', existingSessions);
-        
+
         // Tự động tiếp tục với session đang có
         const sessionId = existingSessions.id || existingSessions._id;
         setSessionId(sessionId);
@@ -1304,17 +1308,17 @@ const ChargingSession = () => {
       const warnings = [];
       const isConfirmed = reservation.status === 'confirmed';
       const isCheckedIn = reservation.qrCheck === true;
-      
+
       // Kiểm tra status
       if (!isConfirmed) {
         warnings.push(`⚠️ Trạng thái reservation: ${reservation.status} (cần 'confirmed')`);
       }
-      
+
       // Kiểm tra qrCheck
       if (!isCheckedIn) {
         warnings.push('⚠️ Reservation chưa được check-in bởi nhân viên (qrCheck = false)');
       }
-      
+
       // Chỉ kiểm tra thời gian nếu chưa confirmed hoặc chưa check-in
       // Nếu đã confirmed + check-in thì không cần check time nữa
       if (!isConfirmed || !isCheckedIn) {
@@ -1322,12 +1326,12 @@ const ChargingSession = () => {
           const minutesUntil = Math.round((startAt - now) / 1000 / 60);
           warnings.push(`⚠️ Chưa đến thời gian đặt chỗ (còn ${minutesUntil} phút)`);
         }
-        
+
         if (endAt && now > endAt) {
           warnings.push('⚠️ Đã quá thời gian đặt chỗ');
         }
       }
-      
+
       if (warnings.length > 0) {
         console.warn('=== VALIDATION WARNINGS ===');
         warnings.forEach(w => console.warn(w));
@@ -1338,7 +1342,7 @@ const ChargingSession = () => {
 
       // Gọi API bắt đầu sạc
       const response = await api.post('/charging/start', requestBody);
-      
+
       console.log('🔥 API Response:', response);
       console.log('🔥 Response Data:', response.data);
       console.log('🔥 Response Status:', response.status);
@@ -1346,21 +1350,21 @@ const ChargingSession = () => {
       // Check multiple response formats
       const session = response.data?.data || response.data;
       const isSuccess = response.status === 201 || response.status === 200 || response.data?.success;
-      
+
       console.log('🔥 Extracted Session:', session);
       console.log('🔥 Is Success:', isSuccess);
 
       if (isSuccess && session && (session.id || session._id)) {
         const sessionId = session.id || session._id;
         console.log('✅ Starting charging with session ID:', sessionId);
-        
+
         setSessionId(sessionId);
-        
+
         // Cập nhật thời gian bắt đầu - GIỮ LẠI previousSessionsDuration
         setChargingData((prev) => {
           const previousDuration = prev.previousSessionsDuration || 0;
           console.log('🔄 Starting new session, previous duration:', previousDuration, 'minutes');
-          
+
           return {
             ...prev,
             startTime: new Date(session.startedAt || new Date()),
@@ -1387,14 +1391,14 @@ const ChargingSession = () => {
       console.error("Error starting charging session:", error);
       console.error("Error response:", error.response?.data);
       console.error("Full error object:", JSON.stringify(error.response, null, 2));
-      
+
       let errorMessage = "Lỗi khi bắt đầu phiên sạc";
-      
+
       if (error.response?.status === 409) {
         // Lỗi conflict - slot không khả dụng
         const reservation = location.state?.reservation;
         const serverMessage = error.response?.data?.message || "";
-        
+
         console.log('=== ANALYZING 409 CONFLICT ERROR ===');
         console.log('Server Message:', serverMessage);
         console.log('All conditions met:', {
@@ -1402,31 +1406,31 @@ const ChargingSession = () => {
           status: reservation?.status,
           withinTimeRange: true
         });
-        
+
         // Tạo message chi tiết dựa trên điều kiện
         const reasons = [];
-        
+
         if (!reservation?.qrCheck) {
           reasons.push("• Reservation chưa được check-in bởi nhân viên trạm sạc");
         }
-        
+
         if (reservation?.status !== 'confirmed') {
           reasons.push(`• Trạng thái reservation: ${reservation?.status || 'unknown'} (cần 'confirmed')`);
         }
-        
+
         const now = new Date();
         const startAt = reservation?.items?.[0]?.startAt ? new Date(reservation.items[0].startAt) : null;
         const endAt = reservation?.items?.[0]?.endAt ? new Date(reservation.items[0].endAt) : null;
-        
+
         if (startAt && now < startAt) {
           const minutesUntil = Math.round((startAt - now) / 1000 / 60);
           reasons.push(`• Chưa đến thời gian đặt chỗ (còn ${minutesUntil} phút)`);
         }
-        
+
         if (endAt && now > endAt) {
           reasons.push("• Đã quá thời gian đặt chỗ");
         }
-        
+
         // Nếu tất cả điều kiện đều OK
         if (reasons.length === 0) {
           console.warn('⚠️ All conditions are OK but still got 409 error!');
@@ -1434,19 +1438,18 @@ const ChargingSession = () => {
           console.warn('1. Slot already has an active charging session');
           console.warn('2. Backend has additional validation rules');
           console.warn('3. Reservation may have been used already');
-          
+
           errorMessage = `${serverMessage}\n\n🔍 Phân tích:\nTất cả điều kiện đều hợp lệ (✓ Check-in, ✓ Đã thanh toán, ✓ Đúng thời gian)\n\n⚠️ Nguyên nhân có thể:\n• Slot/Reservation này đã có phiên sạc đang hoạt động\n• Reservation đã được sử dụng trước đó\n• Backend có thêm điều kiện kiểm tra khác\n\n💡 Giải pháp:\n1. Kiểm tra xem bạn đã bắt đầu sạc chưa (có thể đã start rồi)\n2. Thử refresh trang và kiểm tra lại\n3. Nếu vẫn lỗi, vui lòng liên hệ hỗ trợ với mã đặt chỗ: ${reservation?.id || 'N/A'}`;
         } else {
-          errorMessage = `${serverMessage}\n\nNguyên nhân có thể:\n${reasons.join('\n')}\n\n💡 Khuyến nghị: ${
-            !reservation?.qrCheck 
+          errorMessage = `${serverMessage}\n\nNguyên nhân có thể:\n${reasons.join('\n')}\n\n💡 Khuyến nghị: ${!reservation?.qrCheck
               ? 'Vui lòng đến trạm sạc và yêu cầu nhân viên scan QR code để check-in.'
               : 'Vui lòng kiểm tra thông tin đặt chỗ hoặc liên hệ hỗ trợ.'
-          }`;
+            }`;
         }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-      
+
       showPopup(errorMessage, "error");
     }
   };
@@ -1469,7 +1472,7 @@ const ChargingSession = () => {
 
     try {
       console.log('⏹ Stopping charging session:', sessionId);
-      
+
       // Gọi API để stop charging session
       const response = await api.post(`/charging/sessions/${sessionId}/stop`, {
         status: "completed"
@@ -1484,7 +1487,7 @@ const ChargingSession = () => {
 
       if (isSuccess) {
         console.log('✅ Successfully stopped charging session');
-        
+
         // Dừng sạc
         setIsCharging(false);
         setIsPaused(true);
@@ -1558,10 +1561,10 @@ const ChargingSession = () => {
 
   const handleResumeCharging = async () => {
     console.log('▶️ Attempting to resume charging...');
-    
+
     // Reset isPaused và gọi lại handlePayment để start session mới
     setIsPaused(false);
-    
+
     // Gọi handlePayment để tạo session mới và bắt đầu streaming
     await handlePayment();
   };
@@ -1691,7 +1694,7 @@ const ChargingSession = () => {
                 <button
                   className="payment-btn start-btn"
                   onClick={handlePayment}
-                  disabled={!chargingData}
+                  disabled={!chargingData || !hasCheckedIn}
                 >
                   ⚡ Bắt đầu sạc
                 </button>
@@ -1759,8 +1762,8 @@ const ChargingSession = () => {
                               borderBottom: '2px solid rgba(255, 193, 7, 0.3)'
                             }}>
                               <span style={{ fontSize: '22px', marginRight: '10px' }}>⚠️</span>
-                              <h4 style={{ 
-                                margin: 0, 
+                              <h4 style={{
+                                margin: 0,
                                 color: '#856404',
                                 fontSize: '15px',
                                 fontWeight: '600'
@@ -1788,16 +1791,16 @@ const ChargingSession = () => {
                                     fontSize: '10px',
                                     fontWeight: '700',
                                     marginRight: '10px',
-                                    backgroundColor: reason.type === 'error' ? '#dc3545' : 
-                                                   reason.type === 'warning' ? '#ffc107' : '#17a2b8',
+                                    backgroundColor: reason.type === 'error' ? '#dc3545' :
+                                      reason.type === 'warning' ? '#ffc107' : '#17a2b8',
                                     color: '#fff',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.5px'
                                   }}>
-                                    {reason.type === 'error' ? '🚫 LỖI' : 
-                                     reason.type === 'warning' ? '⚠️ Cảnh báo' : 'ℹ️ Thông tin'}
+                                    {reason.type === 'error' ? '🚫 LỖI' :
+                                      reason.type === 'warning' ? '⚠️ Cảnh báo' : 'ℹ️ Thông tin'}
                                   </span>
-                                  <span style={{ 
+                                  <span style={{
                                     color: '#495057',
                                     fontSize: '13px',
                                     lineHeight: '1.5',
@@ -1813,7 +1816,7 @@ const ChargingSession = () => {
                       }
                       return null;
                     })()}
-                    
+
                     <div className="battery-section-modern">
                       <div className="battery-visual">
                         <div className="battery-container">
@@ -1854,7 +1857,7 @@ const ChargingSession = () => {
                             gap: '20px'
                           }}>
                             <div style={{ flex: 1 }}>
-                              <h3 style={{ 
+                              <h3 style={{
                                 margin: '0 0 8px 0',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -1863,8 +1866,8 @@ const ChargingSession = () => {
                                 <span style={{ fontSize: '24px' }}>📱</span>
                                 QR Code Check-in
                               </h3>
-                              <p style={{ 
-                                margin: 0, 
+                              <p style={{
+                                margin: 0,
                                 color: '#6c757d',
                                 fontSize: '14px',
                                 lineHeight: '1.6'
@@ -1884,7 +1887,7 @@ const ChargingSession = () => {
                                 <span style={{ fontSize: '16px' }}>
                                   {(reservationData?.qrCheck ?? location.state?.reservation?.qrCheck) ? '✅' : '⏳'}
                                 </span>
-                                <span style={{ 
+                                <span style={{
                                   fontSize: '13px',
                                   fontWeight: '600',
                                   color: (reservationData?.qrCheck ?? location.state?.reservation?.qrCheck) ? '#155724' : '#856404'
@@ -1906,8 +1909,8 @@ const ChargingSession = () => {
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                 border: '3px solid #007bff'
                               }}>
-                                <img 
-                                  src={location.state.reservation.qr} 
+                                <img
+                                  src={location.state.reservation.qr}
                                   alt="QR Code"
                                   style={{
                                     width: '180px',
@@ -2032,10 +2035,10 @@ const ChargingSession = () => {
 
             <div className="session-right">
               <ChargingStationCarousel />
-              
+
               {/* Thông tin xe - Redesigned */}
               {chargingData && (
-                <div className="info-card" style={{ 
+                <div className="info-card" style={{
                   marginTop: '20px',
                   background: '#ffffff',
                   border: '2px solid #e5e7eb',
@@ -2055,7 +2058,7 @@ const ChargingSession = () => {
                     background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #f0fdf4 100%)',
                     borderRadius: '16px 16px 0 0'
                   }}>
-                    <h2 style={{ 
+                    <h2 style={{
                       margin: 0,
                       background: 'linear-gradient(135deg, #16a34a, #059669)',
                       WebkitBackgroundClip: 'text',
@@ -2067,7 +2070,7 @@ const ChargingSession = () => {
                       letterSpacing: '0.5px'
                     }}>🚗 Thông tin xe</h2>
                   </div>
-                  
+
                   {/* Vehicle information content */}
                   <div style={{
                     padding: '28px',

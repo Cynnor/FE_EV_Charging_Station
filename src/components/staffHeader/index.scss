@@ -35,6 +35,22 @@
             gap: 16px;
             position: relative;
 
+            .logout-btn {
+                padding: 10px 14px;
+                border-radius: 10px;
+                border: 1px solid #16a34a;
+                background: #ecfdf3;
+                color: #166534;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s;
+
+                &:hover {
+                    background: #d1fae5;
+                    border-color: #15803d;
+                }
+            }
+
             .notification-btn {
                 position: relative;
                 background: none;
@@ -78,7 +94,7 @@
             .staff-avatar {
                 width: 44px;
                 height: 44px;
-                background: linear-gradient(135deg, #7ed321, #a3e635);
+                background: linear-gradient(135deg, #16a34a, #22c55e);
                 border-radius: 12px;
                 display: flex;
                 align-items: center;

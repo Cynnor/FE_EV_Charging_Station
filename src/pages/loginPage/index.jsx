@@ -80,17 +80,21 @@ export default function Login() {
         const user = data.data.user;
         localStorage.setItem("user", JSON.stringify(user));
 
-        if (redirectPath && redirectPath !== "/") {
-          navigate(decodeURIComponent(redirectPath), { replace: true });
-          return;
-        }
-
         // Điều hướng theo role
-        const role = user.role || user.userRole || user.accountRole;
-        if (role === "admin") {
-          navigate("/admin", { replace: true });
-        } else if (role === "STAFF") {
-          navigate("/staff", { replace: true });
+        const normalizedRole = String(
+          user.role || user.userRole || user.accountRole || ""
+        ).toLowerCase();
+        const roleRedirect =
+          normalizedRole === "admin"
+            ? "/admin"
+            : normalizedRole === "staff"
+            ? "/staff"
+            : null;
+
+        if (roleRedirect) {
+          navigate(roleRedirect, { replace: true });
+        } else if (redirectPath && redirectPath !== "/") {
+          navigate(decodeURIComponent(redirectPath), { replace: true });
         } else {
           navigate("/", { replace: true });
         }

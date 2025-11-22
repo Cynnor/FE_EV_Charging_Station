@@ -1,137 +1,56 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import api from "../../../config/api";
 import "./index.scss";
 
 const StationStatus = () => {
     const [filterStatus, setFilterStatus] = useState("all");
     const [selectedStation, setSelectedStation] = useState(null);
+    const [stations, setStations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const stations = [
-        {
-            id: "ST001",
-            type: "DC",
-            power: "150kW",
-            status: "online",
-            availability: "available",
-            currentSession: null,
-            lastMaintenance: "2024-01-15",
-            totalSessions: 245,
-            totalEnergy: "12,450 kWh",
-            efficiency: 98.5,
-            location: "Vị trí A1",
-        },
-        {
-            id: "ST002",
-            type: "AC",
-            power: "22kW",
-            status: "online",
-            availability: "charging",
-            currentSession: {
-                licensePlate: "51B-99999",
-                startTime: "14:25",
-                progress: 75,
-                estimatedEnd: "15:10",
-            },
-            lastMaintenance: "2024-01-10",
-            totalSessions: 189,
-            totalEnergy: "8,920 kWh",
-            efficiency: 96.2,
-            location: "Vị trí A2",
-        },
-        {
-            id: "ST003",
-            type: "DC",
-            power: "50kW",
-            status: "online",
-            availability: "available",
-            currentSession: null,
-            lastMaintenance: "2024-01-12",
-            totalSessions: 156,
-            totalEnergy: "6,780 kWh",
-            efficiency: 97.8,
-            location: "Vị trí A3",
-        },
-        {
-            id: "ST004",
-            type: "AC",
-            power: "22kW",
-            status: "offline",
-            availability: "maintenance",
-            currentSession: null,
-            lastMaintenance: "2024-01-20",
-            totalSessions: 203,
-            totalEnergy: "9,150 kWh",
-            efficiency: 95.1,
-            location: "Vị trí B1",
-            issue: "Lỗi kết nối",
-        },
-        {
-            id: "ST005",
-            type: "DC",
-            power: "150kW",
-            status: "online",
-            availability: "charging",
-            currentSession: {
-                licensePlate: "29A-11111",
-                startTime: "16:00",
-                progress: 15,
-                estimatedEnd: "16:45",
-            },
-            lastMaintenance: "2024-01-18",
-            totalSessions: 178,
-            totalEnergy: "7,890 kWh",
-            efficiency: 99.2,
-            location: "Vị trí B2",
-        },
-        {
-            id: "ST006",
-            type: "AC",
-            power: "22kW",
-            status: "online",
-            availability: "available",
-            currentSession: null,
-            lastMaintenance: "2024-01-14",
-            totalSessions: 134,
-            totalEnergy: "5,670 kWh",
-            efficiency: 94.5,
-            location: "Vị trí B3",
-        },
-        {
-            id: "ST007",
-            type: "DC",
-            power: "50kW",
-            status: "offline",
-            availability: "error",
-            currentSession: null,
-            lastMaintenance: "2024-01-08",
-            totalSessions: 167,
-            totalEnergy: "7,230 kWh",
-            efficiency: 93.8,
-            location: "Vị trí C1",
-            issue: "Lỗi phần cứng",
-        },
-        {
-            id: "ST008",
-            type: "AC",
-            power: "22kW",
-            status: "online",
-            availability: "available",
-            currentSession: null,
-            lastMaintenance: "2024-01-16",
-            totalSessions: 198,
-            totalEnergy: "8,450 kWh",
-            efficiency: 97.3,
-            location: "Vị trí C2",
-        },
-    ];
+    const loadStations = async () => {
+        try {
+            setLoading(true);
+            setError("");
+            const res = await api.get("/stations", {
+                params: { includePorts: true, limit: 200 },
+            });
+            const payload = res.data?.items || res.data?.data?.items || res.data?.data || [];
+            setStations(payload);
+            if (payload.length) setSelectedStation(payload[0]);
+        } catch (err) {
+            const msg =
+                err?.response?.data?.message ||
+                err?.message ||
+                "Không thể tải danh sách trạm.";
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadStations();
+    }, []);
+
+    const deriveAvailability = (station) => {
+        const ports = station?.ports || [];
+        const slots = ports.flatMap((p) => p.slots || []);
+        const slotStatuses = slots.map((s) => s.status);
+        if (slotStatuses.includes("in_use")) return "charging";
+        if (slotStatuses.includes("booked")) return "booked";
+        return "available";
+    };
 
     const getStatusColor = (status) => {
         switch (status) {
-            case "online":
+            case "active":
                 return "green";
-            case "offline":
-                return "red";
             case "maintenance":
                 return "orange";
+            case "inactive":
+                return "red";
             default:
                 return "gray";
         }
@@ -143,7 +62,7 @@ const StationStatus = () => {
                 return "green";
             case "charging":
                 return "blue";
-            case "maintenance":
+            case "booked":
                 return "orange";
             case "error":
                 return "red";
@@ -155,9 +74,11 @@ const StationStatus = () => {
     const getAvailabilityText = (availability) => {
         switch (availability) {
             case "available":
-                return "Rỗi";
+                return "Trống";
             case "charging":
                 return "Đang sạc";
+            case "booked":
+                return "Đang giữ chỗ";
             case "maintenance":
                 return "Bảo trì";
             case "error":
@@ -167,25 +88,37 @@ const StationStatus = () => {
         }
     };
 
-    const filteredStations = stations.filter((station) => {
-        if (filterStatus === "all") return true;
-        if (filterStatus === "online") return station.status === "online";
-        if (filterStatus === "offline") return station.status === "offline";
-        if (filterStatus === "charging") return station.availability === "charging";
-        if (filterStatus === "available") return station.availability === "available";
-        return true;
-    });
+    const filteredStations = useMemo(
+        () =>
+            stations.filter((station) => {
+                const availability = deriveAvailability(station);
+                if (filterStatus === "all") return true;
+                if (filterStatus === "online") return station.status === "active";
+                if (filterStatus === "offline") return station.status === "inactive";
+                if (filterStatus === "charging") return availability === "charging";
+                if (filterStatus === "available") return availability === "available";
+                return true;
+            }),
+        [stations, filterStatus]
+    );
+
+    const countAvailability = (value) =>
+        stations.filter((s) => deriveAvailability(s) === value).length;
+    const countStatus = (value) =>
+        stations.filter((s) => s.status === value).length;
+    const summarizeSlots = (station) => {
+        const slots = (station?.ports || []).flatMap((p) => p.slots || []);
+        return slots.reduce(
+            (acc, slot) => ({
+                ...acc,
+                [slot.status]: (acc[slot.status] || 0) + 1,
+            }),
+            { available: 0, booked: 0, in_use: 0 }
+        );
+    };
 
     const handleStationClick = (station) => {
         setSelectedStation(station);
-    };
-
-    const handleMaintenance = (stationId) => {
-        console.log("Bắt đầu bảo trì trụ:", stationId);
-    };
-
-    const handleReset = (stationId) => {
-        console.log("Reset trụ:", stationId);
     };
 
     return (
@@ -204,15 +137,15 @@ const StationStatus = () => {
                         </div>
                         <div className="summary-item">
                             <span className="label">Online:</span>
-                            <span className="value green">{stations.filter(s => s.status === "online").length}</span>
+                            <span className="value green">{countStatus("active")}</span>
                         </div>
                         <div className="summary-item">
                             <span className="label">Offline:</span>
-                            <span className="value red">{stations.filter(s => s.status === "offline").length}</span>
+                            <span className="value red">{countStatus("inactive")}</span>
                         </div>
                         <div className="summary-item">
                             <span className="label">Đang sạc:</span>
-                            <span className="value blue">{stations.filter(s => s.availability === "charging").length}</span>
+                            <span className="value blue">{countAvailability("charging")}</span>
                         </div>
                     </div>
                 </div>
@@ -231,243 +164,162 @@ const StationStatus = () => {
                         className={`filter-tab ${filterStatus === "online" ? "active" : ""}`}
                         onClick={() => setFilterStatus("online")}
                     >
-                        Online ({stations.filter(s => s.status === "online").length})
+                        Online ({countStatus("active")})
                     </button>
                     <button
                         className={`filter-tab ${filterStatus === "offline" ? "active" : ""}`}
                         onClick={() => setFilterStatus("offline")}
                     >
-                        Offline ({stations.filter(s => s.status === "offline").length})
+                        Offline ({countStatus("inactive")})
                     </button>
                     <button
                         className={`filter-tab ${filterStatus === "charging" ? "active" : ""}`}
                         onClick={() => setFilterStatus("charging")}
                     >
-                        Đang sạc ({stations.filter(s => s.availability === "charging").length})
+                        Đang sạc ({countAvailability("charging")})
                     </button>
                     <button
                         className={`filter-tab ${filterStatus === "available" ? "active" : ""}`}
                         onClick={() => setFilterStatus("available")}
                     >
-                        Rỗi ({stations.filter(s => s.availability === "available").length})
+                        Trống ({countAvailability("available")})
                     </button>
                 </div>
             </div>
 
             {/* Stations Grid */}
-            <div className="stations-grid">
-                {filteredStations.map((station) => (
-                    <div
-                        key={station.id}
-                        className={`station-card ${getStatusColor(station.status)}`}
-                        onClick={() => handleStationClick(station)}
-                    >
-                        <div className="card-header">
-                            <div className="station-info">
-                                <span className="station-id">{station.id}</span>
-                                <span className="station-type">{station.type} - {station.power}</span>
-                            </div>
-                            <div className={`status-indicator ${getStatusColor(station.status)}`}>
-                                <span className="status-dot"></span>
-                                {station.status === "online" ? "Online" : "Offline"}
-                            </div>
-                        </div>
-
-                        <div className="card-content">
-                            <div className="availability-section">
-                                <div className={`availability-badge ${getAvailabilityColor(station.availability)}`}>
-                                    {getAvailabilityText(station.availability)}
-                                </div>
-                                <span className="location">{station.location}</span>
-                            </div>
-
-                            {station.currentSession && (
-                                <div className="current-session">
-                                    <div className="session-header">
-                                        <span className="license-plate">{station.currentSession.licensePlate}</span>
-                                        <span className="start-time">Bắt đầu: {station.currentSession.startTime}</span>
-                                    </div>
-                                    <div className="session-progress">
-                                        <div className="progress-bar">
-                                            <div
-                                                className="progress-fill"
-                                                style={{ width: `${station.currentSession.progress}%` }}
-                                            ></div>
-                                        </div>
-                                        <span className="progress-text">{station.currentSession.progress}%</span>
-                                    </div>
-                                    <div className="estimated-end">
-                                        Dự kiến kết thúc: {station.currentSession.estimatedEnd}
-                                    </div>
-                                </div>
-                            )}
-
-                            {station.issue && (
-                                <div className="issue-section">
-                                    <div className="issue-alert">
-                                        <span className="issue-icon">⚠️</span>
-                                        <span className="issue-text">{station.issue}</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="station-stats">
-                                <div className="stat-item">
-                                    <span className="label">Phiên sạc:</span>
-                                    <span className="value">{station.totalSessions}</span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="label">Năng lượng:</span>
-                                    <span className="value">{station.totalEnergy}</span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="label">Hiệu suất:</span>
-                                    <span className="value">{station.efficiency}%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="card-actions">
-                            {station.status === "offline" && (
-                                <button
-                                    className="btn-secondary"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleReset(station.id);
-                                    }}
-                                >
-                                    Reset
-                                </button>
-                            )}
-                            <button
-                                className="btn-primary"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleMaintenance(station.id);
-                                }}
+            {error && <p className="muted error-text">{error}</p>}
+            {loading ? (
+                <p className="muted">Đang tải danh sách trạm...</p>
+            ) : (
+                <div className="stations-grid">
+                    {filteredStations.map((station) => {
+                        const availability = deriveAvailability(station);
+                        const slotSummary = summarizeSlots(station);
+                        return (
+                            <div
+                                key={station.id}
+                                className={`station-card ${getStatusColor(station.status)}`}
+                                onClick={() => handleStationClick(station)}
                             >
-                                Bảo trì
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
+                                <div className="card-header">
+                                    <div className="station-info">
+                                        <span className="station-id">{station.name || station.id}</span>
+                                        <span className="station-type">{station.provider || "N/A"}</span>
+                                        <span className="location">{station.address}</span>
+                                    </div>
+                                    <div className={`status-indicator ${getStatusColor(station.status)}`}>
+                                        <span className="status-dot"></span>
+                                        {station.status}
+                                    </div>
+                                </div>
+
+                                <div className="card-content">
+                                    <div className="availability-section">
+                                        <div className={`availability-badge ${getAvailabilityColor(availability)}`}>
+                                            {getAvailabilityText(availability)}
+                                        </div>
+                                        <span className="location">Số cổng: {station.ports?.length || 0}</span>
+                                    </div>
+
+                                    <div className="slot-summary">
+                                        <div className="summary-chip green">
+                                            Trống: {slotSummary.available || 0}
+                                        </div>
+                                        <div className="summary-chip blue">
+                                            Đang sạc: {slotSummary.in_use || 0}
+                                        </div>
+                                        <div className="summary-chip orange">
+                                            Giữ chỗ: {slotSummary.booked || 0}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Station Detail Modal */}
-            {selectedStation && (
+            {selectedStation && !loading && (
                 <div className="station-modal-overlay" onClick={() => setSelectedStation(null)}>
                     <div className="station-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Chi tiết trụ sạc {selectedStation.id}</h3>
-                            <button
-                                className="close-btn"
-                                onClick={() => setSelectedStation(null)}
-                            >
-                                ✕
-                            </button>
-                        </div>
                         <div className="modal-content">
-                            <div className="detail-grid">
+                            <div className="modal-header">
+                                <div className="modal-title">
+                                    <h3>{selectedStation.name || selectedStation.id}</h3>
+                                    <div className={`status-badge ${getStatusColor(selectedStation.status)}`}>
+                                        <span className="status-dot"></span>
+                                        {selectedStation.status === 'active' ? 'Online' : 'Offline'}
+                                    </div>
+                                </div>
+                                <button className="close-btn" onClick={() => setSelectedStation(null)}>×</button>
+                            </div>
+
+                            <div className="modal-body">
                                 <div className="detail-section">
-                                    <h4>Thông tin cơ bản</h4>
-                                    <div className="detail-items">
+                                    <h4>Thông tin chung</h4>
+                                    <div className="detail-grid">
                                         <div className="detail-item">
-                                            <span className="label">Loại:</span>
-                                            <span className="value">{selectedStation.type} - {selectedStation.power}</span>
+                                            <span className="label">Địa chỉ:</span>
+                                            <span className="value">{selectedStation.address || "N/A"}</span>
                                         </div>
                                         <div className="detail-item">
-                                            <span className="label">Vị trí:</span>
-                                            <span className="value">{selectedStation.location}</span>
+                                            <span className="label">Nhà cung cấp:</span>
+                                            <span className="value">{selectedStation.provider || "N/A"}</span>
                                         </div>
                                         <div className="detail-item">
-                                            <span className="label">Trạng thái:</span>
-                                            <span className={`value ${getStatusColor(selectedStation.status)}`}>
-                                                {selectedStation.status === "online" ? "Online" : "Offline"}
+                                            <span className="label">Tọa độ:</span>
+                                            <span className="value">
+                                                {selectedStation.latitude?.toFixed(6)}, {selectedStation.longitude?.toFixed(6)}
                                             </span>
                                         </div>
                                         <div className="detail-item">
-                                            <span className="label">Tình trạng:</span>
-                                            <span className={`value ${getAvailabilityColor(selectedStation.availability)}`}>
-                                                {getAvailabilityText(selectedStation.availability)}
-                                            </span>
+                                            <span className="label">Số cổng sạc:</span>
+                                            <span className="value">{selectedStation.ports?.length || 0}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="detail-section">
-                                    <h4>Thống kê</h4>
-                                    <div className="detail-items">
-                                        <div className="detail-item">
-                                            <span className="label">Tổng phiên sạc:</span>
-                                            <span className="value">{selectedStation.totalSessions}</span>
-                                        </div>
-                                        <div className="detail-item">
-                                            <span className="label">Tổng năng lượng:</span>
-                                            <span className="value">{selectedStation.totalEnergy}</span>
-                                        </div>
-                                        <div className="detail-item">
-                                            <span className="label">Hiệu suất:</span>
-                                            <span className="value">{selectedStation.efficiency}%</span>
-                                        </div>
-                                        <div className="detail-item">
-                                            <span className="label">Bảo trì cuối:</span>
-                                            <span className="value">{selectedStation.lastMaintenance}</span>
-                                        </div>
+                                    <h4>Trạng thái cổng sạc</h4>
+                                    <div className="ports-list">
+                                        {selectedStation.ports && selectedStation.ports.length > 0 ? (
+                                            selectedStation.ports.map((port, idx) => (
+                                                <div key={idx} className="port-item">
+                                                    <div className="port-header">
+                                                        <span className="port-type">{port.type} - {port.powerKw}kW</span>
+                                                        <span className={`port-status ${port.status === 'available' ? 'green' : 'red'}`}>
+                                                            {port.status === 'available' ? 'Hoạt động' : 'Bảo trì'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="port-slots">
+                                                        {port.slots && port.slots.map((slot, sIdx) => (
+                                                            <span key={sIdx} className={`slot-badge ${slot.status}`}>
+                                                                Slot {slot.slotNumber || sIdx + 1}: {
+                                                                    slot.status === 'available' ? 'Trống' :
+                                                                        slot.status === 'in_use' ? 'Đang sạc' : 'Đã đặt'
+                                                                }
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="muted">Chưa có thông tin cổng sạc</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
 
-                            {selectedStation.currentSession && (
-                                <div className="detail-section">
-                                    <h4>Phiên sạc hiện tại</h4>
-                                    <div className="current-session-detail">
-                                        <div className="session-info">
-                                            <div className="info-item">
-                                                <span className="label">Biển số:</span>
-                                                <span className="value">{selectedStation.currentSession.licensePlate}</span>
-                                            </div>
-                                            <div className="info-item">
-                                                <span className="label">Bắt đầu:</span>
-                                                <span className="value">{selectedStation.currentSession.startTime}</span>
-                                            </div>
-                                            <div className="info-item">
-                                                <span className="label">Tiến độ:</span>
-                                                <span className="value">{selectedStation.currentSession.progress}%</span>
-                                            </div>
-                                            <div className="info-item">
-                                                <span className="label">Dự kiến kết thúc:</span>
-                                                <span className="value">{selectedStation.currentSession.estimatedEnd}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {selectedStation.issue && (
-                                <div className="detail-section">
-                                    <h4>Sự cố</h4>
-                                    <div className="issue-detail">
-                                        <div className="issue-alert">
-                                            <span className="issue-icon">⚠️</span>
-                                            <span className="issue-text">{selectedStation.issue}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        <div className="modal-actions">
-                            <button
-                                className="btn-secondary"
-                                onClick={() => setSelectedStation(null)}
-                            >
-                                Đóng
-                            </button>
-                            <button
-                                className="btn-primary"
-                                onClick={() => handleMaintenance(selectedStation.id)}
-                            >
-                                Bảo trì
-                            </button>
+                            <div className="modal-actions">
+                                <button
+                                    className="btn-secondary"
+                                    onClick={() => setSelectedStation(null)}
+                                >
+                                    Đóng
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

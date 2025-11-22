@@ -176,6 +176,7 @@ body {
   border-radius: 30px;
   padding: 6px 12px;
   box-shadow: 0 4px 16px rgba(25, 135, 84, 0.15);
+  position: relative;
 }
 
 .header__notification-btn {
@@ -247,6 +248,10 @@ body {
   display: flex;
   align-items: center;
   text-decoration: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .header__avatar {
@@ -261,6 +266,43 @@ body {
 .header__avatar:hover {
   transform: scale(1.1);
   box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+.header__user-menu {
+  position: absolute;
+  top: 58px;
+  right: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(25, 135, 84, 0.2);
+  box-shadow: 0 10px 30px rgba(25, 135, 84, 0.15);
+  border-radius: 16px;
+  min-width: 200px;
+  padding: 10px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: all 0.2s ease;
+  z-index: 20;
+
+  &.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  a {
+    display: block;
+    padding: 10px 16px;
+    color: #333333;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+
+    &:hover {
+      background: rgba(25, 135, 84, 0.08);
+      color: #198754;
+    }
+  }
 }
 
 .header__logout-btn {

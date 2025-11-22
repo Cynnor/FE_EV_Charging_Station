@@ -1,3 +1,5 @@
+@use "sass:color";
+
 // ===== COLOR PALETTE (synchronized with overview) =====
 $primary-green: #198754;
 $primary-green-hover: #146c43;
@@ -23,6 +25,18 @@ $shadow-md: 0 4px 16px rgba(25, 135, 84, 0.12);
             font-size: 28px;
             font-weight: 700;
             color: $text-dark;
+        }
+
+        .pill.subtle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: $text-dark;
+            font-weight: 700;
+            font-size: 13px;
         }
 
         p {
@@ -181,7 +195,7 @@ $shadow-md: 0 4px 16px rgba(25, 135, 84, 0.12);
                     font-family: inherit;
 
                     &:hover {
-                        border-color: lighten($primary-green, 20%);
+                        border-color: color.adjust($primary-green, $lightness: 20%);
                         background: rgba(25, 135, 84, 0.02);
                     }
 
@@ -430,6 +444,11 @@ $shadow-md: 0 4px 16px rgba(25, 135, 84, 0.12);
             }
         }
 
+        .payment-type {
+            font-size: 12px;
+            color: $text-light;
+        }
+
         .amount {
             font-weight: 700;
             color: $text-dark;
@@ -659,8 +678,8 @@ $shadow-md: 0 4px 16px rgba(25, 135, 84, 0.12);
 
             .detail-grid {
                 display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 16px;
 
                 .detail-item {
                     display: flex;
@@ -668,11 +687,20 @@ $shadow-md: 0 4px 16px rgba(25, 135, 84, 0.12);
                     gap: 8px;
                     padding: 16px;
                     background: rgba(25, 135, 84, 0.03);
-                    border-radius: 12px;
+                    border-radius: 14px;
                     border: 1px solid $border-color;
 
                     &.full-width {
                         grid-column: 1 / -1;
+                    }
+
+                    &.highlight {
+                        background: linear-gradient(135deg, rgba(25, 135, 84, 0.08), #ffffff);
+                        border: 1px solid rgba(25, 135, 84, 0.2);
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 12px;
                     }
 
                     label {
@@ -681,6 +709,22 @@ $shadow-md: 0 4px 16px rgba(25, 135, 84, 0.12);
                         color: $text-light;
                         text-transform: uppercase;
                         letter-spacing: 0.05em;
+                    }
+
+                    .micro-label {
+                        margin: 0 0 4px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        color: $text-light;
+                        font-weight: 700;
+                        font-size: 11px;
+                    }
+
+                    .amount-stack {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-end;
+                        gap: 6px;
                     }
 
                     span {

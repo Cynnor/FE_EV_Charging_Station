@@ -20,21 +20,6 @@ const StaffHeader = ({ title, subtitle }) => {
         return () => document.removeEventListener('click', handleClickOutside);
     }, [showUserMenu]);
 
-    const handleLogout = () => {
-        try {
-            // Xóa thông tin xác thực
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            // Xóa các state thanh toán tạm thời nếu có
-            localStorage.removeItem('paymentVehicleId');
-            localStorage.removeItem('paymentReservationId');
-            localStorage.removeItem('pendingSubscriptionId');
-        } catch (e) {
-            // no-op
-        }
-        setShowUserMenu(false);
-        navigate('/login');
-    };
 
     const notifications = [
         {
@@ -62,6 +47,12 @@ const StaffHeader = ({ title, subtitle }) => {
             unread: false,
         },
     ];
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+    };
 
     return (
         <>

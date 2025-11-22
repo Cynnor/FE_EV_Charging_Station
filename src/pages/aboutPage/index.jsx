@@ -47,7 +47,7 @@ const AboutPage = () => {
               style={{ width: "100%", height: "50%", objectFit: "cover" }}
             />
             <img
-              src="/assets/banner.jpg"
+              src="/assets/about_img.jpg"
               alt="Ảnh giới thiệu 2"
               style={{ width: "100%", height: "50%", objectFit: "cover" }}
             />
@@ -57,7 +57,7 @@ const AboutPage = () => {
             className="intro-content"
             style={{ marginRight: "10px", flex: 1 }}
           >
-            <h2>Giới thiệu về Touch To Charge</h2>
+            <h2>Giới thiệu Touch To Charge</h2>
             <p>
               Touch To Charge là đơn vị tiên phong trong việc phát triển và vận
               hành hệ thống trạm sạc xe điện thông minh tại Việt Nam. Với định

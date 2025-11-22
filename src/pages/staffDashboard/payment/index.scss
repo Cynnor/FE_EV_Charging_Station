@@ -1,26 +1,43 @@
+// Staff payment page - green/white theme
+$page-bg: linear-gradient(135deg, #f9fbf8 0%, #f1f5f9 50%, #eefcf3 100%);
+$card-bg: #ffffff;
+$border: #e2e8f0;
+$shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+$text: #0f172a;
+$muted: #64748b;
+$accent: #16a34a;
+$success: #16a34a;
+
 .payment-content {
+    padding: 28px;
+    background: $page-bg;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
     .payment-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 32px;
-        padding: 24px;
-        background: white;
+        margin-bottom: 16px;
+        padding: 20px 24px;
+        background: $card-bg;
         border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid #f1f5f9;
+        box-shadow: $shadow;
+        border: 1px solid $border;
 
         .header-left {
             h2 {
                 margin: 0 0 4px 0;
                 font-size: 24px;
                 font-weight: 700;
-                color: #1e293b;
+                color: $text;
             }
 
             p {
                 margin: 0;
-                color: #64748b;
+                color: $muted;
                 font-size: 14px;
             }
         }
@@ -28,7 +45,7 @@
         .header-right {
             .payment-stats {
                 display: flex;
-                gap: 32px;
+                gap: 16px;
 
                 .stat-item {
                     display: flex;
@@ -38,587 +55,121 @@
 
                     .label {
                         font-size: 12px;
-                        color: #64748b;
+                        color: $muted;
                     }
 
                     .value {
                         font-size: 18px;
                         font-weight: 700;
-                        color: #7ed321;
+                        color: $accent;
                     }
                 }
             }
         }
     }
 
-    .payment-tabs {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 24px;
-        background: white;
-        padding: 8px;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid #f1f5f9;
+    .payment-history {
+        .history-table {
+            background: $card-bg;
+            border-radius: 16px;
+            box-shadow: $shadow;
+            border: 1px solid $border;
+            overflow: hidden;
 
-        .tab {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 16px;
-            background: none;
-            border: none;
-            border-radius: 8px;
-            color: #64748b;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-
-            &:hover {
-                background: #f8fafc;
-                color: #475569;
-            }
-
-            &.active {
-                background: linear-gradient(135deg, #7ed321, #a3e635);
-                color: white;
-                box-shadow: 0 2px 8px rgba(126, 211, 33, 0.3);
-            }
-
-            .icon {
-                font-size: 16px;
-            }
-        }
-    }
-
-    .payment-content-area {
-        .process-payment {
-            .payment-grid {
+            .table-header {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 32px;
+                grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+                gap: 16px;
+                padding: 16px 20px;
+                background: #f7fbf7;
+                border-bottom: 1px solid $border;
+                font-size: 13px;
+                font-weight: 700;
+                color: $muted;
 
-                .pending-sessions {
-                    .section-header {
-                        margin-bottom: 20px;
-
-                        h3 {
-                            margin: 0 0 4px 0;
-                            font-size: 18px;
-                            font-weight: 700;
-                            color: #1e293b;
-                        }
-
-                        p {
-                            margin: 0;
-                            color: #64748b;
-                            font-size: 14px;
-                        }
-                    }
-
-                    .sessions-list {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 16px;
-
-                        .session-item {
-                            background: white;
-                            border: 2px solid #f1f5f9;
-                            border-radius: 12px;
-                            padding: 20px;
-                            cursor: pointer;
-                            transition: all 0.2s;
-
-                            &:hover {
-                                border-color: #7ed321;
-                                transform: translateY(-1px);
-                                box-shadow: 0 4px 12px rgba(126, 211, 33, 0.1);
-                            }
-
-                            &.selected {
-                                border-color: #7ed321;
-                                background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-                                box-shadow: 0 4px 12px rgba(126, 211, 33, 0.2);
-                            }
-
-                            .session-header {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                margin-bottom: 16px;
-
-                                .station-info {
-                                    display: flex;
-                                    flex-direction: column;
-                                    gap: 4px;
-
-                                    .station-id {
-                                        font-size: 14px;
-                                        font-weight: 600;
-                                        color: #64748b;
-                                    }
-
-                                    .license-plate {
-                                        font-size: 16px;
-                                        font-weight: 700;
-                                        color: #7ed321;
-                                    }
-                                }
-
-                                .cost {
-                                    font-size: 18px;
-                                    font-weight: 700;
-                                    color: #7ed321;
-                                }
-                            }
-
-                            .session-details {
-                                display: flex;
-                                flex-direction: column;
-                                gap: 8px;
-
-                                .detail-item {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-
-                                    .label {
-                                        font-size: 13px;
-                                        color: #64748b;
-                                    }
-
-                                    .value {
-                                        font-size: 14px;
-                                        font-weight: 600;
-                                        color: #1e293b;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                .payment-form {
-                    .section-header {
-                        margin-bottom: 20px;
-
-                        h3 {
-                            margin: 0 0 4px 0;
-                            font-size: 18px;
-                            font-weight: 700;
-                            color: #1e293b;
-                        }
-
-                        p {
-                            margin: 0;
-                            color: #64748b;
-                            font-size: 14px;
-                        }
-                    }
-
-                    .form-content {
-                        background: white;
-                        border-radius: 12px;
-                        padding: 24px;
-                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                        border: 1px solid #f1f5f9;
-
-                        .session-summary {
-                            margin-bottom: 24px;
-                            padding: 20px;
-                            background: #f8fafc;
-                            border-radius: 12px;
-                            border: 1px solid #e2e8f0;
-
-                            .summary-item {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                margin-bottom: 12px;
-
-                                &:last-child {
-                                    margin-bottom: 0;
-                                }
-
-                                &.total {
-                                    padding-top: 12px;
-                                    border-top: 1px solid #e2e8f0;
-                                    font-weight: 700;
-
-                                    .value {
-                                        font-size: 18px;
-                                        color: #7ed321;
-                                    }
-                                }
-
-                                .label {
-                                    font-size: 14px;
-                                    color: #64748b;
-                                }
-
-                                .value {
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    color: #1e293b;
-                                }
-                            }
-                        }
-
-                        .payment-methods {
-                            margin-bottom: 24px;
-
-                            h4 {
-                                margin: 0 0 16px 0;
-                                font-size: 16px;
-                                font-weight: 600;
-                                color: #1e293b;
-                            }
-
-                            .methods-grid {
-                                display: grid;
-                                grid-template-columns: repeat(3, 1fr);
-                                gap: 12px;
-
-                                .method-btn {
-                                    display: flex;
-                                    flex-direction: column;
-                                    align-items: center;
-                                    gap: 8px;
-                                    padding: 16px 12px;
-                                    background: #f8fafc;
-                                    border: 2px solid #e2e8f0;
-                                    border-radius: 12px;
-                                    cursor: pointer;
-                                    transition: all 0.2s;
-
-                                    &:hover {
-                                        border-color: #7ed321;
-                                        background: #f0fdf4;
-                                    }
-
-                                    &.selected {
-                                        border-color: #7ed321;
-                                        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-                                        box-shadow: 0 2px 8px rgba(126, 211, 33, 0.2);
-                                    }
-
-                                    .icon {
-                                        font-size: 24px;
-                                    }
-
-                                    .label {
-                                        font-size: 12px;
-                                        font-weight: 500;
-                                        color: #1e293b;
-                                    }
-                                }
-                            }
-                        }
-
-                        .qr-section {
-                            margin-bottom: 24px;
-                            padding: 20px;
-                            background: #f8fafc;
-                            border-radius: 12px;
-                            border: 1px solid #e2e8f0;
-                            text-align: center;
-
-                            h4 {
-                                margin: 0 0 16px 0;
-                                font-size: 16px;
-                                font-weight: 600;
-                                color: #1e293b;
-                            }
-
-                            .qr-code {
-                                margin-bottom: 16px;
-
-                                .qr-placeholder {
-                                    display: inline-block;
-                                    padding: 40px;
-                                    background: white;
-                                    border-radius: 12px;
-                                    border: 2px dashed #7ed321;
-
-                                    .qr-icon {
-                                        font-size: 48px;
-                                        display: block;
-                                        margin-bottom: 8px;
-                                    }
-
-                                    p {
-                                        margin: 0 0 4px 0;
-                                        font-size: 14px;
-                                        color: #64748b;
-                                    }
-
-                                    .amount {
-                                        font-size: 16px;
-                                        font-weight: 700;
-                                        color: #7ed321;
-                                    }
-                                }
-                            }
-
-                            .qr-instruction {
-                                margin: 0;
-                                font-size: 13px;
-                                color: #64748b;
-                            }
-                        }
-
-                        .form-actions {
-                            display: flex;
-                            gap: 12px;
-
-                            .btn-secondary {
-                                flex: 1;
-                                padding: 12px 16px;
-                                background: #f1f5f9;
-                                border: 1px solid #e2e8f0;
-                                border-radius: 8px;
-                                color: #64748b;
-                                font-size: 14px;
-                                font-weight: 500;
-                                cursor: pointer;
-                                transition: all 0.2s;
-
-                                &:hover {
-                                    background: #e2e8f0;
-                                    color: #475569;
-                                }
-                            }
-
-                            .btn-primary {
-                                flex: 1;
-                                padding: 12px 16px;
-                                background: linear-gradient(135deg, #7ed321, #a3e635);
-                                border: none;
-                                border-radius: 8px;
-                                color: white;
-                                font-size: 14px;
-                                font-weight: 600;
-                                cursor: pointer;
-                                transition: all 0.2s;
-
-                                &:hover {
-                                    transform: translateY(-1px);
-                                    box-shadow: 0 4px 12px rgba(126, 211, 33, 0.3);
-                                }
-                            }
-                        }
-                    }
-
-                    .no-selection {
-                        background: white;
-                        border-radius: 12px;
-                        padding: 60px 24px;
-                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                        border: 1px solid #f1f5f9;
-                        text-align: center;
-
-                        .no-selection-content {
-                            .icon {
-                                font-size: 48px;
-                                display: block;
-                                margin-bottom: 16px;
-                                opacity: 0.5;
-                            }
-
-                            h4 {
-                                margin: 0 0 8px 0;
-                                font-size: 18px;
-                                font-weight: 600;
-                                color: #1e293b;
-                            }
-
-                            p {
-                                margin: 0;
-                                color: #64748b;
-                                font-size: 14px;
-                                line-height: 1.5;
-                            }
-                        }
-                    }
-                }
+                .col { text-align: left; }
             }
-        }
 
-        .payment-history {
-            .history-table {
-                background: white;
-                border-radius: 16px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                border: 1px solid #f1f5f9;
-                overflow: hidden;
-
-                .table-header {
+            .table-body {
+                .table-row {
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1fr 1.5fr 1fr 1fr 1fr 1fr 1fr;
+                    grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
                     gap: 16px;
-                    padding: 20px 24px;
-                    background: #f8fafc;
-                    border-bottom: 1px solid #e2e8f0;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #475569;
+                    padding: 16px 20px;
+                    border-bottom: 1px solid $border;
+                    transition: background 0.2s;
+
+                    &:hover { background: #f7fbf7; }
+                    &:last-child { border-bottom: none; }
 
                     .col {
-                        text-align: left;
-                    }
-                }
+                        display: flex;
+                        align-items: center;
+                        font-size: 13px;
 
-                .table-body {
-                    .table-row {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr 1fr 1.5fr 1fr 1fr 1fr 1fr 1fr;
-                        gap: 16px;
-                        padding: 20px 24px;
-                        border-bottom: 1px solid #f1f5f9;
-                        transition: background 0.2s;
+                        .station-id { font-weight: 700; color: $text; }
+                        .license-plate { font-weight: 700; color: $accent; }
 
-                        &:hover {
-                            background: #f8fafc;
-                        }
-
-                        &:last-child {
-                            border-bottom: none;
-                        }
-
-                        .col {
+                        .time-info {
                             display: flex;
+                            flex-direction: column;
+                            gap: 2px;
+                            .start, .end { color: $text; font-weight: 600; }
+                        }
+
+                        .customer-info {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 2px;
+                            .name { font-weight: 600; color: $text; }
+                            .phone { font-size: 12px; color: $muted; }
+                        }
+
+                        .status {
+                            display: inline-flex;
                             align-items: center;
-                            font-size: 13px;
-
-                            .session-id {
-                                font-weight: 600;
-                                color: #64748b;
-                            }
-
-                            .station-id {
-                                font-weight: 600;
-                                color: #64748b;
-                            }
-
-                            .license-plate {
-                                font-weight: 700;
-                                color: #7ed321;
-                            }
-
-                            .customer-name {
-                                font-weight: 600;
-                                color: #1e293b;
-                            }
-
-                            .amount {
-                                font-weight: 700;
-                                color: #7ed321;
-                            }
-
-                            .payment-method {
-                                padding: 4px 8px;
-                                border-radius: 6px;
-                                font-size: 12px;
-                                font-weight: 500;
-
-                                &.qr-code {
-                                    background: #dbeafe;
-                                    color: #1e40af;
-                                }
-
-                                &.tiền-mặt {
-                                    background: #dcfce7;
-                                    color: #166534;
-                                }
-
-                                &.thẻ {
-                                    background: #fef3c7;
-                                    color: #92400e;
-                                }
-                            }
-
-                            .payment-time {
-                                font-weight: 500;
-                                color: #1e293b;
-                            }
-
-                            .status {
-                                display: flex;
-                                align-items: center;
-                                gap: 6px;
-                                font-size: 12px;
-                                font-weight: 500;
-                                color: #059669;
-
-                                .status-dot {
-                                    width: 6px;
-                                    height: 6px;
-                                    border-radius: 50%;
-                                    background: #059669;
-                                }
-                            }
-
-                            .btn-small {
-                                padding: 6px 12px;
-                                background: #f1f5f9;
-                                border: 1px solid #e2e8f0;
-                                border-radius: 6px;
-                                color: #64748b;
-                                font-size: 12px;
-                                font-weight: 500;
-                                cursor: pointer;
-                                transition: all 0.2s;
-
-                                &:hover {
-                                    background: #e2e8f0;
-                                    color: #475569;
-                                }
+                            gap: 6px;
+                            padding: 6px 10px;
+                            border-radius: 999px;
+                            background: #ecfdf3;
+                            color: $success;
+                            font-weight: 700;
+                            font-size: 12px;
+                            .status-dot {
+                                width: 6px;
+                                height: 6px;
+                                border-radius: 50%;
+                                background: $success;
                             }
                         }
                     }
                 }
             }
         }
-    }
-}
 
-@media (max-width: 1200px) {
-    .payment-content {
-        .payment-grid {
-            grid-template-columns: 1fr !important;
-        }
+        .history-footer {
+            margin-top: 16px;
+            display: flex;
+            justify-content: flex-end;
 
-        .table-header,
-        .table-row {
-            grid-template-columns: 1fr 1fr 1fr 1fr 1fr !important;
-        }
-    }
-}
+            .btn-secondary {
+                padding: 10px 16px;
+                border-radius: 10px;
+                border: 1px solid $border;
+                background: #f8fafc;
+                color: $text;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
 
-@media (max-width: 768px) {
-    .payment-content {
-        .payment-header {
-            flex-direction: column;
-            gap: 16px;
-            align-items: stretch;
-        }
-
-        .payment-tabs {
-            flex-direction: column;
-        }
-
-        .methods-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-        .table-header,
-        .table-row {
-            grid-template-columns: 1fr 1fr !important;
-            gap: 8px !important;
-            padding: 12px 16px !important;
+                &:hover {
+                    border-color: $accent;
+                    color: $accent;
+                }
+            }
         }
     }
 }
+
+.muted { color: $muted; font-size: 13px; }
+.error-text { color: #dc2626; }

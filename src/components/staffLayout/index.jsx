@@ -5,20 +5,15 @@ import StaffHeader from "../staffHeader";
 import "./index.scss";
 
 const pathToTab = {
-    "": "overview",
-    "overview": "overview",
-    "charging-ChargingSessions": "charging-sessions",
+    "": "charging-sessions",
     "charging-sessions": "charging-sessions",
-    "payment": "payment",
     "station-status": "station-status",
     "reports": "reports",
     "profile": "profile",
 };
 
 const menuItems = [
-    { id: "overview", label: "Tổng quan" },
     { id: "charging-sessions", label: "Quản lý phiên sạc" },
-    { id: "payment", label: "Thanh toán tại trạm" },
     { id: "station-status", label: "Tình trạng điểm sạc" },
     { id: "reports", label: "Báo cáo & Sự cố" },
     { id: "profile", label: "Hồ sơ cá nhân" },
@@ -33,10 +28,11 @@ const StaffLayout = () => {
         const segments = location.pathname.split("/");
         // segments: ["", "staff", ...]
         const tab = segments[2] || "";
-        return pathToTab[tab] || "overview";
+        return pathToTab[tab] || "charging-sessions";
     };
 
     const [activeTab, setActiveTab] = useState(getActiveTabFromPath());
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useEffect(() => {
         setActiveTab(getActiveTabFromPath());
@@ -53,19 +49,36 @@ const StaffLayout = () => {
     };
 
     return (
-        <div className="staff-layout">
-            <StaffSidebar activeTab={activeTab} setActiveTab={handleTabChange} />
+        <div className={`staff-layout ${isSidebarOpen ? "" : "sidebar-hidden"}`}>
+            <StaffSidebar
+                activeTab={activeTab}
+                setActiveTab={handleTabChange}
+                hidden={!isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+            />
 
             <main className="staff-main-content">
                 <StaffHeader
                     title={getCurrentTitle()}
-                    subtitle="Chào mừng trở lại! Đây là tổng quan trạm sạc của bạn."
+                    subtitle="Quản lý phiên sạc, kiểm tra QR và vận hành trạm."
+                    onToggleSidebar={undefined}
+                    isSidebarOpen={isSidebarOpen}
                 />
 
                 <div className="staff-content-area">
                     <Outlet />
                 </div>
             </main>
+
+            {!isSidebarOpen && (
+                <button
+                    className="sidebar-reveal-tab"
+                    onClick={() => setIsSidebarOpen(true)}
+                    aria-label="Mở menu"
+                >
+                    ▶
+                </button>
+            )}
         </div>
     );
 };

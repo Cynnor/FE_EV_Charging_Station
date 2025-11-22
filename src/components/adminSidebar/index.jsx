@@ -1,37 +1,38 @@
-import "./index.scss";
+import "./index.scss"; // Import file styles cho sidebar
 
+// Component nhận props activeTab (tab đang active) và setActiveTab (hàm để thay đổi tab)
 const AdminSidebar = ({ activeTab, setActiveTab }) => {
+  // Mảng chứa danh sách các menu item trong sidebar
   const menuItems = [
-    { id: "overview", icon: "📊", label: "Tổng quan", path: "" },
     {
-      id: "station-management",
-      icon: "⚡",
-      label: "Quản lý trạm sạc",
-      path: "station-management",
+      id: "station-management", // ID định danh cho menu quản lý trạm sạc
+      icon: "⚡", // Icon hiển thị cho menu
+      label: "Quản lý trạm sạc", // Nhãn hiển thị cho menu
+      path: "station-management", // Đường dẫn khi click vào menu
     },
     {
-      id: "user-management",
-      icon: "👥",
-      label: "Quản lý người dùng",
-      path: "user-management",
+      id: "user-management", // ID định danh cho menu quản lý người dùng
+      icon: "👥", // Icon hiển thị
+      label: "Quản lý người dùng", // Nhãn hiển thị
+      path: "user-management", // Đường dẫn
     },
     {
-      id: "subscription-management",
-      icon: "📦",
-      label: "Quản lý gói đăng ký",
-      path: "subscription-management",
+      id: "subscription-management", // ID định danh cho menu quản lý gói đăng ký
+      icon: "📦", // Icon hiển thị
+      label: "Quản lý gói đăng ký", // Nhãn hiển thị
+      path: "subscription-management", // Đường dẫn
     },
     {
-      id: "transaction-management",
-      icon: "💳",
-      label: "Quản lý giao dịch",
-      path: "transaction-management",
+      id: "stats-reports", // ID định danh cho menu thống kê
+      icon: "📊", // Icon hiển thị
+      label: "Thống kê", // Nhãn hiển thị
+      path: "analytics", // Đường dẫn
     },
     {
-      id: "revenue-management",
-      icon: "💰",
-      label: "Báo cáo doanh thu",
-      path: "revenue-management",
+      id: "report-management", // ID định danh cho menu quản lý báo cáo
+      icon: "📝", // Icon hiển thị
+      label: "Quản lý báo cáo", // Nhãn hiển thị
+      path: "report", // Đường dẫn
     },
   ];
 
@@ -45,17 +46,23 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            className={`nav-item ${activeTab === item.id ? "active" : ""}`}
-            onClick={() => setActiveTab(item.id, item.path)}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            <span className="nav-label">{item.label}</span>
-            {activeTab === item.id && <div className="active-indicator"></div>}
-          </button>
-        ))}
+        {menuItems.map(
+          (
+            item // Duyệt qua từng menu item để render
+          ) => (
+            <button
+              key={item.id} // Key duy nhất cho mỗi menu item
+              className={`nav-item ${activeTab === item.id ? "active" : ""}`} // Thêm class 'active' nếu item này đang được chọn
+              onClick={() => setActiveTab(item.id, item.path)} // Gọi hàm setActiveTab với ID và path khi click
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-label">{item.label}</span>
+              {activeTab === item.id && (
+                <div className="active-indicator"></div>
+              )}
+            </button>
+          )
+        )}
       </nav>
 
       <div className="sidebar-footer">
@@ -71,4 +78,4 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
   );
 };
 
-export default AdminSidebar;
+export default AdminSidebar; // Export component để sử dụng ở nơi khác

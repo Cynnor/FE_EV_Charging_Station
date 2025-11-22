@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../../config/api";
 import "./index.scss";
@@ -6,6 +6,8 @@ import "./index.scss";
 const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("User");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   // const [notificationCount, setNotificationCount] = useState(3) // Mock notification count
   const location = useLocation();
 
@@ -43,9 +45,20 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
+    setIsMenuOpen(false);
     // Redirect về trang chủ sau khi đăng xuất
     window.location.href = "/";
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // const handleNotificationClick = () => {
   //   console.log("Notification clicked")
@@ -104,8 +117,12 @@ const Header = () => {
                 </Link>
               </div>
             ) : (
-              <div className="header__user">
-                <Link to="/profile" className="header__avatar-link">
+              <div className="header__user" ref={menuRef}>
+                <button
+                  className="header__avatar-link"
+                  onClick={() => setIsMenuOpen((prev) => !prev)}
+                  aria-label="Mở menu tài khoản"
+                >
                   <img
                     src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
                       userName
@@ -113,7 +130,21 @@ const Header = () => {
                     alt="avatar"
                     className="header__avatar"
                   />
-                </Link>
+                </button>
+                <div className={`header__user-menu ${isMenuOpen ? "open" : ""}`}>
+                  <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                    Hồ sơ cá nhân
+                  </Link>
+                  <Link to="/profile/history" onClick={() => setIsMenuOpen(false)}>
+                    Lịch sử đặt chỗ
+                  </Link>
+                  <Link to="/profile/membership" onClick={() => setIsMenuOpen(false)}>
+                    Gói dịch vụ
+                  </Link>
+                  <Link to="/profile/transactions" onClick={() => setIsMenuOpen(false)}>
+                    Lịch sử giao dịch
+                  </Link>
+                </div>
                 <button className="header__logout-btn" onClick={handleLogout}>
                   Đăng xuất
                 </button>

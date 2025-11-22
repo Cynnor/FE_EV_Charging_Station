@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/homePage";
 import ChargingStationsPage from "./pages/chargingStationPage/index";
 import AboutPage from "./pages/aboutPage/index";
@@ -14,14 +14,12 @@ import ChargingSession from "./pages/chargingSessionPage";
 import BookingSuccessPage from "./pages/bookingSuccessPage";
 import ProtectedRoute from "./config/ProtectedRoute";
 import AdminLayout from "./components/adminLayout/index";
-import Overview from "./pages/adminDashboard/overViewManagement/index";
 import StationManagement from "./pages/adminDashboard/stationManagement/index";
 import UserManagement from "./pages/adminDashboard/userManagement/index";
 import SubscriptionManagement from "./pages/adminDashboard/subscriptionManagement/index";
-import TransactionManagement from "./pages/adminDashboard/transactionManagement/index";
-import RevenueManagement from "./pages/adminDashboard/revenueManagement/index";
+import StatsReports from "./pages/adminDashboard/statsReports/index.jsx";
+import AdminReports from "./pages/adminDashboard/reports/index.jsx";
 import StaffLayout from "./components/staffLayout/index";
-import OverviewStaff from "./pages/staffDashboard/Overview/index";
 import ChargingSessions from "./pages/staffDashboard/chargingSessions/index";
 import StationStatus from "./pages/staffDashboard/stationStatus/index";
 import Reports from "./pages/staffDashboard/reports/index";
@@ -39,7 +37,10 @@ function App() {
         { path: "charging-stations", element: <ChargingStationsPage /> },
         { path: "about", element: <AboutPage /> },
         // { path: "support", element: <SupportPage /> },
-        { path: "profile", element: <ProfilePage /> },
+        { path: "profile", element: <ProfilePage initialView="personal" /> },
+        { path: "profile/history", element: <ProfilePage initialView="history" /> },
+        { path: "profile/membership", element: <ProfilePage initialView="membership" /> },
+        { path: "profile/transactions", element: <ProfilePage initialView="transactions" /> },
         { path: "booking/:stationId", element: <BookingPage /> },
         { path: "booking", element: <BookingPage /> },
         // { path: "payment", element: <PaymentPage /> },
@@ -79,15 +80,17 @@ function App() {
         </ProtectedRoute>
       ),
       children: [
-        { path: "", element: <Overview /> },
+        { index: true, element: <Navigate to="station-management" replace /> },
         { path: "station-management", element: <StationManagement /> },
         { path: "user-management", element: <UserManagement /> },
         {
           path: "subscription-management",
           element: <SubscriptionManagement />,
         },
-        { path: "transaction-management", element: <TransactionManagement /> },
-        { path: "revenue-management", element: <RevenueManagement /> },
+        { path: "transaction-management", element: <StatsReports /> },
+        { path: "revenue-management", element: <StatsReports /> },
+        { path: "analytics", element: <StatsReports /> },
+        { path: "report", element: <AdminReports /> },
       ],
     },
     {
@@ -98,9 +101,7 @@ function App() {
         </ProtectedRoute>
       ),
       children: [
-        { path: "", element: <OverviewStaff /> },
-        { path: "charging-ChargingSessions", element: <ChargingSessions /> },
-        { path: "payment", element: <Payment /> },
+        { path: "", element: <ChargingSessions /> },
         { path: "station-status", element: <StationStatus /> },
         { path: "reports", element: <Reports /> },
         { path: "profile", element: <Profile /> },

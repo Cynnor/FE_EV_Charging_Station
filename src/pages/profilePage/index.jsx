@@ -1,26 +1,45 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useCallback, useMemo } from "react";
 import "./index.scss";
 import api from "../../config/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import CustomPopup from "../../components/customPopup";
 import ConfirmPopup from "../../components/confirmPopup/index.jsx";
 import ChangePasswordPopup from "../../components/changePasswordPopup/index.jsx";
-import { BrowserQRCodeReader } from "@zxing/browser";
 import {
   MapPin,
   X,
   Zap,
+  Crown,
   Calendar,
   Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
-  QrCode,
-  RefreshCcw,
 } from "lucide-react";
 
-const ProfilePage = () => {
+const ProfilePage = ({ initialView }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const derivedView =
+    initialView ||
+    (location.pathname.includes("/profile/history")
+      ? "history"
+      : location.pathname.includes("/profile/membership")
+      ? "membership"
+      : location.pathname.includes("/profile/transactions")
+      ? "transactions"
+      : "personal");
+  const isPersonalView = derivedView === "personal";
+  const isHistoryView = derivedView === "history";
+  const isMembershipView = derivedView === "membership";
+  const isTransactionView = derivedView === "transactions";
+  const pageTitle = isMembershipView
+    ? "Gói dịch vụ"
+    : isHistoryView
+    ? "Lịch sử đặt chỗ"
+    : isTransactionView
+    ? "Lịch sử giao dịch"
+    : "Hồ sơ cá nhân";
   const [isEditing, setIsEditing] = useState(false);
   const [userInfo, setUserInfo] = useState({});
   const [originalUserInfo, setOriginalUserInfo] = useState({});
@@ -33,42 +52,186 @@ const ProfilePage = () => {
   const [isEditingVehicle, setIsEditingVehicle] = useState(false);
   const [vehicleErrors, setVehicleErrors] = useState({});
   const [defaultVehicleId, setDefaultVehicleId] = useState(null);
+  const [editingVehicleId, setEditingVehicleId] = useState(null);
 
   // ===== Station mapping =====
   const [stationMap, setStationMap] = useState({});
   const [portTypeMap, setPortTypeMap] = useState({});
-  const [userRole, setUserRole] = useState("");
-  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
-  const [qrScanError, setQrScanError] = useState("");
-  const [manualQrValue, setManualQrValue] = useState("");
-  const [isProcessingQr, setIsProcessingQr] = useState(false);
-  const [isBarcodeSupported, setIsBarcodeSupported] = useState(
-    typeof window !== "undefined" && "BarcodeDetector" in window
-  );
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const animationFrameRef = useRef(null);
-  const barcodeDetectorRef = useRef(null);
-  const zxingReaderRef = useRef(null);
-  const zxingControlsRef = useRef(null);
-  const processingRef = useRef(false);
-  const normalizedRole = (userRole || "").toLowerCase();
-  const canUseQrTools =
-    normalizedRole === "staff" || normalizedRole === "admin";
-  const roleDisplayLabel = userRole || normalizedRole.toUpperCase();
-  const qrStatusText = isProcessingQr
-    ? "Đang xác thực mã QR..."
-    : "Cho phép sử dụng camera và đưa mã QR vào khung hình để check-in.";
-
-  useEffect(() => {
-    processingRef.current = isProcessingQr;
-  }, [isProcessingQr]);
 
   const [reservations, setReservations] = useState([]);
   const [txLoading, setTxLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 5;
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [subscriptionPlanMap, setSubscriptionPlanMap] = useState({});
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [subscriptionError, setSubscriptionError] = useState("");
+  const [isCancellingSubscription, setIsCancellingSubscription] =
+    useState(false);
+  const [detailModal, setDetailModal] = useState({
+    isOpen: false,
+    loading: false,
+    error: "",
+    data: null,
+  });
+  const [transactions, setTransactions] = useState([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [transactionsError, setTransactionsError] = useState("");
+  const [transactionModal, setTransactionModal] = useState({
+    isOpen: false,
+    loading: false,
+    error: "",
+    data: null,
+  });
+  const formatCurrency = (amount = 0, currency = "VND") => {
+    const safeAmount = Number.isFinite(Number(amount)) ? Number(amount) : 0;
+    return `${new Intl.NumberFormat("vi-VN").format(safeAmount)} ${currency}`;
+  };
+  const getTransactionStatusText = (status) => {
+    if (status === "success") return "Thành công";
+    if (status === "pending") return "Đang xử lý";
+    if (status === "failed") return "Thất bại";
+    return status || "N/A";
+  };
+  const getTransactionStatusClass = (status) => {
+    if (status === "success") return "success";
+    if (status === "pending") return "pending";
+    if (status === "failed") return "failed";
+    return "pending";
+  };
+  const transactionSummary = useMemo(() => {
+    const total = transactions?.length || 0;
+    const successTransactions = transactions.filter(
+      (t) => t.status === "success"
+    );
+    const pendingTransactions = transactions.filter(
+      (t) => t.status === "pending"
+    );
+    const failedTransactions = transactions.filter(
+      (t) => t.status === "failed"
+    );
+    const totalSpent = successTransactions.reduce(
+      (sum, t) => sum + (t.amount || 0),
+      0
+    );
+    const latest = transactions[0] || {};
+
+    return {
+      total,
+      totalSpent,
+      success: successTransactions.length,
+      pending: pendingTransactions.length,
+      failed: failedTransactions.length,
+      lastMethod: latest.paymentMethod?.toUpperCase?.() || "N/A",
+      lastDate: latest.createdAt
+        ? new Date(latest.createdAt).toLocaleString("vi-VN")
+        : "",
+    };
+  }, [transactions]);
+
+  const formatSubscriptionPrice = (value) => {
+    if (value === undefined || value === null) return "0 VNĐ";
+    return new Intl.NumberFormat("vi-VN").format(value) + " VNĐ";
+  };
+
+  const formatSubscriptionDuration = (duration) => {
+    const map = {
+      "1_month": "1 tháng",
+      "6_months": "6 tháng",
+      "12_months": "12 tháng",
+    };
+    return map[duration] || duration || "";
+  };
+
+  const formatSubscriptionDate = (date) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("vi-VN");
+  };
+
+  const getSubscriptionStatusLabel = (status) => {
+    const map = {
+      current_active: "Đang hiệu lực",
+      active: "Có hiệu lực",
+      pending: "Chờ thanh toán",
+      expired: "Đã hết hạn",
+      cancelled: "Đã hủy",
+    };
+    return map[status] || status;
+  };
+
+  const loadSubscriptionData = useCallback(async () => {
+    try {
+      setSubscriptionLoading(true);
+      setSubscriptionError("");
+
+      const [currentRes, plansRes] = await Promise.allSettled([
+        api.get("/subscriptions/current-active"),
+        api.get("/subscription-plans"),
+      ]);
+
+      if (plansRes.status === "fulfilled" && plansRes.value.data?.success) {
+        const plans = plansRes.value.data.data || [];
+        const planMap = plans.reduce((acc, plan) => {
+          if (plan?._id) acc[plan._id] = plan;
+          return acc;
+        }, {});
+        setSubscriptionPlanMap(planMap);
+      }
+
+      if (currentRes.status === "fulfilled" && currentRes.value.data?.success) {
+        setCurrentSubscription(currentRes.value.data.data);
+      } else if (
+        currentRes.status === "rejected" &&
+        currentRes.reason?.response?.status === 404
+      ) {
+        setCurrentSubscription(null);
+      } else if (currentRes.status === "rejected") {
+        const message =
+          currentRes.reason?.response?.data?.message ||
+          "Không thể tải gói thành viên.";
+        setSubscriptionError(message);
+        setCurrentSubscription(null);
+      } else {
+        setCurrentSubscription(null);
+      }
+    } catch (error) {
+      const message =
+        error?.response?.data?.message || "Không thể tải gói thành viên.";
+      setSubscriptionError(message);
+      setCurrentSubscription(null);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  }, []);
+
+  const handleCancelSubscription = () => {
+    if (!currentSubscription) return;
+
+    showConfirmPopup(
+      "Bạn chắc chắn muốn hủy gói hiện tại? Bạn vẫn có thể sử dụng đến ngày hết hạn đã thanh toán.",
+      async () => {
+        try {
+          setIsCancellingSubscription(true);
+          const id = currentSubscription._id || currentSubscription.id;
+          await api.post(`/subscriptions/${id}/cancel`);
+          showPopup(
+            "Đã hủy gói thành viên. Bạn vẫn sử dụng được đến hết ngày hiệu lực.",
+            "success"
+          );
+          await loadSubscriptionData();
+        } catch (error) {
+          const message =
+            error?.response?.data?.message ||
+            "Không thể hủy gói thành viên. Vui lòng thử lại.";
+          showPopup(message, "error");
+        } finally {
+          setIsCancellingSubscription(false);
+          closeConfirmPopup();
+        }
+      }
+    );
+  };
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -82,10 +245,8 @@ const ProfilePage = () => {
   }, []);
 
   useEffect(() => {
-    setIsBarcodeSupported(
-      typeof window !== "undefined" && "BarcodeDetector" in window
-    );
-  }, []);
+    loadSubscriptionData();
+  }, [loadSubscriptionData]);
 
   // Add helper function to normalize reservations
   const normalizeReservations = (reservationList) => {
@@ -244,13 +405,6 @@ const ProfilePage = () => {
 
         setUserInfo(userData);
         setOriginalUserInfo(userData);
-        const detectedRole =
-          profileData.role ||
-          profileData.roleName ||
-          profileData.userRole ||
-          profileData?.roleInfo ||
-          "";
-        setUserRole(detectedRole || "");
       }
     } catch (error) {
       // console.error("Error fetching user data:", error);
@@ -382,58 +536,80 @@ const ProfilePage = () => {
     });
   };
 
-
   const handleChangePassword = async (oldPassword, newPassword) => {
     try {
       await api.put("/users/password", {
         oldPassword,
         newPassword,
       });
-      
+
       // Đóng popup trước khi hiện thông báo thành công
       setIsChangePasswordOpen(false);
-      
+
       showPopup("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.", "success");
-      
+
       // Auto logout sau 2 giây
       setTimeout(() => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login");
       }, 2000);
-      
     } catch (error) {
       // console.error("Error changing password:", error);
       const errorCode = error.response?.data?.code;
       const errorMessage = error.response?.data?.message;
-      
+
       // Xử lý các loại lỗi cụ thể - ưu tiên check mật khẩu hiện tại sai
       if (error.response?.status === 400 || error.response?.status === 401) {
         // Check mật khẩu hiện tại sai trước
         if (
-          errorMessage?.toLowerCase().includes("incorrect") || 
-          errorMessage?.toLowerCase().includes("wrong") || 
+          errorMessage?.toLowerCase().includes("incorrect") ||
+          errorMessage?.toLowerCase().includes("wrong") ||
           errorMessage?.toLowerCase().includes("current password") ||
           errorMessage?.toLowerCase().includes("old password") ||
           errorCode === "INCORRECT_PASSWORD" ||
           errorCode === "WRONG_PASSWORD"
         ) {
-          showPopup("Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại.", "error");
-        } else if (errorMessage?.toLowerCase().includes("same") || errorCode === "SAME_PASSWORD") {
-          showPopup("Mật khẩu mới không được trùng với mật khẩu hiện tại.", "warning");
-        } else if (errorMessage?.toLowerCase().includes("weak") || errorCode === "WEAK_PASSWORD") {
-          showPopup("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.", "warning");
-        } else if (errorMessage?.toLowerCase().includes("required") || errorCode === "MISSING_FIELD") {
-          showPopup("Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.", "error");
+          showPopup(
+            "Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại.",
+            "error"
+          );
+        } else if (
+          errorMessage?.toLowerCase().includes("same") ||
+          errorCode === "SAME_PASSWORD"
+        ) {
+          showPopup(
+            "Mật khẩu mới không được trùng với mật khẩu hiện tại.",
+            "warning"
+          );
+        } else if (
+          errorMessage?.toLowerCase().includes("weak") ||
+          errorCode === "WEAK_PASSWORD"
+        ) {
+          showPopup(
+            "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",
+            "warning"
+          );
+        } else if (
+          errorMessage?.toLowerCase().includes("required") ||
+          errorCode === "MISSING_FIELD"
+        ) {
+          showPopup(
+            "Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.",
+            "error"
+          );
         } else {
-          showPopup("" + (errorMessage || "Có lỗi xảy ra khi đổi mật khẩu."), "error");
+          showPopup(
+            "" + (errorMessage || "Có lỗi xảy ra khi đổi mật khẩu."),
+            "error"
+          );
         }
       } else if (error.response?.status === 422) {
         showPopup("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.", "warning");
       } else {
         showPopup("Có lỗi xảy ra. Vui lòng thử lại sau.", "error");
       }
-      
+
       // Throw error để popup không tự đóng
       throw error;
     }
@@ -569,12 +745,84 @@ const ProfilePage = () => {
   // Helper function to get status text
   const getStatusText = (status) => {
     const statusMap = {
-      pending: "Chờ thanh toán",
+      pending: "Chưa check-in",
       confirmed: "Đã check-in - Sẵn sàng sạc",
       cancelled: "Đã hủy",
       "payment-success": "Thanh toán thành công",
     };
     return statusMap[status] || status;
+  };
+
+  const navigateToChargingSession = (reservation) => {
+    const reservationId = reservation._id || reservation.id;
+    const vehicleId = reservation.vehicle?._id || reservation.vehicle?.id;
+    const firstItem = reservation.items?.[0];
+    const portInfo = firstItem?.slot?.port;
+
+    if (!reservationId || !vehicleId) {
+      showPopup("Không thể lấy thông tin đặt chỗ", "error");
+      return;
+    }
+
+    console.log(
+      "📍 Navigating to charging session page (reservation list action)"
+    );
+    console.log("Reservation:", reservation);
+    console.log("First Item:", firstItem);
+    console.log("Slot:", firstItem?.slot);
+    console.log("Charger:", portInfo);
+
+    let extractedPortId = null;
+    if (portInfo) {
+      extractedPortId =
+        typeof portInfo === "object" ? portInfo._id || portInfo.id : portInfo;
+    }
+    console.log("Extracted Port ID:", extractedPortId);
+
+    localStorage.setItem("reservationId", reservationId);
+    localStorage.setItem("vehicleId", vehicleId);
+
+    const navState = {
+      reservation,
+      vehicle: {
+        id: vehicleId,
+        plateNumber: reservation.vehicle?.plateNumber,
+        make: reservation.vehicle?.make,
+        model: reservation.vehicle?.model,
+        batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
+        connectorType: reservation.vehicle?.connectorType,
+      },
+    };
+
+    navigate("/chargingSession", {
+      state: navState,
+    });
+  };
+
+  const buildSubscriptionFeatures = (features = {}) => {
+    return Object.entries(features)
+      .map(([key, value]) => {
+        if (
+          key === "maxReservations" &&
+          value !== undefined &&
+          value !== null
+        ) {
+          if (value === -1) return "Đặt lịch không giới hạn";
+          if (value > 0) return `Tối đa ${value} lần đặt lịch/tháng`;
+        }
+        if (key === "maxVehicles" && value !== undefined && value !== null) {
+          if (value === -1) return "Quản lý xe không giới hạn";
+          if (value > 0) return `Tối đa ${value} xe đã lưu`;
+        }
+        if (key === "prioritySupport" && value === true) {
+          return "Hỗ trợ ưu tiên 24/7";
+        }
+        if (key === "discount" && value) {
+          return `Giảm giá ${value}% khi gia hạn`;
+        }
+        return null;
+      })
+      .filter(Boolean);
   };
 
   //   const handleVehicleChange = (field, value) => {
@@ -602,7 +850,8 @@ const ProfilePage = () => {
   const handleVehicleSave = async () => {
     if (!validateVehicle()) return;
     try {
-      const vehicleId = selectedVehicle?.id || selectedVehicle?._id;
+      const vehicleId =
+        editingVehicleId || selectedVehicle?.id || selectedVehicle?._id;
       const endpoint = vehicleId ? `/vehicles/${vehicleId}` : "/vehicles";
       const method = vehicleId ? api.put : api.post;
       const payload = {
@@ -641,6 +890,7 @@ const ProfilePage = () => {
       showPopup("Lưu thông tin xe thành công!", "success");
       setIsEditingVehicle(false);
       setSelectedVehicle(null);
+      setEditingVehicleId(null);
     } catch (error) {
       // console.error("Error saving vehicle:", error);
       showPopup("Không thể lưu thông tin xe, vui lòng thử lại!", "error");
@@ -712,12 +962,88 @@ const ProfilePage = () => {
     });
   };
 
+  const handleViewDetail = async (reservationId) => {
+    if (!reservationId) return;
+    setDetailModal({ isOpen: true, loading: true, error: "", data: null });
+    try {
+      const res = await api.get(`/reservations/${reservationId}`);
+      const data =
+        res.data?.data ||
+        res.data?.reservation ||
+        res.data?.reservationData ||
+        res.data;
+      setDetailModal({ isOpen: true, loading: false, error: "", data });
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        "Không thể tải chi tiết đặt chỗ. Vui lòng thử lại.";
+      setDetailModal({
+        isOpen: true,
+        loading: false,
+        error: message,
+        data: null,
+      });
+    }
+  };
+
+  const loadTransactions = useCallback(async () => {
+    if (!isTransactionView) return;
+    try {
+      setTransactionsLoading(true);
+      setTransactionsError("");
+      const res = await api.get("/transactions/my-history", {
+        params: {
+          page: 1,
+          limit: 10,
+          sortBy: "createdAt",
+          sortOrder: "desc",
+        },
+      });
+      const items = res.data?.data || res.data?.items || [];
+      setTransactions(Array.isArray(items) ? items : []);
+    } catch (_err) {
+      setTransactions([]);
+      setTransactionsError("Không thể tải lịch sử giao dịch.");
+    } finally {
+      setTransactionsLoading(false);
+    }
+  }, [isTransactionView]);
+
+  const handleViewTransactionDetail = async (id) => {
+    if (!id) return;
+    setTransactionModal({ isOpen: true, loading: true, error: "", data: null });
+    try {
+      const res = await api.get(`/transactions/${id}`);
+      const data = res.data?.data || res.data?.transaction || res.data || null;
+      setTransactionModal({ isOpen: true, loading: false, error: "", data });
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        "Không thể tải chi tiết giao dịch. Vui lòng thử lại.";
+      setTransactionModal({
+        isOpen: true,
+        loading: false,
+        error: message,
+        data: null,
+      });
+    }
+  };
+
+  useEffect(() => {
+    loadTransactions();
+  }, [loadTransactions]);
+
   // Get paginated reservations
   const getPaginatedReservations = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return reservations.slice(startIndex, endIndex);
   };
+
+  const paginatedReservations = useMemo(
+    () => getPaginatedReservations(),
+    [reservations, currentPage]
+  );
 
   // Pagination handlers
   const handlePreviousPage = () => {
@@ -749,367 +1075,28 @@ const ProfilePage = () => {
         (position) => {
           const currentLat = position.coords.latitude;
           const currentLng = position.coords.longitude;
-          
+
           // Mở Google Maps với route từ vị trí hiện tại đến trạm
           const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLat},${currentLng}&destination=${stationInfo.latitude},${stationInfo.longitude}&travelmode=driving`;
-          
-          window.open(googleMapsUrl, '_blank');
+
+          window.open(googleMapsUrl, "_blank");
         },
         (error) => {
           // Nếu không lấy được vị trí hiện tại, chỉ hiển thị trạm
           console.error("Error getting location:", error);
           const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
-          window.open(googleMapsUrl, '_blank');
+          window.open(googleMapsUrl, "_blank");
         }
       );
     } else {
       // Browser không hỗ trợ geolocation
       const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationInfo.latitude},${stationInfo.longitude}`;
-      window.open(googleMapsUrl, '_blank');
-    }
-  };
-
-  const stopQrScanner = useCallback(() => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.srcObject = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    barcodeDetectorRef.current = null;
-    if (zxingControlsRef.current) {
-      try {
-        zxingControlsRef.current.stop();
-      } catch (error) {
-        console.log("Error stopping ZXing controls:", error);
-      }
-      zxingControlsRef.current = null;
-    }
-    // ZXing reader doesn't need reset, just set to null
-    zxingReaderRef.current = null;
-    setIsProcessingQr(false);
-  }, []);
-
-  const submitQrPayload = useCallback(
-    async (payload) => {
-      try {
-        const res = await api.post("/reservations/qr-check", payload);
-        const message =
-          res.data?.message || "Check-in bằng QR thành công";
-        
-        // Stop scanner first to clean up resources
-        stopQrScanner();
-        
-        // Close the modal
-        setIsQrScannerOpen(false);
-        
-        // Show success message
-        setPopup({
-          isOpen: true,
-          message,
-          type: "success",
-        });
-        
-        // Reload reservations
-        await loadReservations();
-        
-        setIsProcessingQr(false);
-      } catch (error) {
-        const errMessage =
-          error.response?.data?.message ||
-          "Không thể xác thực mã QR. Vui lòng thử lại.";
-        setQrScanError(errMessage);
-        setIsProcessingQr(false);
-      }
-    },
-    [loadReservations, stopQrScanner]
-  );
-
-  const handleQrPayload = useCallback(
-    async (rawValue) => {
-      try {
-        const parsed =
-          typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
-        if (!parsed?.reservationId || !parsed?.hash) {
-          throw new Error("INVALID_QR_DATA");
-        }
-        await submitQrPayload(parsed);
-      } catch (error) {
-        const isInvalid = error.message === "INVALID_QR_DATA";
-        setQrScanError(
-          isInvalid
-            ? "Dữ liệu QR không hợp lệ. Vui lòng quét lại mã chính xác."
-            : "Không thể đọc mã QR. Hãy giữ chắc thiết bị và thử lại."
-        );
-        setIsProcessingQr(false);
-      }
-    },
-    [submitQrPayload]
-  );
-
-  const scanVideoFrame = useCallback(async () => {
-    if (
-      !barcodeDetectorRef.current ||
-      !videoRef.current ||
-      !isQrScannerOpen
-    ) {
-      return;
-    }
-
-    if (videoRef.current.readyState < 2) {
-      animationFrameRef.current = requestAnimationFrame(() => {
-        scanVideoFrame();
-      });
-      return;
-    }
-
-    try {
-      const bitmap = await createImageBitmap(videoRef.current);
-      const barcodes = await barcodeDetectorRef.current.detect(bitmap);
-      bitmap.close();
-
-      if (barcodes.length && !processingRef.current) {
-        setIsProcessingQr(true);
-        processingRef.current = true;
-        await handleQrPayload(barcodes[0].rawValue);
-      }
-    } catch (error) {
-      console.error("QR detect error:", error);
-    } finally {
-      if (barcodeDetectorRef.current && isQrScannerOpen) {
-        animationFrameRef.current = requestAnimationFrame(() => {
-          scanVideoFrame();
-        });
-      }
-    }
-  }, [handleQrPayload, isProcessingQr, isQrScannerOpen]);
-
-  const startBarcodeDetectorScanner = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setQrScanError("Thiết bị không hỗ trợ camera.");
-      return;
-    }
-
-    // Check if running in secure context (HTTPS or localhost)
-    if (!window.isSecureContext) {
-      setQrScanError("Camera chỉ hoạt động trên HTTPS hoặc localhost.");
-      return;
-    }
-
-    try {
-      barcodeDetectorRef.current = new window.BarcodeDetector({
-        formats: ["qr_code"],
-      });
-    } catch (error) {
-      setQrScanError(
-        "Không thể khởi tạo trình quét. Vui lòng cập nhật trình duyệt."
-      );
-      return;
-    }
-
-    try {
-      console.log("Requesting camera permission...");
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false,
-      });
-      
-      console.log("Camera permission granted, stream:", stream);
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = async () => {
-          try {
-            await videoRef.current.play();
-            console.log("Video started playing");
-            animationFrameRef.current = requestAnimationFrame(() => {
-              scanVideoFrame();
-            });
-          } catch (playError) {
-            console.error("Video play error:", playError);
-            setQrScanError("Không thể phát video từ camera.");
-          }
-        };
-      }
-    } catch (error) {
-      console.error("Camera access error:", error);
-      
-      // Handle specific error types
-      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
-        setQrScanError(
-          "Quyền truy cập camera bị từ chối. Vui lòng cho phép quyền camera trong cài đặt trình duyệt."
-        );
-      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
-        setQrScanError(
-          "Không tìm thấy camera. Vui lòng kiểm tra kết nối camera của thiết bị."
-        );
-      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
-        setQrScanError(
-          "Camera đang được sử dụng bởi ứng dụng khác. Vui lòng đóng các ứng dụng khác và thử lại."
-        );
-      } else if (error.name === "OverconstrainedError" || error.name === "ConstraintNotSatisfiedError") {
-        setQrScanError(
-          "Camera không hỗ trợ các yêu cầu được chỉ định. Đang thử lại với cài đặt cơ bản..."
-        );
-        
-        // Try again with basic constraints
-        try {
-          const basicStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false,
-          });
-          streamRef.current = basicStream;
-          
-          if (videoRef.current) {
-            videoRef.current.srcObject = basicStream;
-            videoRef.current.onloadedmetadata = async () => {
-              try {
-                await videoRef.current.play();
-                console.log("Video started playing with basic constraints");
-                animationFrameRef.current = requestAnimationFrame(() => {
-                  scanVideoFrame();
-                });
-              } catch (playError) {
-                console.error("Video play error:", playError);
-                setQrScanError("Không thể phát video từ camera.");
-              }
-            };
-          }
-        } catch (retryError) {
-          console.error("Retry error:", retryError);
-          setQrScanError("Không thể truy cập camera ngay cả với cài đặt cơ bản.");
-        }
-      } else {
-        setQrScanError(
-          `Lỗi camera: ${error.message || "Vui lòng cho phép quyền sử dụng camera."}`
-        );
-      }
-    }
-  }, [scanVideoFrame]);
-
-  const startZxingScanner = useCallback(async () => {
-    if (!videoRef.current) {
-      setQrScanError("Không tìm thấy phần hiển thị camera để quét.");
-      return;
-    }
-    
-    // Check if running in secure context (HTTPS or localhost)
-    if (!window.isSecureContext) {
-      setQrScanError("Camera chỉ hoạt động trên HTTPS hoặc localhost.");
-      return;
-    }
-    
-    try {
-      console.log("Starting ZXing scanner...");
-      const reader = new BrowserQRCodeReader(undefined, {
-        delayBetweenScanAttempts: 300,
-        delayBetweenScanSuccess: 800,
-      });
-      zxingReaderRef.current = reader;
-      
-      const controls = await reader.decodeFromVideoDevice(
-        undefined,
-        videoRef.current,
-        (result, err, controls) => {
-          if (result && !processingRef.current) {
-            console.log("QR Code detected:", result.getText());
-            processingRef.current = true;
-            setIsProcessingQr(true);
-            handleQrPayload(result.getText());
-          }
-          if (err && err.name !== "NotFoundException") {
-            console.error("ZXing scan error:", err);
-          }
-        }
-      );
-      zxingControlsRef.current = controls;
-      console.log("ZXing scanner started successfully");
-    } catch (error) {
-      console.error("ZXing error:", error);
-      
-      // Handle specific error types
-      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
-        setQrScanError(
-          "Quyền truy cập camera bị từ chối. Vui lòng cho phép quyền camera trong cài đặt trình duyệt."
-        );
-      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
-        setQrScanError(
-          "Không tìm thấy camera. Vui lòng kiểm tra kết nối camera của thiết bị."
-        );
-      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
-        setQrScanError(
-          "Camera đang được sử dụng bởi ứng dụng khác. Vui lòng đóng các ứng dụng khác và thử lại."
-        );
-      } else {
-        setQrScanError(
-          `Không thể mở camera: ${error.message || "Vui lòng kiểm tra quyền camera của trình duyệt."}`
-        );
-      }
-    }
-  }, [handleQrPayload]);
-
-  const startQrScanner = useCallback(async () => {
-    setQrScanError("");
-    setManualQrValue("");
-    setIsProcessingQr(false);
-    processingRef.current = false;
-
-    if (isBarcodeSupported) {
-      await startBarcodeDetectorScanner();
-    } else {
-      await startZxingScanner();
-    }
-  }, [
-    isBarcodeSupported,
-    startBarcodeDetectorScanner,
-    startZxingScanner,
-  ]);
-
-  const handleManualSubmit = async () => {
-    if (!manualQrValue.trim()) {
-      setQrScanError("Vui lòng nhập dữ liệu QR.");
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(manualQrValue.trim());
-      setQrScanError("");
-      setIsProcessingQr(true);
-      await submitQrPayload(parsed);
-    } catch (error) {
-      setQrScanError("Dữ liệu JSON không hợp lệ. Vui lòng kiểm tra lại.");
-      setIsProcessingQr(false);
+      window.open(googleMapsUrl, "_blank");
     }
   };
 
   useEffect(() => {
-    if (isQrScannerOpen) {
-      startQrScanner();
-    } else {
-      stopQrScanner();
-      setManualQrValue("");
-      setQrScanError("");
-    }
-
-    return () => {
-      stopQrScanner();
-    };
-  }, [isQrScannerOpen, startQrScanner, stopQrScanner]);
-
-  useEffect(() => {
+    if (!isHistoryView) return;
     // Kiểm tra flag scroll đến lịch sử
     const shouldScroll = sessionStorage.getItem("scrollToHistory");
 
@@ -1131,6 +1118,22 @@ const ProfilePage = () => {
       }, 100);
     }
   }, []);
+
+  const rawPlanReference =
+    currentSubscription?.planId ||
+    currentSubscription?.plan?._id ||
+    currentSubscription?.plan;
+  const planIdentifier =
+    typeof rawPlanReference === "string"
+      ? rawPlanReference
+      : rawPlanReference?._id || "";
+  const activePlan = planIdentifier
+    ? subscriptionPlanMap[planIdentifier]
+    : null;
+  const subscriptionFeatures =
+    activePlan?.features || currentSubscription?.features || {};
+  const subscriptionFeatureTexts =
+    buildSubscriptionFeatures(subscriptionFeatures);
 
   return (
     <div className="profile-page dark-theme">
@@ -1154,715 +1157,535 @@ const ProfilePage = () => {
         onSubmit={handleChangePassword}
       />
 
-      {canUseQrTools && isQrScannerOpen && (
-        <div className="qr-scanner-overlay">
-          <div className="qr-scanner-modal">
-            <div className="qr-scanner-header">
-              <div>
-                <h3>Quét mã QR đặt chỗ</h3>
-                <p>Hướng camera vào mã QR khách hàng cung cấp để check-in.</p>
-                {!window.isSecureContext && (
-                  <p style={{ color: '#ff6b6b', fontSize: '0.9em', marginTop: '8px' }}>
-                    ⚠️ Camera yêu cầu kết nối HTTPS hoặc localhost
-                  </p>
-                )}
-              </div>
-              <button
-                className="qr-modal-close"
-                onClick={() => setIsQrScannerOpen(false)}
-                aria-label="Đóng"
-              >
-                <X size={18} />
-              </button>
-            </div>
+      <h1 className="profile-title">{pageTitle}</h1>
 
-            {isBarcodeSupported ? (
-              <div className="qr-video-wrapper">
-                <video 
-                  ref={videoRef} 
-                  playsInline 
-                  muted 
-                  autoPlay
-                  style={{ width: '100%', maxWidth: '100%', height: 'auto' }}
-                />
-                <div className="qr-scan-guide" />
-              </div>
+      {isPersonalView && (
+        <section className="profile-section user-info">
+          <div className="section-header">
+            <h2>Thông tin người dùng</h2>
+            {!isEditing ? (
+              <button className="edit-btn" onClick={() => setIsEditing(true)}>
+                Chỉnh sửa
+              </button>
             ) : (
-              <div className="qr-video-wrapper">
-                <video 
-                  ref={videoRef} 
-                  playsInline 
-                  muted 
-                  autoPlay
-                  style={{ width: '100%', maxWidth: '100%', height: 'auto' }}
-                />
-                <div className="qr-scan-guide" />
+              <div className="edit-actions">
+                <button
+                  className="save-btn"
+                  onClick={handleSave}
+                  disabled={isLoading}
+                >
+                  Lưu
+                </button>
+                <button className="cancel-btn" onClick={handleCancel}>
+                  Hủy
+                </button>
               </div>
             )}
-
-            <div className="qr-status">
-              <span>{qrStatusText}</span>
-              {qrScanError && <p className="qr-error">{qrScanError}</p>}
-            </div>
-
-            <div className="qr-manual-input">
-              <label>Nhập dữ liệu QR (JSON)</label>
-              <textarea
-                rows={3}
-                value={manualQrValue}
-                onChange={(e) => setManualQrValue(e.target.value)}
-                placeholder='{"reservationId":"","hash":""}'
-              />
-              <button
-                className="qr-submit-btn"
-                onClick={handleManualSubmit}
-                disabled={isProcessingQr || !manualQrValue.trim()}
-              >
-                {isProcessingQr ? "Đang gửi..." : "Gửi thủ công"}
-              </button>
-            </div>
           </div>
-        </div>
-      )}
-
-      {canUseQrTools && (
-        <div className="profile-toolbar">
-          <div className="toolbar-info">
-            <span className="role-chip">
-              {(roleDisplayLabel || "STAFF").toUpperCase()}
-            </span>
-            <div>
-              <h3>QR Check-in</h3>
-              <p>Nhân viên có thể quét mã QR của khách hàng để check-in nhanh.</p>
-            </div>
-          </div>
-          <div className="toolbar-actions">
+          <div className="user-details">
+            {!isEditing ? (
+              <>
+                <p>
+                  <b>Tên:</b> {String(userInfo.fullname || "Chưa cập nhật")}
+                </p>
+                <p>
+                  <b>Email:</b> {String(userInfo.email || "Chưa cập nhật")}
+                </p>
+                <p>
+                  <b>Số điện thoại:</b>{" "}
+                  {String(userInfo.phone || "Chưa cập nhật")}
+                </p>
+                <p>
+                  <b>Địa chỉ:</b> {String(userInfo.address || "Chưa cập nhật")}
+                </p>
+                <p>
+                  <b>Ngày sinh:</b>{" "}
+                  {userInfo.dob
+                    ? new Date(userInfo.dob).toLocaleDateString("vi-VN")
+                    : "Chưa cập nhật"}
+                </p>
+              </>
+            ) : (
+              <div className="edit-form">
+                <div className="form-group">
+                  <label>
+                    <b>Tên:</b>
+                  </label>
+                  <input
+                    type="text"
+                    value={String(userInfo.fullname || "")}
+                    onChange={(e) =>
+                      handleInputChange("fullname", e.target.value)
+                    }
+                    placeholder="Nhập tên của bạn"
+                    className={errors.fullname ? "error" : ""}
+                  />
+                  {errors.fullname && (
+                    <span className="error-message">{errors.fullname}</span>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>
+                    <b>Email:</b>
+                  </label>
+                  <input
+                    type="email"
+                    value={String(userInfo.email || "")}
+                    disabled
+                    className="disabled-input"
+                    placeholder="Email không thể thay đổi"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>
+                    <b>Số điện thoại:</b>
+                  </label>
+                  <input
+                    type="tel"
+                    value={String(userInfo.phone || "")}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    placeholder="Nhập số điện thoại"
+                    className={errors.phone ? "error" : ""}
+                  />
+                  {errors.phone && (
+                    <span className="error-message">{errors.phone}</span>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>
+                    <b>Địa chỉ:</b>
+                  </label>
+                  <input
+                    type="text"
+                    value={String(userInfo.address || "")}
+                    onChange={(e) =>
+                      handleInputChange("address", e.target.value)
+                    }
+                    placeholder="Nhập địa chỉ"
+                    className={errors.address ? "error" : ""}
+                  />
+                  {errors.address && (
+                    <span className="error-message">{errors.address}</span>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>
+                    <b>Ngày sinh:</b>
+                  </label>
+                  <input
+                    type="date"
+                    value={String(userInfo.dob || "")}
+                    onChange={(e) => handleInputChange("dob", e.target.value)}
+                    className={errors.dob ? "error" : ""}
+                  />
+                  {errors.dob && (
+                    <span className="error-message">{errors.dob}</span>
+                  )}
+                </div>
+              </div>
+            )}
             <button
-              className="qr-scan-btn"
-              onClick={() => setIsQrScannerOpen(true)}
+              className="change-password-btn"
+              onClick={() => setIsChangePasswordOpen(true)}
             >
-              <QrCode size={18} />
-              Quét QR check-in
-            </button>
-            <button
-              className="qr-refresh-btn"
-              onClick={loadReservations}
-              disabled={txLoading}
-            >
-              <RefreshCcw size={16} />
-              Làm mới dữ liệu
+              Đổi mật khẩu
             </button>
           </div>
-        </div>
+        </section>
       )}
-
-      <h1 className="profile-title">Hồ sơ cá nhân</h1>
-      <section className="profile-section user-info">
-        <div className="section-header">
-          <h2>Thông tin người dùng</h2>
-          {!isEditing ? (
-            <button className="edit-btn" onClick={() => setIsEditing(true)}>
-              Chỉnh sửa
-            </button>
-          ) : (
-            <div className="edit-actions">
-              <button
-                className="save-btn"
-                onClick={handleSave}
-                disabled={isLoading}
-              >
-                Lưu
-              </button>
-              <button className="cancel-btn" onClick={handleCancel}>
-                Hủy
-              </button>
-            </div>
-          )}
-        </div>
-        <div className="user-details">
-          {!isEditing ? (
-            <>
-              <p>
-                <b>Tên:</b> {String(userInfo.fullname || "Chưa cập nhật")}
-              </p>
-              <p>
-                <b>Email:</b> {String(userInfo.email || "Chưa cập nhật")}
-              </p>
-              <p>
-                <b>Số điện thoại:</b>{" "}
-                {String(userInfo.phone || "Chưa cập nhật")}
-              </p>
-              <p>
-                <b>Địa chỉ:</b> {String(userInfo.address || "Chưa cập nhật")}
-              </p>
-              <p>
-                <b>Ngày sinh:</b>{" "}
-                {userInfo.dob
-                  ? new Date(userInfo.dob).toLocaleDateString("vi-VN")
-                  : "Chưa cập nhật"}
-              </p>
-            </>
-          ) : (
-            <div className="edit-form">
-              <div className="form-group">
-                <label>
-                  <b>Tên:</b>
-                </label>
-                <input
-                  type="text"
-                  value={String(userInfo.fullname || "")}
-                  onChange={(e) =>
-                    handleInputChange("fullname", e.target.value)
-                  }
-                  placeholder="Nhập tên của bạn"
-                  className={errors.fullname ? "error" : ""}
-                />
-                {errors.fullname && (
-                  <span className="error-message">{errors.fullname}</span>
-                )}
-              </div>
-              <div className="form-group">
-                <label>
-                  <b>Email:</b>
-                </label>
-                <input
-                  type="email"
-                  value={String(userInfo.email || "")}
-                  disabled
-                  className="disabled-input"
-                  placeholder="Email không thể thay đổi"
-                />
-              </div>
-              <div className="form-group">
-                <label>
-                  <b>Số điện thoại:</b>
-                </label>
-                <input
-                  type="tel"
-                  value={String(userInfo.phone || "")}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="Nhập số điện thoại"
-                  className={errors.phone ? "error" : ""}
-                />
-                {errors.phone && (
-                  <span className="error-message">{errors.phone}</span>
-                )}
-              </div>
-              <div className="form-group">
-                <label>
-                  <b>Địa chỉ:</b>
-                </label>
-                <input
-                  type="text"
-                  value={String(userInfo.address || "")}
-                  onChange={(e) => handleInputChange("address", e.target.value)}
-                  placeholder="Nhập địa chỉ"
-                  className={errors.address ? "error" : ""}
-                />
-                {errors.address && (
-                  <span className="error-message">{errors.address}</span>
-                )}
-              </div>
-              <div className="form-group">
-                <label>
-                  <b>Ngày sinh:</b>
-                </label>
-                <input
-                  type="date"
-                  value={String(userInfo.dob || "")}
-                  onChange={(e) => handleInputChange("dob", e.target.value)}
-                  className={errors.dob ? "error" : ""}
-                />
-                {errors.dob && (
-                  <span className="error-message">{errors.dob}</span>
-                )}
-              </div>
-            </div>
-          )}
-          <button 
-            className="change-password-btn"
-            onClick={() => setIsChangePasswordOpen(true)}
-          >
-            Đổi mật khẩu
-          </button>
-        </div>
-      </section>
 
       {/* === VEHICLE SECTION === */}
-      <section className="profile-section vehicle-section">
-        <div className="section-header">
-          <h2>Thông tin phương tiện</h2>
-          {!isEditingVehicle && (
-            <button
-              className="edit-btn"
-              onClick={() => {
-                setSelectedVehicle({});
-                setIsEditingVehicle(true);
-              }}
-            >
-              Thêm xe mới
-            </button>
-          )}
-        </div>
-
-        {vehicles.length === 0 && !isEditingVehicle ? (
-          <p style={{ color: "#90caf9" }}>
-            Chưa có thông tin xe. Nhấn "Thêm xe mới" để bắt đầu.
-          </p>
-        ) : !isEditingVehicle ? (
-          <div className="vehicles-grid">
-            {vehicles.map((vehicle) => (
-              <div
-                key={vehicle.id}
-                className={`vehicle-card ${
-                  defaultVehicleId === vehicle.id ? "default-vehicle" : ""
-                }`}
-                onClick={() => {
-                  setSelectedVehicle(vehicle);
-                  localStorage.setItem("vehicleId", vehicle.id);
-                }}
-              >
-                <h3>
-                  <span className="plate-number">
-                    {vehicle.plateNumber}
-                    {defaultVehicleId === vehicle.id && (
-                      <span className="default-badge">Mặc định</span>
-                    )}
-                  </span>
-                  <span
-                    className="delete-icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteVehicle(vehicle.id);
-                    }}
-                  >
-                    ✕
-                  </span>
-                </h3>
-                <div className="vehicle-info">
-                  <p>
-                    <b>Hãng:</b>
-                    <span>{vehicle.make || "Chưa cập nhật"}</span>
-                  </p>
-                  <p>
-                    <b>Mẫu:</b>
-                    <span>{vehicle.model || "Chưa cập nhật"}</span>
-                  </p>
-                  <p>
-                    <b>Năm sản xuất:</b>
-                    <span>{vehicle.year || "Chưa cập nhật"}</span>
-                  </p>
-                  <p>
-                    <b>Màu xe:</b>
-                    <span>{vehicle.color || "Chưa cập nhật"}</span>
-                  </p>
-                  <p>
-                    <b>Số khung (VIN):</b>
-                    <span>{vehicle.vin || "Chưa cập nhật"}</span>
-                  </p>
-                  <p>
-                    <b>Loại xe:</b>
-                    <span>
-                      {vehicle.type === "car"
-                        ? "Ô tô"
-                        : vehicle.type === "motorbike"
-                        ? "Xe máy"
-                        : "Chưa cập nhật"}
-                    </span>
-                  </p>
-                  <p>
-                    <b>Dung lượng pin:</b>
-                    <span>
-                      {vehicle.batteryCapacityKwh
-                        ? `${vehicle.batteryCapacityKwh} kWh`
-                        : "Chưa cập nhật"}
-                    </span>
-                  </p>
-                  <p>
-                    <b>Loại cổng sạc:</b>
-                    <span>{vehicle.connectorType || "Chưa cập nhật"}</span>
-                  </p>
-                </div>
-                <div className="vehicle-actions">
-                  <button
-                    className={`default-btn ${
-                      defaultVehicleId === vehicle.id ? "active" : ""
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSetDefaultVehicle(vehicle.id);
-                    }}
-                  >
-                    {defaultVehicleId === vehicle.id
-                      ? "✓ Xe mặc định"
-                      : "Đặt mặc định"}
-                  </button>
-                  <button
-                    className="edit-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedVehicle(vehicle);
-                      localStorage.setItem("vehicleId", vehicle.id);
-                      setIsEditingVehicle(true);
-                    }}
-                  >
-                    Chỉnh sửa
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="edit-form vehicle-edit-form">
-            <div className="form-grid">
-              <div className="form-group">
-                <label>
-                  <b>Biển số xe:</b>
-                </label>
-                <input
-                  type="text"
-                  value={selectedVehicle?.plateNumber || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      plateNumber: e.target.value,
-                    }))
-                  }
-                  className={vehicleErrors.plateNumber ? "error" : ""}
-                  placeholder="VD: 51H-123.45"
-                />
-                {vehicleErrors.plateNumber && (
-                  <span className="error-message">
-                    {vehicleErrors.plateNumber}
-                  </span>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <b>Hãng xe:</b>
-                </label>
-                <input
-                  type="text"
-                  value={selectedVehicle?.make || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      make: e.target.value,
-                    }))
-                  }
-                  placeholder="VD: VinFast"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <b>Mẫu xe:</b>
-                </label>
-                <input
-                  type="text"
-                  value={selectedVehicle?.model || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      model: e.target.value,
-                    }))
-                  }
-                  placeholder="VD: VF8"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <b>Năm sản xuất:</b>
-                </label>
-                <input
-                  type="number"
-                  value={selectedVehicle?.year || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      year: e.target.value,
-                    }))
-                  }
-                  placeholder="VD: 2023"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <b>Màu xe:</b>
-                </label>
-                <input
-                  type="text"
-                  value={selectedVehicle?.color || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      color: e.target.value,
-                    }))
-                  }
-                  placeholder="VD: White"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <b>Số khung (VIN):</b>
-                </label>
-                <input
-                  type="text"
-                  value={selectedVehicle?.vin || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      vin: e.target.value,
-                    }))
-                  }
-                  placeholder="VD: WVWAA71K08W201030"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <b>Loại xe:</b>
-                </label>
-                <select
-                  value={selectedVehicle?.type || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      type: e.target.value,
-                    }))
-                  }
-                >
-                  <option value="">Chọn loại xe</option>
-                  <option value="car">Ô tô</option>
-                  <option value="motorbike">Xe máy</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <b>Dung lượng pin (kWh):</b>
-                </label>
-                <input
-                  type="number"
-                  value={selectedVehicle?.batteryCapacityKwh || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      batteryCapacityKwh: e.target.value,
-                    }))
-                  }
-                  placeholder="VD: 82"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <b>Loại cổng sạc:</b>
-                </label>
-                <select
-                  value={selectedVehicle?.connectorType || ""}
-                  onChange={(e) =>
-                    setSelectedVehicle((prev) => ({
-                      ...prev,
-                      connectorType: e.target.value,
-                    }))
-                  }
-                >
-                  <option value="">Chọn loại cổng sạc</option>
-                  <option value="AC">AC</option>
-                  <option value="DC">DC</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="edit-actions">
-              <button className="save-btn" onClick={handleVehicleSave}>
-                Lưu
-              </button>
+      {isPersonalView && (
+        <section className="profile-section vehicle-section">
+          <div className="section-header">
+            <h2>Thông tin phương tiện</h2>
+            {!isEditingVehicle && (
               <button
-                className="cancel-btn"
+                className="edit-btn"
                 onClick={() => {
-                  setIsEditingVehicle(false);
-                  setSelectedVehicle(null);
-                  setVehicleErrors({});
+                  setSelectedVehicle({});
+                  setEditingVehicleId(null);
+                  setIsEditingVehicle(true);
                 }}
               >
-                Hủy
+                Thêm xe mới
               </button>
+            )}
+          </div>
+
+          {vehicles.length === 0 && !isEditingVehicle ? (
+            <p style={{ color: "#90caf9" }}>
+              Chưa có thông tin xe. Nhấn "Thêm xe mới" để bắt đầu.
+            </p>
+          ) : !isEditingVehicle ? (
+            <div className="vehicles-grid">
+              {vehicles.map((vehicle, index) => (
+                <div
+                  key={
+                    vehicle.id ||
+                    vehicle._id ||
+                    vehicle.plateNumber ||
+                    `vehicle-${index}`
+                  }
+                  className={`vehicle-card ${
+                    defaultVehicleId === vehicle.id ? "default-vehicle" : ""
+                  }`}
+                  onClick={() => {
+                    setSelectedVehicle({ ...vehicle });
+                    setEditingVehicleId(vehicle.id || vehicle._id || null);
+                    localStorage.setItem("vehicleId", vehicle.id);
+                  }}
+                >
+                  <h3>
+                    <span className="plate-number">
+                      {vehicle.plateNumber}
+                      {defaultVehicleId === vehicle.id && (
+                        <span className="default-badge">Mặc định</span>
+                      )}
+                    </span>
+                    <span
+                      className="delete-icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteVehicle(vehicle.id);
+                      }}
+                    >
+                      ✕
+                    </span>
+                  </h3>
+                  <div className="vehicle-info">
+                    <p>
+                      <b>Hãng:</b>
+                      <span>{vehicle.make || "Chưa cập nhật"}</span>
+                    </p>
+                    <p>
+                      <b>Mẫu:</b>
+                      <span>{vehicle.model || "Chưa cập nhật"}</span>
+                    </p>
+                    <p>
+                      <b>Năm sản xuất:</b>
+                      <span>{vehicle.year || "Chưa cập nhật"}</span>
+                    </p>
+                    <p>
+                      <b>Màu xe:</b>
+                      <span>{vehicle.color || "Chưa cập nhật"}</span>
+                    </p>
+                    <p>
+                      <b>Loại xe:</b>
+                      <span>
+                        {vehicle.type === "car"
+                          ? "Ô tô"
+                          : vehicle.type === "motorbike"
+                          ? "Xe máy"
+                          : "Chưa cập nhật"}
+                      </span>
+                    </p>
+                    <p>
+                      <b>Dung lượng pin:</b>
+                      <span>
+                        {vehicle.batteryCapacityKwh
+                          ? `${vehicle.batteryCapacityKwh} kWh`
+                          : "Chưa cập nhật"}
+                      </span>
+                    </p>
+                    <p>
+                      <b>Loại cổng sạc:</b>
+                      <span>{vehicle.connectorType || "Chưa cập nhật"}</span>
+                    </p>
+                  </div>
+                  <div className="vehicle-actions">
+                    <button
+                      className={`default-btn ${
+                        defaultVehicleId === vehicle.id ? "active" : ""
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSetDefaultVehicle(vehicle.id);
+                      }}
+                    >
+                      {defaultVehicleId === vehicle.id
+                        ? "✓ Xe mặc định"
+                        : "Đặt mặc định"}
+                    </button>
+                    <button
+                      className="edit-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedVehicle({ ...vehicle });
+                        setEditingVehicleId(vehicle.id || vehicle._id || null);
+                        localStorage.setItem("vehicleId", vehicle.id);
+                        setIsEditingVehicle(true);
+                      }}
+                    >
+                      Chỉnh sửa
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="edit-form vehicle-edit-form">
+              <div className="form-grid">
+                <div className="form-group">
+                  <div className="form-label-block">
+                    <span>Biển số xe</span>
+                    <small>VD: 51H-123.45</small>
+                  </div>
+                  <input
+                    type="text"
+                    value={selectedVehicle?.plateNumber || ""}
+                    onChange={(e) =>
+                      setSelectedVehicle((prev) => ({
+                        ...prev,
+                        plateNumber: e.target.value,
+                      }))
+                    }
+                    className={vehicleErrors.plateNumber ? "error" : ""}
+                    placeholder="51H-123.45"
+                  />
+                  {vehicleErrors.plateNumber && (
+                    <span className="error-message">
+                      {vehicleErrors.plateNumber}
+                    </span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <div className="form-label-block">
+                    <span>Hãng xe</span>
+                    <small>VD: VinFast</small>
+                  </div>
+                  <input
+                    type="text"
+                    value={selectedVehicle?.make || ""}
+                    onChange={(e) =>
+                      setSelectedVehicle((prev) => ({
+                        ...prev,
+                        make: e.target.value,
+                      }))
+                    }
+                    placeholder="VinFast"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <div className="form-label-block">
+                    <span>Mẫu xe</span>
+                    <small>VD: VF8</small>
+                  </div>
+                  <input
+                    type="text"
+                    value={selectedVehicle?.model || ""}
+                    onChange={(e) =>
+                      setSelectedVehicle((prev) => ({
+                        ...prev,
+                        model: e.target.value,
+                      }))
+                    }
+                    placeholder="VF8"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <div className="form-label-block">
+                    <span>Năm sản xuất</span>
+                    <small>VD: 2023</small>
+                  </div>
+                  <input
+                    type="number"
+                    value={selectedVehicle?.year || ""}
+                    onChange={(e) =>
+                      setSelectedVehicle((prev) => ({
+                        ...prev,
+                        year: e.target.value,
+                      }))
+                    }
+                    placeholder="2023"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <div className="form-label-block">
+                    <span>Màu xe</span>
+                    <small>VD: White</small>
+                  </div>
+                  <input
+                    type="text"
+                    value={selectedVehicle?.color || ""}
+                    onChange={(e) =>
+                      setSelectedVehicle((prev) => ({
+                        ...prev,
+                        color: e.target.value,
+                      }))
+                    }
+                    placeholder="White"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <div className="form-label-block">
+                    <span>Loại xe</span>
+                    <small>Chọn loại xe</small>
+                  </div>
+                  <select
+                    value={selectedVehicle?.type || ""}
+                    onChange={(e) =>
+                      setSelectedVehicle((prev) => ({
+                        ...prev,
+                        type: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Chọn loại xe</option>
+                    <option value="car">Ô tô</option>
+                    <option value="motorbike">Xe máy</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <div className="form-label-block">
+                    <span>Dung lượng pin (kWh)</span>
+                    <small>VD: 82</small>
+                  </div>
+                  <input
+                    type="number"
+                    value={selectedVehicle?.batteryCapacityKwh || ""}
+                    onChange={(e) =>
+                      setSelectedVehicle((prev) => ({
+                        ...prev,
+                        batteryCapacityKwh: e.target.value,
+                      }))
+                    }
+                    placeholder="82"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <div className="form-label-block">
+                    <span>Loại cổng sạc</span>
+                    <small>Chọn loại cổng sạc</small>
+                  </div>
+                  <select
+                    value={selectedVehicle?.connectorType || ""}
+                    onChange={(e) =>
+                      setSelectedVehicle((prev) => ({
+                        ...prev,
+                        connectorType: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Chọn loại cổng sạc</option>
+                    <option value="AC">AC</option>
+                    <option value="DC">DC</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="edit-actions">
+                <button className="save-btn" onClick={handleVehicleSave}>
+                  Lưu
+                </button>
+                <button
+                  className="cancel-btn"
+                  onClick={() => {
+                    setIsEditingVehicle(false);
+                    setSelectedVehicle(null);
+                    setEditingVehicleId(null);
+                    setVehicleErrors({});
+                  }}
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {isHistoryView && (
+        <section className="profile-section history-section">
+          <div className="section-header history-header">
+            <div className="title-stack">
+              <div className="title-row">
+                <span className="icon-bubble soft">
+                  <Calendar size={18} />
+                </span>
+                <h2>Lịch sử đặt chỗ</h2>
+              </div>
             </div>
           </div>
-        )}
-      </section>
 
-      <section className="profile-section history-section">
-        <div className="section-header">
-          <h2>
-            <Calendar size={28} style={{ marginRight: '12px', verticalAlign: 'middle' }} />
-            Lịch sử đặt chỗ
-          </h2>
-        </div>
-        <div className="history-table-wrapper">
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>Tên trạm</th>
-                <th>Xe</th>
-                <th>Thời gian</th>
-                <th>Trạng thái</th>
-                <th className="action-column" style={{ textAlign: "center" }}>
-                  Thao tác
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {txLoading ? (
-                <tr>
-                  <td colSpan={5} style={{ color: "#666", textAlign: "center", padding: "40px" }}>
-                    <div className="loading-spinner">Đang tải...</div>
-                  </td>
-                </tr>
-              ) : getPaginatedReservations().length > 0 ? (
-                getPaginatedReservations().map((reservation) => {
+          {txLoading ? (
+            <div className="history-loading">Đang tải...</div>
+          ) : reservations.length === 0 ? (
+            <div className="history-empty">
+              <h3>Chưa có đặt chỗ</h3>
+              <p className="muted">
+                Khi bạn đặt chỗ, lịch sử sẽ hiển thị tại đây với đầy đủ thông tin.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="history-rail">
+                <div className="history-row header-row">
+                  <div className="row-col">Trạm</div>
+                  <div className="row-col">Xe</div>
+                  <div className="row-col">Thời gian</div>
+                  <div className="row-col">Cổng</div>
+                  <div className="row-col status-col">Trạng thái</div>
+                  <div className="row-col actions-col">Thao tác</div>
+                </div>
+                {paginatedReservations.map((reservation) => {
                   const reservationId = reservation._id || reservation.id;
-                  const vehicleId =
-                    reservation.vehicle?._id || reservation.vehicle?.id;
                   const firstItem = reservation.items?.[0];
                   const portId =
                     firstItem?.slot?.port?._id || firstItem?.slot?.port;
                   const stationInfo = stationMap[portId] || {
                     stationName: "Đang tải...",
+                    address: "",
+                    provider: "",
                   };
+                  const connectorType = portTypeMap[portId] || "N/A";
 
                   return (
-                    <tr key={reservationId}>
-                      <td>
-                        <div className="station-name-cell">
-                          <MapPin size={16} color="#16a34a" />
-                          <span>{stationInfo.stationName}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="vehicle-info-cell">
-                          <strong>{reservation.vehicle?.plateNumber || "N/A"}</strong>
-                          <small>
-                            {reservation.vehicle?.make}{" "}
-                            {reservation.vehicle?.model}
-                          </small>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="time-info-cell">
-                          <div className="time-row">
-                            <Clock size={14} />
-                            <span>Bắt đầu: {formatDateTime(firstItem?.startAt)}</span>
-                          </div>
-                          <div className="time-row">
-                            <Clock size={14} />
-                            <span>Kết thúc: {formatDateTime(firstItem?.endAt)}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`status-badge ${reservation.status}`}>
-                          {reservation.status === "pending" && <AlertCircle size={14} />}
-                          {reservation.status === "confirmed" && <CheckCircle size={14} />}
-                          {reservation.status === "cancelled" && <XCircle size={14} />}
-                          {reservation.status === "payment-success" && <CheckCircle size={14} />}
+                    <div className="history-row" key={reservationId}>
+                      <div className="row-col">
+                        <p className="col-value">{stationInfo.stationName}</p>
+                        <p className="col-sub">{stationInfo.address}</p>
+                      </div>
+                      <div className="row-col">
+                        <p className="col-value">
+                          {reservation.vehicle?.plateNumber || "N/A"}
+                        </p>
+                        <p className="col-sub">
+                          {reservation.vehicle?.make} {reservation.vehicle?.model}
+                        </p>
+                      </div>
+                      <div className="row-col">
+                        <p className="col-sub">Bắt đầu: {formatDateTime(firstItem?.startAt)}</p>
+                        <p className="col-sub">Kết thúc: {formatDateTime(firstItem?.endAt)}</p>
+                      </div>
+                      <div className="row-col">
+                        <p className="col-value">{connectorType}</p>
+                        <p className="col-sub">{stationInfo.provider || "N/A"}</p>
+                      </div>
+                      <div className="row-col status-col">
+                        <span className={`status-chip ${reservation.status}`}>
                           {getStatusText(reservation.status)}
                         </span>
-                      </td>
-                      <td className="action-column">
-                        {(reservation.status === "pending" ||
-                          reservation.status === "confirmed") && (
-                          <button
-                            className="row-cancel-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCancelReservation(reservationId);
-                            }}
-                            title="Hủy đặt chỗ"
-                          >
-                            <X size={16} />
-                          </button>
-                        )}
-                        <div className="action-buttons">
-                          {reservation.status === "pending" && (
-                            <>
-                              <button
-                                className="action-btn map-btn"
-                                onClick={() => handleViewMap(stationInfo)}
-                                title="Xem đường đi trên bản đồ"
-                              >
-                                <MapPin size={16} />
-                                Xem bản đồ
-                              </button>
-                            </>
-                          )}
-                          {reservation.status === "confirmed" && (
+                      </div>
+                      <div className="row-col actions-col">
+                        <div className="action-buttons compact">
+                          {(reservation.status === "pending" ||
+                            reservation.status === "confirmed") && (
                             <>
                               <button
                                 className="action-btn start-btn"
-                                onClick={() => {
-                                  if (reservationId && vehicleId) {
-                                    const firstItem = reservation.items?.[0];
-                                    const portInfo = firstItem?.slot?.port;
-
-                                    console.log('📍 ===== NAVIGATE TO CHARGING SESSION PAGE (from Profile) =====');
-                                    console.log('This is ONLY navigation, NOT starting the charging yet!');
-                                    console.log('User needs to click "Bắt đầu sạc" button on charging session page to actually start.');
-                                    console.log('Reservation:', reservation);
-                                    console.log('First Item:', firstItem);
-                                    console.log('Slot:', firstItem?.slot);
-                                    console.log('Charger:', portInfo);
-                                    
-                                    // Extract port ID
-                                    let extractedPortId = null;
-                                    if (portInfo) {
-                                      extractedPortId = typeof portInfo === 'object' ? (portInfo._id || portInfo.id) : portInfo;
-                                    }
-                                    console.log('Extracted Port ID:', extractedPortId);
-
-                                    localStorage.setItem(
-                                      "reservationId",
-                                      reservationId
-                                    );
-                                    localStorage.setItem(
-                                      "vehicleId",
-                                      vehicleId
-                                    );
-
-                                    // Pass complete reservation object
-                                    const navState = {
-                                      reservation: reservation, // Pass entire reservation object with qrCheck, status, items
-                                      vehicle: {
-                                        id: vehicleId,
-                                        plateNumber: reservation.vehicle?.plateNumber,
-                                        make: reservation.vehicle?.make,
-                                        model: reservation.vehicle?.model,
-                                        batteryCapacityKwh: reservation.vehicle?.batteryCapacityKwh,
-                                        connectorType: reservation.vehicle?.connectorType,
-                                      },
-                                    };
-                                    
-                                    console.log('Navigation State:', navState);
-
-                                    navigate("/chargingSession", {
-                                      state: navState,
-                                    });
-                                  } else {
-                                    showPopup(
-                                      "Không thể lấy thông tin đặt chỗ",
-                                      "error"
-                                    );
-                                  }
-                                }}
+                                onClick={() => navigateToChargingSession(reservation)}
+                                title="Chuyển đến phiên sạc"
                               >
                                 <Zap size={16} />
-                                Bắt đầu sạc
+                                Vào phiên sạc
                               </button>
                               <button
                                 className="action-btn map-btn"
@@ -1872,128 +1695,632 @@ const ProfilePage = () => {
                                 <MapPin size={16} />
                                 Xem bản đồ
                               </button>
+                              <button
+                                className="ghost-danger"
+                                onClick={() => handleCancelReservation(reservationId)}
+                              >
+                                Hủy
+                              </button>
                             </>
                           )}
-                          {reservation.status === "cancelled" && (
-                            <div className="status-info-cell cancelled">
-                              <XCircle size={16} />
-                              <span>Đã hủy</span>
-                            </div>
-                          )}
-                          {reservation.status === "payment-success" && (
-                            <div className="status-info-cell success">
-                              <CheckCircle size={16} />
-                              <span>Đã thanh toán</span>
-                            </div>
+
+                          {(reservation.status === "payment-success" ||
+                            reservation.status === "cancelled") && (
+                            <button
+                              className="link-btn inline detail-action"
+                              onClick={() => handleViewDetail(reservationId)}
+                            >
+                              Xem chi tiết
+                            </button>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan={5}
-                    style={{ textAlign: "center", color: "#90caf9" }}
-                  >
-                    Chưa có đặt chỗ nào
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button
-              className="pagination-btn"
-              onClick={handlePreviousPage}
-              disabled={currentPage === 1}
-            >
-              ← Trước
-            </button>
-
-            <div className="pagination-numbers">
-              {[...Array(totalPages)].map((_, index) => {
-                const pageNumber = index + 1;
-                return (
+              {totalPages > 1 && (
+                <div className="pagination">
                   <button
-                    key={pageNumber}
-                    className={`pagination-number ${
-                      currentPage === pageNumber ? "active" : ""
-                    }`}
-                    onClick={() => handlePageClick(pageNumber)}
+                    className="pagination-btn"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
                   >
-                    {pageNumber}
+                    ← Trước
                   </button>
+
+                  <div className="pagination-numbers">
+                    {[...Array(totalPages)].map((_, index) => {
+                      const pageNumber = index + 1;
+                      return (
+                        <button
+                          key={pageNumber}
+                          className={`pagination-number ${
+                            currentPage === pageNumber ? "active" : ""
+                          }`}
+                          onClick={() => handlePageClick(pageNumber)}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    className="pagination-btn"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    Sau →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      {isMembershipView && (
+        <section className="profile-section subscription-section">
+          <div className="section-header">
+            <div>
+              <p className="micro-label">Thành viên ưu tiên</p>
+              <h2>Gói hiện tại</h2>
+            </div>
+            <div className="subscription-actions">
+              {currentSubscription && (
+                <button
+                  className="ghost-danger"
+                  onClick={handleCancelSubscription}
+                  disabled={isCancellingSubscription}
+                >
+                  {isCancellingSubscription ? "Đang hủy..." : "Hủy gói"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {subscriptionLoading ? (
+            <div className="subscription-loading">
+              <div className="loading-spinner">Đang tải</div>
+              <p>Đang kiểm tra gói của bạn...</p>
+            </div>
+          ) : subscriptionError ? (
+            <div className="subscription-error">
+              <p>{subscriptionError}</p>
+              <button className="link-btn" onClick={loadSubscriptionData}>
+                Thử lại
+              </button>
+            </div>
+          ) : currentSubscription ? (
+            <div className="subscription-card">
+              <div className="subscription-card__header">
+                <span className="subscription-chip">
+                  <Crown size={16} />
+                  {activePlan?.name?.split(" - ")?.[0] ||
+                    activePlan?.type ||
+                    currentSubscription.type ||
+                    "Membership"}
+                </span>
+                <span className={`status-chip ${currentSubscription.status}`}>
+                  {getSubscriptionStatusLabel(currentSubscription.status)}
+                </span>
+              </div>
+
+              <div className="subscription-card__body">
+                <div>
+                  <p className="plan-title">
+                    {activePlan?.name || "Gói thành viên đang hiệu lực"}
+                  </p>
+                  <div className="price-row">
+                    <span className="price">
+                      {formatSubscriptionPrice(
+                        currentSubscription.price || activePlan?.price
+                      )}
+                    </span>
+                    <span className="price-duration">
+                      /
+                      {formatSubscriptionDuration(
+                        activePlan?.duration || currentSubscription.duration
+                      )}
+                    </span>
+                  </div>
+                  <p className="date-row">
+                    Hiệu lực:{" "}
+                    {formatSubscriptionDate(currentSubscription.startDate)} -{" "}
+                    {formatSubscriptionDate(currentSubscription.endDate)}
+                  </p>
+                </div>
+              <div className="subscription-card__actions">
+                <button className="edit-btn" onClick={() => navigate("/membership")}>
+                  Upgrade
+                </button>
+              </div>
+              </div>
+
+              <div className="subscription-facts">
+                <div className="fact">
+                  <span className="fact-label">Hết hạn</span>
+                  <strong>
+                    {formatSubscriptionDate(currentSubscription.endDate)}
+                  </strong>
+                </div>
+                <div className="fact">
+                  <span className="fact-label">Tự động gia hạn</span>
+                  <strong>
+                    {currentSubscription.autoRenew ? "Bật" : "Tắt"}
+                  </strong>
+                </div>
+                <div className="fact">
+                  <span className="fact-label">Mã gói</span>
+                  <strong>{(planIdentifier || "000000").slice(-6)}</strong>
+                </div>
+              </div>
+
+              <ul className="subscription-features">
+                {subscriptionFeatureTexts.length > 0 ? (
+                  subscriptionFeatureTexts.map((text, idx) => (
+                    <li key={idx}>
+                      <CheckCircle size={16} /> <span>{text}</span>
+                    </li>
+                  ))
+                ) : (
+                  <li className="muted">
+                    Các quyền lợi sẽ hiển thị khi gói được kích hoạt.
+                  </li>
+                )}
+              </ul>
+            </div>
+          ) : (
+            <div className="subscription-empty">
+              <div>
+                <p className="micro-label">Bạn chưa có gói</p>
+                <h3>Bật chế độ ưu tiên</h3>
+                <p>
+                  Giữ chỗ nhanh hơn, hỗ trợ chuyên dụng và minh bạch chi phí cho
+                  mọi phiên sạc.
+                </p>
+              </div>
+              <button
+                className="edit-btn"
+                onClick={() => navigate("/membership")}
+              >
+                Chọn gói ngay
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
+      {isHistoryView && (
+        <section className="profile-section analysis-section">
+          <div className="section-header">
+            <h2>
+              <span className="stats-icon">📊</span>
+              Thống kê giao dịch
+            </h2>
+          </div>
+          <div className="analysis-cards">
+            <div className="analysis-card">
+              <div className="icon-box cost">
+                <span>📊</span>
+              </div>
+              <div>
+                <div className="analysis-label">Tổng booking</div>
+                <div className="analysis-value">{totalBookings}</div>
+              </div>
+            </div>
+
+            <div className="analysis-card">
+              <div className="icon-box location">
+                <span>🔌</span>
+              </div>
+              <div>
+                <div className="analysis-label">
+                  Loại cổng sử dụng nhiều nhất
+                </div>
+                <div className="analysis-value">
+                  {getConnectorTypeName(favoriteConnectorType)}
+                </div>
+              </div>
+            </div>
+
+            <div className="analysis-card">
+              <div className="icon-box time">
+                <span>⏱️</span>
+              </div>
+              <div>
+                <div className="analysis-label">
+                  Thời gian TB mỗi booking (phút)
+                </div>
+                <div className="analysis-value">{avgDuration}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {isTransactionView && (
+        <section className="profile-section transaction-section">
+          <div className="section-header">
+            <h2>
+              <span className="stats-icon">💳</span>
+              Lịch sử giao dịch
+            </h2>
+          </div>
+          {transactionsLoading ? (
+            <p className="muted">Đang tải...</p>
+          ) : transactionsError ? (
+            <p className="error-text">{transactionsError}</p>
+          ) : transactions.length === 0 ? (
+            <div className="transaction-empty">
+              <h3>Chưa có giao dịch nào</h3>
+              <p className="muted">
+                Khi bạn thanh toán, các giao dịch sẽ xuất hiện tại đây để tiện
+                theo dõi.
+              </p>
+            </div>
+          ) : (
+            <div className="transaction-dashboard">
+              <div className="transaction-hero">
+                <div className="hero-copy">
+                  <p className="micro-label">Ví giao dịch</p>
+                  <h3>Giao dịch rõ ràng, cân đối</h3>
+                  <p className="muted">
+                    Theo dõi các thanh toán và trạng thái cập nhật mới nhất.
+                  </p>
+                  <div className="hero-chips">
+                    <span className="pill success">Thanh toán an toàn</span>
+                    <span className="pill outline">
+                      Cập nhật thời gian thực
+                    </span>
+                  </div>
+                </div>
+                <div className="hero-stats">
+                  <div className="hero-stat">
+                    <span>Đã chi</span>
+                    <strong>
+                      {formatCurrency(transactionSummary.totalSpent)}
+                    </strong>
+                    <p>Trong {transactionSummary.total} giao dịch</p>
+                  </div>
+                  <div className="hero-stat">
+                    <span>Thành công</span>
+                    <strong>{transactionSummary.success}</strong>
+                    <p>
+                      {transactionSummary.pending} chờ •{" "}
+                      {transactionSummary.failed} lỗi
+                    </p>
+                  </div>
+                  <div className="hero-stat">
+                    <span>Giao dịch gần nhất</span>
+                    <strong>{transactionSummary.lastMethod}</strong>
+                    <p>{transactionSummary.lastDate || "Đang cập nhật"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="transaction-list">
+                {transactions.map((tx) => (
+                  <div className="transaction-card" key={tx._id || tx.id}>
+                    <div className="tx-head">
+                      <div>
+                        <p className="tx-amount">
+                          {formatCurrency(tx.amount || 0, tx.currency || "VND")}
+                        </p>
+                        <p className="tx-desc">
+                          {tx.description || "Giao dịch"}
+                        </p>
+                      </div>
+                      <span className={`tx-pill ${tx.status || "pending"}`}>
+                        {tx.status === "success"
+                          ? "Thành công"
+                          : tx.status === "pending"
+                          ? "Đang xử lý"
+                          : tx.status === "failed"
+                          ? "Thất bại"
+                          : tx.status}
+                      </span>
+                    </div>
+
+                    <div className="tx-body">
+                      <div className="tx-line">
+                        <span className="tx-label">Mã giao dịch</span>
+                        <span className="tx-value">
+                          #{String(tx._id || tx.id || "------").slice(-6)}
+                        </span>
+                      </div>
+                      <div className="tx-line">
+                        <span className="tx-label">Phương thức</span>
+                        <span className="tx-value tx-method">
+                          {tx.paymentMethod?.toUpperCase?.() || "N/A"}
+                        </span>
+                      </div>
+                      <div className="tx-line">
+                        <span className="tx-label">Thời gian</span>
+                        <span className="tx-value tx-date">
+                          {tx.createdAt
+                            ? new Date(tx.createdAt).toLocaleString("vi-VN")
+                            : ""}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="tx-footer">
+                      <button
+                        className="link-btn inline detail-action"
+                        onClick={() =>
+                          handleViewTransactionDetail(tx._id || tx.id)
+                        }
+                      >
+                        Xem chi tiết
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {detailModal.isOpen && (
+        <div
+          className="reservation-modal-overlay"
+          onClick={() =>
+            setDetailModal({
+              isOpen: false,
+              loading: false,
+              error: "",
+              data: null,
+            })
+          }
+        >
+          <div
+            className="reservation-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Chi tiết đặt chỗ</h3>
+              <button
+                className="close-button"
+                onClick={() =>
+                  setDetailModal({
+                    isOpen: false,
+                    loading: false,
+                    error: "",
+                    data: null,
+                  })
+                }
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {detailModal.loading ? (
+              <p>Đang tải...</p>
+            ) : detailModal.error ? (
+              <p className="error-text">{detailModal.error}</p>
+            ) : (
+              (() => {
+                const d = detailModal.data || {};
+                const firstItem = d.items?.[0];
+                const port = firstItem?.slot?.port;
+                const station = port?.station || {};
+                const vehicle = d.vehicle || {};
+                return (
+                  <div className="reservation-detail">
+                    <div className="detail-grid">
+                      <div>
+                        <p className="detail-label">Trạm</p>
+                        <p className="detail-value">{station.name || "N/A"}</p>
+                        <p className="detail-sub">{station.address || ""}</p>
+                      </div>
+                      <div>
+                        <p className="detail-label">Xe</p>
+                        <p className="detail-value">
+                          {vehicle.plateNumber || "N/A"}
+                        </p>
+                        <p className="detail-sub">
+                          {vehicle.make} {vehicle.model}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="detail-label">Thời gian</p>
+                        <p className="detail-sub">
+                          Bắt đầu: {formatDateTime(firstItem?.startAt)}
+                        </p>
+                        <p className="detail-sub">
+                          Kết thúc: {formatDateTime(firstItem?.endAt)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="detail-label">Trạng thái</p>
+                        <p className="detail-value">
+                          {getStatusText(d.status)}
+                        </p>
+                        <p className="detail-sub">
+                          QR: {d.qrCheck ? "Đã kiểm tra" : "Chưa kiểm tra"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="detail-label">Giá cước</p>
+                        <p className="detail-value">
+                          {port?.price
+                            ? `${new Intl.NumberFormat("vi-VN").format(
+                                port.price
+                              )} VNĐ/kWh`
+                            : "N/A"}
+                        </p>
+                        <p className="detail-sub">
+                          Loại cổng: {port?.type || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                    {d.qr && (
+                      <div className="qr-preview">
+                        <img src={d.qr} alt="QR code" />
+                      </div>
+                    )}
+                  </div>
                 );
-              })}
-            </div>
-
-            <button
-              className="pagination-btn"
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-            >
-              Sau →
-            </button>
-          </div>
-        )}
-      </section>
-
-      <section className="profile-section analysis-section">
-        <div className="section-header">
-          <h2>
-            <span className="stats-icon">📊</span>
-            Thống kê giao dịch
-          </h2>
-        </div>
-        <div className="analysis-cards">
-          <div className="analysis-card">
-            <div className="icon-box cost">
-              <span>📊</span>
-            </div>
-            <div>
-              <div className="analysis-label">Tổng booking</div>
-              <div className="analysis-value">{totalBookings}</div>
-            </div>
-          </div>
-
-          <div className="analysis-card">
-            <div className="icon-box location">
-              <span>🔌</span>
-            </div>
-            <div>
-              <div className="analysis-label">Loại cổng sử dụng nhiều nhất</div>
-              <div className="analysis-value">
-                {getConnectorTypeName(favoriteConnectorType)}
-              </div>
-            </div>
-          </div>
-
-          <div className="analysis-card">
-            <div className="icon-box time">
-              <span>⏱️</span>
-            </div>
-            <div>
-              <div className="analysis-label">
-                Thời gian TB mỗi booking (phút)
-              </div>
-              <div className="analysis-value">{avgDuration}</div>
-            </div>
+              })()
+            )}
           </div>
         </div>
-      </section>
+      )}
+
+      {transactionModal.isOpen && (
+        <div
+          className="reservation-modal-overlay"
+          onClick={() =>
+            setTransactionModal({
+              isOpen: false,
+              loading: false,
+              error: "",
+              data: null,
+            })
+          }
+        >
+          <div
+            className="reservation-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Chi tiết giao dịch</h3>
+              <button
+                className="close-button"
+                onClick={() =>
+                  setTransactionModal({
+                    isOpen: false,
+                    loading: false,
+                    error: "",
+                    data: null,
+                  })
+                }
+              >
+                <X size={18} />
+              </button>
+            </div>
+            {transactionModal.loading ? (
+              <p>Đang tải...</p>
+            ) : transactionModal.error ? (
+              <p className="error-text">{transactionModal.error}</p>
+            ) : (
+              (() => {
+                const tx = transactionModal.data || {};
+                const txCode =
+                  tx.vnpayDetails?.vnp_TransactionNo ||
+                  tx.transactionCode ||
+                  tx.code ||
+                  tx._id ||
+                  tx.id ||
+                  "N/A";
+                const txRef =
+                  tx.vnpayDetails?.vnp_TxnRef ||
+                  tx.paymentReference ||
+                  tx.referenceId ||
+                  tx.orderId ||
+                  tx._id ||
+                  tx.id ||
+                  "N/A";
+                const bank =
+                  tx.vnpayDetails?.vnp_BankCode || tx.bankCode || "N/A";
+                const orderInfo =
+                  tx.vnpayDetails?.vnp_OrderInfo ||
+                  tx.orderInfo ||
+                  tx.note ||
+                  tx.description ||
+                  "Không có ghi chú";
+                const customer =
+                  tx.customerName || tx.username || tx.owner || "";
+                const statusText = getTransactionStatusText(tx.status);
+                const statusClass = getTransactionStatusClass(tx.status);
+                return (
+                  <div className="transaction-detail modern">
+                    <div className="tx-overview">
+                      <div className="amount-block">
+                        <p className="micro-label">Số tiền</p>
+                        <div className="amount-row">
+                          <h3 className="tx-amount-lg">
+                            {formatCurrency(
+                              tx.amount || 0,
+                              tx.currency || "VND"
+                            )}
+                          </h3>
+                          <span className={`tx-pill ${statusClass}`}>
+                            {statusText}
+                          </span>
+                        </div>
+                        <p className="detail-sub">
+                          {tx.description || "Giao dịch"}
+                        </p>
+                      </div>
+                      <div className="overview-meta">
+                        <div className="meta-line">
+                          <span className="tx-label">Phương thức</span>
+                          <span className="tx-value tx-method">
+                            {tx.paymentMethod?.toUpperCase?.() || "N/A"}
+                          </span>
+                        </div>
+                        <div className="meta-line">
+                          <span className="tx-label">Thời gian</span>
+                          <span className="tx-value tx-date">
+                            {formatDateTime(tx.createdAt)}
+                          </span>
+                        </div>
+                        <div className="meta-line">
+                          <span className="tx-label">Trạng thái</span>
+                          <span className="tx-value">{statusText}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="tx-detail-grid">
+                      <div className="detail-card">
+                        <p className="detail-label">Mã giao dịch</p>
+                        <p className="detail-value">{txCode}</p>
+                      </div>
+                      <div className="detail-card">
+                        <p className="detail-label">Ngân hàng</p>
+                        <p className="detail-value">{bank}</p>
+                        <p className="detail-sub">
+                          Loại tiền: {tx.currency || "VND"}
+                        </p>
+                      </div>
+                      <div className="detail-card">
+                        <p className="detail-label">Nội dung thanh toán</p>
+                        <p className="detail-value">
+                          {orderInfo || "Không có ghi chú"}
+                        </p>
+                        <p className="detail-sub"> {customer}</p>
+                      </div>
+                      <div className="detail-card">
+                        <p className="detail-label">Phí/thuế</p>
+                        <p className="detail-value">
+                          {tx.fee
+                            ? formatCurrency(tx.fee, tx.currency || "VND")
+                            : "0"}
+                        </p>
+                        <p className="detail-sub">
+                          Tổng sau phí:{" "}
+                          {formatCurrency(
+                            (tx.amount || 0) + (tx.fee || 0),
+                            tx.currency || "VND"
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default ProfilePage;
-
-
-
-
-
