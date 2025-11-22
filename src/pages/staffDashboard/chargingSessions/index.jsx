@@ -10,6 +10,7 @@
 //  - Các helper format thời gian, tiến độ sạc giả lập, duration
 import { useEffect, useMemo, useState } from "react";
 import api from "../../../config/api";
+import "./index.scss";
 import "./modal-styles.scss";
 import StaffQrCheckin from "../../../components/staffQrCheckin";
 
