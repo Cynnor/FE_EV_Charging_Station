@@ -1,44 +1,45 @@
-import { useEffect, useMemo, useState } from "react";
-import "./index.scss";
-import api from "../../../config/api";
+// Trang StatsReports: tổng hợp giao dịch và doanh thu.
+// Phần chính:
+//  - KPI tóm tắt (doanh thu, tỉ lệ thành công, trung bình/giao dịch, pending)
+//  - Phân bố phương thức thanh toán
+//  - Biểu đồ combo: cột (orders) + đường (revenue) theo tháng / theo ngày
+//  - Bảng giao dịch có bộ lọc & phân trang
+//  - Modal chi tiết giao dịch
+import { useEffect, useMemo, useState } from "react"; // hook React dùng quản lý lifecycle, memo và state
+import "./index.scss"; // style riêng cho trang
+import api from "../../../config/api"; // axios instance gọi API backend
 
+// ComboChart: kết hợp bar (số đơn hàng) và line (doanh thu)
+// data: [{ key,label,orders,revenue }]
+// height: chiều cao tổng thể SVG
 const ComboChart = ({ data = [], height = 420 }) => {
   if (!data.length) {
     return <p className="chart-empty">Chưa có dữ liệu</p>;
   }
 
-  const padding = { top: 32, bottom: 56, left: 64, right: 32 };
-  const innerHeight = height - padding.top - padding.bottom;
-  const slot = 68;
-  const barWidth = 26;
+  const padding = { top: 32, bottom: 56, left: 64, right: 32 }; // khoảng trống cho trục + nhãn
+  const innerHeight = height - padding.top - padding.bottom; // vùng vẽ thực tế
+  const slot = 68; // độ rộng "khung" 1 điểm (giãn cách ngang)
+  const barWidth = 26; // chiều rộng cột đơn hàng
   const width = Math.max(
     data.length * slot + padding.left + padding.right,
     520
   );
-  const maxOrders =
-    data.reduce((max, item) => Math.max(max, item.orders), 0) || 1;
-  const maxRevenue =
-    data.reduce((max, item) => Math.max(max, item.revenue), 0) || 1;
+  const maxOrders = data.reduce((max, item) => Math.max(max, item.orders), 0) || 1; // phục vụ scale chiều cao cột
+  const maxRevenue = data.reduce((max, item) => Math.max(max, item.revenue), 0) || 1; // phục vụ scale đường doanh thu
   const tickCount = 4;
   const ticks = Array.from({ length: tickCount + 1 }, (_, index) => index);
 
-  const formatCompact = (value) =>
-    new Intl.NumberFormat("vi-VN", {
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(value || 0);
+  const formatCompact = (value) => // hiển thị dạng compact (1.2K, 3.4M)
+    new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 }).format(value || 0);
 
-  const getX = (index) => padding.left + index * slot + slot / 2;
-  const getBarX = (index) => getX(index) - barWidth / 2;
-  const getBarHeight = (orders) => (orders / maxOrders) * innerHeight;
-  const getRevenueY = (revenue) =>
-    height - padding.bottom - (revenue / maxRevenue) * innerHeight;
+  const getX = (index) => padding.left + index * slot + slot / 2; // tâm điểm X
+  const getBarX = (index) => getX(index) - barWidth / 2; // vị trí bắt đầu cột
+  const getBarHeight = (orders) => (orders / maxOrders) * innerHeight; // scale chiều cao cột
+  const getRevenueY = (revenue) => height - padding.bottom - (revenue / maxRevenue) * innerHeight; // toạ độ Y đường
 
-  const points = data.map((point, index) => ({
-    x: getX(index),
-    y: getRevenueY(point.revenue),
-  }));
-  const linePath = points.reduce((path, point, index) => {
+  const points = data.map((point, index) => ({ x: getX(index), y: getRevenueY(point.revenue) })); // danh sách toạ độ đường
+  const linePath = points.reduce((path, point, index) => { // tạo đường cong mượt dùng cubic bezier
     if (index === 0) {
       return `M ${point.x} ${point.y}`;
     }
@@ -46,12 +47,9 @@ const ComboChart = ({ data = [], height = 420 }) => {
     const midX = (previous.x + point.x) / 2;
     return `${path} C ${midX} ${previous.y}, ${midX} ${point.y}, ${point.x} ${point.y}`;
   }, "");
-  const areaPath =
-    points.length > 1
-      ? `${linePath} L ${points[points.length - 1].x} ${
-          height - padding.bottom
-        } L ${points[0].x} ${height - padding.bottom} Z`
-      : "";
+  const areaPath = points.length > 1
+    ? `${linePath} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`
+    : ""; // vùng fill dưới đường
 
   return (
     <div className="chart-wrapper">
@@ -87,7 +85,7 @@ const ComboChart = ({ data = [], height = 420 }) => {
           </filter>
         </defs>
 
-        {ticks.map((tick) => {
+        {ticks.map((tick) => { // lưới ngang + giá trị doanh thu compact
           const y = padding.top + (innerHeight / tickCount) * tick;
           const value = maxRevenue - (maxRevenue / tickCount) * tick;
           return (
@@ -140,7 +138,7 @@ const ComboChart = ({ data = [], height = 420 }) => {
           />
         )}
 
-        {data.map((point, index) => {
+        {data.map((point, index) => { // vẽ từng cột + dot + nhãn trục X
           const barHeight = getBarHeight(point.orders);
           const barY = height - padding.bottom - barHeight;
           const revenueY = getRevenueY(point.revenue);
@@ -194,6 +192,7 @@ const ComboChart = ({ data = [], height = 420 }) => {
   );
 };
 
+// Các lựa chọn nhanh khoảng thời gian lọc dữ liệu giao dịch
 const timeRanges = [
   { id: "7days", label: "7 ngày" },
   { id: "30days", label: "30 ngày" },
@@ -201,18 +200,20 @@ const timeRanges = [
   { id: "year", label: "Năm nay" },
 ];
 
+// Danh sách tháng phục vụ biểu đồ theo ngày
 const monthOptions = Array.from({ length: 12 }, (_, index) => ({
   value: index + 1,
   short: `T${index + 1}`,
   label: `Tháng ${index + 1}`,
 }));
 
-const currentYear = new Date().getFullYear();
-const yearPreset = Array.from(
+const currentYear = new Date().getFullYear(); // năm hiện tại
+const yearPreset = Array.from( // preset từ 2021 đến hiện tại + 2 năm đệm
   { length: Math.max(currentYear + 2 - 2021, 5) },
   (_, index) => 2021 + index
 );
 
+// Component chính StatsReports: quản lý state, fetch dữ liệu, memo hoá và render UI
 const StatsReports = () => {
   const [timeFilter, setTimeFilter] = useState("30days");
   const [transactions, setTransactions] = useState([]);
@@ -232,12 +233,12 @@ const StatsReports = () => {
     new Date().getMonth() + 1
   );
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchTransactions();
+  useEffect(() => { // mỗi lần đổi bộ lọc khoảng thời gian -> refetch
+    window.scrollTo(0, 0); // cuộn đầu trang cho UX
+    fetchTransactions(); // tải lại dữ liệu giao dịch
   }, [timeFilter]);
 
-  const getDateRange = () => {
+  const getDateRange = () => { // trả về khoảng thời gian ISO dựa trên timeFilter
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     let from = new Date(today);
@@ -248,7 +249,7 @@ const StatsReports = () => {
     return { fromDate: from.toISOString(), toDate: now.toISOString() };
   };
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async () => { // gọi API /transactions và chuẩn hoá user
     try {
       setLoading(true);
       setError(null);
@@ -302,7 +303,7 @@ const StatsReports = () => {
     }
   };
 
-  const handleViewDetail = async (transactionId) => {
+  const handleViewDetail = async (transactionId) => { // tải chi tiết một giao dịch cho modal
     try {
       const response = await api.get(`/transactions/${transactionId}`);
       const data = response.data?.data || response.data || null;
@@ -331,18 +332,18 @@ const StatsReports = () => {
     }
   };
 
-  const formatCurrency = (amount) =>
+  const formatCurrency = (amount) => // định dạng VND hoặc '—'
     amount === undefined || amount === null
       ? "—"
       : new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(amount);
+        style: "currency",
+        currency: "VND",
+      }).format(amount);
 
-  const formatDateTime = (value) =>
+  const formatDateTime = (value) => // định dạng thời gian locale vi-VN hoặc '—'
     value ? new Date(value).toLocaleString("vi-VN", { hour12: false }) : "—";
 
-  const formatStatus = (status = "") => {
+  const formatStatus = (status = "") => { // map status -> {label,tone} dùng cho badge
     const map = {
       success: { label: "Thành công", tone: "success" },
       failed: { label: "Thất bại", tone: "danger" },
@@ -354,7 +355,7 @@ const StatsReports = () => {
     return map[status] || { label: status || "Không rõ", tone: "default" };
   };
 
-  const availableYears = useMemo(() => {
+  const availableYears = useMemo(() => { // tập hợp năm xuất hiện trong dữ liệu (thêm preset)
     const years = new Set(yearPreset);
     transactions.forEach((t) => {
       const year = new Date(t.createdAt).getFullYear();
@@ -364,7 +365,7 @@ const StatsReports = () => {
     return Array.from(years).sort((a, b) => a - b);
   }, [transactions]);
 
-  useEffect(() => {
+  useEffect(() => { // đảm bảo năm chọn còn hợp lệ sau khi list years thay đổi
     if (!availableYears.includes(selectedYearMonthly)) {
       setSelectedYearMonthly(
         availableYears[availableYears.length - 1] || currentYear
@@ -377,7 +378,7 @@ const StatsReports = () => {
     }
   }, [availableYears, selectedYearMonthly, selectedYearDaily]);
 
-  const filteredTransactions = useMemo(() => {
+  const filteredTransactions = useMemo(() => { // áp dụng lọc trạng thái, phương thức, từ khoá
     return transactions.filter((transaction) => {
       const matchStatus =
         filters.status === "all" || transaction.status === filters.status;
@@ -398,7 +399,7 @@ const StatsReports = () => {
     });
   }, [transactions, filters]);
 
-  const paginatedTransactions = useMemo(() => {
+  const paginatedTransactions = useMemo(() => { // lấy slice dữ liệu trang hiện tại
     const start = (currentPage - 1) * pageSize;
     return filteredTransactions.slice(start, start + pageSize);
   }, [filteredTransactions, currentPage]);
@@ -408,7 +409,7 @@ const StatsReports = () => {
     Math.ceil(filteredTransactions.length / pageSize)
   );
 
-  const summaryCards = useMemo(() => {
+  const summaryCards = useMemo(() => { // tính các KPI tóm tắt
     if (transactions.length === 0) return [];
     const totalRevenue = transactions.reduce(
       (sum, t) => sum + (t.amount || 0),
@@ -447,7 +448,7 @@ const StatsReports = () => {
     ];
   }, [transactions]);
 
-  const paymentBreakdown = useMemo(() => {
+  const paymentBreakdown = useMemo(() => { // phân bố phương thức thanh toán
     const counts = transactions.reduce((acc, t) => {
       const method = t.paymentMethod || "other";
       acc[method] = (acc[method] || 0) + 1;
@@ -462,7 +463,7 @@ const StatsReports = () => {
     }));
   }, [transactions]);
 
-  const monthlyStats = useMemo(() => {
+  const monthlyStats = useMemo(() => { // gom orders & revenue theo tháng
     const months = monthOptions.map((option) => ({
       key: `${selectedYearMonthly}-${option.value}`,
       label: option.short,
@@ -481,7 +482,7 @@ const StatsReports = () => {
     return months;
   }, [transactions, selectedYearMonthly]);
 
-  const dailyStats = useMemo(() => {
+  const dailyStats = useMemo(() => { // gom orders & revenue theo từng ngày trong tháng chọn
     const daysInMonth = new Date(
       selectedYearDaily,
       selectedMonthDaily,
@@ -507,7 +508,7 @@ const StatsReports = () => {
     return days;
   }, [transactions, selectedYearDaily, selectedMonthDaily]);
 
-  const paginationItems = useMemo(() => {
+  const paginationItems = useMemo(() => { // tạo danh sách trang + ellipsis nếu cần
     if (totalPages <= 6)
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     const items = [1];
@@ -546,9 +547,8 @@ const StatsReports = () => {
               <button
                 key={range.id}
                 type="button"
-                className={`time-chip ${
-                  timeFilter === range.id ? "active" : ""
-                }`}
+                className={`time-chip ${timeFilter === range.id ? "active" : ""
+                  }`}
                 onClick={() => setTimeFilter(range.id)}
               >
                 {range.label}
@@ -567,7 +567,7 @@ const StatsReports = () => {
         </div>
       </section>
 
-      <div className="filters-card">
+      <div className="filters-card"> {/* Khối bộ lọc trạng thái/phương thức/từ khoá + biểu đồ */}
         <div className="filter-row">
           <div className="filter-field">
             <label>Trạng thái</label>
@@ -688,7 +688,7 @@ const StatsReports = () => {
         </div>
       </div>
 
-      <div className="panel-card">
+      <div className="panel-card"> {/* Bảng giao dịch + phân trang */}
         <div className="panel-headline">
           <div>
             <h3>Giao dịch gần đây</h3>
@@ -731,17 +731,16 @@ const StatsReports = () => {
                           {transaction.paymentMethod === "vnpay"
                             ? "VNPay"
                             : transaction.paymentMethod === "cash"
-                            ? "Tiền mặt"
-                            : "Khác"}
+                              ? "Tiền mặt"
+                              : "Khác"}
                         </span>
                       </td>
                       <td>{formatCurrency(transaction.amount)}</td>
                       <td>{formatDateTime(transaction.createdAt)}</td>
                       <td>
                         <span
-                          className={`status-pill status-${
-                            formatStatus(transaction.status).tone
-                          }`}
+                          className={`status-pill status-${formatStatus(transaction.status).tone
+                            }`}
                         >
                           {formatStatus(transaction.status).label}
                         </span>
@@ -799,7 +798,7 @@ const StatsReports = () => {
         </div>
       </div>
 
-      {detail && (
+      {detail && ( // Modal chi tiết giao dịch
         <div className="modal-overlay-new" onClick={() => setDetail(null)}>
           <div
             className="modal-content-new detail-modal"
@@ -841,8 +840,8 @@ const StatsReports = () => {
                   {detail.paymentMethod === "vnpay"
                     ? "VNPay"
                     : detail.paymentMethod === "cash"
-                    ? "Tiền mặt"
-                    : "Khác"}
+                      ? "Tiền mặt"
+                      : "Khác"}
                 </strong>
                 <p className="muted">
                   Loại thanh toán: {detail.metadata?.paymentType === "subscription" ? "Gói thành viên" : "Đặt chỗ/phiên sạc"}
