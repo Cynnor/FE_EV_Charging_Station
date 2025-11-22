@@ -478,19 +478,28 @@ const SubscriptionManagement = () => {
 
   // Hàm mở modal edit subscription
   const handleEditClickSubscription = (subscription) => {
-    setEditingSubscription(subscription); // Set subscription đang edit
+    // Cập nhật phiên đăng ký đang chỉnh sửa và điền dữ liệu vào form
+    setEditingSubscription(subscription);
     setSubscriptionFormData({
-      // Điền dữ liệu vào form
-      userId: subscription.user?.id || subscription.userId || "", // User ID
-      planId: subscription.plan?.id || subscription.planId || "", // Plan ID
-      autoRenew: subscription.autoRenew || false, // Auto renew
-      customPrice: subscription.customPrice || "", // Custom price
-      status: subscription.status || "pending", // Status
-      endDate: subscription.endDate // End date
-        ? new Date(subscription.endDate).toISOString().split("T")[0] // Convert sang format YYYY-MM-DD
+      userId:
+        subscription.user?.id ||
+        subscription.user?._id ||
+        subscription.userId ||
+        "",
+      planId:
+        subscription.plan?.id ||
+        subscription.plan?._id ||
+        subscription.planId ||
+        subscription.metadata?.planId ||
+        "",
+      autoRenew: subscription.autoRenew || false,
+      customPrice: subscription.customPrice || "",
+      status: subscription.status || "pending",
+      endDate: subscription.endDate
+        ? new Date(subscription.endDate).toISOString().split("T")[0]
         : "",
     });
-    setShowEditSubscriptionModal(true); // Mở modal
+    setShowEditSubscriptionModal(true);
   };
 
   // ==================== HÀM FORMAT DỮ LIỆU HIỂN THỊ ====================
@@ -501,14 +510,50 @@ const SubscriptionManagement = () => {
   };
 
   // Hàm format duration thành text hiển thị
+  const durationDaysLabelMap = {
+    30: "1 tháng",
+    180: "6 tháng",
+    365: "12 tháng",
+  };
+
   const formatDuration = (duration) => {
+    if (duration === undefined || duration === null || duration === "") {
+      return "—";
+    }
+    if (typeof duration === "number") {
+      return durationDaysLabelMap[duration] || `${duration} ngày`;
+    }
+
     const durationMap = {
-      // Map key sang text tiếng Việt
       "1_month": "1 tháng",
       "6_months": "6 tháng",
       "12_months": "12 tháng",
     };
-    return durationMap[duration] || duration; // Trả về text hoặc giá trị gốc nếu không tìm thấy
+
+    return durationMap[duration] || duration || "—";
+  };
+
+  const getUserDisplayName = (user) =>
+    user?.profile?.fullName ||
+    user?.fullName ||
+    user?.username ||
+    user?.email ||
+    "Không rõ";
+
+  const getSubscriptionPlanName = (subscription) =>
+    subscription.plan?.name ||
+    subscription.planName ||
+    subscription.metadata?.planName ||
+    "Không rõ";
+
+  const getSubscriptionDurationLabel = (subscription) => {
+    const durationSource =
+      subscription.plan?.duration ||
+      subscription.duration ||
+      subscription.planDuration ||
+      subscription.metadata?.duration ||
+      subscription.metadata?.durationDays;
+    return formatDuration(durationSource);
   };
 
   // Hàm format ngày tháng theo định dạng Việt Nam
@@ -549,19 +594,19 @@ const SubscriptionManagement = () => {
 
   // Hàm xác định tone/màu cho trạng thái subscription
   const getSubscriptionStatusTone = (status = "") => {
-    const normalized = status.toLowerCase(); // Chuyển về lowercase để so sánh
-    if (normalized === "active") return "success"; // Active -> success (xanh)
-    if (normalized === "pending") return "warning"; // Pending -> warning (vàng)
-    if (normalized === "cancelled" || normalized === "expired") return "danger"; // Cancelled/Expired -> danger (đỏ)
-    return "default"; // Còn lại -> default
+    const normalized = status.toLowerCase();
+    if (normalized === "active" || normalized === "current_active") return "success";
+    if (normalized === "pending") return "warning";
+    if (normalized === "cancelled" || normalized === "expired") return "danger";
+    return "default";
   };
 
   // Hàm format text trạng thái subscription
   const formatSubscriptionStatus = (status = "") => {
     const normalized = status.toLowerCase(); // Lowercase
     const labels = {
-      // Map status sang text tiếng Việt
       active: "Hoạt động",
+      current_active: "Hoạt động",
       pending: "Chờ xử lý",
       cancelled: "Đã huỷ",
       expired: "Hết hạn",
@@ -1203,17 +1248,12 @@ const SubscriptionManagement = () => {
                     subscriptions.map((subscription) => (
                       <tr key={subscription._id}>
                         <td className="plan-cell">
-                          <p>{subscription.user?.fullName || "Không rõ"}</p>
+                          <p>{getUserDisplayName(subscription.user)}</p>
                           <span>{subscription.user?.email || "—"}</span>
                         </td>
                         <td className="plan-cell">
-                          <p>{subscription.plan?.name || "Không rõ"}</p>
-                          <span>
-                            {formatDuration(
-                              subscription.plan?.duration ||
-                                subscription.planDuration
-                            )}
-                          </span>
+                          <p>{getSubscriptionPlanName(subscription)}</p>
+                          <span>{getSubscriptionDurationLabel(subscription)}</span>
                         </td>
                         <td>
                           <span
@@ -1305,27 +1345,13 @@ const SubscriptionManagement = () => {
             <div className="form-new detail-grid">
               <div className="detail-card">
                 <span>Khách hàng</span>
-                <strong>
-                  {selectedSubscription.user?.fullName || "Không rõ"}
-                </strong>
+                <strong>{getUserDisplayName(selectedSubscription.user)}</strong>
                 <p>{selectedSubscription.user?.email || "—"}</p>
               </div>
               <div className="detail-card">
                 <span>Gói đăng ký</span>
-                <strong>
-                  {selectedSubscription.plan?.name ||
-                    selectedSubscription.planName ||
-                    "Không rõ"}
-                </strong>
-                <p>
-                  {selectedSubscription.plan?.duration ||
-                  selectedSubscription.planDuration
-                    ? formatDuration(
-                        selectedSubscription.plan?.duration ||
-                          selectedSubscription.planDuration
-                      )
-                    : "—"}
-                </p>
+                <strong>{getSubscriptionPlanName(selectedSubscription)}</strong>
+                <p>{getSubscriptionDurationLabel(selectedSubscription)}</p>
               </div>
               <div className="detail-card">
                 <span>Trạng thái</span>
@@ -1337,14 +1363,6 @@ const SubscriptionManagement = () => {
                 <span>Gia hạn</span>
                 <strong>
                   {formatAutoRenewLabel(selectedSubscription.autoRenew)}
-                </strong>
-              </div>
-              <div className="detail-card">
-                <span>Giá tuỳ chỉnh</span>
-                <strong>
-                  {selectedSubscription.customPrice
-                    ? formatPrice(Number(selectedSubscription.customPrice) || 0)
-                    : "—"}
                 </strong>
               </div>
               <div className="detail-card">
@@ -1365,12 +1383,27 @@ const SubscriptionManagement = () => {
       )}
       {/* Add Subscription Modal */}
       {showAddSubscriptionModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Thêm Đăng Ký Mới</h2>
+        <div
+          className="modal-overlay-new"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddSubscriptionModal(false);
+              resetSubscriptionForm();
+            }
+          }}
+        >
+          <div className="modal-content-new edit-modal">
+            <div className="modal-header-new">
+              <div className="modal-title-section">
+                <div className="modal-icon">➕</div>
+                <div>
+                  <h2>Thêm Đăng Ký Mới</h2>
+                  <p>Chọn người dùng &amp; gói để kích hoạt dịch vụ nhanh chóng.</p>
+                </div>
+              </div>
               <button
-                className="modal-close"
+                type="button"
+                className="modal-close-new"
                 onClick={() => {
                   setShowAddSubscriptionModal(false);
                   resetSubscriptionForm();
@@ -1379,53 +1412,58 @@ const SubscriptionManagement = () => {
                 ✕
               </button>
             </div>
-            <form onSubmit={handleAddSubscription} className="modal-body">
-              <div className="form-group">
-                <label>Người dùng *</label>
-                <select
-                  required
-                  value={subscriptionFormData.userId}
-                  onChange={(e) =>
-                    setSubscriptionFormData({
-                      ...subscriptionFormData,
-                      userId: e.target.value,
-                    })
-                  }
-                >
-                  <option key="select-user" value="">
-                    Chọn người dùng
-                  </option>
-                  {usersList.map((user) => (
-                    <option
-                      key={user._id || user.id}
-                      value={user._id || user.id}
-                    >
-                      {user.username} - {user.fullName || user.email}
+            <form
+              onSubmit={handleAddSubscription}
+              className="form-new edit-grid"
+            >
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Người dùng *</label>
+                  <select
+                    required
+                    value={subscriptionFormData.userId}
+                    onChange={(e) =>
+                      setSubscriptionFormData({
+                        ...subscriptionFormData,
+                        userId: e.target.value,
+                      })
+                    }
+                  >
+                    <option key="select-user" value="">
+                      Chọn người dùng
                     </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Gói đăng ký *</label>
-                <select
-                  required
-                  value={subscriptionFormData.planId}
-                  onChange={(e) =>
-                    setSubscriptionFormData({
-                      ...subscriptionFormData,
-                      planId: e.target.value,
-                    })
-                  }
-                >
-                  <option key="select-plan" value="">
-                    Chọn gói
-                  </option>
-                  {plans.map((plan) => (
-                    <option key={plan._id} value={plan._id}>
-                      {plan.name} - {formatPrice(plan.price)}
+                    {usersList.map((user) => (
+                      <option
+                        key={user._id || user.id}
+                        value={user._id || user.id}
+                      >
+                        {user.username} - {user.fullName || user.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Gói đăng ký *</label>
+                  <select
+                    required
+                    value={subscriptionFormData.planId}
+                    onChange={(e) =>
+                      setSubscriptionFormData({
+                        ...subscriptionFormData,
+                        planId: e.target.value,
+                      })
+                    }
+                  >
+                    <option key="select-plan" value="">
+                      Chọn gói
                     </option>
-                  ))}
-                </select>
+                    {plans.map((plan) => (
+                      <option key={plan._id} value={plan._id}>
+                        {plan.name} - {formatPrice(plan.price)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="form-row">
                 <div className="form-group">
@@ -1458,10 +1496,10 @@ const SubscriptionManagement = () => {
                   </label>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div className="form-footer-new">
                 <button
                   type="button"
-                  className="btn-cancel"
+                  className="btn-cancel-new"
                   onClick={() => {
                     setShowAddSubscriptionModal(false);
                     resetSubscriptionForm();
@@ -1469,7 +1507,7 @@ const SubscriptionManagement = () => {
                 >
                   Hủy
                 </button>
-                <button type="submit" className="btn-submit">
+                <button type="submit" className="btn-submit-new">
                   Thêm
                 </button>
               </div>
@@ -1480,12 +1518,28 @@ const SubscriptionManagement = () => {
 
       {/* Edit Subscription Modal */}
       {showEditSubscriptionModal && editingSubscription && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Sửa Đăng Ký</h2>
+        <div
+          className="modal-overlay-new"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowEditSubscriptionModal(false);
+              setEditingSubscription(null);
+              resetSubscriptionForm();
+            }
+          }}
+        >
+          <div className="modal-content-new edit-modal">
+            <div className="modal-header-new">
+              <div className="modal-title-section">
+                <div className="modal-icon">✏️</div>
+                <div>
+                  <h2>Sửa Đăng Ký</h2>
+                  <p>Cập nhật trạng thái hoặc thời hạn kết thúc nhiều hơn.</p>
+                </div>
+              </div>
               <button
-                className="modal-close"
+                type="button"
+                className="modal-close-new"
                 onClick={() => {
                   setShowEditSubscriptionModal(false);
                   setEditingSubscription(null);
@@ -1495,37 +1549,40 @@ const SubscriptionManagement = () => {
                 ✕
               </button>
             </div>
-            <form onSubmit={handleEditSubscription} className="modal-body">
-              <div className="form-group">
-                <label>Trạng thái *</label>
-                <select
-                  required
-                  value={subscriptionFormData.status}
-                  onChange={(e) =>
-                    setSubscriptionFormData({
-                      ...subscriptionFormData,
-                      status: e.target.value,
-                    })
-                  }
-                >
-                  <option key="pending" value="pending">
-                    Pending
-                  </option>
-                  <option key="active" value="active">
-                    Active
-                  </option>
-                  <option key="current_active" value="current_active">
-                    Current Active
-                  </option>
-                  <option key="expired" value="expired">
-                    Expired
-                  </option>
-                  <option key="cancelled" value="cancelled">
-                    Cancelled
-                  </option>
-                </select>
-              </div>
+            <form
+              onSubmit={handleEditSubscription}
+              className="form-new edit-grid"
+            >
               <div className="form-row">
+                <div className="form-group">
+                  <label>Trạng thái *</label>
+                  <select
+                    required
+                    value={subscriptionFormData.status}
+                    onChange={(e) =>
+                      setSubscriptionFormData({
+                        ...subscriptionFormData,
+                        status: e.target.value,
+                      })
+                    }
+                  >
+                    <option key="pending" value="pending">
+                      Pending
+                    </option>
+                    <option key="active" value="active">
+                      Active
+                    </option>
+                    <option key="current_active" value="current_active">
+                      Current Active
+                    </option>
+                    <option key="expired" value="expired">
+                      Expired
+                    </option>
+                    <option key="cancelled" value="cancelled">
+                      Cancelled
+                    </option>
+                  </select>
+                </div>
                 <div className="form-group">
                   <label>Ngày kết thúc</label>
                   <input
@@ -1539,26 +1596,26 @@ const SubscriptionManagement = () => {
                     }
                   />
                 </div>
-                <div className="form-group checkbox-group">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={subscriptionFormData.autoRenew}
-                      onChange={(e) =>
-                        setSubscriptionFormData({
-                          ...subscriptionFormData,
-                          autoRenew: e.target.checked,
-                        })
-                      }
-                    />
-                    Tự động gia hạn
-                  </label>
-                </div>
               </div>
-              <div className="modal-footer">
+              <div className="checkbox-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={subscriptionFormData.autoRenew}
+                    onChange={(e) =>
+                      setSubscriptionFormData({
+                        ...subscriptionFormData,
+                        autoRenew: e.target.checked,
+                      })
+                    }
+                  />
+                  Tự động gia hạn
+                </label>
+              </div>
+              <div className="form-footer-new">
                 <button
                   type="button"
-                  className="btn-cancel"
+                  className="btn-cancel-new"
                   onClick={() => {
                     setShowEditSubscriptionModal(false);
                     setEditingSubscription(null);
@@ -1567,7 +1624,7 @@ const SubscriptionManagement = () => {
                 >
                   Hủy
                 </button>
-                <button type="submit" className="btn-submit">
+                <button type="submit" className="btn-submit-new">
                   Cập nhật
                 </button>
               </div>
