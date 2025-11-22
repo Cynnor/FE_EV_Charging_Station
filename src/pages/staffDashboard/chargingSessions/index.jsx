@@ -56,6 +56,66 @@ const ChargingSessions = () => {
         [sessions]
     );
 
+    // Merge consecutive sessions by station, plate, and status
+    const mergedCompletedSessions = useMemo(() => {
+        if (completedSessions.length === 0) return [];
+
+        // Group sessions by station, plate, and status
+        const groups = {};
+
+        completedSessions.forEach(session => {
+            const stationName = session.slot?.port?.station?.name || 'N/A';
+            const plate = session.vehicle?.plateNumber || 'Ẩn biển số';
+            const status = session.status || 'completed';
+            const key = `${stationName}|||${plate}|||${status}`;
+
+            if (!groups[key]) {
+                groups[key] = [];
+            }
+            groups[key].push(session);
+        });
+
+        // Merge consecutive sessions in each group
+        const merged = [];
+
+        Object.values(groups).forEach(groupSessions => {
+            // Sort by start time ascending
+            groupSessions.sort((a, b) =>
+                new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime()
+            );
+
+            // Merge consecutive sessions (within 10 minutes gap)
+            const TIME_GAP_MS = 10 * 60 * 1000; // 10 minutes
+            let currentMerged = { ...groupSessions[0] };
+
+            for (let i = 1; i < groupSessions.length; i++) {
+                const current = groupSessions[i];
+                const prevEnd = new Date(currentMerged.endedAt || currentMerged.startedAt).getTime();
+                const currentStart = new Date(current.startedAt).getTime();
+
+                // If sessions are consecutive (within 10 min), merge them
+                if (currentStart - prevEnd <= TIME_GAP_MS) {
+                    // Extend the merged session's end time
+                    currentMerged.endedAt = current.endedAt;
+                    // Keep the first session's ID for "Chi tiết" button
+                    // Status should be the same since they're in the same group
+                } else {
+                    // Gap is too large, save current merged session and start new one
+                    merged.push(currentMerged);
+                    currentMerged = { ...current };
+                }
+            }
+
+            // Don't forget the last merged session
+            merged.push(currentMerged);
+        });
+
+        // Sort final result by start time descending (newest first)
+        return merged.sort((a, b) =>
+            new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+        );
+    }, [completedSessions]);
+
     const formatTime = (value) => {
         if (!value) return "—";
         try {
@@ -247,7 +307,7 @@ const ChargingSessions = () => {
                         onClick={() => setActiveTab("completed")}
                     >
                         <span className="icon">✅</span>
-                        Đã hoàn thành ({completedSessions.length})
+                        Đã hoàn thành ({mergedCompletedSessions.length})
                     </button>
                 </div>
 
@@ -346,7 +406,7 @@ const ChargingSessions = () => {
                         <div className="completed-sessions">
                             {loading ? (
                                 <p className="muted">Đang tải dữ liệu...</p>
-                            ) : completedSessions.length === 0 ? (
+                            ) : mergedCompletedSessions.length === 0 ? (
                                 <p className="muted">Chưa có phiên sạc đã hoàn tất.</p>
                             ) : (
                                 <div className="sessions-table">
@@ -358,7 +418,7 @@ const ChargingSessions = () => {
                                         <div className="col">Hành động</div>
                                     </div>
                                     <div className="table-body">
-                                        {completedSessions.map((session) => (
+                                        {mergedCompletedSessions.map((session) => (
                                             <div key={session._id || session.id} className="table-row">
                                                 <div className="col">
                                                     <span className="station-id">
