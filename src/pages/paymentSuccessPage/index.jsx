@@ -3,6 +3,49 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./index.scss";
 import api from "../../config/api";
 
+const getRawVnpQueryString = (search) => {
+  if (!search) return "";
+  return search.startsWith("?") ? search.slice(1) : search;
+};
+
+const parseVnpParams = (rawQueryString) => {
+  const params = {};
+  if (!rawQueryString) return params;
+
+  rawQueryString.split("&").forEach((segment) => {
+    if (!segment) return;
+    const equalsIndex = segment.indexOf("=");
+    const rawKey = equalsIndex >= 0 ? segment.slice(0, equalsIndex) : segment;
+    if (!rawKey) return;
+    const rawValue = equalsIndex >= 0 ? segment.slice(equalsIndex + 1) : "";
+
+    let decodedKey = rawKey;
+    try {
+      decodedKey = decodeURIComponent(rawKey);
+    } catch {
+      // Keep fallback raw key
+    }
+
+    params[decodedKey] = rawValue ?? "";
+  });
+
+  return params;
+};
+
+const buildVnpSignData = (params) => {
+  return Object.keys(params)
+    .filter(
+      (key) =>
+        key.startsWith("vnp_") &&
+        key !== "vnp_SecureHash" &&
+        key !== "vnp_SecureHashType"
+    )
+    .sort()
+    // Only hash official VNPay params — exclude custom fields like subscriptionId
+    .map((key) => `${key}=${params[key] ?? ""}`)
+    .join("&");
+};
+
 export default function PaymentSuccessPage() {
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -19,22 +62,12 @@ export default function PaymentSuccessPage() {
     try {
       setIsLoading(true);
 
-      // Lấy thông tin từ URL params (VNPay return)
-      const urlParams = new URLSearchParams(window.location.search);
-      const vnpParams = {
-        vnp_Amount: urlParams.get("vnp_Amount"),
-        vnp_BankCode: urlParams.get("vnp_BankCode"),
-        vnp_BankTranNo: urlParams.get("vnp_BankTranNo"),
-        vnp_CardType: urlParams.get("vnp_CardType"),
-        vnp_OrderInfo: urlParams.get("vnp_OrderInfo"),
-        vnp_PayDate: urlParams.get("vnp_PayDate"),
-        vnp_ResponseCode: urlParams.get("vnp_ResponseCode"),
-        vnp_TmnCode: urlParams.get("vnp_TmnCode"),
-        vnp_TransactionNo: urlParams.get("vnp_TransactionNo"),
-        vnp_TransactionStatus: urlParams.get("vnp_TransactionStatus"),
-        vnp_TxnRef: urlParams.get("vnp_TxnRef"),
-        vnp_SecureHash: urlParams.get("vnp_SecureHash"),
-      };
+      const rawQueryString = getRawVnpQueryString(window.location.search || "");
+      const vnpParams = parseVnpParams(rawQueryString);
+      const vnpSignData = buildVnpSignData(vnpParams);
+
+      console.log("🔐 VNPay raw query:", rawQueryString);
+      console.log("🔐 VNPay sign data:", vnpSignData);
 
       // Kiểm tra xem có phải VNPay return không
       if (vnpParams.vnp_ResponseCode) {
@@ -58,12 +91,12 @@ export default function PaymentSuccessPage() {
                 vnp_PayDate: vnpParams.vnp_PayDate,
                 vnp_ResponseCode: vnpParams.vnp_ResponseCode,
                 vnp_TmnCode: vnpParams.vnp_TmnCode,
-                vnp_TransactionNo: vnpParams.vnp_TransactionNo,
-                vnp_TransactionStatus: vnpParams.vnp_TransactionStatus,
-                vnp_TxnRef: vnpParams.vnp_TxnRef,
-                vnp_SecureHash: vnpParams.vnp_SecureHash,
-              }
-            );
+              vnp_TransactionNo: vnpParams.vnp_TransactionNo,
+              vnp_TransactionStatus: vnpParams.vnp_TransactionStatus,
+              vnp_TxnRef: vnpParams.vnp_TxnRef,
+              vnp_SecureHash: vnpParams.vnp_SecureHash,
+            }
+          );
 
             if (response.data?.success) {
               const paymentData = response.data.data || response.data;
@@ -149,7 +182,7 @@ export default function PaymentSuccessPage() {
             if (response.data?.success) {
               const paymentData = response.data.data;
               const status = paymentData.paymentStatus || response.data.paymentStatus;
-              
+
               console.log('💳 Payment Status:', status);
               console.log('💳 Updated Sessions:', paymentData.updatedSessions);
               console.log('💳 Updated Slots:', paymentData.updatedSlots);
@@ -447,15 +480,15 @@ export default function PaymentSuccessPage() {
             {paymentInfo?.isSubscription
               ? "Đăng ký gói thành công!"
               : paymentInfo?.isChargingSession
-              ? "Thanh toán phiên sạc thành công!"
-              : "Thanh toán thành công!"}
+                ? "Thanh toán phiên sạc thành công!"
+                : "Thanh toán thành công!"}
           </h1>
           <p className="success-message">
             {paymentInfo?.isSubscription
               ? "Gói đăng ký của bạn đã được kích hoạt tự động. Bạn có thể bắt đầu sử dụng ngay!"
               : paymentInfo?.isChargingSession
-              ? "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."
-              : "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."}
+                ? "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."
+                : "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."}
           </p>
 
           {paymentInfo && (
@@ -493,8 +526,8 @@ export default function PaymentSuccessPage() {
                   {paymentInfo.isSubscription
                     ? "Chi tiết đăng ký gói"
                     : paymentInfo.isChargingSession
-                    ? "Chi tiết thanh toán phiên sạc"
-                    : "Chi tiết giao dịch"}
+                      ? "Chi tiết thanh toán phiên sạc"
+                      : "Chi tiết giao dịch"}
                 </h3>
               </div>
 
@@ -548,8 +581,8 @@ export default function PaymentSuccessPage() {
                         <span className="value">
                           #{paymentInfo.reservationId?.slice(-8) || "N/A"}
                           {paymentInfo.reservationUpdated && (
-                            <span style={{ 
-                              marginLeft: '8px', 
+                            <span style={{
+                              marginLeft: '8px',
                               color: '#16a34a',
                               fontSize: '12px',
                               fontWeight: '600'

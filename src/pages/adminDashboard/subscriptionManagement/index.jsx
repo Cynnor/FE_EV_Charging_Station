@@ -1489,7 +1489,7 @@ const SubscriptionManagement = () => {
                                                 </td>
                                                 <td>
                                                     {subscription.plan?.name ||
-                                                        subscription.planId ||
+                                                        subscription.type ||
                                                         "N/A"}
                                                 </td>
                                                 <td>
