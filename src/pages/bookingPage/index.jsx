@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react"; // Import React hooks để quản lý state và side effects
+import { useState, useEffect, useMemo, useCallback } from "react"; // Import React hooks để quản lý state và side effects
 import { useNavigate, useSearchParams, useParams } from "react-router-dom"; // Import hooks để điều hướng và lấy params từ URL
 import "./index.scss"; // Import file SCSS cho styling
 import api from "../../config/api"; // Import instance axios đã cấu hình để gọi API
+import CustomPopup from "../../components/customPopup"; // Reuse the common popup for conflict messaging
 
 /** ============== MAPPERS & TYPES (JS) ============== */
 // Danh sách quận cố định theo yêu cầu (đã loại bỏ trùng lặp)
@@ -229,6 +230,15 @@ export default function BookingPage() {
   const [searchTerm, setSearchTerm] = useState(""); // State lưu từ khóa tìm kiếm
   const [filterType, setFilterType] = useState("all"); // State lưu bộ lọc loại trạm
   const [districtFilter, setDistrictFilter] = useState("all"); // State lưu bộ lọc quận
+  const [activeChargingVehicleInfo, setActiveChargingVehicleInfo] = useState(
+    {}
+  ); // State lưu map vehicle đang sạc
+  const [vehicleReservations, setVehicleReservations] = useState({}); // State lưu lịch đặt chỗ mỗi xe
+  const [conflictPopup, setConflictPopup] = useState({
+    isOpen: false,
+    message: "",
+    type: "error",
+  }); // Popup để hiển thị lỗi xung đột
 
   const [userLocation, setUserLocation] = useState(null); // State lưu vị trí GPS của user
   useEffect(() => {
@@ -292,6 +302,87 @@ export default function BookingPage() {
     };
   }, []); // chỉ load 1 lần. Nếu muốn search theo từ khoá, thêm [searchTerm]
 
+  const fetchActiveChargingVehicles = useCallback(async () => {
+    try {
+      const { data } = await api.get("/charging/sessions", {
+        params: { status: "active", limit: 100 },
+      });
+      const sessions = data?.data?.items || [];
+      const map = {};
+      sessions.forEach((session) => {
+        const vehicleId =
+          session?.vehicle?.id || session?.vehicle?._id || session?.vehicle;
+        if (!vehicleId) return;
+        const station =
+          session?.slot?.port?.station ||
+          session?.slot?.station ||
+          session?.station ||
+          {};
+        const stationId = station?.id || station?._id;
+        const stationName =
+          station?.name || station?.stationName || station?.title;
+        map[vehicleId] = {
+          stationId: stationId || undefined,
+          stationName: stationName || undefined,
+        };
+      });
+      setActiveChargingVehicleInfo(map);
+    } catch (error) {
+      console.error("Error loading active charging sessions:", error);
+    }
+  }, []);
+
+  const fetchVehicleReservations = useCallback(async () => {
+    try {
+      const { data } = await api.get("/reservations", {
+        params: { limit: 200 },
+      });
+      const reservations = data?.data?.items || [];
+      const map = {};
+      const relevantStatuses = ["pending", "confirmed", "payment-success"];
+      reservations.forEach((reservation) => {
+        if (!relevantStatuses.includes(reservation.status)) return;
+        const vehicleId =
+          reservation?.vehicle?.id ||
+          reservation?.vehicle?._id ||
+          reservation?.vehicle;
+        if (!vehicleId) return;
+        const entries = reservation.items || [];
+        map[vehicleId] ??= [];
+        entries.forEach((item) => {
+          if (!item.startAt || !item.endAt) return;
+          const slot = item.slot;
+          const station =
+            slot?.port?.station ||
+            slot?.station ||
+            reservation.station ||
+            {};
+          map[vehicleId].push({
+            startAt: item.startAt,
+            endAt: item.endAt,
+            stationName:
+              station?.name ||
+              station?.stationName ||
+              station?.title ||
+              undefined,
+            status: reservation.status,
+          });
+        });
+      });
+      setVehicleReservations(map);
+    } catch (error) {
+      console.error("Error loading vehicle reservations:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchActiveChargingVehicles();
+  }, [fetchActiveChargingVehicles]);
+
+  useEffect(() => {
+    fetchVehicleReservations();
+  }, [fetchVehicleReservations]);
+
   useEffect(() => {
     // Hook lấy vị trí GPS của user
     if (navigator.geolocation) {
@@ -308,6 +399,14 @@ export default function BookingPage() {
       );
     }
   }, []);
+
+  useEffect(() => {
+    if (showVehicleModal) {
+      fetchActiveChargingVehicles();
+      fetchVehicleReservations();
+    }
+  }, [showVehicleModal, fetchActiveChargingVehicles, fetchVehicleReservations]);
+ 
 
   const defaultCenter = [10.850268581807446, 106.76508926692969]; // Tọa độ mặc định (trung tâm TP.HCM)
 
@@ -492,6 +591,22 @@ export default function BookingPage() {
       return;
     }
 
+    const conflictingReservation = hasVehicleTimeConflict(
+      vehicleId,
+      startAtIso,
+      endAtIso
+    );
+    if (conflictingReservation) {
+      showConflictPopup(
+        `❌ Xe này đang có lịch sạc (${formatLocalTimeString(
+          conflictingReservation.startAt
+        )} - ${formatLocalTimeString(
+          conflictingReservation.endAt
+        )}). Vui lòng chọn thời gian khác.`
+      );
+      return;
+    }
+
     // Re-validate latest slot status before booking (avoid race conditions)
     setSubmitting(true);
     try {
@@ -626,6 +741,46 @@ export default function BookingPage() {
     return `${(powerKw * priceVnd).toLocaleString("vi-VN")} đ`;
   }, [selectedCharger]);
 
+  const getVehicleChargingInfo = (vehicleId) =>
+    activeChargingVehicleInfo[vehicleId];
+
+  const isVehicleCurrentlyCharging = (vehicleId) =>
+    Boolean(getVehicleChargingInfo(vehicleId)?.stationId);
+
+  const formatLocalTimeString = (iso) =>
+    iso
+      ? new Date(iso).toLocaleString("vi-VN", {
+          dateStyle: "short",
+          timeStyle: "short",
+        })
+      : "Không xác định";
+
+  const showConflictPopup = (message) =>
+    setConflictPopup({ isOpen: true, message, type: "error" });
+
+  const closeConflictPopup = () =>
+    setConflictPopup((prev) => ({ ...prev, isOpen: false }));
+
+  const hasVehicleTimeConflict = (vehicleId, startIso, endIso) => {
+    if (!vehicleId || !vehicleReservations[vehicleId]) return null;
+    const startTs = new Date(startIso);
+    const endTs = new Date(endIso);
+    if (!startTs || !endTs || Number.isNaN(startTs.getTime())) return null;
+    for (const reserv of vehicleReservations[vehicleId]) {
+      const existingStart = new Date(reserv.startAt);
+      const existingEnd = new Date(reserv.endAt);
+      if (
+        existingStart &&
+        existingEnd &&
+        startTs < existingEnd &&
+        existingStart < endTs
+      ) {
+        return reserv;
+      }
+    }
+    return null;
+  };
+
   // Fetch slots when entering step 3
   useEffect(() => {
     async function fetchSlots() {
@@ -692,9 +847,43 @@ export default function BookingPage() {
     fetchVehicles();
   }, []);
 
+  useEffect(() => {
+    if (!vehicles.length) return;
+    const firstAvailable = vehicles.find(
+      (vehicle) => !isVehicleCurrentlyCharging(vehicle.id)
+    );
+
+    if (selectedVehicle && isVehicleCurrentlyCharging(selectedVehicle.id)) {
+      if (firstAvailable && firstAvailable.id !== selectedVehicle.id) {
+        setSelectedVehicle(firstAvailable);
+        setVehicleId(firstAvailable.id);
+      } else if (!firstAvailable) {
+        setSelectedVehicle(null);
+        setVehicleId("");
+      }
+      return;
+    }
+
+    if (!selectedVehicle && firstAvailable) {
+      setSelectedVehicle(firstAvailable);
+      setVehicleId(firstAvailable.id);
+    }
+  }, [
+    vehicles,
+    selectedVehicle,
+    activeChargingVehicleInfo,
+    vehicleReservations,
+  ]);
+
   return (
     <div className="booking-wrapper">
       {" "}
+      <CustomPopup
+        isOpen={conflictPopup.isOpen}
+        message={conflictPopup.message}
+        type={conflictPopup.type}
+        onClose={closeConflictPopup}
+      />
       {/* Container ngoài cùng */}
       <div
         className={`booking-container full-width ${
@@ -1339,36 +1528,50 @@ export default function BookingPage() {
                 </div>
               ) : (
                 <div className="vehicles-grid-modal">
-                  {vehicles.map((vehicle) => (
-                    <div
-                      key={vehicle.id}
-                      className={`vehicle-card-modal ${
-                        selectedVehicle?.id === vehicle.id ? "selected" : ""
-                      }`}
-                      onClick={() => {
-                        setSelectedVehicle(vehicle);
-                        setVehicleId(vehicle.id);
-                        setShowVehicleModal(false);
-                      }}
-                    >
-                      <div className="vehicle-icon-large">🏍️</div>
-                      <div className="vehicle-info-modal">
-                        <div className="vehicle-name">
-                          {vehicle.make} {vehicle.model}
+                  {vehicles.map((vehicle) => {
+                    const chargingInfo = getVehicleChargingInfo(vehicle.id);
+                    const isCharging = Boolean(chargingInfo?.stationId);
+                    const badgeLabel = chargingInfo?.stationName
+                      ? `Đang sạc tại ${chargingInfo.stationName}`
+                      : "Đang sạc";
+
+                    return (
+                      <div
+                        key={vehicle.id}
+                        className={`vehicle-card-modal ${
+                          selectedVehicle?.id === vehicle.id ? "selected" : ""
+                        } ${isCharging ? "disabled" : ""}`}
+                        onClick={() => {
+                          if (isCharging) return;
+                          setSelectedVehicle(vehicle);
+                          setVehicleId(vehicle.id);
+                          setShowVehicleModal(false);
+                        }}
+                      >
+                        <div className="vehicle-icon-large">🏍️</div>
+                        <div className="vehicle-info-modal">
+                          <div className="vehicle-name">
+                            {vehicle.make} {vehicle.model}
+                          </div>
+                          <div className="vehicle-plate-large">
+                            {vehicle.plateNumber}
+                          </div>
+                          <div className="vehicle-connector">
+                            {vehicle.connectorType}
+                          </div>
                         </div>
-                        <div className="vehicle-plate-large">
-                          {vehicle.plateNumber}
-                        </div>
-                        <div className="vehicle-connector">
-                          {vehicle.connectorType}
-                        </div>
+                        {localStorage.getItem("defaultVehicleId") ===
+                          vehicle.id && (
+                          <span className="default-badge-modal">Mặc định</span>
+                        )}
+                        {isCharging && (
+                          <span className="vehicle-status-badge">
+                            {badgeLabel}
+                          </span>
+                        )}
                       </div>
-                      {localStorage.getItem("defaultVehicleId") ===
-                        vehicle.id && (
-                        <span className="default-badge-modal">Mặc định</span>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

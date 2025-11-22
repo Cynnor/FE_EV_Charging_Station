@@ -233,7 +233,7 @@ export default function PaymentSuccessPage() {
   };
 
   const handleGoToProfile = () => {
-    navigate("/profile");
+    navigate("/profile/history");
   };
 
   const handleGoToHome = () => {

@@ -1470,7 +1470,29 @@ body {
           background: $primary-pale;
           box-shadow: $shadow-md;
         }
-        
+
+        &.disabled {
+          cursor: not-allowed;
+          opacity: 0.7;
+
+          &:hover {
+            border-color: $border-color;
+            box-shadow: none;
+          }
+        }
+
+        .vehicle-status-badge {
+          position: absolute;
+          bottom: $spacing-sm;
+          left: $spacing-sm;
+          padding: 4px 12px;
+          border-radius: $radius-sm;
+          font-size: 12px;
+          font-weight: 700;
+          background: rgba($danger, 0.16);
+          color: $danger;
+        }
+
         .vehicle-icon-large {
           font-size: 48px;
           flex-shrink: 0;

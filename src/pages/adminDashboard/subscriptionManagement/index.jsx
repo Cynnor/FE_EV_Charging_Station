@@ -1228,17 +1228,16 @@ const SubscriptionManagement = () => {
             <div className="table-wrapper">
               <table className="modern-table">
                 <thead>
-                  <tr>
-                    <th>Khách hàng</th>
-                    <th>Gói đăng ký</th>
-                    <th>Trạng thái</th>
-                    <th>Gia hạn</th>
-                    <th>Ngày kết thúc</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subscriptions.length === 0 ? (
+                    <tr>
+                      <th>Khách hàng</th>
+                      <th>Gói đăng ký</th>
+                      <th>Trạng thái</th>
+                      <th>Ngày kết thúc</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subscriptions.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="no-data">
                         Chưa có đăng ký nào
@@ -1262,15 +1261,6 @@ const SubscriptionManagement = () => {
                             )}`}
                           >
                             {formatSubscriptionStatus(subscription.status)}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={`chip chip-${
-                              subscription.autoRenew ? "success" : "default"
-                            }`}
-                          >
-                            {subscription.autoRenew ? "Tự động" : "Thủ công"}
                           </span>
                         </td>
                         <td>{formatDateDisplay(subscription.endDate)}</td>
