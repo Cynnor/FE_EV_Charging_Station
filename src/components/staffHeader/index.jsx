@@ -1,10 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./index.scss";
 
 const StaffHeader = ({ title, subtitle }) => {
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const navigate = useNavigate();
+
+    // Đóng menu khi click ra ngoài hoặc đổi route
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            const menu = document.querySelector('.user-menu');
+            const avatar = document.querySelector('.staff-avatar');
+            if (showUserMenu && menu && avatar && !menu.contains(e.target) && !avatar.contains(e.target)) {
+                setShowUserMenu(false);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [showUserMenu]);
+
 
     const notifications = [
         {
@@ -57,13 +72,37 @@ const StaffHeader = ({ title, subtitle }) => {
                             <span className="badge">3</span>
                         </button>
 
-                        <button className="logout-btn" onClick={handleLogout}>
-                            Đăng xuất
-                        </button>
-
-                        <div className="staff-avatar">
+                        <div
+                            className="staff-avatar"
+                            onClick={() => setShowUserMenu((v) => !v)}
+                            title="Tài khoản nhân viên"
+                        >
                             <span>S</span>
                         </div>
+                        {showUserMenu && (
+                            <div className="user-menu" onClick={(e) => e.stopPropagation()}>
+                                <div className="user-menu-header">
+                                    <div className="avatar-small">S</div>
+                                    <div className="user-info">
+                                        <div className="user-name">Nhân viên</div>
+                                        <div className="user-role">Staff</div>
+                                    </div>
+                                </div>
+                                <button
+                                    className="user-menu-item"
+                                    onClick={() => {
+                                        setShowUserMenu(false);
+                                        navigate('/staff/profile');
+                                    }}
+                                >
+                                    👤 Hồ sơ cá nhân
+                                </button>
+                                <div className="menu-divider" />
+                                <button className="user-menu-item logout" onClick={handleLogout}>
+                                    ⎋ Đăng xuất
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </header>

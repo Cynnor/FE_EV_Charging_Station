@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react"; // Import các hooks React cần thiết
-import "./index.scss"; // Import file styles SCSS
-import api from "../../../config/api"; // Import cấu hình API để gọi backend
+import { useState, useEffect, useMemo } from "react";
+import "./index.scss";
+import api from "../../../config/api";
 
 const SubscriptionManagement = () => {
   // ==================== STATE QUẢN LÝ TABS ====================
@@ -891,12 +891,12 @@ const SubscriptionManagement = () => {
                     <span className="highlight-value">
                       {planFormData.originalPrice
                         ? formatPrice(
-                            Math.max(
-                              0,
-                              Number(planFormData.originalPrice || 0) -
-                                Number(planFormData.price || 0)
-                            )
+                          Math.max(
+                            0,
+                            Number(planFormData.originalPrice || 0) -
+                            Number(planFormData.price || 0)
                           )
+                        )
                         : "—"}
                     </span>
                   </div>
@@ -905,9 +905,9 @@ const SubscriptionManagement = () => {
                     <span className="highlight-value">
                       {planFormData.price && planFormData.durationDays
                         ? formatPrice(
-                            Number(planFormData.price || 0) /
-                              Number(planFormData.durationDays || 1)
-                          )
+                          Number(planFormData.price || 0) /
+                          Number(planFormData.durationDays || 1)
+                        )
                         : "—"}
                     </span>
                   </div>
@@ -1092,9 +1092,8 @@ const SubscriptionManagement = () => {
           Gói đăng ký
         </button>
         <button
-          className={`tab-chip ${
-            activeTab === "subscriptions" ? "active" : ""
-          }`}
+          className={`tab-chip ${activeTab === "subscriptions" ? "active" : ""
+            }`}
           onClick={() => setActiveTab("subscriptions")}
         >
           Đăng ký người dùng
@@ -1228,18 +1227,18 @@ const SubscriptionManagement = () => {
             <div className="table-wrapper">
               <table className="modern-table">
                 <thead>
+                  <tr>
+                    <th>Khách hàng</th>
+                    <th>Gói đăng ký</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày kết thúc</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subscriptions.length === 0 ? (
                     <tr>
-                      <th>Khách hàng</th>
-                      <th>Gói đăng ký</th>
-                      <th>Trạng thái</th>
-                      <th>Ngày kết thúc</th>
-                      <th>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subscriptions.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="no-data">
+                      <td colSpan="5" className="no-data">
                         Chưa có đăng ký nào
                       </td>
                     </tr>

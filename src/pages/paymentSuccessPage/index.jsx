@@ -1,146 +1,167 @@
+// Trang PaymentSuccessPage: xử lý quay về từ VNPay (return URL) cho 2 luồng:
+// 1) Thanh toán Subscription (membership) -> kích hoạt / ghi nhận trạng thái gói
+// 2) Thanh toán phiên sạc (charging session) -> cập nhật phiên, slot, reservation nếu có
+// Các bước tổng quát:
+//  - Parse query string VNPay (window.location.search)
+//  - Tách các tham số vnp_* và build chuỗi signData (nếu cần verify chữ ký phía BE)
+//  - Phân biệt thanh toán subscription bằng pendingSubscriptionId lưu trước đó
+//  - Gọi endpoint kiểm tra trạng thái tương ứng (/subscriptions/check-payment-status hoặc /vnpay/check-payment-status)
+//  - Cập nhật UI: success / failed / cancelled
+//  - Dọn dẹp localStorage (pendingSubscriptionId, paymentVehicleId, paymentReservationId) để tránh leak trạng thái cho lần sau
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./index.scss";
 import api from "../../config/api";
 
-export default function PaymentSuccessPage() {
-  const navigate = useNavigate();
-  const { state } = useLocation();
-  const [paymentInfo, setPaymentInfo] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [paymentStatus, setPaymentStatus] = useState("processing");
+// Helper: lấy raw query string (bỏ dấu ? đầu nếu có), trả về chuỗi rỗng nếu không có
+const getRawVnpQueryString = (search) => {
+  if (!search) return ""; // không có gì => trả rỗng
+  return search.startsWith("?") ? search.slice(1) : search; // cắt bỏ ký tự ? ở đầu
+};
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    handlePaymentReturn();
-  }, []);
+// Helper: parse các cặp key=value trong raw query thành object
+// Giữ nguyên value (không decode để BE tự xử lý nếu cần) chỉ decode key an toàn
+const parseVnpParams = (rawQueryString) => {
+  const params = {}; // object kết quả
+  if (!rawQueryString) return params; // rỗng => trả object rỗng
 
-  const handlePaymentReturn = async () => {
+  rawQueryString.split("&").forEach((segment) => { // tách theo &
+    if (!segment) return; // skip đoạn rỗng
+    const equalsIndex = segment.indexOf("="); // tìm vị trí dấu =
+    const rawKey = equalsIndex >= 0 ? segment.slice(0, equalsIndex) : segment; // lấy key
+    if (!rawKey) return; // bỏ qua nếu key rỗng
+    const rawValue = equalsIndex >= 0 ? segment.slice(equalsIndex + 1) : ""; // phần còn lại làm value
+
+    let decodedKey = rawKey; // thử decode key để tránh %xx
     try {
-      setIsLoading(true);
+      decodedKey = decodeURIComponent(rawKey);
+    } catch {
+      // Giữ nguyên nếu decode lỗi
+    }
 
-      // Lấy thông tin từ URL params (VNPay return)
-      const urlParams = new URLSearchParams(window.location.search);
-      const vnpParams = {
-        vnp_Amount: urlParams.get("vnp_Amount"),
-        vnp_BankCode: urlParams.get("vnp_BankCode"),
-        vnp_BankTranNo: urlParams.get("vnp_BankTranNo"),
-        vnp_CardType: urlParams.get("vnp_CardType"),
-        vnp_OrderInfo: urlParams.get("vnp_OrderInfo"),
-        vnp_PayDate: urlParams.get("vnp_PayDate"),
-        vnp_ResponseCode: urlParams.get("vnp_ResponseCode"),
-        vnp_TmnCode: urlParams.get("vnp_TmnCode"),
-        vnp_TransactionNo: urlParams.get("vnp_TransactionNo"),
-        vnp_TransactionStatus: urlParams.get("vnp_TransactionStatus"),
-        vnp_TxnRef: urlParams.get("vnp_TxnRef"),
-        vnp_SecureHash: urlParams.get("vnp_SecureHash"),
-      };
+    params[decodedKey] = rawValue ?? ""; // gán vào object kết quả
+  });
 
-      // Kiểm tra xem có phải VNPay return không
+  return params; // trả về object các param
+};
+
+// Helper: xây dựng chuỗi signData theo chuẩn VNPay (lọc các key vnp_, loại bỏ SecureHash / SecureHashType)
+// Dùng để BE verify chữ ký nếu cần (FE chỉ chuẩn bị chuỗi, không hash)
+const buildVnpSignData = (params) => {
+  return Object.keys(params)
+    .filter(
+      (key) =>
+        key.startsWith("vnp_") && // chỉ lấy param bắt đầu vnp_
+        key !== "vnp_SecureHash" && // loại trừ hash do VNPay gửi
+        key !== "vnp_SecureHashType" // loại trừ kiểu hash
+    )
+    .sort() // sắp xếp alpha theo yêu cầu quy trình ký
+    .map((key) => `${key}=${params[key] ?? ""}`) // nối key=value
+    .join("&"); // ghép lại thành chuỗi signData
+};
+
+export default function PaymentSuccessPage() { // Component chính xử lý kết quả thanh toán
+  const navigate = useNavigate(); // hook điều hướng
+  const { state } = useLocation(); // lấy state fallback từ route trước (payment page)
+  const [paymentInfo, setPaymentInfo] = useState(null); // chi tiết thanh toán (subscription hoặc charging)
+  const [isLoading, setIsLoading] = useState(true); // cờ hiển thị spinner trong lúc kiểm tra trạng thái
+  const [paymentStatus, setPaymentStatus] = useState("processing"); // trạng thái hiện tại: processing | success | error | cancelled
+
+  useEffect(() => { // chạy 1 lần khi mount trang
+    window.scrollTo(0, 0); // cuộn lên đầu trang để tránh vị trí scroll cũ
+    handlePaymentReturn(); // bắt đầu quá trình xử lý truy vấn VNPay / fallback
+  }, []); // dependency rỗng => chỉ chạy 1 lần
+
+  const handlePaymentReturn = async () => { // hàm chính xử lý chuỗi VNPay & kích hoạt trạng thái
+    try {
+      setIsLoading(true); // bật loading spinner
+
+      const rawQueryString = getRawVnpQueryString(window.location.search || ""); // lấy phần sau dấu ?
+      const vnpParams = parseVnpParams(rawQueryString); // parse thành object key/value
+      const vnpSignData = buildVnpSignData(vnpParams); // build chuỗi signData phục vụ BE verify
+
+      // Nếu VNPay có trả về mã phản hồi thì đang ở return URL chính thức
       if (vnpParams.vnp_ResponseCode) {
-        const subscriptionIdFromUrl = vnpParams.vnp_TxnRef;
-        const pendingSubscriptionId =
-          localStorage.getItem("pendingSubscriptionId");
-        const isSubscriptionPayment =
-          Boolean(
-            pendingSubscriptionId &&
-              subscriptionIdFromUrl &&
-              pendingSubscriptionId === subscriptionIdFromUrl
-          );
+        const subscriptionIdFromUrl = vnpParams.vnp_TxnRef; // VNPay truyền vnp_TxnRef = transaction reference (subscriptionId lúc tạo)
+        const pendingSubscriptionId = localStorage.getItem("pendingSubscriptionId"); // id gói pending lưu trước redirect
+        const isSubscriptionPayment = Boolean(
+          pendingSubscriptionId &&
+          subscriptionIdFromUrl &&
+          pendingSubscriptionId === subscriptionIdFromUrl
+        ); // xác định luồng subscription
 
-        let subscriptionHandled = false;
+        let subscriptionHandled = false; // cờ đánh dấu đã xử lý xong luồng subscription
 
-        // ===== ƯU TIÊN: CHỈ CHECK SUBSCRIPTION KHI ĐÚNG LUỒNG =====
-        if (isSubscriptionPayment && pendingSubscriptionId) {
-          const subscriptionId = pendingSubscriptionId;
+        // --------- LUỒNG SUBSCRIPTION (membership) ---------
+        if (isSubscriptionPayment && pendingSubscriptionId) { // chỉ xử lý nếu khớp id pending
+          const subscriptionId = pendingSubscriptionId; // đồng bộ tên biến
           try {
-            const response = await api.post(
-              "/subscriptions/check-payment-status",
-              {
-                subscriptionId: subscriptionId,
-                vnp_Amount: vnpParams.vnp_Amount,
-                vnp_BankCode: vnpParams.vnp_BankCode,
-                vnp_BankTranNo: vnpParams.vnp_BankTranNo,
-                vnp_CardType: vnpParams.vnp_CardType,
-                vnp_OrderInfo: vnpParams.vnp_OrderInfo,
-                vnp_PayDate: vnpParams.vnp_PayDate,
-                vnp_ResponseCode: vnpParams.vnp_ResponseCode,
-                vnp_TmnCode: vnpParams.vnp_TmnCode,
-                vnp_TransactionNo: vnpParams.vnp_TransactionNo,
-                vnp_TransactionStatus: vnpParams.vnp_TransactionStatus,
-                vnp_TxnRef: vnpParams.vnp_TxnRef,
-                vnp_SecureHash: vnpParams.vnp_SecureHash,
-              }
-            );
+            // Gửi toàn bộ các tham số cần thiết để BE xác minh chữ ký / trạng thái
+            const response = await api.post("/subscriptions/check-payment-status", {
+              subscriptionId: subscriptionId,
+              vnp_Amount: vnpParams.vnp_Amount,
+              vnp_BankCode: vnpParams.vnp_BankCode,
+              vnp_BankTranNo: vnpParams.vnp_BankTranNo,
+              vnp_CardType: vnpParams.vnp_CardType,
+              vnp_OrderInfo: vnpParams.vnp_OrderInfo,
+              vnp_PayDate: vnpParams.vnp_PayDate,
+              vnp_ResponseCode: vnpParams.vnp_ResponseCode,
+              vnp_TmnCode: vnpParams.vnp_TmnCode,
+              vnp_TransactionNo: vnpParams.vnp_TransactionNo,
+              vnp_TransactionStatus: vnpParams.vnp_TransactionStatus,
+              vnp_TxnRef: vnpParams.vnp_TxnRef,
+              vnp_SecureHash: vnpParams.vnp_SecureHash,
+            });
 
-            if (response.data?.success) {
-              const paymentData = response.data.data || response.data;
-              const status =
-                paymentData.paymentStatus ||
-                response.data.paymentStatus ||
-                (vnpParams.vnp_ResponseCode === "00" ? "success" : "failed");
+            if (response.data?.success) { // BE xác thực thành công
+              const paymentData = response.data.data || response.data; // lấy payload chính
+              const status = paymentData.paymentStatus || response.data.paymentStatus || (vnpParams.vnp_ResponseCode === "00" ? "success" : "failed"); // chuẩn hoá status
 
-              setPaymentStatus(status);
+              setPaymentStatus(status); // cập nhật trạng thái UI
 
-              // Dọn localStorage nếu có
-              if (status === "success") {
-                const subscriptionInfo =
-                  paymentData.subscription ||
-                  paymentData.subscriptionData ||
-                  paymentData;
-
+              if (status === "success") { // thành công -> lấy thông tin subscription để hiển thị
+                const subscriptionInfo = paymentData.subscription || paymentData.subscriptionData || paymentData; // tìm object chứa chi tiết gói
                 setPaymentInfo({
                   subscriptionId: subscriptionId,
-                  amount: parseInt(vnpParams.vnp_Amount) / 100,
-                  orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || ""),
-                  transactionNo: vnpParams.vnp_TransactionNo,
-                  bankCode: vnpParams.vnp_BankCode,
-                  cardType: vnpParams.vnp_CardType,
-                  payDate: vnpParams.vnp_PayDate,
-                  paymentMethod: "vnpay",
-                  isSubscription: true,
-                  subscriptionInfo: subscriptionInfo,
+                  amount: parseInt(vnpParams.vnp_Amount) / 100, // VNPay amount *100 -> chia lại
+                  orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || ""), // thông tin đơn hàng mô tả
+                  transactionNo: vnpParams.vnp_TransactionNo, // mã giao dịch VNPay
+                  bankCode: vnpParams.vnp_BankCode, // mã ngân hàng
+                  cardType: vnpParams.vnp_CardType, // loại thẻ
+                  payDate: vnpParams.vnp_PayDate, // thời gian thanh toán (format chuỗi)
+                  paymentMethod: "vnpay", // phương thức
+                  isSubscription: true, // đánh dấu luồng subscription
+                  subscriptionInfo: subscriptionInfo, // chi tiết gói trả về
                 });
-                localStorage.removeItem("pendingSubscriptionId");
-                subscriptionHandled = true;
-              } else if (status === "failed") {
+                localStorage.removeItem("pendingSubscriptionId"); // cleanup id pending để tránh reuse
+                subscriptionHandled = true; // đánh dấu đã xử lý subscription
+              } else if (status === "failed") { // thất bại
                 setPaymentStatus("error");
-                localStorage.removeItem("pendingSubscriptionId");
+                localStorage.removeItem("pendingSubscriptionId"); // dọn dẹp
                 subscriptionHandled = true;
-              } else if (status === "cancelled") {
+              } else if (status === "cancelled") { // bị hủy
                 setPaymentStatus("cancelled");
                 localStorage.removeItem("pendingSubscriptionId");
                 subscriptionHandled = true;
               }
             }
           } catch (subError) {
-            console.error("Error checking subscription payment:", subError);
-            // Không return ở đây, cho phép fallback qua charging session
+            // Lỗi kiểm tra subscription: tiếp tục fallback sang luồng session nếu có
           }
         } else if (pendingSubscriptionId && !isSubscriptionPayment) {
-          console.warn(
-            "Stale pendingSubscriptionId detected, clearing before charging payment flow."
-          );
+          // Có id pending nhưng không khớp TxnRef => stale -> xóa
           localStorage.removeItem("pendingSubscriptionId");
         }
 
+        // --------- LUỒNG CHARGING SESSION (nếu subscription không xử lý) ---------
         if (!subscriptionHandled) {
-          // Xử lý charging session payment với vehicleId
-          const vehicleId = localStorage.getItem('paymentVehicleId');
-          const reservationId = localStorage.getItem('paymentReservationId');
+          const vehicleId = localStorage.getItem('paymentVehicleId'); // id xe lưu trước redirect
+          const reservationId = localStorage.getItem('paymentReservationId'); // id đặt chỗ (nếu có)
 
-          if (vehicleId) {
-            console.log('💳 Checking payment status for vehicle:', vehicleId);
-            console.log('💳 Reservation ID:', reservationId);
-            console.log('💳 VNPay Response Code:', vnpParams.vnp_ResponseCode);
-            console.log('💳 VNPay Transaction Status:', vnpParams.vnp_TransactionStatus);
-            console.log('💳 VNPay All Params:', vnpParams);
-
-            // Gọi API mới để kiểm tra trạng thái thanh toán
-            // GỬI TẤT CẢ VNPay params + reservationId để backend verify signature
-            const requestBody = {
+          if (vehicleId) { // chỉ xử lý nếu có vehicleId (đánh dấu luồng phiên sạc)
+            const requestBody = { // payload gửi BE kiểm tra thanh toán phiên sạc
               vehicleId: vehicleId,
-              ...(reservationId && { reservationId: reservationId }),
+              ...(reservationId && { reservationId: reservationId }), // chỉ thêm reservationId nếu tồn tại
               vnp_Amount: vnpParams.vnp_Amount,
               vnp_BankCode: vnpParams.vnp_BankCode,
               vnp_BankTranNo: vnpParams.vnp_BankTranNo,
@@ -155,31 +176,20 @@ export default function PaymentSuccessPage() {
               vnp_SecureHash: vnpParams.vnp_SecureHash,
             };
 
-            console.log('💳 Request Body:', requestBody);
-            const response = await api.post("/vnpay/check-payment-status", requestBody);
+            const response = await api.post("/vnpay/check-payment-status", requestBody); // gọi BE kiểm tra chữ ký & cập nhật phiên
 
-            console.log('💳 Check Payment Status Response:', response.data);
+            if (response.data?.success) { // BE xác thực thành công
+              const paymentData = response.data.data; // chi tiết trả về
+              const status = paymentData.paymentStatus || response.data.paymentStatus; // chuẩn hoá
+              setPaymentStatus(status); // cập nhật UI
 
-            if (response.data?.success) {
-              const paymentData = response.data.data;
-              const status = paymentData.paymentStatus || response.data.paymentStatus;
-              
-              console.log('💳 Payment Status:', status);
-              console.log('💳 Updated Sessions:', paymentData.updatedSessions);
-              console.log('💳 Updated Slots:', paymentData.updatedSlots);
-
-              setPaymentStatus(status);
-
-              // Xử lý các trạng thái: success, failed, cancelled
-              if (status === "success") {
-                // Xóa vehicleId và reservationId sau khi xử lý thành công
-                localStorage.removeItem('paymentVehicleId');
-                localStorage.removeItem('paymentReservationId');
-
-                setPaymentInfo({
+              if (status === "success") { // thành công
+                localStorage.removeItem('paymentVehicleId'); // dọn id xe
+                localStorage.removeItem('paymentReservationId'); // dọn id reservation
+                setPaymentInfo({ // lưu thông tin chi tiết để render
                   vehicleId: vehicleId,
                   reservationId: paymentData.reservationId || reservationId,
-                  reservationUpdated: paymentData.reservationUpdated || false,
+                  reservationUpdated: paymentData.reservationUpdated || false, // đánh dấu BE có cập nhật reservation
                   amount: paymentData.amount || parseInt(vnpParams.vnp_Amount) / 100,
                   orderInfo: decodeURIComponent(vnpParams.vnp_OrderInfo || "Thanh toán phiên sạc"),
                   transactionNo: paymentData.transactionId || vnpParams.vnp_TransactionNo,
@@ -187,34 +197,32 @@ export default function PaymentSuccessPage() {
                   cardType: vnpParams.vnp_CardType,
                   payDate: vnpParams.vnp_PayDate,
                   paymentMethod: "vnpay",
-                  isChargingSession: true,
+                  isChargingSession: true, // đánh dấu luồng phiên sạc
                   updatedSessions: paymentData.updatedSessions || 0,
                   updatedSlots: paymentData.updatedSlots || 0,
                   sessionIds: paymentData.sessionIds || [],
                   slotIds: paymentData.slotIds || [],
                 });
-              } else if (status === "failed") {
+              } else if (status === "failed") { // thất bại phiên sạc
                 localStorage.removeItem('paymentVehicleId');
                 localStorage.removeItem('paymentReservationId');
                 setPaymentStatus("error");
-              } else if (status === "cancelled") {
+              } else if (status === "cancelled") { // hủy phiên sạc
                 localStorage.removeItem('paymentVehicleId');
                 localStorage.removeItem('paymentReservationId');
                 setPaymentStatus("cancelled");
               }
-            } else {
+            } else { // BE trả không success => coi như lỗi
               localStorage.removeItem('paymentVehicleId');
               localStorage.removeItem('paymentReservationId');
               setPaymentStatus("error");
             }
-          } else {
-            console.warn('⚠️ No vehicleId found in localStorage');
+          } else { // Không có vehicleId => không xác định được luồng -> báo lỗi
             setPaymentStatus("error");
           }
         }
-      } else if (state?.reservationId) {
-        // Trường hợp chuyển từ PaymentPage (fallback)
-        setPaymentInfo({
+      } else if (state?.reservationId) { // Fallback: một số route truyền state trực tiếp (không qua VNPay)
+        setPaymentInfo({ // lấy dữ liệu từ state để hiển thị
           reservationId: state.reservationId,
           amount: state.amount,
           orderInfo: state.orderInfo,
@@ -222,43 +230,39 @@ export default function PaymentSuccessPage() {
           chargingInfo: state.chargingInfo,
           paymentMethod: state.paymentMethod,
         });
-        setPaymentStatus("success");
+        setPaymentStatus("success"); // coi như thành công
       }
     } catch (error) {
-      console.error("Error handling payment return:", error);
-      setPaymentStatus("error");
+      setPaymentStatus("error"); // bất kỳ lỗi nào -> chuyển error
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // tắt loading dù thành công hay lỗi
     }
   };
 
-  const handleGoToProfile = () => {
+  const handleGoToProfile = () => { // điều hướng sang trang hồ sơ để xem đặt lịch / gói
     navigate("/profile/history");
   };
 
-  const handleGoToHome = () => {
+  const handleGoToHome = () => { // quay về trang chủ
     navigate("/");
   };
 
-  const handleGoToMembership = () => {
+  const handleGoToMembership = () => { // mở trang membership để xem / mua gói
     navigate("/membership");
   };
 
-  const formatPayDate = (payDate) => {
-    if (!payDate) return new Date().toLocaleString("vi-VN");
-    // VNPay format: YYYYMMDDHHmmss
+  const formatPayDate = (payDate) => { // chuyển chuỗi thời gian VNPay (YYYYMMDDHHmmss) thành định dạng locale vi-VN
+    if (!payDate) return new Date().toLocaleString("vi-VN"); // fallback: thời gian hiện tại
     const year = payDate.substring(0, 4);
     const month = payDate.substring(4, 6);
     const day = payDate.substring(6, 8);
     const hour = payDate.substring(8, 10);
     const minute = payDate.substring(10, 12);
     const second = payDate.substring(12, 14);
-    return new Date(
-      `${year}-${month}-${day}T${hour}:${minute}:${second}`
-    ).toLocaleString("vi-VN");
+    return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`).toLocaleString("vi-VN"); // tạo Date ISO rồi format locale
   };
 
-  if (isLoading) {
+  if (isLoading) { // giao diện khi đang xử lý xác thực thanh toán
     return (
       <div className="payment-success-page">
         <div className="success-container">
@@ -278,7 +282,7 @@ export default function PaymentSuccessPage() {
   }
 
   // Xử lý 3 trạng thái: error (failed), cancelled, và success
-  if (paymentStatus === "error") {
+  if (paymentStatus === "error") { // trạng thái lỗi (thanh toán thất bại)
     return (
       <div className="payment-success-page">
         <div className="success-container error-container">
@@ -350,7 +354,7 @@ export default function PaymentSuccessPage() {
   }
 
   // Trạng thái cancelled (hủy thanh toán)
-  if (paymentStatus === "cancelled") {
+  if (paymentStatus === "cancelled") { // trạng thái bị hủy bởi người dùng / VNPay
     return (
       <div className="payment-success-page">
         <div className="success-container cancelled-container">
@@ -422,10 +426,10 @@ export default function PaymentSuccessPage() {
     );
   }
 
-  return (
+  return ( // trạng thái success
     <div className="payment-success-page">
       <div className="success-container">
-        {/* Success Animation */}
+        {/* Khối animation thành công: vòng tròn + checkmark + confetti trang trí */}
         <div className="success-animation">
           <div className="checkmark">
             <svg width="120" height="120" viewBox="0 0 24 24" fill="none">
@@ -455,24 +459,24 @@ export default function PaymentSuccessPage() {
           </div>
         </div>
 
-        {/* Success Content */}
+        {/* Nội dung thành công: tiêu đề + mô tả tuỳ theo loại thanh toán */}
         <div className="success-content">
           <h1 className="success-title">
             {paymentInfo?.isSubscription
               ? "Đăng ký gói thành công!"
               : paymentInfo?.isChargingSession
-              ? "Thanh toán phiên sạc thành công!"
-              : "Thanh toán thành công!"}
+                ? "Thanh toán phiên sạc thành công!"
+                : "Thanh toán thành công!"}
           </h1>
           <p className="success-message">
             {paymentInfo?.isSubscription
               ? "Gói đăng ký của bạn đã được kích hoạt tự động. Bạn có thể bắt đầu sử dụng ngay!"
               : paymentInfo?.isChargingSession
-              ? "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."
-              : "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."}
+                ? "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."
+                : "Cảm ơn bạn đã sử dụng dịch vụ sạc xe điện của chúng tôi."}
           </p>
 
-          {paymentInfo && (
+          {paymentInfo && ( // chỉ render card chi tiết nếu đã có paymentInfo
             <div className="payment-details-card">
               <div className="card-header">
                 <h3>
@@ -507,13 +511,13 @@ export default function PaymentSuccessPage() {
                   {paymentInfo.isSubscription
                     ? "Chi tiết đăng ký gói"
                     : paymentInfo.isChargingSession
-                    ? "Chi tiết thanh toán phiên sạc"
-                    : "Chi tiết giao dịch"}
+                      ? "Chi tiết thanh toán phiên sạc"
+                      : "Chi tiết giao dịch"}
                 </h3>
               </div>
 
               <div className="details-grid">
-                {paymentInfo.isChargingSession ? (
+                {paymentInfo.isChargingSession ? ( // nhánh chi tiết phiên sạc
                   <>
                     <div className="detail-item">
                       <span className="label">
@@ -562,8 +566,8 @@ export default function PaymentSuccessPage() {
                         <span className="value">
                           #{paymentInfo.reservationId?.slice(-8) || "N/A"}
                           {paymentInfo.reservationUpdated && (
-                            <span style={{ 
-                              marginLeft: '8px', 
+                            <span style={{
+                              marginLeft: '8px',
                               color: '#16a34a',
                               fontSize: '12px',
                               fontWeight: '600'
@@ -607,7 +611,7 @@ export default function PaymentSuccessPage() {
                       </div>
                     )}
                   </>
-                ) : paymentInfo.isSubscription ? (
+                ) : paymentInfo.isSubscription ? ( // nhánh chi tiết subscription
                   <>
                     <div className="detail-item">
                       <span className="label">
@@ -719,7 +723,7 @@ export default function PaymentSuccessPage() {
                       </div>
                     )}
                   </>
-                ) : (
+                ) : ( // nhánh generic nếu không xác định loại
                   <>
                     {paymentInfo.amount && (
                       <div className="detail-item highlight">
@@ -756,7 +760,7 @@ export default function PaymentSuccessPage() {
                   </>
                 )}
 
-                {paymentInfo.transactionNo && (
+                {paymentInfo.transactionNo && ( // mã giao dịch VNPay nếu có
                   <div className="detail-item">
                     <span className="label">
                       <svg
@@ -790,7 +794,7 @@ export default function PaymentSuccessPage() {
                   </div>
                 )}
 
-                {paymentInfo.bankCode && (
+                {paymentInfo.bankCode && ( // mã ngân hàng thanh toán
                   <div className="detail-item">
                     <span className="label">
                       <svg
@@ -816,7 +820,7 @@ export default function PaymentSuccessPage() {
                   </div>
                 )}
 
-                <div className="detail-item">
+                <div className="detail-item"> {/* thời gian giao dịch (format lại) */}
                   <span className="label">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <circle
@@ -841,7 +845,7 @@ export default function PaymentSuccessPage() {
                   </span>
                 </div>
 
-                {!paymentInfo.isSubscription && paymentInfo.vehicleInfo && (
+                {!paymentInfo.isSubscription && paymentInfo.vehicleInfo && ( // thông tin xe (chỉ trong phiên sạc)
                   <div className="detail-item">
                     <span className="label">
                       <svg
@@ -873,7 +877,7 @@ export default function PaymentSuccessPage() {
                   </div>
                 )}
 
-                {!paymentInfo.isSubscription && paymentInfo.chargingInfo && (
+                {!paymentInfo.isSubscription && paymentInfo.chargingInfo && ( // thông tin mức sạc + thời gian sạc
                   <>
                     <div className="detail-item">
                       <span className="label">
@@ -943,7 +947,7 @@ export default function PaymentSuccessPage() {
             </div>
           )}
 
-          {/* Action Buttons */}
+          {/* Nhóm nút hành động cuối trang tuỳ theo loại thanh toán */}
           <div className="action-buttons">
             {paymentInfo?.isSubscription ? (
               <>

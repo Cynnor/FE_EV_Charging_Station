@@ -1621,7 +1621,8 @@ const ProfilePage = ({ initialView }) => {
             <div className="history-empty">
               <h3>Chưa có đặt chỗ</h3>
               <p className="muted">
-                Khi bạn đặt chỗ, lịch sử sẽ hiển thị tại đây với đầy đủ thông tin.
+                Khi bạn đặt chỗ, lịch sử sẽ hiển thị tại đây với đầy đủ thông
+                tin.
               </p>
             </div>
           ) : (
@@ -1658,16 +1659,23 @@ const ProfilePage = ({ initialView }) => {
                           {reservation.vehicle?.plateNumber || "N/A"}
                         </p>
                         <p className="col-sub">
-                          {reservation.vehicle?.make} {reservation.vehicle?.model}
+                          {reservation.vehicle?.make}{" "}
+                          {reservation.vehicle?.model}
                         </p>
                       </div>
                       <div className="row-col">
-                        <p className="col-sub">Bắt đầu: {formatDateTime(firstItem?.startAt)}</p>
-                        <p className="col-sub">Kết thúc: {formatDateTime(firstItem?.endAt)}</p>
+                        <p className="col-sub">
+                          Bắt đầu: {formatDateTime(firstItem?.startAt)}
+                        </p>
+                        <p className="col-sub">
+                          Kết thúc: {formatDateTime(firstItem?.endAt)}
+                        </p>
                       </div>
                       <div className="row-col">
                         <p className="col-value">{connectorType}</p>
-                        <p className="col-sub">{stationInfo.provider || "N/A"}</p>
+                        <p className="col-sub">
+                          {stationInfo.provider || "N/A"}
+                        </p>
                       </div>
                       <div className="row-col status-col">
                         <span className={`status-chip ${reservation.status}`}>
@@ -1681,7 +1689,9 @@ const ProfilePage = ({ initialView }) => {
                             <>
                               <button
                                 className="action-btn start-btn"
-                                onClick={() => navigateToChargingSession(reservation)}
+                                onClick={() =>
+                                  navigateToChargingSession(reservation)
+                                }
                                 title="Chuyển đến phiên sạc"
                               >
                                 <Zap size={16} />
@@ -1697,7 +1707,9 @@ const ProfilePage = ({ initialView }) => {
                               </button>
                               <button
                                 className="ghost-danger"
-                                onClick={() => handleCancelReservation(reservationId)}
+                                onClick={() =>
+                                  handleCancelReservation(reservationId)
+                                }
                               >
                                 Hủy
                               </button>
@@ -1832,11 +1844,14 @@ const ProfilePage = ({ initialView }) => {
                     {formatSubscriptionDate(currentSubscription.endDate)}
                   </p>
                 </div>
-              <div className="subscription-card__actions">
-                <button className="edit-btn" onClick={() => navigate("/membership")}>
-                  Upgrade
-                </button>
-              </div>
+                <div className="subscription-card__actions">
+                  <button
+                    className="edit-btn"
+                    onClick={() => navigate("/membership")}
+                  >
+                    Upgrade
+                  </button>
+                </div>
               </div>
 
               <div className="subscription-facts">

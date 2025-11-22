@@ -1,17 +1,27 @@
-import { useState, useEffect } from "react";
-import api from "../../../config/api";
-import "./AdminReports.scss"; // 🔴 ĐỔI FILE SCSS RIÊNG
+// Trang AdminReports: quản lý danh sách báo cáo / sự cố do nhân viên gửi lên.
+// Chức năng chính:
+//  - Tải danh sách báo cáo (fetchReports)
+//  - Hiển thị bảng với các cột: mã, người báo cáo, loại, trạm, tiêu đề, mức độ, trạng thái, thời gian
+//  - Cập nhật trạng thái báo cáo (modal trạng thái)
+//  - Xóa báo cáo (modal xác nhận xóa)
+//  - Phân loại type hiển thị icon + nhãn, level priority -> badge màu, status -> badge trạng thái
+// Ghi chú UX: sử dụng overlay modal; click nền để đóng; xác nhận hành động destructive.
+import { useState, useEffect } from "react"; // hook React quản lý state cục bộ + lifecycle
+import api from "../../../config/api"; // axios instance cấu hình baseURL + interceptor
+import "./AdminReports.scss"; // stylesheet riêng cho trang báo cáo
 
-const AdminReports = () => {
-    const [reports, setReports] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [selectedReport, setSelectedReport] = useState(null);
-    const [showStatusModal, setShowStatusModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [reportToDelete, setReportToDelete] = useState(null);
-    const [tempStatus, setTempStatus] = useState("");
+const AdminReports = () => { // Component chính trang quản lý báo cáo
+    // =============== STATE CHÍNH ===============
+    const [reports, setReports] = useState([]); // danh sách báo cáo từ BE
+    const [loading, setLoading] = useState(false); // cờ hiển thị đang tải dữ liệu bảng
+    const [error, setError] = useState(""); // thông điệp lỗi nếu fetch thất bại
+    const [selectedReport, setSelectedReport] = useState(null); // báo cáo đang chọn để cập nhật trạng thái
+    const [showStatusModal, setShowStatusModal] = useState(false); // bật/tắt modal cập nhật trạng thái
+    const [showDeleteModal, setShowDeleteModal] = useState(false); // bật/tắt modal xác nhận xóa
+    const [reportToDelete, setReportToDelete] = useState(null); // báo cáo nhắm đến để xóa
+    const [tempStatus, setTempStatus] = useState(""); // trạng thái tạm chọn trong modal trước khi confirm
 
+    // Mapping loại report -> nhãn + icon hiển thị trong bảng
     const reportTypes = [
         { id: "hardware", label: "Lỗi phần cứng", icon: "🔧" },
         { id: "connection", label: "Lỗi kết nối", icon: "📡" },
@@ -21,6 +31,7 @@ const AdminReports = () => {
         { id: "other", label: "Khác", icon: "📝" },
     ];
 
+    // Các trạng thái hợp lệ: dùng cho badge và lựa chọn cập nhật
     const statusOptions = [
         { id: "pending", label: "Chờ xử lý" },
         { id: "in_progress", label: "Đang xử lý" },
@@ -28,72 +39,58 @@ const AdminReports = () => {
         { id: "rejected", label: "Từ chối" },
     ];
 
-    useEffect(() => {
+    useEffect(() => { // mount lần đầu -> tải danh sách báo cáo
         fetchReports();
-    }, []);
+    }, []); // dependency rỗng => chỉ chạy 1 lần
 
-    const fetchReports = async () => {
+    const fetchReports = async () => { // gọi API lấy danh sách báo cáo
         try {
-            setLoading(true);
-            const response = await api.get("/reports");
-            const data = response.data;
-            const items = data?.items || data?.data || data || [];
-            setReports(items);
+            setLoading(true); // bật loading
+            const response = await api.get("/reports"); // GET /reports
+            const data = response.data; // payload tổng
+            const items = data?.items || data?.data || data || []; // linh hoạt lấy mảng
+            setReports(items); // lưu vào state chính
         } catch (err) {
-            console.error("Failed to fetch reports:", err);
-            setError("Không thể tải danh sách báo cáo");
+            setError("Không thể tải danh sách báo cáo"); // gán lỗi UI
         } finally {
-            setLoading(false);
+            setLoading(false); // tắt loading dù success/fail
         }
     };
 
-    const openStatusModal = (report) => {
-        setSelectedReport(report);
-        setTempStatus(report.status);
-        setShowStatusModal(true);
+    const openStatusModal = (report) => { // mở modal cập nhật trạng thái cho báo cáo được chọn
+        setSelectedReport(report); // gán báo cáo
+        setTempStatus(report.status); // trạng thái hiện tại làm giá trị mặc định
+        setShowStatusModal(true); // hiển thị modal
     };
 
-    const handleConfirmStatusUpdate = async () => {
-        if (!selectedReport || !tempStatus) return;
-
+    const handleConfirmStatusUpdate = async () => { // xác nhận cập nhật trạng thái
+        if (!selectedReport || !tempStatus) return; // guard nếu thiếu
         try {
-            await api.patch(`/reports/${selectedReport._id}/status`, {
+            await api.patch(`/reports/${selectedReport._id}/status`, { // PATCH status
                 status: tempStatus,
             });
-
-            setReports((prev) =>
-                prev.map((r) =>
-                    r._id === selectedReport._id ? { ...r, status: tempStatus } : r
-                )
-            );
-
-            setShowStatusModal(false);
-            setSelectedReport(null);
+            // cập nhật local state để phản ánh thay đổi ngay lập tức
+            setReports((prev) => prev.map((r) => r._id === selectedReport._id ? { ...r, status: tempStatus } : r));
+            setShowStatusModal(false); // đóng modal
+            setSelectedReport(null); // reset lựa chọn
         } catch (err) {
-            console.error("Failed to update status:", err);
-            alert("Cập nhật trạng thái thất bại");
+            alert("Cập nhật trạng thái thất bại"); // báo lỗi nhẹ
         }
     };
 
-    const handleDeleteReport = async () => {
-        if (!reportToDelete) return;
-
+    const handleDeleteReport = async () => { // xóa báo cáo đã chọn
+        if (!reportToDelete) return; // guard
         try {
-            await api.delete(`/reports/${reportToDelete._id}`);
-
-            setReports((prev) =>
-                prev.filter((r) => r._id !== reportToDelete._id)
-            );
-
-            setShowDeleteModal(false);
-            setReportToDelete(null);
+            await api.delete(`/reports/${reportToDelete._id}`); // gọi DELETE
+            setReports((prev) => prev.filter((r) => r._id !== reportToDelete._id)); // loại khỏi danh sách
+            setShowDeleteModal(false); // đóng modal
+            setReportToDelete(null); // reset
         } catch (err) {
-            console.error("Failed to delete report:", err);
             alert("Xóa báo cáo thất bại");
         }
     };
 
-    const getStatusColor = (status) => {
+    const getStatusColor = (status) => { // map status -> className màu badge
         switch (status) {
             case "pending":
                 return "pending";
@@ -108,12 +105,12 @@ const AdminReports = () => {
         }
     };
 
-    const getStatusText = (status) => {
+    const getStatusText = (status) => { // map status -> nhãn tiếng Việt
         const option = statusOptions.find((o) => o.id === status);
         return option ? option.label : "Không xác định";
     };
 
-    const getPriorityColor = (priority) => {
+    const getPriorityColor = (priority) => { // map priority -> className màu
         switch (priority) {
             case "high":
                 return "high";
@@ -126,7 +123,7 @@ const AdminReports = () => {
         }
     };
 
-    const getPriorityText = (priority) => {
+    const getPriorityText = (priority) => { // map priority -> nhãn hiển thị
         switch (priority) {
             case "high":
                 return "Cao";
@@ -139,7 +136,7 @@ const AdminReports = () => {
         }
     };
 
-    const getTypeInfo = (type) => {
+    const getTypeInfo = (type) => { // lấy info type (icon + label) hoặc default
         return (
             reportTypes.find((t) => t.id === type) || {
                 label: "Không xác định",
@@ -176,8 +173,8 @@ const AdminReports = () => {
                             <div className="col">Thời gian</div>
                             <div className="col actions">Thao tác</div>
                         </div>
-                        <div className="table-body">
-                            {loading ? (
+                        <div className="table-body"> {/* thân bảng: xử lý 4 trạng thái (loading, error, empty, data) */}
+                            {loading ? ( // trạng thái đang tải danh sách
                                 <div className="table-row loading">
                                     <div
                                         className="col"
@@ -190,7 +187,7 @@ const AdminReports = () => {
                                         Đang tải dữ liệu...
                                     </div>
                                 </div>
-                            ) : error ? (
+                            ) : error ? ( // trạng thái lỗi fetch
                                 <div className="table-row empty">
                                     <div
                                         className="col"
@@ -204,7 +201,7 @@ const AdminReports = () => {
                                         {error}
                                     </div>
                                 </div>
-                            ) : reports.length === 0 ? (
+                            ) : reports.length === 0 ? ( // không có dữ liệu báo cáo
                                 <div className="table-row empty">
                                     <div
                                         className="col"
@@ -217,10 +214,10 @@ const AdminReports = () => {
                                         Chưa có báo cáo nào.
                                     </div>
                                 </div>
-                            ) : (
-                                reports.map((report, index) => (
+                            ) : ( // có dữ liệu -> render từng dòng báo cáo
+                                reports.map((report, index) => ( // lặp mảng reports
                                     <div key={report._id || index} className="table-row">
-                                        <div className="col">
+                                        <div className="col"> {/* cột mã rút gọn 6 ký tự cuối */}
                                             <span className="report-id">
                                                 {report._id
                                                     ? report._id
@@ -229,7 +226,7 @@ const AdminReports = () => {
                                                     : "N/A"}
                                             </span>
                                         </div>
-                                        <div className="col">
+                                        <div className="col"> {/* người báo cáo (tên / email) */}
                                             <span
                                                 className="reporter-name"
                                                 title={
@@ -242,7 +239,7 @@ const AdminReports = () => {
                                                     "N/A"}
                                             </span>
                                         </div>
-                                        <div className="col">
+                                        <div className="col"> {/* loại báo cáo: icon + label */}
                                             <div className="report-type">
                                                 <span className="type-icon">
                                                     {getTypeInfo(report.type).icon}
@@ -252,7 +249,7 @@ const AdminReports = () => {
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="col">
+                                        <div className="col"> {/* tên trạm sạc liên quan */}
                                             <span
                                                 className="station-id"
                                                 title={report.stationId?.name}
@@ -260,12 +257,12 @@ const AdminReports = () => {
                                                 {report.stationId?.name || "N/A"}
                                             </span>
                                         </div>
-                                        <div className="col">
+                                        <div className="col"> {/* tiêu đề mô tả ngắn */}
                                             <span className="report-title" title={report.title}>
                                                 {report.title}
                                             </span>
                                         </div>
-                                        <div className="col">
+                                        <div className="col"> {/* mức độ ưu tiên -> badge màu */}
                                             <span
                                                 className={`priority-badge ${getPriorityColor(
                                                     report.priority
@@ -274,7 +271,7 @@ const AdminReports = () => {
                                                 {getPriorityText(report.priority)}
                                             </span>
                                         </div>
-                                        <div className="col">
+                                        <div className="col"> {/* trạng thái -> badge + dot */}
                                             <span
                                                 className={`status-badge ${getStatusColor(
                                                     report.status
@@ -284,7 +281,7 @@ const AdminReports = () => {
                                                 {getStatusText(report.status)}
                                             </span>
                                         </div>
-                                        <div className="col">
+                                        <div className="col"> {/* thời gian tạo (format vi-VN) */}
                                             <span className="created-time">
                                                 {report.createdAt
                                                     ? new Date(
@@ -293,7 +290,7 @@ const AdminReports = () => {
                                                     : "N/A"}
                                             </span>
                                         </div>
-                                        <div className="col actions">
+                                        <div className="col actions"> {/* nút thao tác: cập nhật trạng thái / xóa */}
                                             <button
                                                 className="btn-icon edit"
                                                 title="Cập nhật trạng thái"
@@ -320,7 +317,7 @@ const AdminReports = () => {
                 </div>
             </div>
 
-            {/* Status Modal */}
+            {/* Status Modal: cập nhật trạng thái báo cáo */}
             {showStatusModal && selectedReport && (
                 <div
                     className="modal-overlay"
@@ -392,7 +389,7 @@ const AdminReports = () => {
                 </div>
             )}
 
-            {/* Delete Modal */}
+            {/* Delete Modal: xác nhận xóa báo cáo */}
             {showDeleteModal && reportToDelete && (
                 <div
                     className="modal-overlay"
