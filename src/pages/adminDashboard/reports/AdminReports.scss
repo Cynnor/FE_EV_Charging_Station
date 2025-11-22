@@ -180,6 +180,12 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
                         border-bottom: none;
                     }
 
+                    // Base column styling - IMPORTANT for text-overflow
+                    .col {
+                        min-width: 0; // Critical for ellipsis in grid
+                        overflow: hidden;
+                    }
+
                     // ID Column
                     .report-id {
                         font-family: 'Courier New', monospace;
@@ -190,7 +196,11 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
                         border-radius: 8px;
                         font-size: 13px;
                         width: fit-content;
+                        max-width: 100%;
                         letter-spacing: 0.5px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                     }
 
                     // Reporter Name
@@ -200,6 +210,8 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
+                        display: block;
+                        max-width: 100%;
                     }
 
                     // Report Type
@@ -207,9 +219,12 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
                         display: flex;
                         align-items: center;
                         gap: 8px;
+                        min-width: 0;
+                        max-width: 100%;
 
                         .type-icon {
                             font-size: 18px;
+                            flex-shrink: 0;
                         }
 
                         .type-label {
@@ -217,6 +232,8 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
                             white-space: nowrap;
                             overflow: hidden;
                             text-overflow: ellipsis;
+                            flex: 1;
+                            min-width: 0;
                         }
                     }
 
@@ -227,6 +244,8 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
+                        display: block;
+                        max-width: 100%;
                     }
 
                     // Report Title
@@ -236,6 +255,8 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
                         text-overflow: ellipsis;
                         font-weight: 500;
                         color: $slate-600;
+                        display: block;
+                        max-width: 100%;
                     }
 
                     // Priority Badge
@@ -324,6 +345,9 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
                     .created-time {
                         color: $slate-600;
                         font-size: 14px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                     }
 
                     // Actions Column
@@ -721,7 +745,7 @@ $shadow-card: 0 25px 60px -35px rgba(15, 139, 92, 0.6);
                     box-shadow: 0 10px 30px rgba($danger, 0.25);
 
                     &:hover {
-                        background: darken($danger, 8%);
+                        background: #dc2626;
                         transform: translateY(-1px);
                         box-shadow: 0 12px 35px rgba($danger, 0.3);
                     }
